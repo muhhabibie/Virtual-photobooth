@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+/* ================= 🌟 GLOBAL SCROLLBAR HIDING (APP-LIKE SMOOTH SCROLL) 🌟 ================= */
+html, body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scroll-behavior: smooth;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge, Opera */
+  width: 0px;
+  height: 0px;
+}
+
+/* Hide scrollbar for all scrollable elements globally */
+* {
+  -webkit-tap-highlight-color: transparent;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE / Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Edge, Opera */
+  width: 0px !important;
+  height: 0px !important;
+}
+
+@layer utilities {
+  .btn-pink {
+    @apply inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#8A1828] via-[#B8233C] to-[#8A1828] hover:from-[#6B111F] hover:to-[#6B111F] text-white font-bold px-7 py-3.5 rounded-full shadow-lg shadow-rose-900/25 transition-all duration-200 active:scale-95 touch-manipulation cursor-pointer;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 border border-rose-200 hover:border-[#8A1828] text-gray-700 hover:text-[#8A1828] font-semibold px-5 py-3 rounded-full transition-all duration-200 active:scale-95 touch-manipulation cursor-pointer;
+  }
+  .no-scrollbar,
+  .scrollbar-none {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+  .no-scrollbar::-webkit-scrollbar,
+  .scrollbar-none::-webkit-scrollbar {
+    display: none !important;
+    width: 0px !important;
+    height: 0px !important;
+  }
+}
+
+/* ================= 📱 MOBILE UX & TOUCH OPTIMIZATIONS 📱 ================= */
+
+button, a, input, textarea {
+  touch-action: manipulation;
+}
+
+/* Prevent auto-zoom on iOS Safari when focusing inputs by ensuring 16px minimum font size */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+@media (min-width: 640px) {
+  input, textarea, select {
+    font-size: 14px !important;
+  }
+}
+
+/* Safe area insets for notched phones (iPhone X/12/13/14/15/16) */
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom, 12px), 12px);
+}
+
+.safe-top {
+  padding-top: max(env(safe-area-inset-top, 8px), 8px);
+}
+
+/* ================= 🌟 LUXURY ROMANTIC EASINGS & GLOW 🌟 ================= */
+@keyframes romanticGlow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes floatPetal {
+  0% {
+    transform: translateY(0px) rotate(0deg) translateX(0px);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.6;
+  }
+  85% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(120px) rotate(45deg) translateX(30px);
+    opacity: 0;
+  }
+}
+
+.animate-romantic-glow {
+  animation: romanticGlow 6s ease-in-out infinite;
+}
+
+/* ================= 🌟 ENDLESS SMOOTH SEAMLESS MARQUEE (HORIZONTAL & VERTICAL) 🌟 ================= */
+@keyframes marqueeH {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes marqueeHRev {
+  0% { transform: translate3d(-50%, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes endlessStripDown {
+  0% { transform: translate3d(0, -50%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes endlessStripUp {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(0, -50%, 0); }
+}
+
+.animate-strip-down {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: endlessStripDown 26s linear infinite;
+}
+
+.animate-strip-up {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: endlessStripUp 26s linear infinite;
+}
+
+.animate-strip-down:hover, .animate-strip-up:hover {
+  animation-play-state: paused;
+}
+
+.marquee-track,
+.marquee-track-h {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marqueeH 30s linear infinite;
+}
+
+.marquee-track-h-rev {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marqueeHRev 30s linear infinite;
+}
+
+.marquee-track:hover,
+.marquee-track-h:hover,
+.marquee-track-h-rev:hover {
+  animation-play-state: paused;
+}
+
+@keyframes wave {
+  from { height: 4px; }
+  to { height: 26px; }
+}
+
+.waveform-active .wave-bar:nth-child(1) { animation: wave 0.5s 0.0s ease-in-out infinite alternate; }
+.waveform-active .wave-bar:nth-child(2) { animation: wave 0.5s 0.1s ease-in-out infinite alternate; }
+.waveform-active .wave-bar:nth-child(3) { animation: wave 0.5s 0.2s ease-in-out infinite alternate; }
+.waveform-active .wave-bar:nth-child(4) { animation: wave 0.5s 0.3s ease-in-out infinite alternate; }
+.waveform-active .wave-bar:nth-child(5) { animation: wave 0.5s 0.4s ease-in-out infinite alternate; }
+.waveform-active .wave-bar:nth-child(6) { animation: wave 0.5s 0.3s ease-in-out infinite alternate; }
+.waveform-active .wave-bar:nth-child(7) { animation: wave 0.5s 0.2s ease-in-out infinite alternate; }
+.waveform-active .wave-bar:nth-child(8) { animation: wave 0.5s 0.1s ease-in-out infinite alternate; }
+.waveform-active .wave-bar:nth-child(9) { animation: wave 0.5s 0.0s ease-in-out infinite alternate; }
