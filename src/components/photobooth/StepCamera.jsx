@@ -71,6 +71,9 @@ export default function StepCamera() {
   const [showTooltip, setShowTooltip] = useState(true); // Pop-up speech bubble state above bottom left button
   const [facingMode, setFacingMode] = useState('user'); // 'user' | 'environment'
 
+  const accessoryRefs = useRef({});
+  const filterRefs = useRef({});
+
   // Active theme matched to the chosen stripColor
   const currentTheme = COLOR_THEMES.find(c => c.hex.toLowerCase() === (stripColor || '').toLowerCase()) || COLOR_THEMES[0];
   const isLight = currentTheme.hex === '#FDFBF7' || currentTheme.hex === '#F3C5CB';
@@ -84,6 +87,24 @@ export default function StepCamera() {
       setShowTooltip(true);
     }
   }, [capturedPhotos.length]);
+
+  // Smoothly center the active AR accessory or tone filter in the carousel view (Instagram Style)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (controlTab === 'accessories' && selectedAccessory) {
+        const el = accessoryRefs.current[selectedAccessory];
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      } else if (controlTab === 'filters' && selectedFilter) {
+        const el = filterRefs.current[selectedFilter];
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      }
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [selectedAccessory, selectedFilter, controlTab]);
 
   // Initialize camera
   const initCamera = useCallback(async () => {
@@ -468,8 +489,8 @@ export default function StepCamera() {
         
         {/* Lens Carousel (Dynamic AR Lenses or Tone Filters) */}
         {controlTab === 'accessories' ? (
-          <div className="w-full overflow-x-auto no-scrollbar py-1 flex justify-start sm:justify-center items-center touch-pan-x snap-x">
-            <div className="flex items-center gap-3 min-w-max px-6">
+          <div className="w-full overflow-x-auto no-scrollbar py-2 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth">
+            <div className="flex items-center gap-3.5 min-w-max px-[calc(50vw-28px)] sm:px-[calc(200px-28px)]">
               {AR_ACCESSORIES.map(acc => {
                 const isActive = selectedAccessory === acc.id;
                 const IconComp = ACCESSORY_ICONS[acc.id]?.icon || Crown;
@@ -477,24 +498,25 @@ export default function StepCamera() {
                 return (
                   <button
                     key={acc.id}
+                    ref={el => (accessoryRefs.current[acc.id] = el)}
                     onClick={() => {
                       setSelectedAccessory(acc.id);
                       if (isActive && !isComplete && !capturing) {
                         handleShutterClick();
                       }
                     }}
-                    className={`flex flex-col items-center gap-1 transition-all cursor-pointer snap-center ${
-                      isActive ? 'scale-105 z-10' : 'opacity-65 hover:opacity-100 hover:scale-105'
+                    className={`flex flex-col items-center gap-1 transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
+                      isActive ? 'scale-110 opacity-100 z-20' : 'scale-90 opacity-45 hover:opacity-85 hover:scale-100'
                     }`}
                   >
                     <div
-                      className={`rounded-full flex items-center justify-center transition-all ${
+                      className={`rounded-full flex items-center justify-center transition-all duration-300 ${
                         isActive
-                          ? 'w-13 h-13 sm:w-14 sm:h-14 ring-2 ring-white ring-offset-2 ring-offset-black bg-gradient-to-br from-amber-500/40 via-amber-600/50 to-rose-950/70 shadow-[0_0_20px_rgba(255,255,255,0.4)]'
-                          : 'w-10 h-10 sm:w-11 sm:h-11 bg-black/70 border border-white/30'
+                          ? 'w-14 h-14 sm:w-16 sm:h-16 ring-4 ring-white ring-offset-2 ring-offset-black bg-gradient-to-br from-amber-500/50 via-amber-600/60 to-rose-950/80 shadow-[0_0_30px_rgba(255,255,255,0.65)]'
+                          : 'w-10 h-10 sm:w-11 sm:h-11 bg-black/70 border border-white/20'
                       }`}
                     >
-                      <IconComp size={isActive ? 22 : 16} className={isActive ? 'text-white drop-shadow-md' : iconColor} />
+                      <IconComp size={isActive ? 24 : 16} className={isActive ? 'text-white drop-shadow-lg' : iconColor} />
                     </div>
                   </button>
                 );
@@ -502,18 +524,19 @@ export default function StepCamera() {
             </div>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto no-scrollbar py-1 flex justify-start sm:justify-center items-center touch-pan-x snap-x">
-            <div className="flex items-center gap-2 min-w-max px-6">
+          <div className="w-full overflow-x-auto no-scrollbar py-2 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth">
+            <div className="flex items-center gap-3 min-w-max px-[calc(50vw-36px)] sm:px-[calc(200px-36px)]">
               {CAMERA_FILTERS.map(filter => {
                 const isActive = selectedFilter === filter.id;
                 return (
                   <button
                     key={filter.id}
+                    ref={el => (filterRefs.current[filter.id] = el)}
                     onClick={() => setSelectedFilter(filter.id)}
-                    className={`text-[10px] tracking-wider font-bold uppercase px-3 py-1 rounded-full backdrop-blur-md transition-all cursor-pointer snap-center ${
+                    className={`text-[10.5px] tracking-wider font-bold uppercase px-4 py-1.5 rounded-full backdrop-blur-md transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
                       isActive
-                        ? 'border-2 border-white bg-gradient-to-r from-amber-900/80 to-rose-900/80 text-white shadow-lg scale-105'
-                        : 'bg-black/70 border border-white/20 text-gray-400 hover:text-white'
+                        ? 'border-2 border-white ring-2 ring-amber-300 bg-gradient-to-r from-amber-900/90 to-rose-900/90 text-white shadow-[0_0_20px_rgba(255,255,255,0.5)] scale-110 opacity-100'
+                        : 'bg-black/70 border border-white/20 text-gray-400 hover:text-white opacity-50 scale-95'
                     }`}
                   >
                     {filter.label}
