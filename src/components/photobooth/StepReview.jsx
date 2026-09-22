@@ -81,8 +81,8 @@ export default function StepReview() {
               return (
                 <div
                   key={idx}
-                  className={`relative w-full rounded-lg bg-black/40 border border-white/10 overflow-hidden shadow-inner group ${
-                    targetPhotoCount === 1 ? 'aspect-[4/5]' : 'aspect-[4/3]'
+                  className={`relative w-full rounded-lg bg-black/40 border border-white/10 overflow-hidden shadow-inner group flex-shrink-0 ${
+                    targetPhotoCount === 1 ? 'aspect-[4/5]' : 'aspect-[3/4]'
                   }`}
                 >
                   {photo ? (
@@ -90,7 +90,7 @@ export default function StepReview() {
                       <img 
                         src={photo.dataUrl} 
                         alt={`Foto ${idx + 1}`} 
-                        className="w-full h-full object-cover object-[center_35%]" 
+                        className="w-full h-full object-cover object-center" 
                       />
                       {/* Red Delete Badge on Top Right */}
                       <button

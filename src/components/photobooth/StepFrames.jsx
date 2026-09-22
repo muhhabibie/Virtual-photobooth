@@ -88,7 +88,7 @@ export default function StepFrames() {
     const pad = 16;
     const gap = 12;
     const photoW = w - pad * 2;
-    const photoH = count === 1 ? photoW * 0.85 : count === 2 ? 125 : count === 3 ? 98 : 82;
+    const photoH = count === 1 ? Math.round(photoW * 1.15) : Math.round(photoW * (4 / 3));
     const headH = 50;
     const footH = 58;
     const totalH = pad + headH + (photoH * count) + (gap * (count - 1)) + footH + pad;

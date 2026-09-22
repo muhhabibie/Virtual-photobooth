@@ -87,18 +87,18 @@ export default function StepVoice() {
             </div>
 
             {/* Photos */}
-            <div className="flex-1 min-h-0 flex flex-col gap-1 sm:gap-1.5 py-1 sm:py-1.5 overflow-hidden">
+            <div className="flex flex-col gap-1 sm:gap-1.5 py-1 sm:py-1.5 max-h-[260px] xs:max-h-[300px] sm:max-h-[340px] overflow-y-auto no-scrollbar">
               {Array.from({ length: targetPhotoCount }).map((_, idx) => {
                 const photo = capturedPhotos[idx];
                 return (
                   <div
                     key={idx}
-                    className={`relative w-full flex-1 min-h-0 rounded-lg bg-black/40 border border-white/10 overflow-hidden shadow-inner ${
-                      targetPhotoCount === 1 ? 'aspect-[4/5]' : 'aspect-[4/3]'
+                    className={`relative w-full rounded-lg bg-black/40 border border-white/10 overflow-hidden shadow-inner flex-shrink-0 ${
+                      targetPhotoCount === 1 ? 'aspect-[4/5]' : 'aspect-[3/4]'
                     }`}
                   >
                     {photo ? (
-                      <img src={photo.dataUrl} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover object-[center_35%]" />
+                      <img src={photo.dataUrl} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover object-center" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-white/40 text-[9px] font-mono">
                         Pose #{idx + 1}
