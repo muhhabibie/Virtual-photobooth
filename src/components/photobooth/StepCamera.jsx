@@ -75,6 +75,101 @@ export default function StepCamera() {
   const filterRefs = useRef({});
   const modalCanvasRef = useRef({});
 
+  const accessoryCarouselRef = useRef(null);
+  const filterCarouselRef = useRef(null);
+  const isProgrammaticScrollRef = useRef(false);
+
+  // Scroll swipe center detection for AR Accessories
+  const handleAccessoryScroll = useCallback(() => {
+    if (isProgrammaticScrollRef.current) return;
+    const container = accessoryCarouselRef.current;
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.left + containerRect.width / 2;
+
+    let closestId = null;
+    let minDistance = Infinity;
+
+    AR_ACCESSORIES.forEach(acc => {
+      const el = accessoryRefs.current[acc.id];
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const itemCenter = rect.left + rect.width / 2;
+        const dist = Math.abs(itemCenter - containerCenter);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestId = acc.id;
+        }
+      }
+    });
+
+    if (closestId && closestId !== selectedAccessory) {
+      setSelectedAccessory(closestId);
+    }
+  }, [selectedAccessory]);
+
+  // Scroll swipe center detection for Tone Filters
+  const handleFilterScroll = useCallback(() => {
+    if (isProgrammaticScrollRef.current) return;
+    const container = filterCarouselRef.current;
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.left + containerRect.width / 2;
+
+    let closestId = null;
+    let minDistance = Infinity;
+
+    CAMERA_FILTERS.forEach(filter => {
+      const el = filterRefs.current[filter.id];
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const itemCenter = rect.left + rect.width / 2;
+        const dist = Math.abs(itemCenter - containerCenter);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestId = filter.id;
+        }
+      }
+    });
+
+    if (closestId && closestId !== selectedFilter) {
+      setSelectedFilter(closestId);
+    }
+  }, [selectedFilter]);
+
+  // Click handlers with scrollIntoView
+  const selectAccessoryByClick = (id) => {
+    if (selectedAccessory === id) {
+      if (capturedPhotos.length < targetPhotoCount && !capturing) {
+        handleShutterClick();
+      }
+      return;
+    }
+    isProgrammaticScrollRef.current = true;
+    setSelectedAccessory(id);
+    const el = accessoryRefs.current[id];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+    setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 500);
+  };
+
+  const selectFilterByClick = (id) => {
+    isProgrammaticScrollRef.current = true;
+    setSelectedFilter(id);
+    const el = filterRefs.current[id];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+    setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 500);
+  };
+
   // Active theme matched to the chosen stripColor
   const currentTheme = COLOR_THEMES.find(c => c.hex.toLowerCase() === (stripColor || '').toLowerCase()) || COLOR_THEMES[0];
   const isLight = currentTheme.hex === '#FDFBF7' || currentTheme.hex === '#F3C5CB';
@@ -174,6 +269,7 @@ export default function StepCamera() {
 
   // Smoothly center the active AR accessory or tone filter in the carousel view (Instagram Style)
   useEffect(() => {
+    if (isProgrammaticScrollRef.current) return;
     const timer = setTimeout(() => {
       if (controlTab === 'accessories' && selectedAccessory) {
         const el = accessoryRefs.current[selectedAccessory];
@@ -571,9 +667,48 @@ export default function StepCamera() {
       {/* ================= 🌟 3. INSTAGRAM STORY FILTER CIRCLES CAROUSEL 🌟 ================= */}
       <div className="relative z-30 flex flex-col items-center w-full max-w-md mx-auto flex-shrink-0 my-1">
         
+        {/* Tab Switcher Pills (Aksesoris AR / Tone Filter) */}
+        <div className="flex items-center gap-1.5 p-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 mb-1 shadow-md">
+          <button
+            onClick={() => {
+              isProgrammaticScrollRef.current = true;
+              setControlTab('accessories');
+              setTimeout(() => { isProgrammaticScrollRef.current = false; }, 500);
+            }}
+            className={`px-3 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
+              controlTab === 'accessories'
+                ? 'bg-gradient-to-r from-amber-600 to-rose-900 text-white shadow-sm'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Sparkles size={11} />
+            <span>Aksesoris AR</span>
+          </button>
+
+          <button
+            onClick={() => {
+              isProgrammaticScrollRef.current = true;
+              setControlTab('filters');
+              setTimeout(() => { isProgrammaticScrollRef.current = false; }, 500);
+            }}
+            className={`px-3 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
+              controlTab === 'filters'
+                ? 'bg-gradient-to-r from-amber-600 to-rose-900 text-white shadow-sm'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <SlidersHorizontal size={11} />
+            <span>Tone Filter</span>
+          </button>
+        </div>
+
         {/* Lens Carousel (Dynamic AR Lenses or Tone Filters) */}
         {controlTab === 'accessories' ? (
-          <div className="w-full overflow-x-auto no-scrollbar py-2 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth">
+          <div 
+            ref={accessoryCarouselRef}
+            onScroll={handleAccessoryScroll}
+            className="w-full overflow-x-auto no-scrollbar py-2 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth"
+          >
             <div className="flex items-center gap-3.5 min-w-max px-[calc(50vw-28px)] sm:px-[calc(200px-28px)]">
               {AR_ACCESSORIES.map(acc => {
                 const isActive = selectedAccessory === acc.id;
@@ -583,12 +718,7 @@ export default function StepCamera() {
                   <button
                     key={acc.id}
                     ref={el => (accessoryRefs.current[acc.id] = el)}
-                    onClick={() => {
-                      setSelectedAccessory(acc.id);
-                      if (isActive && !isComplete && !capturing) {
-                        handleShutterClick();
-                      }
-                    }}
+                    onClick={() => selectAccessoryByClick(acc.id)}
                     className={`flex flex-col items-center gap-1 transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
                       isActive ? 'scale-110 opacity-100 z-20' : 'scale-90 opacity-45 hover:opacity-85 hover:scale-100'
                     }`}
@@ -608,7 +738,11 @@ export default function StepCamera() {
             </div>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto no-scrollbar py-2 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth">
+          <div 
+            ref={filterCarouselRef}
+            onScroll={handleFilterScroll}
+            className="w-full overflow-x-auto no-scrollbar py-2 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth"
+          >
             <div className="flex items-center gap-3 min-w-max px-[calc(50vw-36px)] sm:px-[calc(200px-36px)]">
               {CAMERA_FILTERS.map(filter => {
                 const isActive = selectedFilter === filter.id;
@@ -616,7 +750,7 @@ export default function StepCamera() {
                   <button
                     key={filter.id}
                     ref={el => (filterRefs.current[filter.id] = el)}
-                    onClick={() => setSelectedFilter(filter.id)}
+                    onClick={() => selectFilterByClick(filter.id)}
                     className={`text-[10.5px] tracking-wider font-bold uppercase px-4 py-1.5 rounded-full backdrop-blur-md transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
                       isActive
                         ? 'border-2 border-white ring-2 ring-amber-300 bg-gradient-to-r from-amber-900/90 to-rose-900/90 text-white shadow-[0_0_20px_rgba(255,255,255,0.5)] scale-110 opacity-100'

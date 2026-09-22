@@ -36,6 +36,52 @@ export default function StepResult() {
   const [activeStickerId, setActiveStickerId] = useState(null);
   const [activeTab, setActiveTab] = useState('filters'); // 'filters' | 'stickers'
 
+  const filterCarouselRef = useRef(null);
+  const filterRefs = useRef({});
+  const isProgrammaticScrollRef = useRef(false);
+
+  // Scroll swipe center detection for Tone Filters in StepResult
+  const handleFilterScroll = useCallback(() => {
+    if (isProgrammaticScrollRef.current) return;
+    const container = filterCarouselRef.current;
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.left + containerRect.width / 2;
+
+    let closestId = null;
+    let minDistance = Infinity;
+
+    PHOTO_FILTERS.forEach(filter => {
+      const el = filterRefs.current[filter.id];
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const itemCenter = rect.left + rect.width / 2;
+        const dist = Math.abs(itemCenter - containerCenter);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestId = filter.id;
+        }
+      }
+    });
+
+    if (closestId && closestId !== selectedFilter) {
+      setSelectedFilter(closestId);
+    }
+  }, [selectedFilter]);
+
+  const selectFilterByClick = (id) => {
+    isProgrammaticScrollRef.current = true;
+    setSelectedFilter(id);
+    const el = filterRefs.current[id];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+    setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 500);
+  };
+
   // Render high-res 2X Retina wedding photo strip (Base canvas: photos, frames, text)
   const renderStrip = useCallback(() => {
     const canvas = canvasRef.current;
@@ -348,17 +394,20 @@ export default function StepResult() {
 
         {/* Carousel Content */}
         {activeTab === 'filters' ? (
-          <div className="w-full overflow-x-auto no-scrollbar py-1 flex justify-start sm:justify-center items-center touch-pan-x snap-x">
-            <div className="flex items-center gap-3.5 min-w-max px-6">
+          <div 
+            ref={filterCarouselRef}
+            onScroll={handleFilterScroll}
+            className="w-full overflow-x-auto no-scrollbar py-1 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth"
+          >
+            <div className="flex items-center gap-3.5 min-w-max px-[calc(50vw-24px)] sm:px-6">
               {PHOTO_FILTERS.map(filter => {
                 const isActive = selectedFilter === filter.id;
                 return (
                   <button
                     key={filter.id}
-                    onClick={() => {
-                      setSelectedFilter(filter.id);
-                    }}
-                    className={`flex flex-col items-center gap-1 transition-all cursor-pointer snap-center ${
+                    ref={el => (filterRefs.current[filter.id] = el)}
+                    onClick={() => selectFilterByClick(filter.id)}
+                    className={`flex flex-col items-center gap-1 transition-all cursor-pointer snap-center flex-shrink-0 ${
                       isActive ? 'scale-105 z-10' : 'opacity-65 hover:opacity-100 hover:scale-105'
                     }`}
                   >
