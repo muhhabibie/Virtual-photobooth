@@ -357,7 +357,6 @@ export default function StepResult() {
                     key={filter.id}
                     onClick={() => {
                       setSelectedFilter(filter.id);
-                      toast(`Filter ${filter.name} diterapkan!`, 'info');
                     }}
                     className={`flex flex-col items-center gap-1 transition-all cursor-pointer snap-center ${
                       isActive ? 'scale-105 z-10' : 'opacity-65 hover:opacity-100 hover:scale-105'
