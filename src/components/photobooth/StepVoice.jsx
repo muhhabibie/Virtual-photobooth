@@ -21,6 +21,83 @@ export default function StepVoice() {
   const { isRecording, seconds, audioUrl, audioBlob, toggle, reset, formatTime } = useRecorder();
   const { toast } = useToast();
 
+  const canvasRef = useRef(null);
+
+  const renderStrip = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || capturedPhotos.length === 0) return;
+
+    const count = capturedPhotos.length;
+    const scale = 2; // 2x Retina Resolution
+    const photoW = 400 * scale;
+    const pad = 30 * scale;
+    const gap = 18 * scale;
+    const headerH = 65 * scale;
+    const footerH = 85 * scale;
+
+    const photoLayouts = capturedPhotos.map((photo) => {
+      const srcEl = photo.canvas;
+      const aspect = (srcEl && srcEl.width && srcEl.height) ? (srcEl.height / srcEl.width) : (count === 1 ? 1.15 : 0.75);
+      const h = Math.round(photoW * aspect);
+      return { photo, h };
+    });
+
+    const totalPhotosHeight = photoLayouts.reduce((sum, item) => sum + item.h, 0);
+    const totalW = photoW + pad * 2;
+    const totalH = pad + headerH + totalPhotosHeight + (gap * Math.max(0, count - 1)) + footerH + pad;
+
+    canvas.width = totalW;
+    canvas.height = totalH;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    const frameBg = stripColor || '#6B111F';
+    ctx.fillStyle = frameBg;
+    ctx.fillRect(0, 0, totalW, totalH);
+
+    const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
+    ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
+    ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('✦ THE WEDDING OF ✦', totalW / 2, pad + 38 * scale);
+
+    let drawY = pad + headerH;
+    photoLayouts.forEach(({ photo, h }) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
+
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2 * scale;
+      ctx.strokeRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
+
+      const srcEl = photo.canvas;
+      if (srcEl) {
+        ctx.drawImage(srcEl, 0, 0, srcEl.width, srcEl.height, pad, drawY, photoW, h);
+      } else if (photo.dataUrl) {
+        const img = new Image();
+        img.src = photo.dataUrl;
+        ctx.drawImage(img, pad, drawY, photoW, h);
+      }
+
+      drawY += h + gap;
+    });
+
+    const displayName = guestName ? guestName.trim() : 'Sabrina & Raka';
+    ctx.fillStyle = isLightBg ? '#6B111F' : 'rgba(255,255,255,0.85)';
+    ctx.font = `italic bold ${13 * scale}px Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('With Love & Blessings,', totalW / 2, totalH - pad - 38 * scale);
+
+    ctx.fillStyle = isLightBg ? '#6B111F' : '#F5D77F';
+    ctx.font = `italic bold ${24 * scale}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
+    ctx.fillText(displayName, totalW / 2, totalH - pad - 10 * scale);
+  }, [capturedPhotos, stripColor, guestName]);
+
+  useEffect(() => {
+    renderStrip();
+  }, [renderStrip]);
+
   useEffect(() => {
     reset();
     return () => reset();
@@ -64,62 +141,15 @@ export default function StepVoice() {
         </button>
       </div>
 
-      {/* ================= 🌟 2. CENTER CONTENT (PROMINENT PHOTOSTRIP + RECORDING CARD) 🌟 ================= */}
+      {/* ================= 🌟 2. CENTER CONTENT (PROMINENT CANVAS PHOTOSTRIP + RECORDING CARD) 🌟 ================= */}
       <div className="flex-1 min-h-0 w-full max-w-md mx-auto relative flex flex-col items-center justify-between py-1 overflow-y-auto no-scrollbar gap-2">
         
-        {/* Prominent Photo Strip Preview Container (Matching StepResult Output) */}
-        <div className="flex-1 min-h-0 w-full flex items-center justify-center py-1">
-          <div 
-            style={{ backgroundColor: stripColor || '#6B111F' }}
-            className="h-full max-h-full w-40 xs:w-44 sm:w-48 rounded-2xl p-2 sm:p-2.5 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(245,215,127,0.15)] border border-white/20 flex flex-col justify-between transition-all overflow-hidden mx-auto"
-          >
-            {/* Header */}
-            <div className="text-center pb-1 border-b border-white/10 flex-shrink-0">
-              <p className="text-[6px] sm:text-[7px] font-mono text-[#F5D77F]/90 tracking-widest uppercase font-bold">
-                ✦ THE WEDDING OF ✦
-              </p>
-              <h3 
-                style={{ fontFamily: "'Alex Brush', 'Great Vibes', cursive" }}
-                className="text-xs sm:text-sm text-[#F5D77F] leading-none mt-0.5"
-              >
-                Sabrina & Raka
-              </h3>
-            </div>
-
-            {/* Photos */}
-            <div className="flex-1 min-h-0 flex flex-col gap-1 sm:gap-1.5 py-1 overflow-hidden justify-between">
-              {Array.from({ length: targetPhotoCount }).map((_, idx) => {
-                const photo = capturedPhotos[idx];
-                return (
-                  <div
-                    key={idx}
-                    className="relative w-full flex-1 min-h-0 rounded bg-white p-0.5 shadow-sm overflow-hidden border border-black/20"
-                  >
-                    {photo ? (
-                      <img src={photo.dataUrl} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover object-center rounded-[2px]" />
-                    ) : (
-                      <div className="w-full h-full bg-black/30 flex items-center justify-center text-white/40 text-[9px] font-mono rounded-[2px]">
-                        Pose #{idx + 1}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Footer */}
-            <div className="text-center pt-1 border-t border-white/10 flex-shrink-0">
-              <p className="text-[5.5px] sm:text-[6.5px] font-mono text-[#F5D77F]/80 tracking-widest">
-                30 · 05 · 2026
-              </p>
-              <h4 
-                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-                className="text-[9px] sm:text-[10px] font-serif italic font-bold text-[#F5D77F] leading-tight truncate px-1 mt-0.5"
-              >
-                {guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan'}
-              </h4>
-            </div>
-          </div>
+        {/* Prominent Canvas Photo Strip Preview (100% Identical to StepResult Output) */}
+        <div className="flex-1 min-h-0 w-full flex items-center justify-center py-1 overflow-hidden">
+          <canvas 
+            ref={canvasRef} 
+            className="h-full max-h-full w-auto max-w-full object-contain block shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(245,215,127,0.15)] rounded-2xl mx-auto border border-white/20" 
+          />
         </div>
 
         {/* Voice Recording Card */}
