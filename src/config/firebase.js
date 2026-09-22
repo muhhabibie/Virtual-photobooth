@@ -1,16 +1,17 @@
-﻿// Firebase configuration
+// Firebase configuration
 // User can replace with their own Firebase credentials
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBXwuiEMIbV5eM8Qjf3h02Z_rM5DKWq72E",
+  authDomain: "notesapp-fbb6e.firebaseapp.com",
+  projectId: "notesapp-fbb6e",
+  storageBucket: "notesapp-fbb6e.firebasestorage.app",
+  messagingSenderId: "1054916046669",
+  appId: "1:1054916046669:web:584b29a2939425309d5104",
+  measurementId: "G-VTJSM3B4KZ"
 };
 
 // Safe initialization that doesn't crash if config is placeholder
