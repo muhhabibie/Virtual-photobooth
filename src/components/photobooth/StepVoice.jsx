@@ -68,10 +68,10 @@ export default function StepVoice() {
       <div className="flex-1 min-h-0 w-full max-w-md mx-auto relative flex flex-col items-center justify-between py-1 overflow-y-auto no-scrollbar gap-2">
         
         {/* Prominent Photo Strip Preview Container (Scaled properly) */}
-        <div className="flex-1 min-h-0 w-full flex items-center justify-center py-1">
+        <div className="flex-1 min-h-0 w-full flex items-center justify-center py-1 overflow-hidden">
           <div 
             style={{ backgroundColor: stripColor || '#6B111F' }}
-            className="h-full max-h-[100%] w-auto aspect-auto rounded-2xl p-2.5 sm:p-3 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(245,215,127,0.15)] border border-white/20 flex flex-col justify-between transition-all overflow-hidden"
+            className="h-full max-h-full w-48 xs:w-52 sm:w-56 rounded-2xl p-2.5 sm:p-3 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(245,215,127,0.15)] border border-white/20 flex flex-col justify-between transition-all overflow-hidden mx-auto"
           >
             {/* Header */}
             <div className="text-center pb-1 border-b border-white/10 flex-shrink-0">
@@ -93,12 +93,12 @@ export default function StepVoice() {
                 return (
                   <div
                     key={idx}
-                    className={`relative w-full flex-1 rounded-lg bg-black/40 border border-white/10 overflow-hidden shadow-inner ${
+                    className={`relative w-full flex-1 min-h-0 rounded-lg bg-black/40 border border-white/10 overflow-hidden shadow-inner ${
                       targetPhotoCount === 1 ? 'aspect-[4/5]' : 'aspect-[4/3]'
                     }`}
                   >
                     {photo ? (
-                      <img src={photo.dataUrl} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={photo.dataUrl} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover object-[center_35%]" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-white/40 text-[9px] font-mono">
                         Pose #{idx + 1}

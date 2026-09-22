@@ -706,7 +706,7 @@ export default function StepCamera() {
                           <img 
                             src={photo.dataUrl} 
                             alt={`Pose ${idx + 1}`} 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover object-[center_35%]" 
                           />
                           {/* Pose Badge Top Left */}
                           <div className="absolute top-1.5 left-1.5 bg-black/70 text-amber-200 text-[8px] font-bold px-1.5 py-0.5 rounded-full font-mono z-20">

@@ -90,7 +90,7 @@ export default function StepReview() {
                       <img 
                         src={photo.dataUrl} 
                         alt={`Foto ${idx + 1}`} 
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-cover object-[center_35%]" 
                       />
                       {/* Red Delete Badge on Top Right */}
                       <button
