@@ -73,6 +73,7 @@ export default function StepCamera() {
 
   const accessoryRefs = useRef({});
   const filterRefs = useRef({});
+  const modalCanvasRef = useRef({});
 
   // Active theme matched to the chosen stripColor
   const currentTheme = COLOR_THEMES.find(c => c.hex.toLowerCase() === (stripColor || '').toLowerCase()) || COLOR_THEMES[0];
@@ -80,6 +81,89 @@ export default function StepCamera() {
 
   // Real-time 60 FPS FaceMesh Tracking
   const { facesRef, isReady: isFaceMeshReady } = useFaceMesh(videoRef, selectedAccessory !== 'none');
+
+  // Render photostrip canvas inside preview modal (100% Identical to StepResult Output)
+  const renderModalStrip = useCallback(() => {
+    const canvas = modalCanvasRef.current;
+    if (!canvas || !showPreviewModal) return;
+
+    const count = targetPhotoCount;
+    const scale = 2; // 2x Retina Resolution
+    const photoW = 400 * scale;
+    const pad = 30 * scale;
+    const gap = 18 * scale;
+    const headerH = 65 * scale;
+    const footerH = 85 * scale;
+
+    const photoLayouts = Array.from({ length: count }).map((_, idx) => {
+      const photo = capturedPhotos[idx];
+      const srcEl = photo?.canvas;
+      const aspect = (srcEl && srcEl.width && srcEl.height) ? (srcEl.height / srcEl.width) : 0.75;
+      const h = Math.round(photoW * aspect);
+      return { photo, h };
+    });
+
+    const totalPhotosHeight = photoLayouts.reduce((sum, item) => sum + item.h, 0);
+    const totalW = photoW + pad * 2;
+    const totalH = pad + headerH + totalPhotosHeight + (gap * Math.max(0, count - 1)) + footerH + pad;
+
+    canvas.width = totalW;
+    canvas.height = totalH;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    const frameBg = stripColor || '#6B111F';
+    ctx.fillStyle = frameBg;
+    ctx.fillRect(0, 0, totalW, totalH);
+
+    const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
+    ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
+    ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('✦ THE WEDDING OF ✦', totalW / 2, pad + 38 * scale);
+
+    let drawY = pad + headerH;
+    photoLayouts.forEach(({ photo, h }, idx) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
+
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2 * scale;
+      ctx.strokeRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
+
+      if (photo && photo.canvas) {
+        ctx.drawImage(photo.canvas, 0, 0, photo.canvas.width, photo.canvas.height, pad, drawY, photoW, h);
+      } else if (photo && photo.dataUrl) {
+        const img = new Image();
+        img.src = photo.dataUrl;
+        ctx.drawImage(img, pad, drawY, photoW, h);
+      } else {
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillRect(pad, drawY, photoW, h);
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.font = `bold ${16 * scale}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`Pose #${idx + 1}`, pad + photoW / 2, drawY + h / 2);
+      }
+
+      drawY += h + gap;
+    });
+
+    const displayName = guestName ? guestName.trim() : 'Sabrina & Raka';
+    ctx.fillStyle = isLightBg ? '#6B111F' : 'rgba(255,255,255,0.85)';
+    ctx.font = `italic bold ${13 * scale}px Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('With Love & Blessings,', totalW / 2, totalH - pad - 38 * scale);
+
+    ctx.fillStyle = isLightBg ? '#6B111F' : '#F5D77F';
+    ctx.font = `italic bold ${24 * scale}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
+    ctx.fillText(displayName, totalW / 2, totalH - pad - 10 * scale);
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, showPreviewModal]);
+
+  useEffect(() => {
+    renderModalStrip();
+  }, [renderModalStrip]);
 
   // Auto-show pop-up tooltip whenever new photos exist
   useEffect(() => {
@@ -666,91 +750,12 @@ export default function StepCamera() {
               </button>
             </div>
 
-            {/* Photo Strip Miniature Vertical Preview (Matching Real Photobooth Output Strip) */}
-            <div 
-              style={{ backgroundColor: currentTheme.hex }}
-              className="w-44 xs:w-48 sm:w-52 rounded-2xl p-3 border border-white/20 shadow-2xl flex flex-col justify-between transition-all my-1"
-            >
-              {/* Strip Top Header */}
-              <div className="text-center pb-1.5 border-b border-white/10">
-                <p 
-                  className="text-[6.5px] sm:text-[7.5px] font-serif font-bold uppercase tracking-wider"
-                  style={{ color: isLight ? '#8C7A6B' : (currentTheme.textHex || '#F5D77F') }}
-                >
-                  ✦ THE WEDDING OF ✦
-                </p>
-                <h3 
-                  style={{ 
-                    color: isLight ? '#3A2D28' : (currentTheme.textHex || '#F5D77F'),
-                    fontFamily: "'Alex Brush', 'Great Vibes', cursive" 
-                  }}
-                  className="text-xs sm:text-sm font-serif italic leading-none mt-0.5"
-                >
-                  Sabrina & Raka
-                </h3>
-              </div>
-
-              {/* Vertical Stack of Photo Slots */}
-              <div className="flex flex-col gap-2 py-2 max-h-[360px] overflow-y-auto no-scrollbar">
-                {Array.from({ length: targetPhotoCount }).map((_, idx) => {
-                  const photo = capturedPhotos[idx];
-                  return (
-                    <div
-                      key={idx}
-                      className={`relative w-full rounded-lg overflow-hidden border border-black/80 bg-black/40 shadow-inner flex-shrink-0 ${
-                        targetPhotoCount === 1 ? 'aspect-[4/5]' : 'aspect-[3/4]'
-                      }`}
-                    >
-                      {photo ? (
-                        <>
-                          <img 
-                            src={photo.dataUrl} 
-                            alt={`Pose ${idx + 1}`} 
-                            className="w-full h-full object-cover object-center" 
-                          />
-                          {/* Pose Badge Top Left */}
-                          <div className="absolute top-1.5 left-1.5 bg-black/70 text-amber-200 text-[8px] font-bold px-1.5 py-0.5 rounded-full font-mono z-20">
-                            Pose {idx + 1}
-                          </div>
-                          {/* Trash Icon Button Top Right for Direct Deletion */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeletePhoto(idx);
-                            }}
-                            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 border border-white text-white flex items-center justify-center text-xs font-bold shadow-lg active:scale-90 transition cursor-pointer z-30"
-                            title="Hapus foto ini"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-center p-2">
-                          <Camera size={16} className="opacity-40 mb-1 text-white" />
-                          <span className="text-[9px] font-mono text-gray-300">Pose {idx + 1}</span>
-                          <span className="text-[8px] text-amber-300/80 mt-0.5 font-sans">Belum difoto</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Strip Footer */}
-              <div className="text-center pt-2 border-t border-white/10">
-                <h4 
-                  style={{ color: isLight ? '#5A4A3E' : '#FFFFFF' }}
-                  className="text-[10px] font-sans font-bold leading-tight truncate px-1"
-                >
-                  {guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)'}
-                </h4>
-                <p 
-                  className="text-[7px] font-mono tracking-widest mt-0.5"
-                  style={{ color: isLight ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)' }}
-                >
-                  30 · 05 · 2026
-                </p>
-              </div>
+            {/* Photo Strip Retina Canvas Preview (100% Identical to StepResult Output) */}
+            <div className="flex-1 min-h-0 w-full flex items-center justify-center py-2 overflow-hidden">
+              <canvas 
+                ref={modalCanvasRef} 
+                className="h-full max-h-full w-auto max-w-full object-contain block shadow-2xl rounded-2xl mx-auto border border-white/20" 
+              />
             </div>
 
             {/* Modal Bottom Action Button */}

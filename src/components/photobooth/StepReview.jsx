@@ -1,3 +1,4 @@
+import { useEffect, useRef, useCallback } from 'react';
 import { RotateCcw, ArrowRight, X } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 
@@ -12,6 +13,90 @@ export default function StepReview() {
     setCurrentStep,
     closeBooth
   } = useBooth();
+
+  const canvasRef = useRef(null);
+
+  const renderStrip = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || capturedPhotos.length === 0) return;
+
+    const count = targetPhotoCount;
+    const scale = 2; // 2x Retina Resolution
+    const photoW = 400 * scale;
+    const pad = 30 * scale;
+    const gap = 18 * scale;
+    const headerH = 65 * scale;
+    const footerH = 85 * scale;
+
+    const photoLayouts = Array.from({ length: count }).map((_, idx) => {
+      const photo = capturedPhotos[idx];
+      const srcEl = photo?.canvas;
+      const aspect = (srcEl && srcEl.width && srcEl.height) ? (srcEl.height / srcEl.width) : 0.75;
+      const h = Math.round(photoW * aspect);
+      return { photo, h };
+    });
+
+    const totalPhotosHeight = photoLayouts.reduce((sum, item) => sum + item.h, 0);
+    const totalW = photoW + pad * 2;
+    const totalH = pad + headerH + totalPhotosHeight + (gap * Math.max(0, count - 1)) + footerH + pad;
+
+    canvas.width = totalW;
+    canvas.height = totalH;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    const frameBg = stripColor || '#6B111F';
+    ctx.fillStyle = frameBg;
+    ctx.fillRect(0, 0, totalW, totalH);
+
+    const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
+    ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
+    ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('✦ THE WEDDING OF ✦', totalW / 2, pad + 38 * scale);
+
+    let drawY = pad + headerH;
+    photoLayouts.forEach(({ photo, h }, idx) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
+
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2 * scale;
+      ctx.strokeRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
+
+      if (photo && photo.canvas) {
+        ctx.drawImage(photo.canvas, 0, 0, photo.canvas.width, photo.canvas.height, pad, drawY, photoW, h);
+      } else if (photo && photo.dataUrl) {
+        const img = new Image();
+        img.src = photo.dataUrl;
+        ctx.drawImage(img, pad, drawY, photoW, h);
+      } else {
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fillRect(pad, drawY, photoW, h);
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.font = `bold ${16 * scale}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`Pose #${idx + 1}`, pad + photoW / 2, drawY + h / 2);
+      }
+
+      drawY += h + gap;
+    });
+
+    const displayName = guestName ? guestName.trim() : 'Sabrina & Raka';
+    ctx.fillStyle = isLightBg ? '#6B111F' : 'rgba(255,255,255,0.85)';
+    ctx.font = `italic bold ${13 * scale}px Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('With Love & Blessings,', totalW / 2, totalH - pad - 38 * scale);
+
+    ctx.fillStyle = isLightBg ? '#6B111F' : '#F5D77F';
+    ctx.font = `italic bold ${24 * scale}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
+    ctx.fillText(displayName, totalW / 2, totalH - pad - 10 * scale);
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName]);
+
+  useEffect(() => {
+    renderStrip();
+  }, [renderStrip]);
 
   // Retake or remove a single photo from the strip
   const handleRemovePhoto = (indexToRemove) => {
@@ -55,95 +140,14 @@ export default function StepReview() {
         </p>
       </div>
 
-      {/* ================= 🌟 2. PERFECT VERTICAL & HORIZONTAL CENTER PHOTO STRIP 🌟 ================= */}
-      <div className="flex-1 my-auto w-full flex flex-col items-center justify-center z-10">
-        <div 
-          style={{ backgroundColor: stripColor || '#6B111F' }}
-          className="w-44 xs:w-48 sm:w-56 rounded-2xl p-2.5 sm:p-3 shadow-2xl border border-white/20 flex flex-col justify-between transition-all transform hover:scale-[1.01]"
-        >
-          {/* Strip Top Header */}
-          <div className="text-center pb-1.5 border-b border-white/10">
-            <p className="text-[6.5px] sm:text-[7.5px] font-serif font-bold text-[#F5D77F] uppercase tracking-wider">
-              ✦ THE WEDDING OF ✦
-            </p>
-            <h3 
-              style={{ fontFamily: "'Alex Brush', 'Great Vibes', cursive" }}
-              className="text-xs sm:text-sm text-[#F5D77F] font-script leading-none mt-0.5"
-            >
-              Sabrina & Raka
-            </h3>
-          </div>
-
-          {/* Photo Slots with individual delete buttons */}
-          <div className="flex flex-col gap-1.5 sm:gap-2 py-1.5 sm:py-2 max-h-[320px] xs:max-h-[360px] sm:max-h-[420px] overflow-y-auto no-scrollbar">
-            {Array.from({ length: targetPhotoCount }).map((_, idx) => {
-              const photo = capturedPhotos[idx];
-              return (
-                <div
-                  key={idx}
-                  className={`relative w-full rounded-lg bg-black/40 border border-white/10 overflow-hidden shadow-inner group flex-shrink-0 ${
-                    targetPhotoCount === 1 ? 'aspect-[4/5]' : 'aspect-[3/4]'
-                  }`}
-                >
-                  {photo ? (
-                    <>
-                      <img 
-                        src={photo.dataUrl} 
-                        alt={`Foto ${idx + 1}`} 
-                        className="w-full h-full object-cover object-center" 
-                      />
-                      {/* Red Delete Badge on Top Right */}
-                      <button
-                        onClick={() => handleRemovePhoto(idx)}
-                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 border border-white text-white flex items-center justify-center text-xs font-bold shadow-lg active:scale-90 transition cursor-pointer z-30"
-                        title="Hapus & Ambil Ulang Foto Ini"
-                      >
-                        <X size={12} />
-                      </button>
-                    </>
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-white/40 text-[10px] font-mono">
-                      <span>Pose #{idx + 1}</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Strip Bottom Footer matching agreed gallery card output */}
-          <div className="text-center pt-1.5 pb-1 flex-shrink-0 flex flex-col items-center">
-            <h3 
-              style={{ 
-                color: '#F5D77F',
-                fontFamily: "'Alex Brush', 'Great Vibes', 'Playfair Display', cursive" 
-              }}
-              className="text-xs sm:text-sm font-serif italic leading-tight"
-            >
-              Sabrina & Raka
-            </h3>
-            <p className="text-[6.5px] sm:text-[7.5px] font-mono text-[#F5D77F]/80 tracking-widest mt-0.5">
-              30 · 05 · 2026
-            </p>
-            <h4 className="text-[10px] sm:text-xs font-sans font-bold text-white leading-tight mt-0.5 tracking-wide truncate max-w-full px-1">
-              {guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)'}
-            </h4>
-            {guestMessage && guestMessage.trim() ? (
-              <>
-                <div className="w-full border-t border-white/20 my-0.5 flex-shrink-0" />
-                <div className="px-1 text-center max-h-6 overflow-hidden flex items-center justify-center">
-                  <p className="text-[8px] sm:text-[9px] font-serif italic text-rose-100/90 leading-tight line-clamp-1 overflow-hidden text-ellipsis">
-                    "{guestMessage.trim().length > 45 ? `${guestMessage.trim().slice(0, 45)}...` : guestMessage.trim()}"
-                  </p>
-                </div>
-              </>
-            ) : null}
-          </div>
+      {/* ================= 🌟 2. PERFECT VERTICAL CANVAS PHOTO STRIP 🌟 ================= */}
+      <div className="flex-1 my-auto w-full flex flex-col items-center justify-center z-10 overflow-hidden py-2">
+        <div className="relative h-full max-h-full flex items-center justify-center">
+          <canvas 
+            ref={canvasRef} 
+            className="h-full max-h-full w-auto max-w-full object-contain block shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_25px_rgba(245,215,127,0.15)] rounded-2xl mx-auto border border-white/20" 
+          />
         </div>
-
-        <p className="text-[10px] sm:text-xs text-gray-400 text-center mt-2.5">
-          Ketuk foto di strip untuk menghapus & retake
-        </p>
       </div>
 
       {/* ================= 🌟 3. STICKY BOTTOM ACTION BAR 🌟 ================= */}
