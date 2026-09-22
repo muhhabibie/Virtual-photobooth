@@ -49,23 +49,28 @@ export async function saveSubmission({ guestName, guestMessage, photos, stripCol
   // Always save to LocalStorage first
   saveLocalSubmission(newSubmission);
 
-  // If Firebase is initialized with valid credentials, upload to Cloud
-  if (db && storage) {
+  // If Firebase Database (Firestore) is initialized, sync to Cloud
+  if (db) {
     try {
-      const uploadedPhotoUrls = [];
-      for (let i = 0; i < photos.length; i++) {
-        const photoData = typeof photos[i] === 'string' ? photos[i] : photos[i].dataUrl;
-        const photoRef = ref(storage, `photos/${newSubmission.id}_${i}.jpg`);
-        await uploadString(photoRef, photoData, 'data_url');
-        const downloadUrl = await getDownloadURL(photoRef);
-        uploadedPhotoUrls.push(downloadUrl);
-      }
+      let uploadedPhotoUrls = newSubmission.photos;
 
-      let uploadedVoiceUrl = voiceUrl || null;
-      if (voiceBlob) {
-        const voiceRef = ref(storage, `voices/${newSubmission.id}.webm`);
-        await uploadBytes(voiceRef, voiceBlob);
-        uploadedVoiceUrl = await getDownloadURL(voiceRef);
+      // Try uploading to Storage if enabled
+      if (storage) {
+        try {
+          const cloudUrls = [];
+          for (let i = 0; i < photos.length; i++) {
+            const photoData = typeof photos[i] === 'string' ? photos[i] : photos[i].dataUrl;
+            const photoRef = ref(storage, `photos/${newSubmission.id}_${i}.jpg`);
+            await uploadString(photoRef, photoData, 'data_url');
+            const downloadUrl = await getDownloadURL(photoRef);
+            cloudUrls.push(downloadUrl);
+          }
+          if (cloudUrls.length === photos.length) {
+            uploadedPhotoUrls = cloudUrls;
+          }
+        } catch (stErr) {
+          console.warn("Storage upload bypassed, storing direct dataUrl in Firestore:", stErr);
+        }
       }
 
       const cloudDoc = {
@@ -76,8 +81,8 @@ export async function saveSubmission({ guestName, guestMessage, photos, stripCol
         takenDate: newSubmission.takenDate,
         colorHex: newSubmission.colorHex,
         textHex: newSubmission.textHex,
-        hasVoice: !!uploadedVoiceUrl,
-        voiceUrl: uploadedVoiceUrl,
+        hasVoice: !!newSubmission.voiceUrl,
+        voiceUrl: newSubmission.voiceUrl,
         createdAt: serverTimestamp(),
       };
 
