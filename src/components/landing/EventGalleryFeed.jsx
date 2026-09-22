@@ -195,7 +195,9 @@ export default function EventGalleryFeed() {
                   {photosList.map((src, i) => (
                     <div 
                       key={i} 
-                      className="w-full aspect-[4/3] rounded-lg sm:rounded-xl overflow-hidden bg-black/20 border border-black/90 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] flex-shrink-0"
+                      className={`w-full rounded-lg sm:rounded-xl overflow-hidden bg-black/20 border border-black/90 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] flex-shrink-0 ${
+                        photosList.length === 1 ? 'aspect-[4/5]' : 'aspect-[3/4]'
+                      }`}
                     >
                       <img
                         src={src}
