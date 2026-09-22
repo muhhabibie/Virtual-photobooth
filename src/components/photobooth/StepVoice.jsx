@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, Mic, Square, Check, X, Sparkles, Volume2 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useRecorder } from '../../hooks/useRecorder';
