@@ -170,6 +170,101 @@ export default function StepCamera() {
     }, 500);
   };
 
+  // Instagram-style swipe gesture directly on camera screen
+  const [swipeToast, setSwipeToast] = useState(null);
+  const swipeTimerRef = useRef(null);
+
+  const touchStartXRef = useRef(null);
+  const touchStartYRef = useRef(null);
+
+  const triggerSwipeToast = (label) => {
+    if (swipeTimerRef.current) clearTimeout(swipeTimerRef.current);
+    setSwipeToast(label);
+    swipeTimerRef.current = setTimeout(() => {
+      setSwipeToast(null);
+    }, 1200);
+  };
+
+  const goToNextItem = useCallback(() => {
+    if (controlTab === 'accessories') {
+      const idx = AR_ACCESSORIES.findIndex(a => a.id === selectedAccessory);
+      const nextIdx = (idx + 1) % AR_ACCESSORIES.length;
+      const nextObj = AR_ACCESSORIES[nextIdx];
+      selectAccessoryByClick(nextObj.id);
+      triggerSwipeToast(nextObj.name);
+    } else {
+      const idx = CAMERA_FILTERS.findIndex(f => f.id === selectedFilter);
+      const nextIdx = (idx + 1) % CAMERA_FILTERS.length;
+      const nextObj = CAMERA_FILTERS[nextIdx];
+      selectFilterByClick(nextObj.id);
+      triggerSwipeToast(nextObj.label);
+    }
+  }, [controlTab, selectedAccessory, selectedFilter, capturedPhotos.length, targetPhotoCount, capturing]);
+
+  const goToPrevItem = useCallback(() => {
+    if (controlTab === 'accessories') {
+      const idx = AR_ACCESSORIES.findIndex(a => a.id === selectedAccessory);
+      const prevIdx = (idx - 1 + AR_ACCESSORIES.length) % AR_ACCESSORIES.length;
+      const prevObj = AR_ACCESSORIES[prevIdx];
+      selectAccessoryByClick(prevObj.id);
+      triggerSwipeToast(prevObj.name);
+    } else {
+      const idx = CAMERA_FILTERS.findIndex(f => f.id === selectedFilter);
+      const prevIdx = (idx - 1 + CAMERA_FILTERS.length) % CAMERA_FILTERS.length;
+      const prevObj = CAMERA_FILTERS[prevIdx];
+      selectFilterByClick(prevObj.id);
+      triggerSwipeToast(prevObj.label);
+    }
+  }, [controlTab, selectedAccessory, selectedFilter, capturedPhotos.length, targetPhotoCount, capturing]);
+
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches.length === 1) {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const diffX = touchStartXRef.current - touchEndX;
+    const diffY = touchStartYRef.current - touchEndY;
+
+    if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        goToNextItem();
+      } else {
+        goToPrevItem();
+      }
+    }
+
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
+
+  const handleMouseDown = (e) => {
+    touchStartXRef.current = e.clientX;
+    touchStartYRef.current = e.clientY;
+  };
+
+  const handleMouseUp = (e) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const diffX = touchStartXRef.current - e.clientX;
+    const diffY = touchStartYRef.current - e.clientY;
+
+    if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        goToNextItem();
+      } else {
+        goToPrevItem();
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
+
   // Active theme matched to the chosen stripColor
   const currentTheme = COLOR_THEMES.find(c => c.hex.toLowerCase() === (stripColor || '').toLowerCase()) || COLOR_THEMES[0];
   const isLight = currentTheme.hex === '#FDFBF7' || currentTheme.hex === '#F3C5CB';
@@ -587,10 +682,14 @@ export default function StepCamera() {
             </p>
           </div>
 
-          {/* Center Cutout Window (Full-width WYSIWYG Camera Stream) */}
+          {/* Center Cutout Window (Full-width WYSIWYG Camera Stream with Touch Swipe) */}
           <div 
             ref={viewportRef}
-            className="relative flex-1 min-h-0 w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center border border-black/40"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            className="relative flex-1 min-h-0 w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center border border-black/40 touch-pan-y select-none cursor-grab active:cursor-grabbing group"
           >
             {/* Camera Video Stream */}
             <video
@@ -598,7 +697,7 @@ export default function StepCamera() {
               autoPlay
               playsInline
               muted
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover pointer-events-none"
               style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none', filter: getFilterCss() }}
             />
 
@@ -607,6 +706,21 @@ export default function StepCamera() {
               ref={arCanvasRef}
               className="absolute inset-0 w-full h-full pointer-events-none z-20"
             />
+
+            {/* Instagram Style Swipe Toast / Floating Active Filter Toast */}
+            {swipeToast ? (
+              <div className="absolute inset-x-0 top-6 z-30 flex justify-center pointer-events-none animate-bounce">
+                <div className="bg-black/75 backdrop-blur-md border border-amber-400/90 text-amber-200 px-4 py-1.5 rounded-full text-xs font-mono font-bold shadow-2xl tracking-wider uppercase flex items-center gap-2">
+                  <span>✨ {swipeToast}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="absolute top-2.5 inset-x-0 z-30 flex justify-center pointer-events-none opacity-40 group-hover:opacity-100 transition duration-300">
+                <span className="bg-black/60 backdrop-blur-xs text-amber-100/90 px-3 py-0.5 rounded-full text-[8.5px] font-mono tracking-widest uppercase shadow-md border border-white/10">
+                  ‹ Swipe / Geser Layar untuk Ganti Filter ›
+                </span>
+              </div>
+            )}
 
             {/* Camera Error / Fallback */}
             {cameraError && (

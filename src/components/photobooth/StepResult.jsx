@@ -82,6 +82,49 @@ export default function StepResult() {
     }, 500);
   };
 
+  // Touch & Mouse swipe gestures to switch filters
+  const touchStartXRef = useRef(null);
+  const touchStartYRef = useRef(null);
+
+  const goToNextFilter = useCallback(() => {
+    const idx = PHOTO_FILTERS.findIndex(f => f.id === selectedFilter);
+    const nextIdx = (idx + 1) % PHOTO_FILTERS.length;
+    selectFilterByClick(PHOTO_FILTERS[nextIdx].id);
+  }, [selectedFilter]);
+
+  const goToPrevFilter = useCallback(() => {
+    const idx = PHOTO_FILTERS.findIndex(f => f.id === selectedFilter);
+    const prevIdx = (idx - 1 + PHOTO_FILTERS.length) % PHOTO_FILTERS.length;
+    selectFilterByClick(PHOTO_FILTERS[prevIdx].id);
+  }, [selectedFilter]);
+
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches.length === 1) {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const diffX = touchStartXRef.current - touchEndX;
+    const diffY = touchStartYRef.current - touchEndY;
+
+    if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        goToNextFilter();
+      } else {
+        goToPrevFilter();
+      }
+    }
+
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
+
   // Render high-res 2X Retina wedding photo strip (Base canvas: photos, frames, text)
   const renderStrip = useCallback(() => {
     const canvas = canvasRef.current;
@@ -310,7 +353,11 @@ export default function StepResult() {
       <div className="flex-1 min-h-0 w-full max-w-md mx-auto relative flex flex-col items-center justify-center py-1 overflow-hidden">
         
         {/* Photo Strip Card Container */}
-        <div className="relative h-full max-h-[100%] flex flex-col items-center justify-center">
+        <div 
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="relative h-full max-h-[100%] flex flex-col items-center justify-center touch-pan-y"
+        >
           
           <div className="relative h-full max-h-[calc(100%-20px)] aspect-auto shadow-[0_15px_40px_rgba(0,0,0,0.9),0_0_25px_rgba(245,215,127,0.15)] rounded-2xl overflow-hidden border border-white/20 flex items-center justify-center bg-gray-950">
             <canvas ref={canvasRef} className="h-full w-auto max-w-full object-contain block pointer-events-none" />
