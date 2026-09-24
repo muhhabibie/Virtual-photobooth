@@ -22,6 +22,7 @@ export default function StepResult() {
     guestMessage,
     stripColor,
     voiceUrl,
+    submitSession,
     setCurrentStep,
     reset,
     closeBooth,
@@ -30,6 +31,7 @@ export default function StepResult() {
   const { toast } = useToast();
   const canvasRef = useRef(null);
   const stickerAreaRef = useRef(null);
+  const hasSubmittedRef = useRef(false);
   
   const [selectedFilter, setSelectedFilter] = useState('natural');
   const [selectedStickers, setSelectedStickers] = useState([]);
@@ -39,6 +41,20 @@ export default function StepResult() {
   const filterCarouselRef = useRef(null);
   const filterRefs = useRef({});
   const isProgrammaticScrollRef = useRef(false);
+
+  // Automatically save photo strip & voice note to Firestore database & LocalStorage
+  useEffect(() => {
+    if (!hasSubmittedRef.current && capturedPhotos.length > 0) {
+      hasSubmittedRef.current = true;
+      submitSession().then((res) => {
+        if (res) {
+          toast('Photo strip & doa restu tersimpan di database! 💍✨', 'success');
+        }
+      }).catch((err) => {
+        console.warn('Auto submit error:', err);
+      });
+    }
+  }, [capturedPhotos.length, submitSession, toast]);
 
   // Scroll swipe center detection for Tone Filters in StepResult
   const handleFilterScroll = useCallback(() => {

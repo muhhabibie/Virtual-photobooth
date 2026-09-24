@@ -19,8 +19,14 @@ export default function StepVoice() {
     closeBooth
   } = useBooth();
 
-  const { isRecording, seconds, audioUrl, audioBlob, toggle, reset, formatTime } = useRecorder();
+  const { isRecording, seconds, audioUrl, audioBlob, recorderError, toggle, reset, formatTime } = useRecorder();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (recorderError) {
+      toast(recorderError, 'error');
+    }
+  }, [recorderError, toast]);
 
   const canvasRef = useRef(null);
 

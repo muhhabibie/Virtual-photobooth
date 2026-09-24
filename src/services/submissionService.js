@@ -30,8 +30,27 @@ export function saveLocalSubmission(submission) {
   }
 }
 
+// Helper to convert Blob to Base64 DataURL
+export function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 // Save submission (Cloud Firebase + LocalStorage fallback)
 export async function saveSubmission({ guestName, guestMessage, photos, stripColor, voiceBlob, voiceUrl }) {
+  let finalVoiceUrl = voiceUrl || null;
+  if (voiceBlob) {
+    try {
+      finalVoiceUrl = await blobToBase64(voiceBlob);
+    } catch (e) {
+      console.warn("Failed to convert voice blob to base64:", e);
+    }
+  }
+
   const newSubmission = {
     id: `sub_${Date.now()}`,
     guestName: guestName || 'Tamu Undangan',
@@ -41,8 +60,8 @@ export async function saveSubmission({ guestName, guestMessage, photos, stripCol
     takenDate: new Date().toLocaleString('id-ID'),
     colorHex: stripColor || '#6B111F',
     textHex: stripColor === '#FDFBF7' || stripColor === '#F3C5CB' ? '#6B111F' : '#F5D77F',
-    hasVoice: !!(voiceBlob || voiceUrl),
-    voiceUrl: voiceUrl || null,
+    hasVoice: !!finalVoiceUrl,
+    voiceUrl: finalVoiceUrl,
     createdAt: Date.now(),
   };
 
@@ -81,8 +100,8 @@ export async function saveSubmission({ guestName, guestMessage, photos, stripCol
         takenDate: newSubmission.takenDate,
         colorHex: newSubmission.colorHex,
         textHex: newSubmission.textHex,
-        hasVoice: !!newSubmission.voiceUrl,
-        voiceUrl: newSubmission.voiceUrl,
+        hasVoice: !!finalVoiceUrl,
+        voiceUrl: finalVoiceUrl,
         createdAt: serverTimestamp(),
       };
 
