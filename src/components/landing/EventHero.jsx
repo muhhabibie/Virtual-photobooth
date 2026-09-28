@@ -3,14 +3,7 @@ import { Camera, BookOpen, Lock, ShieldAlert, Sparkles, Clock, Calendar } from '
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
-import { PACKAGES } from '../../data/mockEvents';
-
-const SLIDE_IMAGES = [
-  'https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&auto=format&fit=crop&q=85',
-  'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=1600&auto=format&fit=crop&q=85',
-  'https://images.unsplash.com/photo-1606800052052-a08af7148866?w=1600&auto=format&fit=crop&q=85',
-  'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1600&auto=format&fit=crop&q=85',
-];
+import { DEFAULT_HERO_PHOTOS, PACKAGES } from '../../data/mockEvents';
 
 export default function EventHero() {
   const { 
@@ -27,12 +20,16 @@ export default function EventHero() {
   const [pinError, setPinError] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
 
+  const slideImages = activeEvent?.heroPhotos && activeEvent.heroPhotos.length > 0 
+    ? activeEvent.heroPhotos 
+    : DEFAULT_HERO_PHOTOS;
+
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % SLIDE_IMAGES.length);
+      setCurrentSlide((prev) => (prev + 1) % slideImages.length);
     }, 4500);
     return () => clearInterval(timer);
-  }, []);
+  }, [slideImages.length]);
 
   if (!activeEvent) return null;
 
@@ -77,7 +74,7 @@ export default function EventHero() {
           className="flex h-full w-full transition-transform duration-1000 ease-in-out"
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
         >
-          {SLIDE_IMAGES.map((imgUrl, idx) => (
+          {slideImages.map((imgUrl, idx) => (
             <div key={idx} className="w-full h-full flex-shrink-0 relative">
               <img
                 src={imgUrl}
@@ -127,7 +124,7 @@ export default function EventHero() {
 
         {/* Slide Dots */}
         <div className="absolute bottom-24 sm:bottom-32 inset-x-0 flex items-center justify-center gap-2 z-20 pointer-events-auto">
-          {SLIDE_IMAGES.map((_, idx) => (
+          {slideImages.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentSlide(idx)}

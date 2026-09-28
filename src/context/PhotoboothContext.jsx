@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { subscribeSubmissions, saveSubmission, getLocalSubmissions } from '../services/submissionService';
-import { INITIAL_EVENTS, PACKAGES } from '../data/mockEvents';
+import { INITIAL_EVENTS, PACKAGES, DEFAULT_HERO_PHOTOS } from '../data/mockEvents';
 
 const PhotoboothContext = createContext(null);
 
@@ -90,8 +90,8 @@ export function PhotoboothProvider({ children }) {
     } catch (e) {}
   }, []);
 
-  // Event Management (Create, Edit, Delete, Expire)
-  const createEvent = useCallback(({ groomName, brideName, slug, eventDate, package: pkgKey, pin, templateIds }) => {
+  // Event Management (Create, Edit, Delete, Expire, Update Hero Photos)
+  const createEvent = useCallback(({ groomName, brideName, slug, eventDate, package: pkgKey, pin, templateIds, heroPhotos }) => {
     const pkg = PACKAGES[pkgKey] || PACKAGES.standard;
     const activeDays = pkg.activeDays || 10;
     const now = Date.now();
@@ -108,6 +108,7 @@ export function PhotoboothProvider({ children }) {
       package: pkgKey,
       pin: pin || '',
       templateIds: templateIds || ['wedding-classic', 'gold-luxury'],
+      heroPhotos: heroPhotos && heroPhotos.length > 0 ? heroPhotos : DEFAULT_HERO_PHOTOS,
       expiresAt: now + activeDays * 86400 * 1000,
       createdAt: now,
     };
@@ -127,6 +128,18 @@ export function PhotoboothProvider({ children }) {
         return {
           ...e,
           expiresAt: isNowExpired ? Date.now() + 7 * 86400 * 1000 : Date.now() - 1000
+        };
+      }
+      return e;
+    }));
+  }, []);
+
+  const updateEventHeroPhotos = useCallback((eventId, newPhotoUrls) => {
+    setEvents(prev => prev.map(e => {
+      if (e.id === eventId) {
+        return {
+          ...e,
+          heroPhotos: newPhotoUrls
         };
       }
       return e;
@@ -251,6 +264,7 @@ export function PhotoboothProvider({ children }) {
       createEvent,
       deleteEvent,
       toggleExpireEvent,
+      updateEventHeroPhotos,
 
       guestName, setGuestName,
       guestMessage, setGuestMessage,

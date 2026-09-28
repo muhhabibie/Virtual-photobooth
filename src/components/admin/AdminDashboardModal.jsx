@@ -1,10 +1,9 @@
-import { useState, useMemo } from 'react';
 import { 
   X, Plus, Calendar, QrCode, Copy, Trash2, Check, Lock, 
-  ExternalLink, Sparkles, Layers, ShieldCheck, Clock, Eye, AlertTriangle, RefreshCw
+  ExternalLink, Sparkles, Layers, ShieldCheck, Clock, Eye, AlertTriangle, RefreshCw, Image as ImageIcon, Upload
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
-import { PACKAGES } from '../../data/mockEvents';
+import { PACKAGES, DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
 import QRCodeCanvas from '../ui/QRCodeCanvas';
 import { FRAMES } from '../../config/frames';
 
@@ -16,6 +15,7 @@ export default function AdminDashboardModal() {
     createEvent, 
     deleteEvent, 
     toggleExpireEvent,
+    updateEventHeroPhotos,
     savedSubmissions,
     navigateToSlug
   } = useBooth();
@@ -24,6 +24,11 @@ export default function AdminDashboardModal() {
   const [adminPinInput, setAdminPinInput] = useState('');
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [pinError, setPinError] = useState(false);
+
+  // Hero Photos Manager Modal State
+  const [heroModalEvent, setHeroModalEvent] = useState(null);
+  const [editHeroPhotos, setEditHeroPhotos] = useState([]);
+  const [newPhotoUrlInput, setNewPhotoUrlInput] = useState('');
 
   // Active Tab inside Dashboard: 'events' | 'qr' | 'templates' | 'submissions'
   const [activeTab, setActiveTab] = useState('events');
@@ -316,6 +321,18 @@ export default function AdminDashboardModal() {
 
                               <button
                                 onClick={() => {
+                                  setHeroModalEvent(evt);
+                                  setEditHeroPhotos(evt.heroPhotos || DEFAULT_HERO_PHOTOS);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-200 text-[10px] font-bold flex items-center gap-1 transition cursor-pointer border border-emerald-500/30"
+                                title="Ubah Foto Background Hero Pengantin"
+                              >
+                                <ImageIcon size={11} />
+                                <span>Foto Hero ({evt.heroPhotos?.length || DEFAULT_HERO_PHOTOS.length})</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
                                   closeAdminModal();
                                   navigateToSlug(evt.slug);
                                 }}
@@ -530,6 +547,136 @@ export default function AdminDashboardModal() {
                 </button>
               </div>
             </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* HERO PHOTOS MANAGER MODAL OVERLAY */}
+      {heroModalEvent && (
+        <div className="fixed inset-0 z-[230] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-[#1C0A15] border border-amber-400/50 rounded-3xl p-5 text-white shadow-2xl animate-scaleIn flex flex-col gap-4 max-h-[90vh] overflow-y-auto no-scrollbar">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div>
+                <h3 className="text-base font-serif font-bold text-amber-200">
+                  Ubah Foto Background Hero Pengantin
+                </h3>
+                <p className="text-[10px] font-mono text-gray-400">
+                  {heroModalEvent.displayName} (sirklen.my.id/{heroModalEvent.slug})
+                </p>
+              </div>
+              <button
+                onClick={() => setHeroModalEvent(null)}
+                className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Current Photos Grid */}
+            <div>
+              <label className="block text-xs font-mono text-gray-300 font-bold mb-2">
+                Foto Carousel Hero saat ini ({editHeroPhotos.length} foto):
+              </label>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {editHeroPhotos.map((url, idx) => (
+                  <div key={idx} className="relative aspect-[4/3] rounded-xl overflow-hidden bg-black border border-white/20 group">
+                    <img src={url} alt={`Hero ${idx + 1}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setEditHeroPhotos(prev => prev.filter((_, i) => i !== idx))}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs shadow hover:scale-110 transition cursor-pointer"
+                      title="Hapus foto ini"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Add New Photos (File Upload or URL Input) */}
+            <div className="bg-black/40 p-3.5 rounded-2xl border border-white/10 space-y-3">
+              <label className="block text-xs font-serif font-bold text-amber-300">
+                Tambah Foto Pengantin Baru:
+              </label>
+
+              {/* Option A: File Upload */}
+              <div>
+                <label className="block text-[10px] font-mono text-gray-400 mb-1">
+                  1. Upload Foto dari HP / Laptop:
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    files.forEach(file => {
+                      const reader = new FileReader();
+                      reader.onload = (evt) => {
+                        if (evt.target?.result) {
+                          setEditHeroPhotos(prev => [...prev, evt.target.result]);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    });
+                  }}
+                  className="w-full text-xs text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-400/20 file:text-amber-200 hover:file:bg-amber-400/30 cursor-pointer"
+                />
+              </div>
+
+              {/* Option B: Image URL */}
+              <div>
+                <label className="block text-[10px] font-mono text-gray-400 mb-1">
+                  2. Atau Masukkan URL Gambar Direct:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={newPhotoUrlInput}
+                    onChange={(e) => setNewPhotoUrlInput(e.target.value)}
+                    className="flex-1 px-3 py-1.5 rounded-xl bg-black/60 border border-white/20 text-xs text-white placeholder:text-gray-600 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newPhotoUrlInput.trim()) {
+                        setEditHeroPhotos(prev => [...prev, newPhotoUrlInput.trim()]);
+                        setNewPhotoUrlInput('');
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-200 border border-amber-400/40 text-xs font-bold hover:bg-amber-500/30 transition cursor-pointer flex-shrink-0"
+                  >
+                    Tambah
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Save */}
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setHeroModalEvent(null)}
+                className="flex-1 py-2.5 rounded-xl bg-white/10 text-white text-xs font-bold"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  updateEventHeroPhotos(heroModalEvent.id, editHeroPhotos);
+                  setHeroModalEvent(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 text-white text-xs font-bold shadow-lg cursor-pointer"
+              >
+                Simpan Perubahan Foto
+              </button>
+            </div>
 
           </div>
         </div>

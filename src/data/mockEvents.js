@@ -59,6 +59,13 @@ export const PACKAGES = {
 const NOW = Date.now();
 const DAY_MS = 86400 * 1000;
 
+export const DEFAULT_HERO_PHOTOS = [
+  'https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&auto=format&fit=crop&q=85',
+  'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=1600&auto=format&fit=crop&q=85',
+  'https://images.unsplash.com/photo-1606800052052-a08af7148866?w=1600&auto=format&fit=crop&q=85',
+  'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1600&auto=format&fit=crop&q=85',
+];
+
 export const INITIAL_EVENTS = [
   {
     id: 'event_sabrina_raka',
@@ -72,6 +79,7 @@ export const INITIAL_EVENTS = [
     package: 'all_in',
     pin: '',
     templateIds: ['wedding-classic', 'floral-romantic', 'gold-luxury'],
+    heroPhotos: DEFAULT_HERO_PHOTOS,
     expiresAt: NOW + 14 * DAY_MS,
     createdAt: NOW - 2 * DAY_MS,
   },
@@ -87,6 +95,7 @@ export const INITIAL_EVENTS = [
     package: 'standard',
     pin: '1234',
     templateIds: ['vintage-rose', 'midnight-blue'],
+    heroPhotos: DEFAULT_HERO_PHOTOS,
     expiresAt: NOW + 10 * DAY_MS,
     createdAt: NOW - 1 * DAY_MS,
   },
@@ -102,6 +111,7 @@ export const INITIAL_EVENTS = [
     package: 'basic',
     pin: '',
     templateIds: ['celebration'],
+    heroPhotos: DEFAULT_HERO_PHOTOS,
     expiresAt: NOW - 1 * DAY_MS, // Expired yesterday
     createdAt: NOW - 10 * DAY_MS,
   }
