@@ -93,7 +93,7 @@ export default function EventHero() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none z-10" />
 
         {/* ================= 👑 FESTIVE WEDDING NAMES (ROMANTIC POETIC REVEAL) 👑 ================= */}
-        <div className="absolute top-8 xs:top-10 sm:top-16 md:top-20 inset-x-3 sm:inset-x-4 text-center z-20 pointer-events-none flex flex-col items-center">
+        <div className="absolute top-16 xs:top-20 sm:top-24 md:top-28 inset-x-3 sm:inset-x-4 text-center z-20 pointer-events-none flex flex-col items-center">
           
           {/* Item 1: Celebration Badge */}
           <motion.div 

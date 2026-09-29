@@ -8,51 +8,53 @@ export default function SirklenHeader() {
 
   return (
     <motion.header
-      initial={{ opacity: 0, y: -25 }}
-      animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -25 }}
-      transition={{ duration: 0.75, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full bg-[#12070D]/95 backdrop-blur-md border-b border-amber-400/20 text-white sticky top-0 z-50 select-none"
+      initial={{ opacity: 0, y: -20 }}
+      animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }}
+      transition={{ duration: 0.8, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+      className="absolute top-0 inset-x-0 z-40 select-none bg-gradient-to-b from-black/75 via-black/30 to-transparent pointer-events-none"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 sm:py-5 flex items-center justify-between relative">
         
-        {/* Brand Logo & Company Title */}
+        {/* Left balance spacer */}
+        <div className="w-16 sm:w-32" />
+
+        {/* ================= 👑 CENTERED LUXURY FLOATING LOGO 👑 ================= */}
         <div 
           onClick={resetToMasterHome}
-          className="flex items-center gap-2.5 cursor-pointer group"
+          className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-2.5 cursor-pointer group pointer-events-auto transition-transform hover:scale-105 active:scale-95 py-1 px-3 rounded-full hover:bg-white/5"
+          title="Sirklen Photo"
         >
-          {/* Pure Letter N Logo - No Square Box */}
+          {/* Pure Letter N Logo - Floating with Candlelit Glow */}
           <img 
             src={logoPhotoboothWhite} 
             alt="Sirklen Photo Logo" 
-            className="w-8 h-8 sm:w-9 sm:h-9 object-contain group-hover:scale-110 transition" 
+            className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)] group-hover:brightness-110 transition" 
           />
 
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="font-serif font-black text-sm sm:text-base tracking-wide text-white group-hover:text-amber-200 transition">
-                Sirklen Photo
-              </span>
-              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-400/20 border border-amber-400/40 text-amber-300 font-bold">
-                .my.id
-              </span>
-            </div>
-            <span className="text-[8.5px] font-mono text-amber-200/60 uppercase tracking-widest">
-              PT Sirklen Kreasi Usaha
+          <div className="flex items-center gap-1.5">
+            <span 
+              style={{ fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif" }}
+              className="font-bold text-sm sm:text-base tracking-[0.22em] sm:tracking-[0.28em] text-white group-hover:text-amber-200 transition drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] uppercase"
+            >
+              Sirklen Photo
+            </span>
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-amber-400/20 backdrop-blur-md border border-amber-400/40 text-amber-200 font-bold shadow-sm">
+              .my.id
             </span>
           </div>
         </div>
 
-        {/* Navigation / Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* ================= 🌟 RIGHT ACTION / EVENT BADGE 🌟 ================= */}
+        <div className="flex items-center">
           {activeEvent ? (
-            <div className="px-3 py-1 rounded-full bg-white/10 border border-amber-400/20 text-amber-200 text-xs font-serif italic">
+            <div className="hidden xs:inline-flex px-3.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-amber-200 text-xs font-serif italic shadow-lg pointer-events-auto">
               {activeEvent.displayName}
             </div>
           ) : (
             <button
               onClick={navigateToAdmin}
-              className="px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-700/30 border border-amber-400/50 hover:border-amber-300 text-amber-200 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition cursor-pointer"
-              title="Dashboard Admin PT Sirklen Kreasi Usaha"
+              className="px-3.5 sm:px-4 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-amber-400/50 hover:border-amber-300 text-amber-200 text-xs font-serif font-bold flex items-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer pointer-events-auto"
+              title="Portal Admin"
             >
               <Lock size={13} className="text-amber-300" />
               <span>Portal Admin</span>
