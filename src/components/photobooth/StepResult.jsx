@@ -22,6 +22,7 @@ export default function StepResult() {
     guestMessage,
     stripColor,
     voiceUrl,
+    activeEvent,
     submitSession,
     setCurrentStep,
     reset,
@@ -179,10 +180,11 @@ export default function StepResult() {
 
     // Frame Header Branding
     const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
+    const coupleTitle = activeEvent?.displayName ? `✦ ${activeEvent.displayName.toUpperCase()} ✦` : '✦ THE WEDDING OF ✦';
     ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
     ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('✦ THE WEDDING OF ✦', totalW / 2, pad + 38 * scale);
+    ctx.fillText(coupleTitle, totalW / 2, pad + 38 * scale);
 
     // Render Photos with Applied Filter (100% UNCROPPED - EXACT WYSIWYG MATCH)
     const activeFilterObj = PHOTO_FILTERS.find(f => f.id === selectedFilter) || PHOTO_FILTERS[0];

@@ -26,19 +26,51 @@ export function PhotoboothProvider({ children }) {
     }
   }, [events]);
 
-  // 2. Active Slug Resolver (Reads path e.g. /sabrina-raka or query ?event=sabrina-raka)
-  const [currentSlug, setCurrentSlug] = useState(() => {
+  // 2. Multi-Route Architecture Resolver ('admin' | 'setup' | 'event')
+  const resolveRouteFromUrl = useCallback(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      const querySlug = params.get('event') || params.get('slug') || params.get('e');
-      if (querySlug) return querySlug.toLowerCase().trim();
+      if (params.get('admin') === 'true' || params.get('admin') === '1') {
+        return { route: 'admin', slug: '' };
+      }
+      const setupQuery = params.get('setup');
+      if (setupQuery) {
+        return { route: 'setup', slug: setupQuery.toLowerCase().trim() };
+      }
+      const eventQuery = params.get('event') || params.get('slug') || params.get('e');
+      if (eventQuery) {
+        return { route: 'event', slug: eventQuery.toLowerCase().trim() };
+      }
 
-      const path = window.location.pathname.replace(/^\//, '').toLowerCase().trim();
-      return path && path !== 'admin' ? path : '';
+      const rawPath = window.location.pathname.replace(/^\/|\/$/g, '').toLowerCase().trim();
+      if (!rawPath || rawPath === 'admin') {
+        // Landing page tidak diperlukan -> root / dan /admin langsung ke Portal Admin
+        return { route: 'admin', slug: '' };
+      }
+      if (rawPath.startsWith('setup/')) {
+        const setupSlug = rawPath.replace(/^setup\//, '').trim();
+        return { route: 'setup', slug: setupSlug };
+      }
+      // Path lainnya adalah event pengantin (e.g. /sabrina-raka)
+      return { route: 'event', slug: rawPath };
     } catch (e) {
-      return '';
+      return { route: 'admin', slug: '' };
     }
-  });
+  }, []);
+
+  const [routeState, setRouteState] = useState(resolveRouteFromUrl);
+
+  // Sync with browser navigation (Back / Forward buttons)
+  useEffect(() => {
+    const handlePopState = () => {
+      setRouteState(resolveRouteFromUrl());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [resolveRouteFromUrl]);
+
+  const currentRoute = routeState.route; // 'admin' | 'setup' | 'event'
+  const currentSlug = routeState.slug;
 
   // Active Event Object
   const activeEvent = useMemo(() => {
@@ -69,26 +101,32 @@ export function PhotoboothProvider({ children }) {
     return false;
   }, [activeEvent]);
 
-  // Admin Modal Open State
-  const [adminModalOpen, setAdminModalOpen] = useState(false);
-  const openAdminModal = useCallback(() => setAdminModalOpen(true), []);
-  const closeAdminModal = useCallback(() => setAdminModalOpen(false), []);
-
-  // Navigation Helpers
-  const navigateToSlug = useCallback((slug) => {
-    setCurrentSlug(slug);
+  // Navigation Helpers (PushState with clean URL)
+  const navigateToAdmin = useCallback(() => {
+    setRouteState({ route: 'admin', slug: '' });
     try {
-      const newUrl = `${window.location.origin}/?event=${slug}`;
-      window.history.pushState({}, '', newUrl);
+      window.history.pushState({}, '', '/admin');
     } catch (e) {}
   }, []);
 
-  const resetToMasterHome = useCallback(() => {
-    setCurrentSlug('');
+  const navigateToSetup = useCallback((slug) => {
+    const clean = (slug || '').toLowerCase().trim();
+    setRouteState({ route: 'setup', slug: clean });
     try {
-      window.history.pushState({}, '', window.location.origin);
+      window.history.pushState({}, '', `/setup/${clean}`);
     } catch (e) {}
   }, []);
+
+  const navigateToEvent = useCallback((slug) => {
+    const clean = (slug || '').toLowerCase().trim();
+    setRouteState({ route: 'event', slug: clean });
+    try {
+      window.history.pushState({}, '', `/${clean}`);
+    } catch (e) {}
+  }, []);
+
+  const navigateToSlug = navigateToEvent;
+  const resetToMasterHome = navigateToAdmin;
 
   // Event Management (Create, Edit, Delete, Expire, Update Hero Photos)
   const createEvent = useCallback(({ groomName, brideName, slug, eventDate, package: pkgKey, pin, templateIds, heroPhotos }) => {
@@ -136,10 +174,33 @@ export function PhotoboothProvider({ children }) {
 
   const updateEventHeroPhotos = useCallback((eventId, newPhotoUrls) => {
     setEvents(prev => prev.map(e => {
-      if (e.id === eventId) {
+      if (e.id === eventId || e.slug === eventId) {
         return {
           ...e,
           heroPhotos: newPhotoUrls
+        };
+      }
+      return e;
+    }));
+  }, []);
+
+  const updateEventConfig = useCallback((eventId, updates) => {
+    setEvents(prev => prev.map(e => {
+      if (e.id === eventId || e.slug === eventId) {
+        const bride = updates.brideName !== undefined ? updates.brideName : e.brideName;
+        const groom = updates.groomName !== undefined ? updates.groomName : e.groomName;
+        const displayName = (bride && groom) ? `${bride} & ${groom}` : (updates.displayName || e.displayName);
+        const eventDate = updates.eventDate !== undefined ? updates.eventDate : e.eventDate;
+        const formattedDate = eventDate ? new Date(eventDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : e.formattedDate;
+
+        return {
+          ...e,
+          ...updates,
+          brideName: bride,
+          groomName: groom,
+          displayName,
+          eventDate,
+          formattedDate
         };
       }
       return e;
@@ -251,6 +312,7 @@ export function PhotoboothProvider({ children }) {
   return (
     <PhotoboothContext.Provider value={{
       events,
+      currentRoute,
       currentSlug,
       activeEvent,
       isEventExpired,
@@ -259,12 +321,16 @@ export function PhotoboothProvider({ children }) {
       adminModalOpen,
       openAdminModal,
       closeAdminModal,
+      navigateToAdmin,
+      navigateToSetup,
+      navigateToEvent,
       navigateToSlug,
       resetToMasterHome,
       createEvent,
       deleteEvent,
       toggleExpireEvent,
       updateEventHeroPhotos,
+      updateEventConfig,
 
       guestName, setGuestName,
       guestMessage, setGuestMessage,

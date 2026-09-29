@@ -4,7 +4,7 @@ import { useBooth } from '../../context/PhotoboothContext';
 import logoPhotobooth from '../../assets/logo photobooth.png';
 
 export default function SirklenHeader() {
-  const { openAdminModal, activeEvent, currentSlug, resetToMasterHome } = useBooth();
+  const { activeEvent, currentSlug, navigateToAdmin, resetToMasterHome } = useBooth();
 
   return (
     <header className="w-full bg-[#12070D]/95 backdrop-blur-md border-b border-amber-400/20 text-white sticky top-0 z-50 select-none">
@@ -34,26 +34,22 @@ export default function SirklenHeader() {
           </div>
         </div>
 
-        {/* Navigation & Admin Portal Trigger */}
+        {/* Navigation / Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {activeEvent && (
+          {activeEvent ? (
+            <div className="px-3 py-1 rounded-full bg-white/10 border border-amber-400/20 text-amber-200 text-xs font-serif italic">
+              {activeEvent.displayName}
+            </div>
+          ) : (
             <button
-              onClick={resetToMasterHome}
-              className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-sans font-medium transition cursor-pointer hidden sm:flex items-center gap-1"
+              onClick={navigateToAdmin}
+              className="px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-700/30 border border-amber-400/50 hover:border-amber-300 text-amber-200 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition cursor-pointer"
+              title="Dashboard Admin PT Sirklen Kreasi Usaha"
             >
-              <span>Beranda Sirklen</span>
+              <Lock size={13} className="text-amber-300" />
+              <span>Portal Admin</span>
             </button>
           )}
-
-          {/* Admin Dashboard Entry Button */}
-          <button
-            onClick={openAdminModal}
-            className="px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-700/30 border border-amber-400/50 hover:border-amber-300 text-amber-200 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition cursor-pointer"
-            title="Dashboard Admin PT Sirklen Kreasi Usaha"
-          >
-            <Lock size={13} className="text-amber-300" />
-            <span>Dashboard Admin</span>
-          </button>
         </div>
 
       </div>

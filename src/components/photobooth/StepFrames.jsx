@@ -28,6 +28,7 @@ export default function StepFrames() {
     setGuestName,
     guestMessage,
     setGuestMessage,
+    activeEvent,
     setCurrentStep,
     closeBooth 
   } = useBooth();
@@ -102,13 +103,14 @@ export default function StepFrames() {
     ctx.fillRect(0, 0, w, totalH);
 
     // Header branding
+    const coupleTitle = activeEvent?.displayName || 'Sabrina & Raka';
     ctx.fillStyle = theme.textHex;
     ctx.font = 'bold 11px Georgia, serif';
     ctx.textAlign = 'center';
     ctx.fillText('THE WEDDING OF', w / 2, pad + 18);
 
     ctx.font = 'italic bold 17px Georgia, serif';
-    ctx.fillText('Sabrina & Raka', w / 2, pad + 38);
+    ctx.fillText(coupleTitle, w / 2, pad + 38);
 
     // Photo slots
     for (let i = 0; i < count; i++) {
