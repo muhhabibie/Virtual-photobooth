@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Camera, Image as ImageIcon, Sparkles, QrCode, Download, Check, 
   Trash2, Plus, ArrowRight, ExternalLink, Heart, Palette, Eye, Share2, Upload, Crop
@@ -26,7 +27,8 @@ export default function ClientSetupPage() {
     updateEventConfig, 
     updateEventHeroPhotos, 
     navigateToEvent,
-    navigateToAdmin 
+    navigateToAdmin,
+    introReady 
   } = useBooth();
 
   const { toast } = useToast();
@@ -145,7 +147,12 @@ export default function ClientSetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0E050A] text-gray-100 font-sans pb-24 selection:bg-rose-950 selection:text-amber-200">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={introReady ? { opacity: 1 } : { opacity: 0 }}
+      transition={{ duration: 0.6 }}
+      className="min-h-screen bg-[#0E050A] text-gray-100 font-sans pb-24 selection:bg-rose-950 selection:text-amber-200"
+    >
       
       {/* ================= 🌟 TOP HEADER 🌟 ================= */}
       <header className="sticky top-0 z-40 bg-[#140810]/95 backdrop-blur-md border-b border-amber-400/20 px-4 py-3">
@@ -522,6 +529,6 @@ export default function ClientSetupPage() {
         title="Sesuaikan & Crop Foto Prewedding"
       />
 
-    </div>
+    </motion.div>
   );
 }

@@ -12,7 +12,8 @@ export default function EventHero() {
     openBooth, 
     openGalleryModal, 
     isPinAuthenticated, 
-    verifyEventPin 
+    verifyEventPin,
+    introReady
   } = useBooth();
 
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -69,8 +70,11 @@ export default function EventHero() {
       {/* ================= 🌟 1. FULL BLEED SLIDING HERO 🌟 ================= */}
       <div className="relative w-full h-[500px] xs:h-[540px] sm:h-[680px] md:h-[780px] overflow-hidden bg-gray-950">
         
-        {/* Sliding Images Track */}
-        <div 
+        {/* Sliding Images Track with Zoom & Fade Reveal */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 1.08 }}
+          animate={introReady ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.08 }}
+          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
           className="flex h-full w-full transition-transform duration-1000 ease-in-out"
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
         >
@@ -83,22 +87,32 @@ export default function EventHero() {
               />
             </div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Vignette Lighting */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none z-10" />
 
-        {/* ================= 👑 FESTIVE WEDDING NAMES 👑 ================= */}
+        {/* ================= 👑 FESTIVE WEDDING NAMES (STAGGERED CHOREOGRAPHY) 👑 ================= */}
         <div className="absolute top-8 xs:top-10 sm:top-16 md:top-20 inset-x-3 sm:inset-x-4 text-center z-20 pointer-events-none flex flex-col items-center">
           
-          <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-5 py-1 sm:py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 shadow-lg mb-2">
+          {/* Item 1: Celebration Badge */}
+          <motion.div 
+            initial={{ opacity: 0, y: -22 }}
+            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -22 }}
+            transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            className="inline-flex items-center gap-1.5 px-3.5 sm:px-5 py-1 sm:py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 shadow-lg mb-2"
+          >
             <Sparkles size={13} className="text-amber-300" />
             <span className="text-[10px] sm:text-xs font-sans font-semibold tracking-[0.2em] sm:tracking-[0.25em] text-amber-200 uppercase">
               THE WEDDING CELEBRATION OF
             </span>
-          </div>
+          </motion.div>
 
-          <h1 
+          {/* Item 2: Wedding Couple Names (Blur to Sharp Reveal) */}
+          <motion.h1 
+            initial={{ opacity: 0, y: 35, filter: 'blur(10px)' }}
+            animate={introReady ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 35, filter: 'blur(10px)' }}
+            transition={{ duration: 0.85, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="text-5xl xs:text-6xl sm:text-8xl md:text-9xl lg:text-[115px] font-normal text-white mt-1 leading-tight sm:leading-none drop-shadow-2xl"
             style={{ 
               fontFamily: "'Alex Brush', 'Great Vibes', cursive",
@@ -106,24 +120,40 @@ export default function EventHero() {
             }}
           >
             {activeEvent.displayName}
-          </h1>
+          </motion.h1>
 
-          <div className="mt-2 sm:mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 shadow-md">
+          {/* Item 3: Event Date & Venue Badge */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.7, delay: 0.40, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-2 sm:mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 shadow-md"
+          >
             <p className="text-[11px] sm:text-sm text-rose-100 font-medium tracking-wide">
               {activeEvent.formattedDate} • {activeEvent.venue || 'Wedding Venue'}
             </p>
-          </div>
+          </motion.div>
 
-          {/* Package Expiry Pill */}
-          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-400/20 backdrop-blur-md border border-amber-400/40 text-amber-200 text-[10px] font-mono font-bold">
+          {/* Item 4: Package Expiry Pill */}
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+            transition={{ duration: 0.7, delay: 0.52, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-400/20 backdrop-blur-md border border-amber-400/40 text-amber-200 text-[10px] font-mono font-bold"
+          >
             <Clock size={11} />
             <span>Paket {pkgInfo.name} ({isEventExpired ? 'Masa Aktif Selesai' : `Galeri Aktif ${pkgInfo.activeDays} Hari`})</span>
-          </div>
+          </motion.div>
 
         </div>
 
-        {/* Slide Dots */}
-        <div className="absolute bottom-24 sm:bottom-32 inset-x-0 flex items-center justify-center gap-2 z-20 pointer-events-auto">
+        {/* Item 5: Slide Dots */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={introReady ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 0.6, delay: 0.62 }}
+          className="absolute bottom-24 sm:bottom-32 inset-x-0 flex items-center justify-center gap-2 z-20 pointer-events-auto"
+        >
           {slideImages.map((_, idx) => (
             <button
               key={idx}
@@ -135,7 +165,7 @@ export default function EventHero() {
               }`}
             />
           ))}
-        </div>
+        </motion.div>
 
         {/* Fog Bottom Fade */}
         <div 
@@ -154,9 +184,15 @@ export default function EventHero() {
       {/* ==================== 🌟 2. CONTENT & ACTION BUTTONS 🌟 ==================== */}
       <div className="max-w-5xl mx-auto px-4 sm:px-5 relative z-20 -mt-6 sm:-mt-8">
         
-        <p className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed mb-6 font-normal px-2">
+        {/* Item 6: Description Paragraph */}
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.7, delay: 0.72, ease: [0.22, 1, 0.36, 1] }}
+          className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed mb-6 font-normal px-2"
+        >
           Abadikan momen kebahagiaan bersama <strong>{activeEvent.displayName}</strong>. Ambil pose foto terbaikmu dan rekam pesan doa restu yang tersimpan di galeri pernikahan.
-        </p>
+        </motion.p>
 
         {/* Warning if Event is Expired */}
         {isEventExpired ? (
@@ -168,8 +204,13 @@ export default function EventHero() {
             </div>
           </div>
         ) : (
-          /* Main Action Buttons */
-          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-center justify-center gap-3 relative z-20 max-w-md mx-auto">
+          /* Item 7: Main Action Buttons (Spring in with pop) */
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 25 }}
+            animate={introReady ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.9, y: 25 }}
+            transition={{ duration: 0.7, delay: 0.86, type: 'spring', damping: 16, stiffness: 180 }}
+            className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-center justify-center gap-3 relative z-20 max-w-md mx-auto"
+          >
             <button
               onClick={handleStartBooth}
               className="w-full sm:flex-1 py-4 px-6 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] font-serif font-bold text-xs sm:text-sm border border-amber-300/40 shadow-2xl shadow-rose-950/35 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
@@ -185,16 +226,21 @@ export default function EventHero() {
               <BookOpen size={18} />
               <span>Lihat Galeri Foto</span>
             </button>
-          </div>
+          </motion.div>
         )}
 
-        {/* Frame Marquee */}
-        <div className="w-full bg-white pt-6 pb-4 overflow-hidden">
+        {/* Item 8: Frame Marquee */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.8, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full bg-white pt-6 pb-4 overflow-hidden"
+        >
           <div className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-[#6B111F] mb-3 font-sans">
             BINGKAI KHUSUS PERNIKAHAN {activeEvent.displayName.toUpperCase()}
           </div>
           <Marquee />
-        </div>
+        </motion.div>
 
       </div>
 

@@ -1,11 +1,18 @@
+import { motion } from 'framer-motion';
+import { Lock } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import logoPhotoboothWhite from '../../assets/logo photobooth white.png';
 
 export default function SirklenHeader() {
-  const { activeEvent, currentSlug, navigateToAdmin, resetToMasterHome } = useBooth();
+  const { activeEvent, navigateToAdmin, resetToMasterHome, introReady } = useBooth();
 
   return (
-    <header className="w-full bg-[#12070D]/95 backdrop-blur-md border-b border-amber-400/20 text-white sticky top-0 z-50 select-none">
+    <motion.header
+      initial={{ opacity: 0, y: -25 }}
+      animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -25 }}
+      transition={{ duration: 0.75, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+      className="w-full bg-[#12070D]/95 backdrop-blur-md border-b border-amber-400/20 text-white sticky top-0 z-50 select-none"
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between">
         
         {/* Brand Logo & Company Title */}
@@ -54,6 +61,6 @@ export default function SirklenHeader() {
         </div>
 
       </div>
-    </header>
+    </motion.header>
   );
 }

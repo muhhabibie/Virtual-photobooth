@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Plus, Calendar, QrCode, Copy, Trash2, Check, Lock, 
   ExternalLink, Sparkles, Layers, ShieldCheck, Clock, Eye, AlertTriangle, RefreshCw, 
@@ -21,7 +22,8 @@ export default function AdminDashboardPage() {
     updateEventHeroPhotos,
     savedSubmissions,
     navigateToEvent,
-    navigateToSetup
+    navigateToSetup,
+    introReady
   } = useBooth();
 
   const { toast } = useToast();
@@ -199,7 +201,12 @@ export default function AdminDashboardPage() {
   if (!isAdminAuthenticated) {
     return (
       <div className="min-h-screen bg-[#0E050A] text-white flex flex-col items-center justify-center p-4 selection:bg-rose-900 selection:text-amber-200">
-        <div className="w-full max-w-sm p-6 sm:p-8 bg-[#180A12] border border-amber-400/30 rounded-3xl shadow-2xl text-center relative overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.94, y: 20 }}
+          animate={introReady ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.94, y: 20 }}
+          transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-sm p-6 sm:p-8 bg-[#180A12] border border-amber-400/30 rounded-3xl shadow-2xl text-center relative overflow-hidden"
+        >
           
           {/* Pure Letter N Logo - No Square Box */}
           <img 
@@ -251,14 +258,19 @@ export default function AdminDashboardPage() {
           <p className="text-[10px] text-gray-500 font-mono mt-6">
             PT SIRKLEN KREASI USAHA • SISTEM SAAS PHOTOBOOTH
           </p>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   // ================= 🌟 SCREEN 2: DEDICATED FULLSCREEN ADMIN DASHBOARD 🌟 =================
   return (
-    <div className="min-h-screen bg-[#0C0409] text-gray-100 font-sans selection:bg-rose-950 selection:text-amber-200 pb-16">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={introReady ? { opacity: 1 } : { opacity: 0 }}
+      transition={{ duration: 0.6 }}
+      className="min-h-screen bg-[#0C0409] text-gray-100 font-sans selection:bg-rose-950 selection:text-amber-200 pb-16"
+    >
       
       {/* ================= 🌟 TOP HEADER 🌟 ================= */}
       <header className="sticky top-0 z-40 bg-[#160810]/95 backdrop-blur-md border-b border-amber-400/20 px-4 sm:px-8 py-3.5">
@@ -736,6 +748,6 @@ export default function AdminDashboardPage() {
         title="Sesuaikan & Crop Foto Hero Prewedding"
       />
 
-    </div>
+    </motion.div>
   );
 }

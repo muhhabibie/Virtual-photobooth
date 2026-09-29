@@ -26,6 +26,9 @@ export function PhotoboothProvider({ children }) {
     }
   }, [events]);
 
+  // Intro Animation State for synchronizing staggered content reveals
+  const [introReady, setIntroReady] = useState(false);
+
   // 2. Multi-Route Architecture Resolver ('admin' | 'setup' | 'event')
   const resolveRouteFromUrl = useCallback(() => {
     try {
@@ -340,6 +343,8 @@ export function PhotoboothProvider({ children }) {
       toggleExpireEvent,
       updateEventHeroPhotos,
       updateEventConfig,
+      introReady,
+      setIntroReady,
 
       guestName, setGuestName,
       guestMessage, setGuestMessage,
