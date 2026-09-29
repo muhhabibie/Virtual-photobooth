@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Share2, Plus, Volume2, ArrowRight, Sparkles, Heart } from 'lucide-react';
+import { Share2, Plus, Volume2, ArrowRight, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
