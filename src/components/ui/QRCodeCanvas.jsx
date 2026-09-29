@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { Download, QrCode } from 'lucide-react';
+import logoPhotobooth from '../../assets/logo photobooth.png';
 
 export default function QRCodeCanvas({ url, displayName, size = 240, showDownload = true }) {
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&color=6B111F&bgcolor=ffffff`;
@@ -24,6 +25,7 @@ export default function QRCodeCanvas({ url, displayName, size = 240, showDownloa
       
       {/* Brand Header on Card */}
       <div className="flex flex-col items-center">
+        <img src={logoPhotobooth} alt="Sirklen Photo" className="w-8 h-8 object-contain mb-1" />
         <span className="text-[10px] font-mono tracking-widest text-[#6B111F] font-bold uppercase">
           PT SIRKLEN KREASI USAHA
         </span>

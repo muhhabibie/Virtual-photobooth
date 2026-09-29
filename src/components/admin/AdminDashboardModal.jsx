@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { 
   X, Plus, Calendar, QrCode, Copy, Trash2, Check, Lock, 
   ExternalLink, Sparkles, Layers, ShieldCheck, Clock, Eye, AlertTriangle, RefreshCw, Image as ImageIcon, Upload
@@ -6,6 +7,7 @@ import { useBooth } from '../../context/PhotoboothContext';
 import { PACKAGES, DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
 import QRCodeCanvas from '../ui/QRCodeCanvas';
 import { FRAMES } from '../../config/frames';
+import logoPhotobooth from '../../assets/logo photobooth.png';
 
 export default function AdminDashboardModal() {
   const { 
@@ -109,8 +111,8 @@ export default function AdminDashboardModal() {
         {/* Modal Top Header */}
         <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between bg-[#1C0A15]/80 flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
-              <ShieldCheck size={18} />
+            <div className="w-8 h-8 rounded-xl bg-white p-1 shadow flex items-center justify-center">
+              <img src={logoPhotobooth} alt="Sirklen Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h3 className="text-base font-serif font-bold text-amber-200">
@@ -133,8 +135,8 @@ export default function AdminDashboardModal() {
         {/* Security Login PIN Prompt */}
         {!isAdminAuthenticated ? (
           <div className="p-8 sm:p-12 flex flex-col items-center text-center my-auto">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#6B111F] to-[#8A1828] border border-amber-400/50 flex items-center justify-center text-amber-300 shadow-xl mb-4">
-              <Lock size={26} />
+            <div className="w-16 h-16 rounded-2xl bg-white p-2 border border-amber-400/50 flex items-center justify-center shadow-xl mb-4">
+              <img src={logoPhotobooth} alt="Sirklen Logo" className="w-full h-full object-contain" />
             </div>
 
             <h3 className="text-xl font-serif font-bold text-white">

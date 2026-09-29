@@ -3,6 +3,7 @@ import { Camera, Sparkles, QrCode, Mic, Layers, ArrowRight, ShieldCheck, Shoppin
 import { useBooth } from '../../context/PhotoboothContext';
 import SirklenPricing from './SirklenPricing';
 import Marquee from './Marquee';
+import logoPhotobooth from '../../assets/logo photobooth.png';
 
 export default function SirklenMasterLanding() {
   const { openBooth, openAdminModal, events, navigateToSlug } = useBooth();
@@ -24,8 +25,10 @@ export default function SirklenMasterLanding() {
         <div className="max-w-4xl mx-auto relative z-10">
           
           {/* Company Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/60 border border-amber-400/40 text-amber-200 text-xs font-mono font-bold tracking-widest uppercase mb-6 shadow-lg backdrop-blur-md">
-            <Sparkles size={13} className="text-amber-300 animate-pulse" />
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/60 border border-amber-400/40 text-amber-200 text-xs font-mono font-bold tracking-widest uppercase mb-6 shadow-lg backdrop-blur-md">
+            <div className="w-5 h-5 rounded-full bg-white p-0.5 flex items-center justify-center">
+              <img src={logoPhotobooth} alt="Sirklen Logo" className="w-full h-full object-contain" />
+            </div>
             <span>PT SIRKLEN KREASI USAHA • SIRKLEN PHOTO</span>
           </div>
 
@@ -133,6 +136,9 @@ export default function SirklenMasterLanding() {
       {/* ================= 🌟 4. FOOTER BRANDING 🌟 ================= */}
       <footer className="py-8 bg-black text-gray-400 border-t border-white/10 text-center text-xs font-mono">
         <div className="max-w-4xl mx-auto px-4 flex flex-col items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center mb-1 shadow-md">
+            <img src={logoPhotobooth} alt="Sirklen Logo" className="w-full h-full object-contain" />
+          </div>
           <p className="text-amber-200 font-serif font-bold">
             PT SIRKLEN KREASI USAHA — Sirklen Photo
           </p>

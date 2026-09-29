@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import logoPhotobooth from '../../assets/logo photobooth.png';
 
 export default function IntroSplashLoader({ onComplete }) {
   const [stage, setStage] = useState('visible'); // 'visible' | 'wiping' | 'fading' | 'done'
@@ -62,15 +63,12 @@ export default function IntroSplashLoader({ onComplete }) {
               transition={{ duration: 0.5, ease: 'easeOut' }}
               className="flex flex-col items-center text-center px-4"
             >
-              {/* Professional Camera Monogram Emblem */}
-              <svg 
-                viewBox="0 0 100 100" 
-                fill="currentColor" 
-                className="w-16 h-16 sm:w-20 sm:h-20 text-[#6B111F] mb-3"
-              >
-                <path d="M50 8 C28 8 18 26 18 46 L18 90 L33 90 L33 46 C33 33 39 22 50 22 C61 22 67 33 67 46 L67 90 L82 90 L82 46 C82 26 72 8 50 8 Z" />
-                <circle cx="50" cy="56" r="7.5" />
-              </svg>
+              {/* Sirklen Brand Logo */}
+              <img 
+                src={logoPhotobooth} 
+                alt="Sirklen Photo Logo" 
+                className="w-20 h-20 sm:w-24 sm:h-24 object-contain mb-3 drop-shadow-sm"
+              />
 
               {/* Title & Tagline */}
               <h1 

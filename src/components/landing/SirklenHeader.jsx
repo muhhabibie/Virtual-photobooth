@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Camera, Sparkles, Lock, ExternalLink, QrCode, ShieldCheck } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
+import logoPhotobooth from '../../assets/logo photobooth.png';
 
 export default function SirklenHeader() {
   const { openAdminModal, activeEvent, currentSlug, resetToMasterHome } = useBooth();
@@ -14,10 +15,8 @@ export default function SirklenHeader() {
           onClick={resetToMasterHome}
           className="flex items-center gap-2.5 cursor-pointer group"
         >
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#6B111F] via-[#8A1828] to-[#C4A46C] p-0.5 shadow-lg group-hover:scale-105 transition">
-            <div className="w-full h-full bg-[#16080E] rounded-[10px] flex items-center justify-center text-amber-200">
-              <Camera size={18} />
-            </div>
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white p-1 shadow-lg group-hover:scale-105 transition flex items-center justify-center">
+            <img src={logoPhotobooth} alt="Sirklen Photo Logo" className="w-full h-full object-contain" />
           </div>
 
           <div className="flex flex-col">
