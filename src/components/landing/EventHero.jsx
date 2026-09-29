@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, BookOpen, Lock, ShieldAlert, Sparkles, Clock, Calendar } from 'lucide-react';
+import { Camera, BookOpen, Lock, ShieldAlert, Clock, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
@@ -68,7 +68,7 @@ export default function EventHero() {
     <section id="beranda" className="pt-0 pb-0 overflow-hidden text-center relative bg-white select-none">
       
       {/* ================= 🌟 1. FULL BLEED SLIDING HERO 🌟 ================= */}
-      <div className="relative w-full h-[500px] xs:h-[540px] sm:h-[680px] md:h-[780px] overflow-hidden bg-gray-950">
+      <div className="relative w-full h-[520px] xs:h-[560px] sm:h-[680px] md:h-[780px] overflow-hidden bg-gray-950">
         
         {/* Sliding Images Track with Romantic Ken-Burns Zoom & Fade Reveal */}
         <motion.div 
@@ -89,34 +89,43 @@ export default function EventHero() {
           ))}
         </motion.div>
 
-        {/* Vignette Lighting */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none z-10" />
+        {/* Balanced Top & Bottom Vignette (Leaves center clear for photo subjects) */}
+        <div 
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{
+            background: `linear-gradient(to bottom, 
+              rgba(0, 0, 0, 0.6) 0%, 
+              transparent 30%, 
+              transparent 55%, 
+              rgba(0, 0, 0, 0.72) 100%
+            )`
+          }}
+        />
 
-        {/* ================= 👑 FESTIVE WEDDING NAMES (ROMANTIC POETIC REVEAL) 👑 ================= */}
-        <div className="absolute top-16 xs:top-20 sm:top-24 md:top-28 inset-x-3 sm:inset-x-4 text-center z-20 pointer-events-none flex flex-col items-center">
+        {/* ================= 👑 FESTIVE WEDDING NAMES (CINEMATIC LOWER-THIRD PLACEMENT) 👑 ================= */}
+        <div className="absolute bottom-6 sm:bottom-10 inset-x-3 sm:inset-x-4 text-center z-20 pointer-events-none flex flex-col items-center">
           
-          {/* Item 1: Celebration Badge */}
+          {/* Item 1: Celebration Badge (Clean Typography, NO Gemini Star) */}
           <motion.div 
-            initial={{ opacity: 0, y: -16 }}
-            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 1, 0.5, 1] }}
-            className="inline-flex items-center gap-1.5 px-3.5 sm:px-5 py-1 sm:py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 shadow-lg mb-2"
+            className="px-3.5 py-1 rounded-full bg-black/45 backdrop-blur-md border border-white/20 shadow-lg mb-1"
           >
-            <Sparkles size={13} className="text-amber-300" />
-            <span className="text-[10px] sm:text-xs font-sans font-semibold tracking-[0.2em] sm:tracking-[0.25em] text-amber-200 uppercase">
+            <span className="text-[9.5px] sm:text-xs font-sans font-semibold tracking-[0.22em] sm:tracking-[0.28em] text-amber-200 uppercase">
               THE WEDDING CELEBRATION OF
             </span>
           </motion.div>
 
           {/* Item 2: Wedding Couple Names (Dreamy Blur to Sharp Romantic Script) */}
           <motion.h1 
-            initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
-            animate={introReady ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 30, filter: 'blur(10px)' }}
+            initial={{ opacity: 0, y: 25, filter: 'blur(10px)' }}
+            animate={introReady ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 25, filter: 'blur(10px)' }}
             transition={{ duration: 1.0, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
-            className="text-5xl xs:text-6xl sm:text-8xl md:text-9xl lg:text-[115px] font-normal text-white mt-1 leading-tight sm:leading-none drop-shadow-2xl"
+            className="text-4xl xs:text-5xl sm:text-7xl md:text-8xl font-normal text-white mt-0.5 leading-tight sm:leading-none drop-shadow-2xl"
             style={{ 
               fontFamily: "'Alex Brush', 'Great Vibes', cursive",
-              textShadow: '0 4px 30px rgba(0,0,0,0.85), 0 0 50px rgba(245,215,127,0.45)'
+              textShadow: '0 4px 30px rgba(0,0,0,0.9), 0 0 45px rgba(245,215,127,0.45)'
             }}
           >
             {activeEvent.displayName}
@@ -127,53 +136,42 @@ export default function EventHero() {
             initial={{ opacity: 0, y: 16 }}
             animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
             transition={{ duration: 0.8, delay: 0.45, ease: [0.25, 1, 0.5, 1] }}
-            className="mt-2 sm:mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 shadow-md"
+            className="mt-1.5 inline-flex items-center px-4 py-1 rounded-full bg-black/45 backdrop-blur-md border border-white/15 shadow-md"
           >
-            <p className="text-[11px] sm:text-sm text-rose-100 font-medium tracking-wide">
+            <p className="text-[11px] sm:text-xs text-rose-100 font-medium tracking-wide">
               {activeEvent.formattedDate} • {activeEvent.venue || 'Wedding Venue'}
             </p>
           </motion.div>
 
-          {/* Item 4: Package Expiry Pill */}
+          {/* Item 4: Slide Dots */}
           <motion.div 
-            initial={{ opacity: 0, y: 14 }}
-            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-            transition={{ duration: 0.8, delay: 0.60, ease: [0.25, 1, 0.5, 1] }}
-            className="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-400/20 backdrop-blur-md border border-amber-400/40 text-amber-200 text-[10px] font-mono font-bold"
+            initial={{ opacity: 0 }}
+            animate={introReady ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.7, delay: 0.65 }}
+            className="mt-3 flex items-center justify-center gap-2 pointer-events-auto"
           >
-            <Clock size={11} />
-            <span>Paket {pkgInfo.name} ({isEventExpired ? 'Masa Aktif Selesai' : `Galeri Aktif ${pkgInfo.activeDays} Hari`})</span>
+            {slideImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                className={`transition-all duration-500 rounded-full cursor-pointer ${
+                  idx === currentSlide
+                    ? 'w-6 h-2 bg-amber-300 shadow-lg shadow-amber-300/50'
+                    : 'w-2 h-2 bg-white/60 hover:bg-white'
+                }`}
+              />
+            ))}
           </motion.div>
 
         </div>
 
-        {/* Item 5: Slide Dots */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={introReady ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.7, delay: 0.70 }}
-          className="absolute bottom-24 sm:bottom-32 inset-x-0 flex items-center justify-center gap-2 z-20 pointer-events-auto"
-        >
-          {slideImages.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentSlide(idx)}
-              className={`transition-all duration-500 rounded-full cursor-pointer ${
-                idx === currentSlide
-                  ? 'w-6 h-2 bg-amber-300 shadow-lg shadow-amber-300/50'
-                  : 'w-2 h-2 bg-white/60 hover:bg-white'
-              }`}
-            />
-          ))}
-        </motion.div>
-
-        {/* Fog Bottom Fade */}
+        {/* Gentle Fog Bottom Blend into White Card */}
         <div 
-          className="absolute bottom-0 inset-x-0 h-36 sm:h-64 pointer-events-none z-10"
+          className="absolute bottom-0 inset-x-0 h-16 sm:h-24 pointer-events-none z-10"
           style={{
             background: `linear-gradient(to top, 
-              #ffffff 15%, 
-              rgba(255, 255, 255, 0.95) 38%, 
+              #ffffff 10%, 
+              rgba(255, 255, 255, 0.65) 45%, 
               rgba(255, 255, 255, 0) 100%
             )`
           }}
@@ -182,13 +180,24 @@ export default function EventHero() {
       </div>
 
       {/* ==================== 🌟 2. CONTENT & ACTION BUTTONS 🌟 ==================== */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-5 relative z-20 -mt-6 sm:-mt-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-5 relative z-20 pt-6 pb-2">
         
-        {/* Item 6: Description Paragraph (Gentle Fade Up) */}
+        {/* Package Expiry Pill - Positioned Professionally Above Content */}
+        <motion.div 
+          initial={{ opacity: 0, y: 12 }}
+          animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={{ duration: 0.7, delay: 0.75, ease: [0.25, 1, 0.5, 1] }}
+          className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-400/15 border border-amber-400/35 text-amber-900 text-[10.5px] font-mono font-bold mb-3 shadow-sm"
+        >
+          <Clock size={12} className="text-amber-700" />
+          <span>Paket {pkgInfo.name} ({isEventExpired ? 'Masa Aktif Selesai' : `Galeri Aktif ${pkgInfo.activeDays} Hari`})</span>
+        </motion.div>
+
+        {/* Item 5: Description Paragraph */}
         <motion.p 
           initial={{ opacity: 0, y: 16 }}
           animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-          transition={{ duration: 0.8, delay: 0.80, ease: [0.25, 1, 0.5, 1] }}
+          transition={{ duration: 0.8, delay: 0.85, ease: [0.25, 1, 0.5, 1] }}
           className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed mb-6 font-normal px-2"
         >
           Abadikan momen kebahagiaan bersama <strong>{activeEvent.displayName}</strong>. Ambil pose foto terbaikmu dan rekam pesan doa restu yang tersimpan di galeri pernikahan.
@@ -204,7 +213,7 @@ export default function EventHero() {
             </div>
           </div>
         ) : (
-          /* Item 7: Main Action Buttons (Luxurious Floating Entrance) */
+          /* Item 6: Main Action Buttons (Luxurious Floating Entrance) */
           <motion.div 
             initial={{ opacity: 0, y: 22 }}
             animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
@@ -229,7 +238,7 @@ export default function EventHero() {
           </motion.div>
         )}
 
-        {/* Item 8: Frame Marquee */}
+        {/* Item 7: Frame Marquee */}
         <motion.div 
           initial={{ opacity: 0, y: 26 }}
           animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 26 }}
