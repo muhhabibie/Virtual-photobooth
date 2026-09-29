@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, BookOpen, Lock, ShieldAlert, Clock, Calendar } from 'lucide-react';
+import { Camera, BookOpen, Lock, ShieldAlert, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
@@ -93,7 +93,7 @@ export default function EventHero() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none z-10" />
 
         {/* ================= 👑 FESTIVE WEDDING NAMES (ROMANTIC POETIC REVEAL) 👑 ================= */}
-        <div className="absolute top-16 xs:top-20 sm:top-24 md:top-28 inset-x-3 sm:inset-x-4 text-center z-20 pointer-events-none flex flex-col items-center">
+        <div className="absolute top-10 xs:top-12 sm:top-16 md:top-20 inset-x-3 sm:inset-x-4 text-center z-20 pointer-events-none flex flex-col items-center">
           
           {/* Item 1: Celebration Badge */}
           <motion.div 
@@ -131,17 +131,6 @@ export default function EventHero() {
             <p className="text-[11px] sm:text-sm text-rose-100 font-medium tracking-wide">
               {activeEvent.formattedDate} • {activeEvent.venue || 'Wedding Venue'}
             </p>
-          </motion.div>
-
-          {/* Item 4: Package Expiry Pill */}
-          <motion.div 
-            initial={{ opacity: 0, y: 14 }}
-            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-            transition={{ duration: 0.8, delay: 0.60, ease: [0.25, 1, 0.5, 1] }}
-            className="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-400/20 backdrop-blur-md border border-amber-400/40 text-amber-200 text-[10px] font-mono font-bold"
-          >
-            <Clock size={11} />
-            <span>Paket {pkgInfo.name} ({isEventExpired ? 'Masa Aktif Selesai' : `Galeri Aktif ${pkgInfo.activeDays} Hari`})</span>
           </motion.div>
 
         </div>
