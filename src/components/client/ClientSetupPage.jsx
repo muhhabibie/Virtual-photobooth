@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
 import { 
   Camera, Image as ImageIcon, Sparkles, QrCode, Download, Check, 
-  Trash2, Plus, ArrowRight, ExternalLink, Heart, Palette, Eye, Share2, Upload
+  Trash2, Plus, ArrowRight, ExternalLink, Heart, Palette, Eye, Share2, Upload, Crop
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import QRCodeCanvas from '../ui/QRCodeCanvas';
+import PhotoCropModal from '../ui/PhotoCropModal';
 import logoPhotobooth from '../../assets/logo photobooth.png';
 import logoPhotoboothWhite from '../../assets/logo photobooth white.png';
 
@@ -43,6 +44,11 @@ export default function ClientSetupPage() {
   const [activeTab, setActiveTab] = useState('photos'); // 'photos' | 'theme' | 'qr'
   const [isSaved, setIsSaved] = useState(false);
 
+  // Photo Crop Modal State
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [currentCropImage, setCurrentCropImage] = useState(null);
+  const [activeCropIdx, setActiveCropIdx] = useState(null); // null = add new, number = re-crop existing
+
   const fileInputRef = useRef(null);
 
   if (!event) {
@@ -60,37 +66,62 @@ export default function ClientSetupPage() {
     );
   }
 
-  // Handle uploading photos from device
+  // Handle uploading photos from device - opens Crop modal
   const handleFileUpload = (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
-      if (!file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = (eventResult) => {
-        const base64Url = eventResult.target.result;
-        setHeroPhotos((prev) => [...prev, base64Url]);
-        setIsSaved(false);
-      };
-      reader.readAsDataURL(file);
-    });
+    const file = files[0];
+    if (!file.type.startsWith('image/')) return;
 
-    toast(`${files.length} foto berhasil dipilih!`, 'success');
+    const reader = new FileReader();
+    reader.onload = (eventResult) => {
+      const base64Url = eventResult.target.result;
+      setCurrentCropImage(base64Url);
+      setActiveCropIdx(null); // adding new photo
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
     e.target.value = '';
+  };
+
+  // Re-crop an existing photo
+  const handleStartCropExisting = (idx) => {
+    setCurrentCropImage(heroPhotos[idx]);
+    setActiveCropIdx(idx);
+    setCropModalOpen(true);
+  };
+
+  // When crop is finished in modal
+  const handleCropComplete = (croppedBase64) => {
+    if (activeCropIdx !== null) {
+      // Replace existing photo at index
+      setHeroPhotos(prev => prev.map((p, i) => i === activeCropIdx ? croppedBase64 : p));
+      toast('Foto berhasil di-crop & disesuaikan! ✨', 'success');
+    } else {
+      // Add as new photo
+      setHeroPhotos(prev => [...prev, croppedBase64]);
+      toast('Foto baru berhasil di-crop & ditambahkan! ✨', 'success');
+    }
+    setCropModalOpen(false);
+    setCurrentCropImage(null);
+    setActiveCropIdx(null);
+    setIsSaved(false);
   };
 
   const handleAddUrl = () => {
     if (!newPhotoUrl.trim()) return;
-    setHeroPhotos((prev) => [...prev, newPhotoUrl.trim()]);
+    // Open crop modal directly for this URL so they can frame it
+    setCurrentCropImage(newPhotoUrl.trim());
+    setActiveCropIdx(null);
+    setCropModalOpen(true);
     setNewPhotoUrl('');
-    setIsSaved(false);
-    toast('Foto ditambahkan ke daftar', 'success');
   };
 
   const handleRemovePhoto = (idx) => {
     setHeroPhotos((prev) => prev.filter((_, i) => i !== idx));
     setIsSaved(false);
+    toast('Foto dihapus dari daftar', 'info');
   };
 
   // Save all changes
@@ -251,16 +282,30 @@ export default function ClientSetupPage() {
             {/* Photo Preview Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {heroPhotos.map((url, idx) => (
-                <div key={idx} className="relative aspect-[3/4] rounded-xl overflow-hidden border border-white/15 bg-black/40 group shadow-md">
+                <div key={idx} className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/20 bg-black/40 group shadow-lg">
                   <img src={url} alt={`Prewedding ${idx + 1}`} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition flex items-end justify-between p-2">
-                    <span className="text-[10px] font-mono text-amber-200 font-bold">#{idx + 1}</span>
+                  
+                  {/* Action buttons (Clean and fully accessible on mobile) */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/60 sm:opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-amber-200 font-bold bg-black/60 px-2 py-0.5 rounded-full border border-white/10">
+                        #{idx + 1}
+                      </span>
+                      <button
+                        onClick={() => handleRemovePhoto(idx)}
+                        className="p-1.5 rounded-full bg-red-600/90 hover:bg-red-700 text-white transition active:scale-90 cursor-pointer shadow-md"
+                        title="Hapus foto ini"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+
                     <button
-                      onClick={() => handleRemovePhoto(idx)}
-                      className="p-1 rounded-full bg-red-600/90 text-white hover:bg-red-700 transition"
-                      title="Hapus foto ini"
+                      onClick={() => handleStartCropExisting(idx)}
+                      className="w-full py-1.5 rounded-xl bg-black/80 hover:bg-black border border-amber-400/60 text-amber-200 text-[10px] font-serif font-bold flex items-center justify-center gap-1.5 backdrop-blur-md active:scale-95 transition shadow-md cursor-pointer"
                     >
-                      <Trash2 size={12} />
+                      <Crop size={12} className="text-amber-300" />
+                      <span>Sesuaikan / Crop</span>
                     </button>
                   </div>
                 </div>
@@ -269,13 +314,13 @@ export default function ClientSetupPage() {
               {/* Add New Empty Slot */}
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="aspect-[3/4] rounded-xl border-2 border-dashed border-white/20 hover:border-amber-400/50 bg-white/5 flex flex-col items-center justify-center p-3 text-center cursor-pointer transition group"
+                className="aspect-[3/4] rounded-2xl border-2 border-dashed border-white/20 hover:border-amber-400/50 bg-white/5 flex flex-col items-center justify-center p-3 text-center cursor-pointer transition group"
               >
-                <div className="w-9 h-9 rounded-full bg-white/10 group-hover:bg-amber-400/20 flex items-center justify-center text-gray-400 group-hover:text-amber-300 transition mb-2">
-                  <Plus size={18} />
+                <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-amber-400/20 flex items-center justify-center text-gray-400 group-hover:text-amber-300 transition mb-2">
+                  <Plus size={20} />
                 </div>
-                <span className="text-[11px] font-serif text-gray-300 group-hover:text-white font-medium">Pilih dari HP</span>
-                <span className="text-[9px] text-gray-500 font-mono">Bisa beberapa foto</span>
+                <span className="text-xs font-serif text-gray-300 group-hover:text-white font-medium">Pilih dari HP</span>
+                <span className="text-[9px] text-gray-500 font-mono">Bisa langsung di-crop</span>
               </div>
             </div>
 
@@ -463,6 +508,19 @@ export default function ClientSetupPage() {
           </button>
         </div>
       </div>
+
+      {/* ================= 🌟 PHOTO CROP MODAL 🌟 ================= */}
+      <PhotoCropModal
+        isOpen={cropModalOpen}
+        imageUrl={currentCropImage}
+        onCropComplete={handleCropComplete}
+        onCancel={() => {
+          setCropModalOpen(false);
+          setCurrentCropImage(null);
+          setActiveCropIdx(null);
+        }}
+        title="Sesuaikan & Crop Foto Prewedding"
+      />
 
     </div>
   );

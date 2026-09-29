@@ -2,11 +2,12 @@ import { useState, useMemo } from 'react';
 import { 
   Plus, Calendar, QrCode, Copy, Trash2, Check, Lock, 
   ExternalLink, Sparkles, Layers, ShieldCheck, Clock, Eye, AlertTriangle, RefreshCw, 
-  Image as ImageIcon, Upload, MessageCircle, Share2, LogOut
+  Image as ImageIcon, Upload, MessageCircle, Share2, LogOut, Crop
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { PACKAGES, DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
 import QRCodeCanvas from '../ui/QRCodeCanvas';
+import PhotoCropModal from '../ui/PhotoCropModal';
 import logoPhotobooth from '../../assets/logo photobooth.png';
 import logoPhotoboothWhite from '../../assets/logo photobooth white.png';
 import { useToast } from '../ui/Toast';
@@ -34,6 +35,11 @@ export default function AdminDashboardPage() {
   const [heroModalEvent, setHeroModalEvent] = useState(null);
   const [editHeroPhotos, setEditHeroPhotos] = useState([]);
   const [newPhotoUrlInput, setNewPhotoUrlInput] = useState('');
+
+  // Photo Crop Modal State
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [currentCropImage, setCurrentCropImage] = useState(null);
+  const [activeCropIdx, setActiveCropIdx] = useState(null); // null = new photo, number = existing photo
 
   // Active Tab inside Dashboard: 'events' | 'qr' | 'submissions'
   const [activeTab, setActiveTab] = useState('events');
@@ -132,7 +138,10 @@ export default function AdminDashboardPage() {
 
   const handleAddHeroPhotoUrl = () => {
     if (!newPhotoUrlInput.trim()) return;
-    setEditHeroPhotos(prev => [...prev, newPhotoUrlInput.trim()]);
+    // Open crop modal for this URL
+    setCurrentCropImage(newPhotoUrlInput.trim());
+    setActiveCropIdx(null);
+    setCropModalOpen(true);
     setNewPhotoUrlInput('');
   };
 
@@ -140,20 +149,43 @@ export default function AdminDashboardPage() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach(file => {
-      if (!file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        const base64Url = uploadEvent.target.result;
-        setEditHeroPhotos(prev => [...prev, base64Url]);
-      };
-      reader.readAsDataURL(file);
-    });
+    const file = files[0];
+    if (!file.type.startsWith('image/')) return;
+
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const base64Url = uploadEvent.target.result;
+      setCurrentCropImage(base64Url);
+      setActiveCropIdx(null); // adding new
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
     e.target.value = '';
+  };
+
+  // Re-crop existing hero photo
+  const handleStartCropHeroPhoto = (idx) => {
+    setCurrentCropImage(editHeroPhotos[idx]);
+    setActiveCropIdx(idx);
+    setCropModalOpen(true);
+  };
+
+  const handleCropCompleteHeroPhoto = (croppedBase64) => {
+    if (activeCropIdx !== null) {
+      setEditHeroPhotos(prev => prev.map((p, i) => i === activeCropIdx ? croppedBase64 : p));
+      toast('Foto berhasil di-crop & disesuaikan!', 'success');
+    } else {
+      setEditHeroPhotos(prev => [...prev, croppedBase64]);
+      toast('Foto baru berhasil di-crop & ditambahkan!', 'success');
+    }
+    setCropModalOpen(false);
+    setCurrentCropImage(null);
+    setActiveCropIdx(null);
   };
 
   const handleRemoveHeroPhoto = (idx) => {
     setEditHeroPhotos(prev => prev.filter((_, i) => i !== idx));
+    toast('Foto dihapus dari daftar', 'info');
   };
 
   const handleSaveHeroPhotos = () => {
@@ -605,16 +637,34 @@ export default function AdminDashboardPage() {
             </p>
 
             {/* Photo Preview Grid */}
-            <div className="grid grid-cols-3 gap-2.5 max-h-60 overflow-y-auto p-1 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-72 overflow-y-auto p-1 mb-4 no-scrollbar">
               {editHeroPhotos.map((url, idx) => (
-                <div key={idx} className="relative aspect-[3/4] rounded-xl overflow-hidden border border-white/20 bg-black/40 group">
+                <div key={idx} className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/20 bg-black/40 group shadow-md">
                   <img src={url} alt={`Hero ${idx + 1}`} className="w-full h-full object-cover" />
-                  <button
-                    onClick={() => handleRemoveHeroPhoto(idx)}
-                    className="absolute top-1 right-1 p-1 rounded-full bg-red-600 text-white opacity-0 group-hover:opacity-100 transition"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  
+                  {/* Action overlays */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/60 sm:opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-amber-200 font-bold bg-black/60 px-2 py-0.5 rounded-full border border-white/10">
+                        #{idx + 1}
+                      </span>
+                      <button
+                        onClick={() => handleRemoveHeroPhoto(idx)}
+                        className="p-1.5 rounded-full bg-red-600/90 hover:bg-red-700 text-white transition active:scale-90 cursor-pointer shadow-md"
+                        title="Hapus foto ini"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => handleStartCropHeroPhoto(idx)}
+                      className="w-full py-1.5 rounded-xl bg-black/80 hover:bg-black border border-amber-400/60 text-amber-200 text-[10px] font-serif font-bold flex items-center justify-center gap-1 backdrop-blur-md active:scale-95 transition shadow-md cursor-pointer"
+                    >
+                      <Crop size={12} className="text-amber-300" />
+                      <span>Sesuaikan / Crop</span>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -672,6 +722,19 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* ================= 🌟 MODAL: PHOTO CROPPER 🌟 ================= */}
+      <PhotoCropModal
+        isOpen={cropModalOpen}
+        imageUrl={currentCropImage}
+        onCropComplete={handleCropCompleteHeroPhoto}
+        onCancel={() => {
+          setCropModalOpen(false);
+          setCurrentCropImage(null);
+          setActiveCropIdx(null);
+        }}
+        title="Sesuaikan & Crop Foto Hero Prewedding"
+      />
 
     </div>
   );
