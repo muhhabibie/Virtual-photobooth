@@ -128,6 +128,15 @@ export function PhotoboothProvider({ children }) {
   const navigateToSlug = navigateToEvent;
   const resetToMasterHome = navigateToAdmin;
 
+  // Backwards compatibility for Admin triggers
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const openAdminModal = useCallback(() => {
+    navigateToAdmin();
+  }, [navigateToAdmin]);
+  const closeAdminModal = useCallback(() => {
+    setAdminModalOpen(false);
+  }, []);
+
   // Event Management (Create, Edit, Delete, Expire, Update Hero Photos)
   const createEvent = useCallback(({ groomName, brideName, slug, eventDate, package: pkgKey, pin, templateIds, heroPhotos }) => {
     const pkg = PACKAGES[pkgKey] || PACKAGES.standard;

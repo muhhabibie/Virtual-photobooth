@@ -7,6 +7,7 @@ import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import QRCodeCanvas from '../ui/QRCodeCanvas';
 import logoPhotobooth from '../../assets/logo photobooth.png';
+import logoPhotoboothWhite from '../../assets/logo photobooth white.png';
 
 const COLOR_PALETTES = [
   { id: 'burgundy', name: 'Royal Burgundy', hex: '#6B111F', textHex: '#F5D77F' },
@@ -119,9 +120,12 @@ export default function ClientSetupPage() {
       <header className="sticky top-0 z-40 bg-[#140810]/95 backdrop-blur-md border-b border-amber-400/20 px-4 py-3">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center shadow-md">
-              <img src={logoPhotobooth} alt="Sirklen Logo" className="w-full h-full object-contain" />
-            </div>
+            {/* Pure Letter N Logo - No Square Box */}
+            <img 
+              src={logoPhotoboothWhite} 
+              alt="Sirklen Logo" 
+              className="w-7 h-7 sm:w-8 sm:h-8 object-contain" 
+            />
             <div>
               <span className="text-xs font-serif font-bold text-white block">Sirklen Photo</span>
               <span className="text-[9px] font-mono text-amber-300/80 uppercase tracking-widest block">Portal Mandiri Pengantin</span>

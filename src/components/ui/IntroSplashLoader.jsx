@@ -63,11 +63,11 @@ export default function IntroSplashLoader({ onComplete }) {
               transition={{ duration: 0.5, ease: 'easeOut' }}
               className="flex flex-col items-center text-center px-4"
             >
-              {/* Sirklen Brand Logo */}
+              {/* Sirklen Brand Logo - Pure Monogram Letter N */}
               <img 
                 src={logoPhotobooth} 
                 alt="Sirklen Photo Logo" 
-                className="w-20 h-20 sm:w-24 sm:h-24 object-contain mb-3 drop-shadow-sm"
+                className="w-16 h-16 sm:w-20 sm:h-20 object-contain mb-3 select-none"
               />
 
               {/* Title & Tagline */}

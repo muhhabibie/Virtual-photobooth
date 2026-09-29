@@ -1,7 +1,5 @@
-import { useState } from 'react';
-import { Camera, Sparkles, Lock, ExternalLink, QrCode, ShieldCheck } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
-import logoPhotobooth from '../../assets/logo photobooth.png';
+import logoPhotoboothWhite from '../../assets/logo photobooth white.png';
 
 export default function SirklenHeader() {
   const { activeEvent, currentSlug, navigateToAdmin, resetToMasterHome } = useBooth();
@@ -15,9 +13,12 @@ export default function SirklenHeader() {
           onClick={resetToMasterHome}
           className="flex items-center gap-2.5 cursor-pointer group"
         >
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white p-1 shadow-lg group-hover:scale-105 transition flex items-center justify-center">
-            <img src={logoPhotobooth} alt="Sirklen Photo Logo" className="w-full h-full object-contain" />
-          </div>
+          {/* Pure Letter N Logo - No Square Box */}
+          <img 
+            src={logoPhotoboothWhite} 
+            alt="Sirklen Photo Logo" 
+            className="w-8 h-8 sm:w-9 sm:h-9 object-contain group-hover:scale-110 transition" 
+          />
 
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">

@@ -7,8 +7,8 @@ import {
 import { useBooth } from '../../context/PhotoboothContext';
 import { PACKAGES, DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
 import QRCodeCanvas from '../ui/QRCodeCanvas';
-import { FRAMES } from '../../config/frames';
 import logoPhotobooth from '../../assets/logo photobooth.png';
+import logoPhotoboothWhite from '../../assets/logo photobooth white.png';
 import { useToast } from '../ui/Toast';
 
 export default function AdminDashboardPage() {
@@ -169,9 +169,12 @@ export default function AdminDashboardPage() {
       <div className="min-h-screen bg-[#0E050A] text-white flex flex-col items-center justify-center p-4 selection:bg-rose-900 selection:text-amber-200">
         <div className="w-full max-w-sm p-6 sm:p-8 bg-[#180A12] border border-amber-400/30 rounded-3xl shadow-2xl text-center relative overflow-hidden">
           
-          <div className="w-16 h-16 rounded-2xl bg-white p-2.5 mx-auto mb-4 shadow-xl border border-amber-400/30 flex items-center justify-center">
-            <img src={logoPhotobooth} alt="Sirklen Photo" className="w-full h-full object-contain" />
-          </div>
+          {/* Pure Letter N Logo - No Square Box */}
+          <img 
+            src={logoPhotoboothWhite} 
+            alt="Sirklen Photo" 
+            className="w-14 h-14 object-contain mx-auto mb-4 drop-shadow-md select-none" 
+          />
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-200 text-[10px] font-mono font-bold tracking-widest uppercase mb-3">
             <ShieldCheck size={12} />
@@ -230,9 +233,12 @@ export default function AdminDashboardPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white p-1.5 shadow-lg border border-amber-400/40 flex items-center justify-center">
-              <img src={logoPhotobooth} alt="Sirklen Photo" className="w-full h-full object-contain" />
-            </div>
+            {/* Pure Letter N Logo - No Square Box */}
+            <img 
+              src={logoPhotoboothWhite} 
+              alt="Sirklen Photo" 
+              className="w-8 h-8 sm:w-9 sm:h-9 object-contain" 
+            />
 
             <div>
               <div className="flex items-center gap-2">
