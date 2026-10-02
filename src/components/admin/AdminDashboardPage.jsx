@@ -4,7 +4,7 @@ import {
   Plus, Calendar, QrCode, Trash2, Check, Lock, 
   ExternalLink, Eye, Image as ImageIcon, Upload, 
   MessageCircle, Share2, LogOut, Crop, Printer, Archive, 
-  ChevronRight, ChevronLeft, Smartphone, X, Camera, Copy
+  ChevronRight, ChevronLeft, Smartphone, X, Camera, Copy, Sparkles
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { PACKAGES, DEFAULT_HERO_PHOTOS, EVENT_CATEGORIES } from '../../data/mockEvents';
@@ -32,7 +32,8 @@ export default function AdminDashboardPage() {
     savedSubmissions,
     navigateToEvent,
     navigateToSetup,
-    introReady
+    introReady,
+    replayIntro
   } = useBooth();
 
   const { toast } = useToast();
@@ -388,6 +389,15 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <button
+              onClick={replayIntro}
+              className="px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF7F2] text-[#6B111F] border border-[#EADBCC] text-xs font-serif font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+              title="Putar Ulang Animasi Intro"
+            >
+              <Sparkles size={13} className="text-[#C4A46C]" />
+              <span className="hidden sm:inline">Animasi Intro</span>
+            </button>
+
             <button
               onClick={() => {
                 setEventType('wedding');

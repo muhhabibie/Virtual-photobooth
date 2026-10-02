@@ -34,6 +34,34 @@
       background: #E5DACB;
       border-radius: 9999px;
     }
+    @keyframes strokeReveal {
+      0% { clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%); opacity: 0; transform: scale(0.94); }
+      20% { opacity: 1; }
+      100% { clip-path: polygon(0% 0%, 105% 0%, 100% 100%, 0% 100%); opacity: 1; transform: scale(1); }
+    }
+    @keyframes goldenSweep {
+      0% { left: -30%; opacity: 0; }
+      20% { opacity: 0.95; }
+      80% { opacity: 0.95; }
+      100% { left: 125%; opacity: 0; }
+    }
+    @keyframes strokeDissolve {
+      0% { clip-path: polygon(0% 0%, 105% 0%, 100% 100%, 0% 100%); opacity: 1; transform: scale(1); filter: blur(0px); }
+      100% { clip-path: polygon(105% 0%, 105% 0%, 100% 100%, 100% 100%); opacity: 0; transform: scale(1.08); filter: blur(6px); }
+    }
+    @keyframes letterPop {
+      0% { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+      100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+    }
+    .anim-stroke-reveal {
+      animation: strokeReveal 1.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .anim-golden-sweep {
+      animation: goldenSweep 1.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .anim-stroke-dissolve {
+      animation: strokeDissolve 0.85s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    }
   </style>
 </head>
 <body class="min-h-screen selection:bg-[#6B111F]/20 selection:text-[#6B111F] pb-28 relative overflow-x-hidden">
@@ -71,6 +99,11 @@
       </div>
 
       <div class="flex items-center gap-2.5">
+        <button onclick="playIntroAnimation()" class="px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF7F2] text-[#6B111F] border border-[#EADBCC] text-xs font-serif font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer" title="Putar Ulang Animasi Intro">
+          <svg class="w-3.5 h-3.5 text-[#C4A46C]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+          <span class="hidden sm:inline">Animasi Intro</span>
+        </button>
+
         <button onclick="openCreateModal()" class="px-4 py-2 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/20 transition cursor-pointer">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
           <span>Buat Event Baru</span>
@@ -788,6 +821,86 @@
       document.getElementById('stripEventName').style.color = th.textHex;
       document.getElementById('themeNameLabel').innerText = th.name;
     }
+
+    function playIntroAnimation() {
+      const overlay = document.getElementById('introSplashOverlay');
+      const stroke = document.getElementById('introMonogramStroke');
+      const beam = document.getElementById('introGoldenBeam');
+      const title = document.getElementById('introBrandTitle');
+      const sub = document.getElementById('introSubtitle');
+      const whisper = document.getElementById('introWhisper');
+
+      // Reset states
+      overlay.classList.remove('hidden');
+      overlay.style.opacity = '1';
+      overlay.style.filter = 'blur(0px)';
+      stroke.className = 'absolute inset-0 flex items-center justify-center overflow-hidden anim-stroke-reveal';
+      beam.className = 'absolute top-0 bottom-0 w-10 bg-gradient-to-r from-transparent via-[#C4A46C]/70 to-transparent pointer-events-none anim-golden-sweep';
+      sub.classList.remove('opacity-100'); sub.classList.add('opacity-0');
+      whisper.classList.remove('opacity-100'); whisper.classList.add('opacity-0');
+
+      // Staggered letters
+      const letters = "SIRKLEN PHOTO".split("");
+      title.innerHTML = letters.map((c, i) => {
+        const spaceClass = c === ' ' ? 'inline-block w-2 sm:w-2.5' : 'inline-block';
+        return `<span class="${spaceClass} opacity-0" style="animation: letterPop 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards ${0.25 + i * 0.045}s;">${c}</span>`;
+      }).join("");
+
+      // Subtitles
+      setTimeout(() => { sub.classList.remove('opacity-0'); sub.classList.add('opacity-100'); }, 750);
+      setTimeout(() => { whisper.classList.remove('opacity-0'); whisper.classList.add('opacity-100'); }, 1200);
+
+      // Stroke dissolution
+      setTimeout(() => {
+        stroke.className = 'absolute inset-0 flex items-center justify-center overflow-hidden anim-stroke-dissolve';
+      }, 2500);
+
+      // Canvas dissolve
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+        overlay.style.filter = 'blur(10px)';
+      }, 3000);
+
+      // Complete unmount
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+      }, 3700);
+    }
   </script>
+
+  <!-- ================= 🌟 INTRO SPLASH OVERLAY (DENGAN LOGO & ANIMASI GORESAN HURUF) 🌟 ================= -->
+  <div id="introSplashOverlay" class="fixed inset-0 z-[99999] bg-[#FAF8F5] flex flex-col items-center justify-center select-none overflow-hidden hidden transition-all duration-700">
+    <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7] via-[#FAF8F5] to-[#F5EFEB] pointer-events-none"></div>
+    <div class="absolute w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-amber-200/35 via-rose-100/25 to-amber-100/15 blur-3xl pointer-events-none -translate-y-4"></div>
+
+    <div class="relative z-10 flex flex-col items-center text-center px-4">
+      <!-- 1. Logo Monogram dengan Animasi Goresan Huruf -->
+      <div id="introLogoContainer" class="relative mb-4 inline-flex items-center justify-center">
+        <!-- Layer 1: Soft Ghost Underlay -->
+        <img src="logo.png" alt="Sirklen Photo Logo" class="w-16 h-16 sm:w-20 sm:h-20 object-contain select-none pointer-events-none opacity-10">
+
+        <!-- Layer 2: Main Monogram Letter dengan Progressive Wipe Reveal -->
+        <div id="introMonogramStroke" class="absolute inset-0 flex items-center justify-center overflow-hidden anim-stroke-reveal">
+          <img src="logo.png" alt="Sirklen Photo Logo" class="w-16 h-16 sm:w-20 sm:h-20 object-contain select-none">
+          <!-- Layer 3: Golden Shimmer Beam -->
+          <div id="introGoldenBeam" class="absolute top-0 bottom-0 w-10 bg-gradient-to-r from-transparent via-[#C4A46C]/70 to-transparent pointer-events-none anim-golden-sweep" style="transform: skewX(-18deg);"></div>
+        </div>
+      </div>
+
+      <!-- 2. Animasi Huruf Tipografi Bertahap (Staggered Letter Reveal) -->
+      <h1 id="introBrandTitle" style="font-family: 'Playfair Display', Georgia, serif;" class="text-base sm:text-lg font-bold tracking-[0.38em] text-[#6B111F] uppercase mt-0.5 flex items-center justify-center select-none">
+      </h1>
+
+      <!-- Subtitle -->
+      <p id="introSubtitle" class="text-[9px] sm:text-[10px] font-mono tracking-[0.25em] text-[#8C7A6B] uppercase mt-1.5 opacity-0 transition-opacity duration-700">
+        PT SIRKLEN KREASI USAHA
+      </p>
+
+      <!-- Romantic Whisper Subtitle -->
+      <p id="introWhisper" class="text-[10px] font-serif italic text-[#C4A46C] mt-2 tracking-wider opacity-0 transition-opacity duration-700">
+        ✦ Memories in Every Frame ✦
+      </p>
+    </div>
+  </div>
 </body>
 </html>
