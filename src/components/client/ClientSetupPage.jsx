@@ -108,7 +108,7 @@ export default function ClientSetupPage() {
       return [selected, ...copy];
     });
     setIsSaved(false);
-    toast('Foto dijadikan Cover Utama pembuka tamu 💍', 'success');
+    toast('Foto dijadikan Cover Utama', 'success');
   };
 
   const handleAddUrl = () => {
@@ -135,7 +135,7 @@ export default function ClientSetupPage() {
       heroPhotos,
     });
     setIsSaved(true);
-    toast('Semua perubahan berhasil disimpan & aktif ✨', 'success');
+    toast('Semua perubahan berhasil disimpan', 'success');
   };
 
   const guestUrl = `${window.location.origin}/${event.slug}`;

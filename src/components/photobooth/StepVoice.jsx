@@ -114,7 +114,7 @@ export default function StepVoice() {
     if (audioBlob) {
       setVoiceBlob(audioBlob);
       setVoiceUrl(audioUrl);
-      toast('Doa & pesan suara tersimpan! 💍', 'success');
+      toast('Pesan suara berhasil disimpan', 'success');
     }
     setCurrentStep('result');
   };

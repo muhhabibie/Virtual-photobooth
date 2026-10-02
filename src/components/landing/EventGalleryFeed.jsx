@@ -25,7 +25,7 @@ export default function EventGalleryFeed() {
       } catch (e) {}
     } else {
       navigator.clipboard?.writeText(window.location.href);
-      toast('🔗 Tautan galeri berhasil disalin!', 'success');
+      toast('Tautan galeri berhasil disalin', 'success');
     }
   };
 

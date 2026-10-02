@@ -515,7 +515,7 @@ export default function HowItWorks() {
                   <button
                     onClick={() => {
                       setDemoDownloaded(true);
-                      toast('📥 Photo strip siap diunduh dalam kualitas HD 2X Retina!', 'success');
+                      toast('Photo strip siap diunduh dalam kualitas HD', 'success');
                       setTimeout(() => setDemoDownloaded(false), 2500);
                     }}
                     className={`flex-1 py-2 sm:py-2.5 px-3 rounded-full text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-lg ${
@@ -533,12 +533,12 @@ export default function HowItWorks() {
                       if (navigator.share) {
                         navigator.share({
                           title: 'Kenangan Photobooth Sabrina & Raka',
-                          text: 'Lihat photo strip pernikahan Sabrina & Raka! 💍✨',
+                          text: 'Lihat photo strip pernikahan Sabrina & Raka!',
                           url: window.location.href
                         }).catch(() => {});
                       } else {
                         navigator.clipboard?.writeText(window.location.href);
-                        toast('🔗 Tautan kenangan berhasil disalin!', 'success');
+                        toast('Tautan berhasil disalin', 'success');
                       }
                     }}
                     className="flex-1 py-2 sm:py-2.5 px-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-lg"

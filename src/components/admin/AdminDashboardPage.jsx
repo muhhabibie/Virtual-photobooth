@@ -153,7 +153,7 @@ export default function AdminDashboardPage() {
           // progress callback
         }
       });
-      toast(`File ZIP berhasil diunduh (${result.totalPhotos} foto)! 📦`, 'success');
+      toast(`File ZIP berhasil diunduh (${result.totalPhotos} foto)`, 'success');
     } catch (err) {
       console.error(err);
       toast(err.message || 'Gagal mengunduh ZIP', 'error');
