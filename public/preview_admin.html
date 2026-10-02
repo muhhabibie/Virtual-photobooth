@@ -35,32 +35,46 @@
       border-radius: 9999px;
     }
     @keyframes strokeReveal {
-      0% { clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%); opacity: 0; transform: scale(0.94); }
+      0% { clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%); opacity: 0; transform: scale(0.95); }
       20% { opacity: 1; }
       100% { clip-path: polygon(0% 0%, 105% 0%, 100% 100%, 0% 100%); opacity: 1; transform: scale(1); }
     }
-    @keyframes goldenSweep {
+    @keyframes strokeReverseRetract {
+      0% { clip-path: polygon(0% 0%, 105% 0%, 100% 100%, 0% 100%); opacity: 1; transform: scale(1); }
+      80% { opacity: 1; }
+      100% { clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%); opacity: 0; transform: scale(0.95); }
+    }
+    @keyframes goldenSweepForward {
       0% { left: -30%; opacity: 0; }
       20% { opacity: 0.95; }
       80% { opacity: 0.95; }
       100% { left: 125%; opacity: 0; }
     }
-    @keyframes strokeDissolve {
-      0% { clip-path: polygon(0% 0%, 105% 0%, 100% 100%, 0% 100%); opacity: 1; transform: scale(1); filter: blur(0px); }
-      100% { clip-path: polygon(105% 0%, 105% 0%, 100% 100%, 100% 100%); opacity: 0; transform: scale(1.08); filter: blur(6px); }
+    @keyframes goldenSweepReverse {
+      0% { left: 125%; opacity: 0; }
+      20% { opacity: 0.95; }
+      80% { opacity: 0.95; }
+      100% { left: -30%; opacity: 0; }
     }
-    @keyframes letterPop {
+    @keyframes letterPopIn {
       0% { opacity: 0; transform: translateY(8px); filter: blur(4px); }
       100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
     }
+    @keyframes letterPopOut {
+      0% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+      100% { opacity: 0; transform: translateY(-8px); filter: blur(4px); }
+    }
     .anim-stroke-reveal {
-      animation: strokeReveal 1.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: strokeReveal 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
-    .anim-golden-sweep {
-      animation: goldenSweep 1.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    .anim-stroke-reverse {
+      animation: strokeReverseRetract 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
-    .anim-stroke-dissolve {
-      animation: strokeDissolve 0.85s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    .anim-golden-forward {
+      animation: goldenSweepForward 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+    .anim-golden-reverse {
+      animation: goldenSweepReverse 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
   </style>
 </head>
@@ -829,65 +843,86 @@
       const title = document.getElementById('introBrandTitle');
       const sub = document.getElementById('introSubtitle');
       const whisper = document.getElementById('introWhisper');
+      const ghost = document.getElementById('introGhostLogo');
 
       // Reset states
       overlay.classList.remove('hidden');
       overlay.style.opacity = '1';
       overlay.style.filter = 'blur(0px)';
+      if (ghost) { ghost.style.opacity = '0.12'; ghost.style.transition = 'opacity 1.2s ease-in-out'; }
       stroke.className = 'absolute inset-0 flex items-center justify-center overflow-hidden anim-stroke-reveal';
-      beam.className = 'absolute top-0 bottom-0 w-10 bg-gradient-to-r from-transparent via-[#C4A46C]/70 to-transparent pointer-events-none anim-golden-sweep';
+      beam.className = 'absolute top-0 bottom-0 w-12 bg-gradient-to-r from-transparent via-[#C4A46C]/75 to-transparent pointer-events-none anim-golden-forward';
+      beam.style.transform = 'skewX(-18deg)';
       sub.classList.remove('opacity-100'); sub.classList.add('opacity-0');
       whisper.classList.remove('opacity-100'); whisper.classList.add('opacity-0');
 
-      // Staggered letters
+      // Staggered letters forward (kiri -> kanan)
       const letters = "SIRKLEN PHOTO".split("");
       title.innerHTML = letters.map((c, i) => {
         const spaceClass = c === ' ' ? 'inline-block w-2 sm:w-2.5' : 'inline-block';
-        return `<span class="${spaceClass} opacity-0" style="animation: letterPop 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards ${0.25 + i * 0.045}s;">${c}</span>`;
+        return `<span id="introLetter_${i}" class="${spaceClass} opacity-0" style="animation: letterPopIn 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards ${0.35 + i * 0.065}s;">${c}</span>`;
       }).join("");
 
-      // Subtitles
-      setTimeout(() => { sub.classList.remove('opacity-0'); sub.classList.add('opacity-100'); }, 750);
-      setTimeout(() => { whisper.classList.remove('opacity-0'); whisper.classList.add('opacity-100'); }, 1200);
+      // Subtitles reveal
+      setTimeout(() => { sub.classList.remove('opacity-0'); sub.classList.add('opacity-100'); }, 1350);
+      setTimeout(() => { whisper.classList.remove('opacity-0'); whisper.classList.add('opacity-100'); }, 1800);
 
-      // Stroke dissolution
+      // Start reverse exit at 3.5s (Arah sebaliknya: kanan -> kiri)
       setTimeout(() => {
-        stroke.className = 'absolute inset-0 flex items-center justify-center overflow-hidden anim-stroke-dissolve';
-      }, 2500);
+        // Monogram retracts right to left
+        stroke.className = 'absolute inset-0 flex items-center justify-center overflow-hidden anim-stroke-reverse';
+        // Golden beam sweeps right to left
+        beam.className = 'absolute top-0 bottom-0 w-12 bg-gradient-to-r from-transparent via-[#C4A46C]/85 to-transparent pointer-events-none anim-golden-reverse';
+        beam.style.transform = 'skewX(18deg)';
+        if (ghost) ghost.style.opacity = '0';
+
+        // Reverse letter fade: kanan ke kiri (arah sebaliknya)
+        letters.forEach((_, i) => {
+          const el = document.getElementById(`introLetter_${i}`);
+          const reverseDelay = (letters.length - 1 - i) * 0.045;
+          if (el) {
+            el.style.animation = `letterPopOut 0.45s cubic-bezier(0.25, 1, 0.5, 1) forwards ${reverseDelay}s`;
+          }
+        });
+
+        // Subtitles fade out
+        sub.classList.remove('opacity-100'); sub.classList.add('opacity-0');
+        whisper.classList.remove('opacity-100'); whisper.classList.add('opacity-0');
+      }, 3500);
 
       // Canvas dissolve
       setTimeout(() => {
         overlay.style.opacity = '0';
         overlay.style.filter = 'blur(10px)';
-      }, 3000);
+      }, 5000);
 
       // Complete unmount
       setTimeout(() => {
         overlay.classList.add('hidden');
-      }, 3700);
+      }, 5700);
     }
   </script>
 
   <!-- ================= 🌟 INTRO SPLASH OVERLAY (DENGAN LOGO & ANIMASI GORESAN HURUF) 🌟 ================= -->
   <div id="introSplashOverlay" class="fixed inset-0 z-[99999] bg-[#FAF8F5] flex flex-col items-center justify-center select-none overflow-hidden hidden transition-all duration-700">
     <div class="absolute inset-0 bg-gradient-to-b from-[#FDFBF7] via-[#FAF8F5] to-[#F5EFEB] pointer-events-none"></div>
-    <div class="absolute w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-amber-200/35 via-rose-100/25 to-amber-100/15 blur-3xl pointer-events-none -translate-y-4"></div>
+    <div class="absolute w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-amber-200/35 via-rose-100/25 to-amber-100/15 blur-3xl pointer-events-none -translate-y-4"></div>
 
     <div class="relative z-10 flex flex-col items-center text-center px-4">
-      <!-- 1. Logo Monogram dengan Animasi Goresan Huruf -->
+      <!-- 1. Logo Monogram dengan Animasi Goresan Huruf (Maju & Mundur) -->
       <div id="introLogoContainer" class="relative mb-4 inline-flex items-center justify-center">
         <!-- Layer 1: Soft Ghost Underlay -->
-        <img src="logo.png" alt="Sirklen Photo Logo" class="w-16 h-16 sm:w-20 sm:h-20 object-contain select-none pointer-events-none opacity-10">
+        <img id="introGhostLogo" src="logo.png" alt="Sirklen Photo Logo" class="w-16 h-16 sm:w-20 sm:h-20 object-contain select-none pointer-events-none opacity-10">
 
-        <!-- Layer 2: Main Monogram Letter dengan Progressive Wipe Reveal -->
+        <!-- Layer 2: Main Monogram Letter dengan Progressive Reveal & Retract -->
         <div id="introMonogramStroke" class="absolute inset-0 flex items-center justify-center overflow-hidden anim-stroke-reveal">
           <img src="logo.png" alt="Sirklen Photo Logo" class="w-16 h-16 sm:w-20 sm:h-20 object-contain select-none">
           <!-- Layer 3: Golden Shimmer Beam -->
-          <div id="introGoldenBeam" class="absolute top-0 bottom-0 w-10 bg-gradient-to-r from-transparent via-[#C4A46C]/70 to-transparent pointer-events-none anim-golden-sweep" style="transform: skewX(-18deg);"></div>
+          <div id="introGoldenBeam" class="absolute top-0 bottom-0 w-12 bg-gradient-to-r from-transparent via-[#C4A46C]/75 to-transparent pointer-events-none anim-golden-forward" style="transform: skewX(-18deg);"></div>
         </div>
       </div>
 
-      <!-- 2. Animasi Huruf Tipografi Bertahap (Staggered Letter Reveal) -->
+      <!-- 2. Animasi Huruf Tipografi Bertahap (Staggered Letter Reveal Maju & Mundur) -->
       <h1 id="introBrandTitle" style="font-family: 'Playfair Display', Georgia, serif;" class="text-base sm:text-lg font-bold tracking-[0.38em] text-[#6B111F] uppercase mt-0.5 flex items-center justify-center select-none">
       </h1>
 

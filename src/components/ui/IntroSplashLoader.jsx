@@ -4,43 +4,45 @@ import { useBooth } from '../../context/PhotoboothContext';
 import logoPhotobooth from '../../assets/logo photobooth.png';
 
 const BRAND_NAME = "SIRKLEN PHOTO";
+const BRAND_LETTERS = BRAND_NAME.split("");
+const TOTAL_LETTERS = BRAND_LETTERS.length;
 
 export default function IntroSplashLoader({ onComplete }) {
   const { setIntroReady, introKey } = useBooth();
 
-  // Romantic & Aesthetic Cinematic Timeline:
-  // 1. 'entering' (0.0s - 1.35s): Progressive ink stroke drawing & golden shimmer beam entrance
-  // 2. 'holding'  (1.35s - 2.5s): Aesthetic romantic breathing, warm champagne ambient aura
-  // 3. 'exiting'  (2.5s - 3.2s): Smooth stroke sweep dissolution with golden exit beam
-  // 4. 'dissolve' (3.0s - 3.7s): Velvet lens optical blur fade & release to main app
-  // 5. 'done'     (3.7s): Unmounted completely
+  // Majestic & Leisurely Luxury Cinematic Timeline:
+  // 1. 'entering' (0.0s - 2.1s): Progressive calligraphy stroke drawing (left -> right) & forward golden beam
+  // 2. 'holding'  (2.1s - 3.5s): Aesthetic romantic breathing, warm champagne ambient aura
+  // 3. 'exiting'  (3.5s - 5.1s): REVERSE stroke erase (right -> left) & backward golden beam sweep + reverse letter fade
+  // 4. 'dissolve' (5.0s - 5.7s): Velvet lens optical blur fade & release to main app
+  // 5. 'done'     (5.7s): Unmounted completely
   const [phase, setPhase] = useState('entering');
 
   useEffect(() => {
     setPhase('entering');
     if (setIntroReady) setIntroReady(false);
 
-    // 1. Transition to holding peak at 1.35s
+    // 1. Transition to holding peak at 2.1s
     const timer1 = setTimeout(() => {
       setPhase('holding');
-    }, 1350);
+    }, 2100);
 
-    // 2. Transition to progressive stroke dissolve at 2.5s
+    // 2. Transition to reverse stroke erase at 3.5s (arah sebaliknya)
     const timer2 = setTimeout(() => {
       setPhase('exiting');
-    }, 2500);
+    }, 3500);
 
-    // 3. Transition to optical dissolve at 3.0s & trigger staggered page reveal
+    // 3. Transition to optical dissolve at 5.0s & trigger staggered page reveal
     const timer3 = setTimeout(() => {
       setPhase('dissolve');
       if (setIntroReady) setIntroReady(true);
-    }, 3000);
+    }, 5000);
 
-    // 4. Unmount completely at 3.7s
+    // 4. Unmount completely at 5.7s
     const timer4 = setTimeout(() => {
       setPhase('done');
       if (onComplete) onComplete();
-    }, 3700);
+    }, 5700);
 
     return () => {
       clearTimeout(timer1);
@@ -79,34 +81,34 @@ export default function IntroSplashLoader({ onComplete }) {
               scale: phase === 'holding' ? [1, 1.08, 1] : 1,
               opacity: phase === 'holding' ? [0.35, 0.65, 0.35] : 0.35
             }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-amber-200/35 via-rose-100/25 to-amber-100/15 blur-3xl pointer-events-none -translate-y-4" 
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-amber-200/35 via-rose-100/25 to-amber-100/15 blur-3xl pointer-events-none -translate-y-4" 
           />
 
           {/* Center Content Container */}
           <div className="relative z-10 flex flex-col items-center text-center px-4">
             
-            {/* ================= 👑 1. LOGO MONOGRAM DENGAN ANIMASI GORESAN HURUF 👑 ================= */}
+            {/* ================= 👑 1. LOGO MONOGRAM DENGAN GORESAN MAJU & MUNDUR (ARAH SEBALIKNYA) 👑 ================= */}
             <div className="relative mb-4 inline-flex items-center justify-center">
               
-              {/* Layer 1: Soft Ghost Underlay (Outline context di awal) */}
+              {/* Layer 1: Soft Ghost Underlay (Outline context di awal, memudar lembut di akhir) */}
               <motion.img 
                 src={logoPhotobooth} 
                 alt="Sirklen Photo Logo" 
                 animate={{ 
                   opacity: phase === 'exiting' || phase === 'dissolve' ? 0 : 0.12,
-                  scale: phase === 'exiting' || phase === 'dissolve' ? 1.06 : 1
+                  scale: phase === 'exiting' || phase === 'dissolve' ? 0.96 : 1
                 }}
-                transition={{ duration: 0.6, ease: 'easeInOut' }}
+                transition={{ duration: 1.2, ease: 'easeInOut' }}
                 className="w-16 h-16 sm:w-20 sm:h-20 object-contain select-none pointer-events-none"
               />
 
-              {/* Layer 2: Main Monogram Letter dengan Progressive Wipe Reveal (Animasi Goresan Huruf) */}
+              {/* Layer 2: Main Monogram Letter dengan Progressive Reveal & Reverse Retraction */}
               <motion.div
                 initial={{ 
                   clipPath: 'polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)',
                   opacity: 0,
-                  scale: 0.94,
+                  scale: 0.95,
                   filter: 'blur(0px)'
                 }}
                 animate={
@@ -125,19 +127,19 @@ export default function IntroSplashLoader({ onComplete }) {
                         filter: 'blur(0px)'
                       }
                     : {
-                        // EXIT: Progressive sweep dissolution from start to end
-                        clipPath: 'polygon(105% 0%, 105% 0%, 100% 100%, 100% 100%)',
+                        // EXIT: Arah Sebaliknya (Mundur dari Kanan ke Kiri menuju 0%)
+                        clipPath: 'polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)',
                         opacity: 0,
-                        scale: 1.08,
-                        filter: 'blur(6px)'
+                        scale: 0.96,
+                        filter: 'blur(4px)'
                       }
                 }
                 transition={
                   phase === 'exiting' || phase === 'dissolve'
-                    ? { duration: 0.85, ease: [0.65, 0, 0.35, 1] }
+                    ? { duration: 1.6, ease: [0.4, 0, 0.2, 1] }
                     : phase === 'holding'
                     ? { duration: 1.4, ease: 'easeInOut' }
-                    : { duration: 1.25, ease: [0.22, 1, 0.36, 1], delay: 0.1 }
+                    : { duration: 1.8, ease: [0.22, 1, 0.36, 1], delay: 0.1 }
                 }
                 className="absolute inset-0 flex items-center justify-center overflow-hidden"
               >
@@ -147,86 +149,103 @@ export default function IntroSplashLoader({ onComplete }) {
                   className="w-16 h-16 sm:w-20 sm:h-20 object-contain select-none"
                 />
 
-                {/* Layer 3A: Entrance Golden Shimmer Beam (Sinar Emas Menyapu Ujung Goresan Huruf) */}
+                {/* Layer 3A: Entrance Golden Shimmer Beam (Menyapu Maju dari Kiri ke Kanan) */}
                 {phase === 'entering' && (
                   <motion.div
-                    initial={{ left: '-25%', opacity: 0 }}
-                    animate={{ left: '120%', opacity: [0, 0.95, 0] }}
+                    key="shimmer-forward"
+                    initial={{ left: '-30%', opacity: 0 }}
+                    animate={{ left: '120%', opacity: [0, 0.95, 0.95, 0] }}
                     transition={{ 
-                      duration: 1.25, 
+                      duration: 1.8, 
                       ease: [0.22, 1, 0.36, 1],
                       delay: 0.1
                     }}
-                    className="absolute top-0 bottom-0 w-10 bg-gradient-to-r from-transparent via-[#C4A46C]/70 to-transparent pointer-events-none"
+                    className="absolute top-0 bottom-0 w-12 bg-gradient-to-r from-transparent via-[#C4A46C]/75 to-transparent pointer-events-none"
                     style={{ transform: 'skewX(-18deg)' }}
                   />
                 )}
 
-                {/* Layer 3B: Exit Golden Dissolve Beam */}
+                {/* Layer 3B: Exit Golden Dissolve Beam (Arah Sebaliknya: Menyapu Mundur dari Kanan ke Kiri) */}
                 {(phase === 'exiting' || phase === 'dissolve') && (
                   <motion.div
-                    initial={{ left: '-20%', opacity: 0 }}
-                    animate={{ left: '125%', opacity: [0, 1, 0] }}
+                    key="shimmer-reverse"
+                    initial={{ left: '120%', opacity: 0 }}
+                    animate={{ left: '-30%', opacity: [0, 0.95, 0.95, 0] }}
                     transition={{ 
-                      duration: 0.85, 
-                      ease: [0.65, 0, 0.35, 1]
+                      duration: 1.6, 
+                      ease: [0.4, 0, 0.2, 1]
                     }}
                     className="absolute top-0 bottom-0 w-12 bg-gradient-to-r from-transparent via-[#C4A46C]/85 to-transparent pointer-events-none"
-                    style={{ transform: 'skewX(-18deg)' }}
+                    style={{ transform: 'skewX(18deg)' }}
                   />
                 )}
               </motion.div>
             </div>
 
-            {/* ================= 👑 2. ANIMASI HURUF TIPOGRAFI BERTAHAP (STAGGERED LETTER REVEAL) 👑 ================= */}
+            {/* ================= 👑 2. ANIMASI HURUF MAJU (KIRI->KANAN) & MUNDUR (KANAN->KIRI) 👑 ================= */}
             <motion.h1 
               initial={{ opacity: 0 }}
               animate={
                 phase === 'exiting' || phase === 'dissolve'
-                  ? { opacity: 0, y: -8, letterSpacing: '0.45em', filter: 'blur(6px)' }
+                  ? { opacity: 0, y: -6, letterSpacing: '0.42em', filter: 'blur(4px)' }
                   : { opacity: 1, y: 0, letterSpacing: '0.38em', filter: 'blur(0px)' }
               }
               transition={{
-                duration: phase === 'exiting' || phase === 'dissolve' ? 0.6 : 0.4,
+                duration: phase === 'exiting' || phase === 'dissolve' ? 0.9 : 0.5,
                 ease: [0.4, 0, 0.2, 1]
               }}
               style={{ fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif" }}
               className="text-base sm:text-lg font-bold tracking-[0.38em] text-[#6B111F] uppercase mt-0.5 flex items-center justify-center select-none"
             >
-              {BRAND_NAME.split("").map((char, idx) => (
-                <motion.span
-                  key={idx}
-                  initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
-                  animate={{ 
-                    opacity: 1, 
-                    y: 0, 
-                    filter: 'blur(0px)' 
-                  }}
-                  transition={{
-                    duration: 0.55,
-                    delay: 0.25 + idx * 0.045,
-                    ease: [0.22, 1, 0.36, 1]
-                  }}
-                  className={char === " " ? "inline-block w-2 sm:w-2.5" : "inline-block"}
-                >
-                  {char}
-                </motion.span>
-              ))}
+              {BRAND_LETTERS.map((char, idx) => {
+                const isSpace = char === " ";
+                const reverseIdx = TOTAL_LETTERS - 1 - idx;
+                return (
+                  <motion.span
+                    key={idx}
+                    initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
+                    animate={
+                      phase === 'entering' || phase === 'holding'
+                        ? { 
+                            opacity: 1, 
+                            y: 0, 
+                            filter: 'blur(0px)' 
+                          }
+                        : { 
+                            // Menghilang satu-per-satu dari arah sebaliknya (kanan ke kiri)
+                            opacity: 0, 
+                            y: -6, 
+                            filter: 'blur(4px)' 
+                          }
+                    }
+                    transition={{
+                      duration: phase === 'exiting' || phase === 'dissolve' ? 0.45 : 0.65,
+                      delay: phase === 'exiting' || phase === 'dissolve'
+                        ? reverseIdx * 0.045
+                        : 0.35 + idx * 0.065,
+                      ease: [0.25, 1, 0.5, 1]
+                    }}
+                    className={isSpace ? "inline-block w-2 sm:w-2.5" : "inline-block"}
+                  >
+                    {char}
+                  </motion.span>
+                );
+              })}
             </motion.h1>
 
             {/* Subtitle / Company Badge */}
             <motion.p 
               initial={{ opacity: 0, y: 4, filter: 'blur(0px)' }}
               animate={
-                phase === 'exiting' || phase === 'dissolve'
-                  ? { opacity: 0, y: -6, letterSpacing: '0.34em', filter: 'blur(5px)' }
-                  : { opacity: 1, y: 0, letterSpacing: '0.25em', filter: 'blur(0px)' }
+                phase === 'entering' || phase === 'holding'
+                  ? { opacity: 1, y: 0, letterSpacing: '0.25em', filter: 'blur(0px)' }
+                  : { opacity: 0, y: -6, letterSpacing: '0.34em', filter: 'blur(5px)' }
               }
-              transition={
-                phase === 'exiting' || phase === 'dissolve'
-                  ? { duration: 0.55, delay: 0.05, ease: [0.4, 0, 0.2, 1] }
-                  : { duration: 0.75, delay: 0.75, ease: [0.16, 1, 0.3, 1] }
-              }
+              transition={{
+                duration: phase === 'exiting' || phase === 'dissolve' ? 0.6 : 0.9,
+                delay: phase === 'exiting' || phase === 'dissolve' ? 0.15 : 1.35,
+                ease: [0.25, 1, 0.5, 1]
+              }}
               className="text-[9px] sm:text-[10px] font-mono tracking-[0.25em] text-[#8C7A6B] uppercase mt-1.5"
             >
               PT SIRKLEN KREASI USAHA
@@ -240,7 +259,10 @@ export default function IntroSplashLoader({ onComplete }) {
                   ? { opacity: 0.85, y: 0 }
                   : { opacity: 0, y: phase === 'entering' ? 4 : -4 }
               }
-              transition={{ duration: 0.7, delay: phase === 'holding' ? 0.2 : 0 }}
+              transition={{ 
+                duration: 0.8, 
+                delay: phase === 'holding' ? 0.3 : 0 
+              }}
               className="text-[10px] font-serif italic text-[#C4A46C] mt-2 tracking-wider"
             >
               ✦ Memories in Every Frame ✦
