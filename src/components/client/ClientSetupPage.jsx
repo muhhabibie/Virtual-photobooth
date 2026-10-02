@@ -737,26 +737,35 @@ export default function ClientSetupPage() {
       </main>
 
       {/* ================= 🌟 3. STICKY BOTTOM ACTION BAR (LUXURY IVORY GLASS DOCK) 🌟 ================= */}
-      <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-[#EADBCC]/80 px-4 py-3 sm:py-3.5 z-40 shadow-[0_-8px_25px_rgba(107,17,31,0.06)]">
-        <div className="max-w-xl mx-auto flex items-center justify-between gap-3">
-          <div className="flex flex-col justify-center min-w-0 pr-1">
-            <span className="text-[9px] font-mono text-[#8C7A6B] uppercase tracking-wider font-semibold">
-              STATUS
+      <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-[#EADBCC]/90 px-4 pt-2.5 pb-3 sm:pb-3.5 z-40 shadow-[0_-8px_30px_rgba(107,17,31,0.06)]">
+        <div className="max-w-xl mx-auto flex flex-col gap-2">
+          
+          {/* Micro Status Bar (Full Width - Never Truncated) */}
+          <div className="flex items-center justify-between text-[11px] px-1">
+            <span className="font-mono text-[9px] uppercase tracking-wider text-[#8C7A6B] font-semibold">
+              STATUS SISTEM
             </span>
-            <span className="text-[11px] sm:text-xs font-medium truncate mt-0.5">
+            <span>
               {isSaved ? (
-                <span className="text-emerald-700 font-semibold">• Tersimpan</span>
+                <span className="text-emerald-700 font-semibold flex items-center gap-1.5 text-xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                  Tersimpan & Aktif di Web Tamu
+                </span>
               ) : (
-                <span className="text-amber-800 font-medium">• Belum disimpan</span>
+                <span className="text-amber-800 font-medium flex items-center gap-1.5 text-xs">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                  Perubahan belum disimpan
+                </span>
               )}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+          {/* Action Buttons Row */}
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => navigateToEvent(event.slug)}
-              className="px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-full bg-[#FAF7F2] hover:bg-stone-100 active:scale-95 border border-[#EADBCC] text-stone-800 text-xs sm:text-sm font-serif font-medium flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap"
+              className="px-4 py-2.5 sm:py-3 rounded-full bg-[#FAF7F2] hover:bg-stone-100 active:scale-95 border border-[#EADBCC] text-stone-800 text-xs sm:text-sm font-serif font-medium flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap flex-shrink-0"
               title="Buka Tampilan Web Tamu Utama"
             >
               <Eye size={14} className="text-[#6B111F]" />
@@ -766,11 +775,12 @@ export default function ClientSetupPage() {
             <button
               type="button"
               onClick={handleSaveAll}
-              className="px-5 sm:px-7 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs sm:text-sm font-serif font-bold flex items-center justify-center shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap tracking-wide"
+              className="flex-1 py-2.5 sm:py-3 px-6 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs sm:text-sm font-serif font-bold flex items-center justify-center shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap tracking-wide"
             >
               <span>Simpan Pengaturan</span>
             </button>
           </div>
+
         </div>
       </div>
 
