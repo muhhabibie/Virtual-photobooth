@@ -1,5 +1,5 @@
 // Mock Events Database for Sirklen Photo SaaS (PT Sirklen Kreasi Usaha)
-// Domain format: sirklen.my.id/:slug
+// Domain format: sirklenice.com/:slug
 
 export const PACKAGES = {
   basic: {

@@ -143,7 +143,7 @@ export default function SirklenMasterLanding() {
             PT SIRKLEN KREASI USAHA — Sirklen Photo
           </p>
           <p className="text-[10px] text-gray-500">
-            Domain Resmi: <code className="text-amber-300 font-mono">photo.sirklen.my.id</code> • Hak Cipta © {new Date().getFullYear()} PT Sirklen Kreasi Usaha.
+            Domain Resmi: <code className="text-amber-300 font-mono">sirklenice.com</code> • Hak Cipta © {new Date().getFullYear()} PT Sirklen Kreasi Usaha.
           </p>
         </div>
       </footer>

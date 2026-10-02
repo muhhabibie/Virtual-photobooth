@@ -579,7 +579,7 @@ export default function AdminDashboardPage() {
               <div>
                 <label className="text-[10px] font-mono text-gray-400 uppercase block mb-1">Slug URL Acara</label>
                 <div className="flex items-center gap-1 bg-black/50 border border-white/15 rounded-xl px-3 py-1.5 font-mono text-xs text-amber-200">
-                  <span className="text-gray-500">photo.sirklen.my.id/</span>
+                  <span className="text-gray-500">{typeof window !== 'undefined' && window.location.host ? `${window.location.host}/` : 'sirklenice.com/'}</span>
                   <input
                     type="text"
                     required
