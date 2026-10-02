@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, Sparkles, Heart } from 'lucide-react';
+import { Camera, Heart } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 
 export default function Navbar() {
@@ -55,7 +55,7 @@ export default function Navbar() {
             onClick={openBooth}
             className="group relative inline-flex items-center gap-1.5 sm:gap-2 bg-[#8A1828] hover:bg-[#6B111F] text-white text-xs sm:text-sm font-extrabold px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-md hover:shadow-lg transition-all transform active:scale-95 cursor-pointer"
           >
-            <Sparkles size={13} className="text-amber-300 group-hover:rotate-12 transition-transform" />
+            <Camera size={14} className="text-amber-200 group-hover:scale-105 transition-transform" />
             <span>Mulai Foto</span>
           </button>
         </div>

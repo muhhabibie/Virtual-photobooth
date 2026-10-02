@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Camera, Image as ImageIcon, Sparkles, QrCode, Download, Check, 
+  Camera, Image as ImageIcon, Save, QrCode, Download, Check, 
   Trash2, Plus, ArrowRight, ExternalLink, Heart, Palette, Eye, Share2, Upload, Crop,
   Printer, Archive
 } from 'lucide-react';
@@ -212,7 +212,7 @@ export default function ClientSetupPage() {
                 : 'bg-gradient-to-r from-amber-500 to-amber-600 text-black hover:brightness-110'
             }`}
           >
-            {isSaved ? <Check size={14} /> : <Sparkles size={14} />}
+            {isSaved ? <Check size={14} /> : <Save size={14} />}
             <span>{isSaved ? 'Tersimpan' : 'Simpan'}</span>
           </button>
         </div>

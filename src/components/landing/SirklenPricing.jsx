@@ -1,4 +1,4 @@
-import { Check, Sparkles, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Check, ShoppingBag, ArrowRight } from 'lucide-react';
 import { PACKAGES } from '../../data/mockEvents';
 
 export default function SirklenPricing({ onOrderClick }) {
@@ -16,7 +16,7 @@ export default function SirklenPricing({ onOrderClick }) {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#6B111F]/10 border border-[#6B111F]/20 text-[#6B111F] text-[11px] font-mono font-bold tracking-widest uppercase mb-3">
-            <Sparkles size={12} />
+            <ShoppingBag size={12} />
             <span>PAKET LAYANAN DIGITAL</span>
           </div>
 

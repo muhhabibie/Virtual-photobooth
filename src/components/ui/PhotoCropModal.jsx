@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { 
-  X, Check, RotateCw, ZoomIn, ZoomOut, Move, Crop, Sparkles, RefreshCw
+  X, Check, RotateCw, ZoomIn, ZoomOut, Move, Crop, RefreshCw
 } from 'lucide-react';
 
 const ASPECT_RATIOS = [

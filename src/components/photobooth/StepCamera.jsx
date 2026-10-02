@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { 
   ArrowLeft, RefreshCw, Timer, Disc, Camera, ArrowRight, 
-  Sparkles, Sliders, Check, Trash2, X, ChevronRight, Image as ImageIcon,
+  Sliders, Check, Trash2, X, ChevronRight, Image as ImageIcon,
   Crown, Flower2, Glasses, Star, Heart, Smile, Wand2, Sparkle, SlidersHorizontal,
   Infinity as InfinityIcon, Type, ChevronDown, Zap, ZapOff, Eye
 } from 'lucide-react';
@@ -795,7 +795,7 @@ export default function StepCamera() {
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Sparkles size={11} />
+            <Smile size={11} />
             <span>Aksesoris AR</span>
           </button>
 

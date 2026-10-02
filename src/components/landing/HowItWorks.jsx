@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, Sparkles, Download, Volume2, Check, Share2 } from 'lucide-react';
+import { Layers, Download, Volume2, Check, Share2 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import MonochromeFloralOrnament from '../ui/MonochromeFloralOrnament';

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Download, Share2, Volume2, Check, X, ArrowLeft, Move, Sparkles, SlidersHorizontal, Smile, RefreshCw, BookOpen } from 'lucide-react';
+import { Download, Share2, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
@@ -13,7 +13,7 @@ const PHOTO_FILTERS = [
   { id: 'bright-glow', name: 'BRIGHT GLOW', css: 'brightness(112%) contrast(105%) saturate(115%)', desc: 'Cerah Berkilau', previewClass: 'from-yellow-200 via-amber-300 to-white' },
 ];
 
-const STICKERS = ['💍', '🌸', '✨', '🎀', '👑', '🌹', '⭐', '🥂', '💖', '🕊️'];
+const STICKERS = ['💍', '🌸', '💐', '🎀', '👑', '🌹', '🤍', '🥂', '💖', '🕊️'];
 
 export default function StepResult() {
   const {

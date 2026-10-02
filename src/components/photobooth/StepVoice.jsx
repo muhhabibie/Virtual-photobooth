@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 // Verified fresh build export for StepVoice canvas renderer
-import { ArrowLeft, ArrowRight, Mic, Square, Check, X, Sparkles, Volume2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Mic, Square, Check, X, Volume2 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useRecorder } from '../../hooks/useRecorder';
 import { useToast } from '../ui/Toast';

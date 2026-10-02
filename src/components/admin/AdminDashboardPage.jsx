@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Plus, Calendar, QrCode, Copy, Trash2, Check, Lock, 
-  ExternalLink, Sparkles, Layers, ShieldCheck, Clock, Eye, AlertTriangle, RefreshCw, 
+  ExternalLink, Layers, ShieldCheck, Clock, Eye, AlertTriangle, RefreshCw, 
   Image as ImageIcon, Upload, MessageCircle, Share2, LogOut, Crop,
   Printer, Download, Archive
 } from 'lucide-react';
