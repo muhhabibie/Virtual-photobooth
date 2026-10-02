@@ -5,7 +5,7 @@ import {
   ExternalLink, ShieldCheck, Eye, 
   Image as ImageIcon, Upload, MessageCircle, Share2, LogOut, Crop,
   Printer, Archive, Music, Palette, Tent, Building2, Tag,
-  ChevronRight, Sparkles, Filter
+  ChevronRight, ChevronLeft, Sparkles, Filter, Smartphone, X, Camera
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { PACKAGES, DEFAULT_HERO_PHOTOS, EVENT_CATEGORIES } from '../../data/mockEvents';
@@ -16,6 +16,13 @@ import PhotoCropModal from '../ui/PhotoCropModal';
 import TentCardModal from '../ui/TentCardModal';
 import logoPhotoboothWhite from '../../assets/logo photobooth white.png';
 import { useToast } from '../ui/Toast';
+
+const PREVIEW_FRAME_THEMES = [
+  { id: 'burgundy', name: 'Royal Burgundy', hex: '#6B111F', textHex: '#F5D77F', borderHex: '#8A1828' },
+  { id: 'slate', name: 'Noir Slate', hex: '#2D3748', textHex: '#E2E8F0', borderHex: '#4A5568' },
+  { id: 'ivory', name: 'Ivory Bliss', hex: '#FDFBF7', textHex: '#6B111F', borderHex: '#E2DDD5' },
+  { id: 'gold', name: 'Antique Gold', hex: '#C4A46C', textHex: '#FFFFFF', borderHex: '#D4AF37' },
+];
 
 export default function AdminDashboardPage() {
   const { 
@@ -66,9 +73,13 @@ export default function AdminDashboardPage() {
   const [selectedFrames, setSelectedFrames] = useState(['wedding-classic', 'gold-luxury']);
   const [copiedSlug, setCopiedSlug] = useState(null);
 
-  // Active Event for QR Code Inspector & Tent Card
+  // Active Event for QR Code Inspector & Tent Card & Live Preview
   const [selectedQrEvent, setSelectedQrEvent] = useState(null);
   const [selectedTentCardEvent, setSelectedTentCardEvent] = useState(null);
+  const [previewModalEvent, setPreviewModalEvent] = useState(null);
+  const [previewTab, setPreviewTab] = useState('hero'); // 'hero' | 'frame'
+  const [previewPhotoIdx, setPreviewPhotoIdx] = useState(0);
+  const [activeFrameThemeIdx, setActiveFrameThemeIdx] = useState(0);
   const [zippingEventId, setZippingEventId] = useState(null);
 
   // Auto-generate slug when Event Name or Groom/Bride names change
@@ -592,8 +603,22 @@ export default function AdminDashboardPage() {
                       {/* Right Side: Professional Unified Action System */}
                       <div className="flex flex-col gap-2.5 xl:items-end">
                         
-                        {/* Primary Row: Setup Outreach Actions */}
+                        {/* Primary Row: Setup Outreach Actions & Live Preview */}
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setPreviewModalEvent(evt);
+                              setPreviewTab('hero');
+                              setPreviewPhotoIdx(0);
+                              setActiveFrameThemeIdx(0);
+                            }}
+                            className="px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap"
+                            title="Pratinjau langsung tampilan layar HP tamu untuk acara ini"
+                          >
+                            <Smartphone size={14} className="text-[#F5D77F]" />
+                            <span>Preview</span>
+                          </button>
+
                           <button
                             onClick={() => handleCopySetupLink(evt.slug)}
                             className="px-4 py-2.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap"
@@ -1039,6 +1064,280 @@ export default function AdminDashboardPage() {
         onClose={() => setSelectedTentCardEvent(null)}
         event={selectedTentCardEvent}
       />
+
+      {/* ================= 🌟 MODAL: LIVE EVENT PHONE PREVIEW (ADMIN INSPECTOR) 🌟 ================= */}
+      <AnimatePresence>
+        {previewModalEvent && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.25 }}
+              className="w-full max-w-lg bg-[#140E16] border border-stone-800 rounded-3xl p-4 sm:p-6 shadow-2xl relative max-h-[95vh] flex flex-col justify-between overflow-hidden"
+            >
+              {/* Modal Top Bar */}
+              <div className="flex items-start justify-between gap-3 border-b border-stone-800/80 pb-3 mb-3 flex-shrink-0">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono tracking-widest text-[#C4A46C] uppercase font-bold">
+                      PRATINJAU LAYAR TAMU
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-stone-300">
+                      /{previewModalEvent.slug}
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-serif font-bold text-white tracking-wide truncate max-w-[260px] sm:max-w-sm mt-0.5">
+                    {previewModalEvent.displayName}
+                  </h3>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => navigateToEvent(previewModalEvent.slug)}
+                    className="p-2 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 transition cursor-pointer"
+                    title="Buka Web Tamu Asli di Halaman Utama"
+                  >
+                    <ExternalLink size={14} />
+                  </button>
+                  <button
+                    onClick={() => setPreviewModalEvent(null)}
+                    className="p-2 rounded-xl bg-stone-900/90 hover:bg-rose-950/60 text-stone-400 hover:text-rose-300 border border-stone-800 transition cursor-pointer"
+                    title="Tutup Pratinjau"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Mode Switcher Pill */}
+              <div className="flex items-center justify-center gap-1.5 p-1 rounded-full bg-black/60 border border-white/10 mx-auto mb-3 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('hero')}
+                  className={`px-3.5 py-1 rounded-full text-xs font-serif font-bold transition cursor-pointer ${
+                    previewTab === 'hero'
+                      ? 'bg-[#6B111F] text-[#F5D77F] shadow-xs'
+                      : 'text-stone-400 hover:text-stone-200'
+                  }`}
+                >
+                  Beranda Tamu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('frame')}
+                  className={`px-3.5 py-1 rounded-full text-xs font-serif font-bold transition cursor-pointer ${
+                    previewTab === 'frame'
+                      ? 'bg-[#6B111F] text-[#F5D77F] shadow-xs'
+                      : 'text-stone-400 hover:text-stone-200'
+                  }`}
+                >
+                  Hasil Strip Foto
+                </button>
+              </div>
+
+              {/* Interactive Phone Simulation Frame */}
+              <div className="flex-1 min-h-0 flex items-center justify-center overflow-y-auto no-scrollbar py-1">
+                <div className="relative mx-auto w-full max-w-[280px] xs:max-w-[300px] rounded-[36px] bg-stone-950 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.6)] border-[5px] border-stone-800 select-none">
+                  
+                  {/* Dynamic Island */}
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-4.5 bg-stone-900 rounded-full z-40 flex items-center justify-between px-2.5 pointer-events-none">
+                    <div className="w-2 h-2 rounded-full bg-stone-950" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A24]" />
+                  </div>
+
+                  {/* Phone Screen Interior */}
+                  <div className="relative w-full aspect-[9/16] rounded-[28px] overflow-hidden bg-[#10060E]">
+                    
+                    {/* TAB 1: Beranda Tamu */}
+                    {previewTab === 'hero' && (() => {
+                      const isWed = (previewModalEvent.eventType || 'wedding') === 'wedding';
+                      const badgeText = isWed 
+                        ? 'THE WEDDING CELEBRATION OF' 
+                        : (previewModalEvent.eventType === 'concert' 
+                            ? 'OFFICIAL FESTIVAL PHOTOBOOTH' 
+                            : (previewModalEvent.eventType === 'exhibition' 
+                                ? 'EXHIBITION PHOTOBOOTH' 
+                                : (previewModalEvent.eventType === 'festival' 
+                                    ? 'OFFICIAL EXPO PHOTOBOOTH' 
+                                    : 'OFFICIAL EVENT PHOTOBOOTH')));
+                      const photos = previewModalEvent.heroPhotos && previewModalEvent.heroPhotos.length > 0
+                        ? previewModalEvent.heroPhotos
+                        : DEFAULT_HERO_PHOTOS;
+
+                      return (
+                        <div className="w-full h-full relative flex flex-col justify-between p-4 text-center">
+                          <img 
+                            src={photos[previewPhotoIdx] || photos[0]} 
+                            alt="Preview Backdrop" 
+                            className="absolute inset-0 w-full h-full object-cover filter brightness-[0.82] contrast-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/25 to-black/90 pointer-events-none" />
+
+                          {/* Top Header */}
+                          <div className="relative z-10 pt-5 flex flex-col items-center">
+                            <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-semibold text-amber-200 uppercase tracking-[0.2em] border border-white/15 shadow-sm">
+                              {badgeText}
+                            </span>
+
+                            <h1 
+                              style={isWed ? { 
+                                fontFamily: "'Alex Brush', 'Great Vibes', cursive",
+                                textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.4)'
+                              } : {
+                                fontFamily: "'Playfair Display', Georgia, serif",
+                                textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.3)',
+                                letterSpacing: '-0.02em'
+                              }}
+                              className={`${isWed ? 'text-4xl xs:text-5xl font-normal' : 'text-2xl xs:text-3xl font-serif font-black tracking-tight'} text-white leading-tight mt-1 px-1 drop-shadow-2xl`}
+                            >
+                              {previewModalEvent.displayName}
+                            </h1>
+
+                            <div className="mt-1 px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15">
+                              <p className="text-[9px] text-rose-100 font-medium">
+                                {previewModalEvent.formattedDate || previewModalEvent.eventDate} • {previewModalEvent.venue || 'Venue Acara'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Bottom Action Simulation */}
+                          <div className="relative z-10 pb-2 space-y-2">
+                            <div className="flex flex-col gap-1.5 w-full max-w-[200px] mx-auto">
+                              <div className="py-2 px-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] text-[#F5D77F] border border-amber-300/40 text-[11px] font-serif font-bold shadow-lg flex items-center justify-center gap-1.5">
+                                <Camera size={12} />
+                                <span>Mulai Photobooth</span>
+                              </div>
+                              <div className="py-1.5 px-3 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] font-medium flex items-center justify-center">
+                                Lihat Galeri Foto
+                              </div>
+                            </div>
+
+                            {/* Slide Dots */}
+                            {photos.length > 1 && (
+                              <div className="flex items-center justify-center gap-1 pt-1">
+                                {photos.map((_, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => setPreviewPhotoIdx(i)}
+                                    className={`rounded-full transition-all cursor-pointer ${
+                                      i === previewPhotoIdx 
+                                        ? 'w-4 h-1.5 bg-[#F5D77F]' 
+                                        : 'w-1.5 h-1.5 bg-white/50'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* TAB 2: Strip Foto */}
+                    {previewTab === 'frame' && (() => {
+                      const isWed = (previewModalEvent.eventType || 'wedding') === 'wedding';
+                      const theme = PREVIEW_FRAME_THEMES[activeFrameThemeIdx] || PREVIEW_FRAME_THEMES[0];
+                      const photos = previewModalEvent.heroPhotos && previewModalEvent.heroPhotos.length > 0
+                        ? previewModalEvent.heroPhotos
+                        : DEFAULT_HERO_PHOTOS;
+
+                      return (
+                        <div className="w-full h-full relative bg-[#F5EFEB] flex flex-col justify-between p-3 overflow-hidden text-stone-900">
+                          <div className="text-center pt-3 pb-1">
+                            <span className="px-2.5 py-0.5 rounded-full bg-black/70 text-white text-[8px] font-mono tracking-widest uppercase">
+                              Pratinjau Hasil Strip
+                            </span>
+                          </div>
+
+                          <div 
+                            className="relative mx-auto w-[150px] rounded-xl shadow-2xl p-2 flex flex-col justify-between transition-colors duration-300"
+                            style={{ 
+                              backgroundColor: theme.hex,
+                              color: theme.textHex,
+                              border: `1.5px solid ${theme.borderHex}`
+                            }}
+                          >
+                            <div className="text-center pb-1">
+                              <span className="text-[6px] font-mono tracking-widest block uppercase opacity-80">
+                                {isWed ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH'}
+                              </span>
+                              <strong 
+                                className="text-[9px] font-serif tracking-wide block truncate"
+                                style={{ color: theme.textHex }}
+                              >
+                                {previewModalEvent.displayName}
+                              </strong>
+                            </div>
+
+                            <div className="space-y-1.5 py-1">
+                              <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/20 border border-black/10">
+                                <img src={photos[0] || DEFAULT_HERO_PHOTOS[0]} alt="Pose 1" className="w-full h-full object-cover" />
+                              </div>
+                              <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/20 border border-black/10">
+                                <img src={photos[1] || photos[0] || DEFAULT_HERO_PHOTOS[1]} alt="Pose 2" className="w-full h-full object-cover" />
+                              </div>
+                            </div>
+
+                            <div className="text-center pt-1 border-t border-black/10">
+                              <span className="text-[6px] font-mono opacity-80">
+                                {previewModalEvent.formattedDate || previewModalEvent.eventDate}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Theme Controls */}
+                          <div className="pt-1 flex items-center justify-between">
+                            <button
+                              type="button"
+                              onClick={() => setActiveFrameThemeIdx((prev) => (prev - 1 + PREVIEW_FRAME_THEMES.length) % PREVIEW_FRAME_THEMES.length)}
+                              className="p-1 rounded-full bg-white text-stone-700 shadow-sm border border-stone-200 cursor-pointer"
+                            >
+                              <ChevronLeft size={12} />
+                            </button>
+                            <span className="text-[9px] font-serif font-bold text-stone-800">
+                              {theme.name}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setActiveFrameThemeIdx((prev) => (prev + 1) % PREVIEW_FRAME_THEMES.length)}
+                              className="p-1 rounded-full bg-white text-stone-700 shadow-sm border border-stone-200 cursor-pointer"
+                            >
+                              <ChevronRight size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Quick Action Footer */}
+              <div className="pt-3 border-t border-stone-800/80 flex items-center justify-between gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => navigateToSetup(previewModalEvent.slug)}
+                  className="px-3 py-1.5 rounded-full bg-stone-900/80 hover:bg-stone-800 text-stone-300 hover:text-white text-xs font-serif border border-stone-800 transition cursor-pointer"
+                >
+                  Portal Setup Klien
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewModalEvent(null)}
+                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] text-[#F5D77F] text-xs font-serif font-bold border border-[#F5D77F]/30 transition cursor-pointer shadow-xs"
+                >
+                  Selesai
+                </button>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </motion.div>
   );
