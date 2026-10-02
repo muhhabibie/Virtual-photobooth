@@ -737,34 +737,36 @@ export default function ClientSetupPage() {
       </main>
 
       {/* ================= 🌟 3. STICKY BOTTOM ACTION BAR (LUXURY IVORY GLASS DOCK) 🌟 ================= */}
-      <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-stone-200/90 p-3 sm:p-4 z-40 shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
+      <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-[#EADBCC]/80 px-4 py-3 sm:py-3.5 z-40 shadow-[0_-8px_25px_rgba(107,17,31,0.06)]">
         <div className="max-w-xl mx-auto flex items-center justify-between gap-3">
-          <div className="text-left hidden xs:block">
-            <span className="text-[9.5px] font-mono text-[#8C7A6B] block uppercase tracking-wider font-semibold">
-              STATUS PENGATURAN
+          <div className="flex flex-col justify-center min-w-0 pr-1">
+            <span className="text-[9px] font-mono text-[#8C7A6B] uppercase tracking-wider font-semibold">
+              STATUS
             </span>
-            <span className="text-xs font-medium text-stone-800 flex items-center gap-1.5 mt-0.5">
+            <span className="text-[11px] sm:text-xs font-medium truncate mt-0.5">
               {isSaved ? (
-                <span className="text-emerald-700 font-semibold">• Tersimpan & Aktif</span>
+                <span className="text-emerald-700 font-semibold">• Tersimpan</span>
               ) : (
-                <span className="text-amber-800">• Perubahan belum disimpan</span>
+                <span className="text-amber-800 font-medium">• Belum disimpan</span>
               )}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
             <button
+              type="button"
               onClick={() => navigateToEvent(event.slug)}
-              className="px-4 py-3 rounded-full bg-[#FAF7F2] hover:bg-stone-100 active:scale-98 border border-stone-200 text-stone-800 text-xs sm:text-sm font-serif font-medium flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
+              className="px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-full bg-[#FAF7F2] hover:bg-stone-100 active:scale-95 border border-[#EADBCC] text-stone-800 text-xs sm:text-sm font-serif font-medium flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap"
               title="Buka Tampilan Web Tamu Utama"
             >
-              <Eye size={15} className="text-[#6B111F]" />
+              <Eye size={14} className="text-[#6B111F]" />
               <span>Web Tamu</span>
             </button>
 
             <button
+              type="button"
               onClick={handleSaveAll}
-              className="flex-1 xs:flex-none xs:px-8 py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-98 text-[#F5D77F] border border-[#F5D77F]/40 text-xs sm:text-sm font-serif font-bold flex items-center justify-center shadow-lg shadow-rose-950/20 transition cursor-pointer"
+              className="px-5 sm:px-7 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs sm:text-sm font-serif font-bold flex items-center justify-center shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap tracking-wide"
             >
               <span>Simpan Pengaturan</span>
             </button>
