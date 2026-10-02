@@ -1,15 +1,14 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Camera, Image as ImageIcon, Save, Check, 
+  Camera, Image as ImageIcon, Save,
   Trash2, Plus, ExternalLink, Eye, Share2, Upload, Crop,
-  Info, Layers, Move, ChevronLeft, ChevronRight, Smartphone
+  Info, Move, ChevronLeft, ChevronRight, Smartphone
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import PhotoCropModal from '../ui/PhotoCropModal';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
-import { FRAMES } from '../../config/frames';
 
 const PREVIEW_FRAME_THEMES = [
   { id: 'burgundy', name: 'Royal Burgundy', hex: '#6B111F', textHex: '#F5D77F', borderHex: '#8A1828' },
@@ -735,32 +734,6 @@ export default function ClientSetupPage() {
           </div>
         </div>
 
-        {/* Group D: Bingkai & Fitur Photobooth (Automated & Ready for Guests) */}
-        <div className="rounded-3xl bg-white border border-[#EADBCC]/80 p-5 sm:p-6 shadow-[0_8px_30px_rgba(107,17,31,0.04)] space-y-3">
-          <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
-            <Layers size={15} className="text-[#6B111F]" />
-            <h3 className="text-xs font-mono uppercase tracking-wider text-[#6B111F] font-bold">
-              03 • KOLEKSI BINGKAI PHOTOBOOTH
-            </h3>
-          </div>
-
-          <p className="text-stone-600 text-xs leading-relaxed">
-            Seluruh koleksi bingkai pernikahan sudah <strong>otomatis aktif</strong>. Para tamu undangan bebas memilih variasi bingkai eksklusif favorit mereka secara langsung saat berfoto di acara:
-          </p>
-
-          {/* Clean Horizontal Scroll of Available Frames */}
-          <div className="flex gap-2.5 overflow-x-auto pb-2 pt-1 no-scrollbar">
-            {FRAMES.map((f, i) => (
-              <div 
-                key={f.id || i}
-                className="flex-shrink-0 px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#EADBCC] text-xs text-stone-800 font-serif flex items-center gap-1.5 shadow-xs"
-              >
-                <span>{f.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
       </main>
 
       {/* ================= 🌟 3. STICKY BOTTOM ACTION BAR (LUXURY IVORY GLASS DOCK) 🌟 ================= */}
@@ -772,10 +745,7 @@ export default function ClientSetupPage() {
             </span>
             <span className="text-xs font-medium text-stone-800 flex items-center gap-1.5 mt-0.5">
               {isSaved ? (
-                <>
-                  <Check size={13} className="text-emerald-600" />
-                  <span className="text-emerald-700 font-semibold">Tersimpan & Aktif</span>
-                </>
+                <span className="text-emerald-700 font-semibold">• Tersimpan & Aktif</span>
               ) : (
                 <span className="text-amber-800">• Perubahan belum disimpan</span>
               )}
@@ -794,9 +764,8 @@ export default function ClientSetupPage() {
 
             <button
               onClick={handleSaveAll}
-              className="flex-1 xs:flex-none xs:px-8 py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-98 text-[#F5D77F] border border-[#F5D77F]/40 text-xs sm:text-sm font-serif font-bold flex items-center justify-center gap-2 shadow-lg shadow-rose-950/20 transition cursor-pointer"
+              className="flex-1 xs:flex-none xs:px-8 py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-98 text-[#F5D77F] border border-[#F5D77F]/40 text-xs sm:text-sm font-serif font-bold flex items-center justify-center shadow-lg shadow-rose-950/20 transition cursor-pointer"
             >
-              <Check size={16} />
               <span>Simpan Pengaturan</span>
             </button>
           </div>
