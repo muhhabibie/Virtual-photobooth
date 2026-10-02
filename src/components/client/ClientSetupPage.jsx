@@ -1,15 +1,37 @@
 import { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Camera, Image as ImageIcon, Save, Check, 
   Trash2, Plus, ExternalLink, Eye, Share2, Upload, Crop,
-  Info, Layers, Move
+  Info, Layers, Move, ChevronLeft, ChevronRight, Smartphone
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import PhotoCropModal from '../ui/PhotoCropModal';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
 import { FRAMES } from '../../config/frames';
+
+const PREVIEW_FRAME_THEMES = [
+  { id: 'burgundy', name: 'Royal Burgundy', hex: '#6B111F', textHex: '#F5D77F', borderHex: '#8A1828' },
+  { id: 'slate', name: 'Noir Slate', hex: '#2D3748', textHex: '#E2E8F0', borderHex: '#4A5568' },
+  { id: 'ivory', name: 'Ivory Bliss', hex: '#FDFBF7', textHex: '#6B111F', borderHex: '#E2DDD5' },
+  { id: 'gold', name: 'Antique Gold', hex: '#C4A46C', textHex: '#FFFFFF', borderHex: '#D4AF37' },
+];
+
+function formatIndoDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const [y, m, d] = dateStr.split('-');
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    const monthName = months[parseInt(m, 10) - 1] || m;
+    return `${parseInt(d, 10)} ${monthName} ${y}`;
+  } catch (e) {
+    return dateStr;
+  }
+}
 
 export default function ClientSetupPage() {
   const { 
@@ -35,6 +57,11 @@ export default function ClientSetupPage() {
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  // Live Preview State (Live Simulator)
+  const [previewTab, setPreviewTab] = useState('hero'); // 'hero' | 'frame'
+  const [previewPhotoIdx, setPreviewPhotoIdx] = useState(0);
+  const [activeFrameThemeIdx, setActiveFrameThemeIdx] = useState(0);
 
   // Photo Crop Modal State
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -107,6 +134,7 @@ export default function ClientSetupPage() {
       const selected = copy.splice(idx, 1)[0];
       return [selected, ...copy];
     });
+    setPreviewPhotoIdx(0);
     setIsSaved(false);
     toast('Foto dijadikan Cover Utama', 'success');
   };
@@ -150,6 +178,9 @@ export default function ClientSetupPage() {
     ? `${groomName} & ${brideName}` 
     : (event.displayName || 'Mempelai');
 
+  const formattedDisplayDate = formatIndoDate(eventDate) || event.formattedDate || '30 Mei 2026';
+  const activeStripTheme = PREVIEW_FRAME_THEMES[activeFrameThemeIdx] || PREVIEW_FRAME_THEMES[0];
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -159,7 +190,6 @@ export default function ClientSetupPage() {
     >
       {/* ================= 🌌 LUXURY WARM AMBIENT BACKDROP 🌌 ================= */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Soft Warm Champagne & Silk Radial Glow */}
         <div 
           className="absolute inset-0"
           style={{
@@ -167,7 +197,6 @@ export default function ClientSetupPage() {
           }}
         />
 
-        {/* Gentle Top Burgundy Light Accenting Header */}
         <div 
           className="absolute -top-32 left-1/2 -translate-x-1/2 w-full max-w-3xl h-80 pointer-events-none opacity-20 blur-[110px]"
           style={{
@@ -226,7 +255,7 @@ export default function ClientSetupPage() {
               Atur nama kedua mempelai dan foto prewedding yang akan menyambut seluruh tamu undangan saat memindai QR code di meja resepsi.
             </p>
 
-            {/* Quick Guest Link Bar (Inspired by Lampiran 2 Undangan Box) */}
+            {/* Quick Guest Link Bar */}
             <div className="mt-4 pt-3.5 border-t border-stone-200/80 flex flex-wrap items-center justify-between gap-2.5">
               <div className="flex items-center gap-1.5 text-xs font-mono text-stone-600 truncate max-w-[220px]">
                 <span className="text-stone-400">Tautan:</span>
@@ -236,14 +265,14 @@ export default function ClientSetupPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopyGuestLink}
-                  className="px-3 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-medium flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-xs"
+                  className="px-3 py-1 rounded-full bg-[#FAF7F2] hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-medium flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-xs"
                 >
                   <Share2 size={12} className="text-[#8C7A6B]" />
                   <span>Salin</span>
                 </button>
                 <button
                   onClick={() => navigateToEvent(event.slug)}
-                  className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1 shadow-md shadow-rose-950/15 transition active:scale-95 cursor-pointer"
+                  className="px-3.5 py-1 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1 shadow-md shadow-rose-950/15 transition active:scale-95 cursor-pointer"
                 >
                   <Eye size={12} />
                   <span>Buka Web</span>
@@ -251,6 +280,222 @@ export default function ClientSetupPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ================= 📱 GROUP LIVE PREVIEW (GAMBARAN LAYAR TAMU LANGSUNG) 📱 ================= */}
+        <div className="rounded-3xl bg-white border border-[#EADBCC]/90 p-5 sm:p-6 shadow-[0_12px_35px_rgba(107,17,31,0.06)] space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-stone-100 pb-3">
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8C7A6B] font-bold block">
+                SIMULASI LANGSUNG
+              </span>
+              <h3 className="text-sm font-serif font-bold text-stone-900">
+                Gambaran di Layar HP Tamu
+              </h3>
+            </div>
+
+            {/* Toggle Preview Mode */}
+            <div className="inline-flex p-1 rounded-full bg-[#FAF7F2] border border-[#E5DACB] self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setPreviewTab('hero')}
+                className={`px-3.5 py-1 rounded-full text-xs font-serif font-bold transition cursor-pointer ${
+                  previewTab === 'hero' 
+                    ? 'bg-[#6B111F] text-[#F5D77F] shadow-xs' 
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                Beranda Tamu
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewTab('frame')}
+                className={`px-3.5 py-1 rounded-full text-xs font-serif font-bold transition cursor-pointer ${
+                  previewTab === 'frame' 
+                    ? 'bg-[#6B111F] text-[#F5D77F] shadow-xs' 
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                Hasil Strip Foto
+              </button>
+            </div>
+          </div>
+
+          {/* Interactive Phone Simulation Frame */}
+          <div className="relative mx-auto w-full max-w-[320px] xs:max-w-[330px] rounded-[36px] bg-stone-950 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] border-[5px] border-stone-800 select-none">
+            {/* iPhone Dynamic Island */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-4.5 bg-stone-900 rounded-full z-40 flex items-center justify-between px-2.5 pointer-events-none">
+              <div className="w-2 h-2 rounded-full bg-stone-950" />
+              <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A24]" />
+            </div>
+
+            {/* Phone Screen Interior */}
+            <div className="relative w-full aspect-[9/16] rounded-[28px] overflow-hidden bg-[#10060E]">
+              
+              {/* TAB 1: Beranda Sambutan Tamu (Event Hero) */}
+              {previewTab === 'hero' && (
+                <div className="w-full h-full relative flex flex-col justify-between p-4 text-center">
+                  {/* Backdrop Photo (Updates Live from Cover Photo) */}
+                  <img 
+                    src={heroPhotos[previewPhotoIdx] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[0]} 
+                    alt="Preview Backdrop" 
+                    className="absolute inset-0 w-full h-full object-cover filter brightness-[0.82] contrast-105"
+                  />
+
+                  {/* Romantic Shadow Vignettes */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/25 to-black/90 pointer-events-none" />
+
+                  {/* Top Wedding Names & Header */}
+                  <div className="relative z-10 pt-5 flex flex-col items-center">
+                    <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-semibold text-amber-200 uppercase tracking-[0.2em] border border-white/15 shadow-sm">
+                      THE WEDDING CELEBRATION OF
+                    </span>
+
+                    {/* Live Couple Calligraphy (Updates Live!) */}
+                    <h1 
+                      style={{ 
+                        fontFamily: "'Alex Brush', 'Great Vibes', cursive",
+                        textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.4)'
+                      }}
+                      className="text-4xl xs:text-5xl text-white font-normal leading-tight mt-1 px-1 drop-shadow-2xl"
+                    >
+                      {combinedDisplayName}
+                    </h1>
+
+                    {/* Live Date & Venue */}
+                    <div className="mt-1 px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15">
+                      <p className="text-[9.5px] text-rose-100 font-medium">
+                        {formattedDisplayDate} • {event.venue || 'Grand Ballroom Jakarta'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Bottom Photobooth Action Buttons Simulation */}
+                  <div className="relative z-10 pb-2 space-y-2">
+                    <div className="flex flex-col gap-1.5 w-full max-w-[220px] mx-auto">
+                      <div className="py-2 px-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] text-[#F5D77F] border border-amber-300/40 text-[11px] font-serif font-bold shadow-lg flex items-center justify-center gap-1.5">
+                        <Camera size={12} />
+                        <span>Mulai Photobooth</span>
+                      </div>
+                      <div className="py-1.5 px-3 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-[10px] font-medium flex items-center justify-center">
+                        Lihat Galeri Foto
+                      </div>
+                    </div>
+
+                    {/* Prewedding Slide Dots Preview */}
+                    {heroPhotos.length > 1 && (
+                      <div className="flex items-center justify-center gap-1 pt-1">
+                        {heroPhotos.map((_, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setPreviewPhotoIdx(i)}
+                            className={`rounded-full transition-all cursor-pointer ${
+                              i === previewPhotoIdx 
+                                ? 'w-4 h-1.5 bg-[#F5D77F]' 
+                                : 'w-1.5 h-1.5 bg-white/50'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: Hasil Strip Foto Tamu (Frame Preview) */}
+              {previewTab === 'frame' && (
+                <div className="w-full h-full relative bg-[#F5EFEB] flex flex-col justify-between p-3.5 overflow-hidden">
+                  {/* Subtle Studio Light */}
+                  <div className="absolute inset-0 bg-radial from-white/70 to-transparent pointer-events-none" />
+
+                  {/* Mode Badge at Top */}
+                  <div className="relative z-10 text-center pt-4 pb-1">
+                    <span className="px-2.5 py-0.5 rounded-full bg-black/70 text-white text-[8px] font-mono tracking-widest uppercase">
+                      Pratinjau Hasil Strip
+                    </span>
+                  </div>
+
+                  {/* Photobooth Strip Mockup */}
+                  <div 
+                    className="relative z-10 mx-auto w-[160px] xs:w-[170px] rounded-xl shadow-2xl p-2 flex flex-col justify-between transition-colors duration-300"
+                    style={{ 
+                      backgroundColor: activeStripTheme.hex,
+                      color: activeStripTheme.textHex,
+                      border: `1.5px solid ${activeStripTheme.borderHex}`
+                    }}
+                  >
+                    {/* Header Strip */}
+                    <div className="text-center pb-1">
+                      <span className="text-[6.5px] font-mono tracking-widest block uppercase opacity-80">
+                        THE WEDDING OF
+                      </span>
+                      <strong 
+                        className="text-[9.5px] font-serif tracking-wide block truncate"
+                        style={{ color: activeStripTheme.textHex }}
+                      >
+                        {combinedDisplayName}
+                      </strong>
+                    </div>
+
+                    {/* Photo Cuts (Simulated Guest Poses with Prewedding Photos) */}
+                    <div className="space-y-1.5 py-1">
+                      <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/20 border border-black/10">
+                        <img 
+                          src={heroPhotos[0] || DEFAULT_HERO_PHOTOS[0]} 
+                          alt="Pose 1" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                      <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/20 border border-black/10">
+                        <img 
+                          src={heroPhotos[1] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[1]} 
+                          alt="Pose 2" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Footer Strip */}
+                    <div className="text-center pt-1 border-t border-black/10">
+                      <span className="text-[6.5px] font-mono opacity-80">
+                        {formattedDisplayDate}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Theme Switcher Controls */}
+                  <div className="relative z-10 pt-2 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setActiveFrameThemeIdx((prev) => (prev - 1 + PREVIEW_FRAME_THEMES.length) % PREVIEW_FRAME_THEMES.length)}
+                      className="p-1 rounded-full bg-white text-stone-700 shadow-sm border border-stone-200 cursor-pointer"
+                      title="Tema Sebelumnya"
+                    >
+                      <ChevronLeft size={13} />
+                    </button>
+                    <span className="text-[10px] font-serif font-bold text-stone-800">
+                      {activeStripTheme.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveFrameThemeIdx((prev) => (prev + 1) % PREVIEW_FRAME_THEMES.length)}
+                      className="p-1 rounded-full bg-white text-stone-700 shadow-sm border border-stone-200 cursor-pointer"
+                      title="Tema Berikutnya"
+                    >
+                      <ChevronRight size={13} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          {/* Friendly UX Caption */}
+          <p className="text-stone-500 text-[11px] text-center max-w-sm mx-auto leading-relaxed pt-1">
+            Simulasi di atas langsung bereaksi saat Anda mengubah nama atau foto di bawah. Hasil inilah yang akan tampil di ponsel para tamu.
+          </p>
         </div>
 
         {/* Group B: Informasi Mempelai (Mempelai Pria Dulu Baru Wanita) */}
