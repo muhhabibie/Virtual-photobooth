@@ -180,7 +180,8 @@ export default function StepResult() {
 
     // Frame Header Branding
     const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
-    const coupleTitle = activeEvent?.displayName ? activeEvent.displayName.toUpperCase() : 'THE WEDDING OF';
+    const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
+    const coupleTitle = activeEvent?.displayName ? activeEvent.displayName.toUpperCase() : (isWedding ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH');
     ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
     ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
     ctx.textAlign = 'center';
@@ -219,16 +220,16 @@ export default function StepResult() {
     });
 
     // Frame Footer Signature
-    const displayName = guestName ? guestName.trim() : 'Sabrina & Raka';
+    const displayName = guestName ? guestName.trim() : (isWedding ? 'Tamu Undangan' : 'Pengunjung Event');
     ctx.fillStyle = isLightBg ? '#6B111F' : 'rgba(255,255,255,0.85)';
     ctx.font = `italic bold ${13 * scale}px Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('With Love & Blessings,', totalW / 2, totalH - pad - 38 * scale);
+    ctx.fillText(isWedding ? 'With Love & Blessings,' : 'Memories & Best Wishes,', totalW / 2, totalH - pad - 38 * scale);
 
     ctx.fillStyle = isLightBg ? '#6B111F' : '#F5D77F';
     ctx.font = `italic bold ${24 * scale}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
     ctx.fillText(displayName, totalW / 2, totalH - pad - 10 * scale);
-  }, [capturedPhotos, stripColor, guestName, selectedFilter]);
+  }, [capturedPhotos, stripColor, guestName, selectedFilter, activeEvent]);
 
   useEffect(() => {
     renderStrip();
@@ -309,15 +310,16 @@ export default function StepResult() {
     if (!canvas) return;
 
     const sanitize = (str) => (str || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
-    const guest = sanitize(guestName) || 'Tamu';
-    const couple = sanitize(activeEvent?.displayName) || 'Pengantin';
+    const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
+    const guest = sanitize(guestName) || (isWedding ? 'Tamu' : 'Pengunjung');
+    const couple = sanitize(activeEvent?.displayName) || (isWedding ? 'Pengantin' : 'Event');
     const filename = `${guest}_${couple}.jpg`;
 
     const a = document.createElement('a');
     a.download = filename;
     a.href = canvas.toDataURL('image/jpeg', 0.96);
     a.click();
-    toast(`Photo strip berhasil diunduh (${filename})! 💍`, 'success');
+    toast(`Photo strip berhasil diunduh (${filename})!`, 'success');
   };
 
   const handleShare = async () => {
@@ -325,8 +327,9 @@ export default function StepResult() {
     if (!canvas) return;
 
     const sanitize = (str) => (str || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
-    const guest = sanitize(guestName) || 'Tamu';
-    const couple = sanitize(activeEvent?.displayName) || 'Pengantin';
+    const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
+    const guest = sanitize(guestName) || (isWedding ? 'Tamu' : 'Pengunjung');
+    const couple = sanitize(activeEvent?.displayName) || (isWedding ? 'Pengantin' : 'Event');
     const filename = `${guest}_${couple}.jpg`;
 
     canvas.toBlob(async (blob) => {
@@ -335,8 +338,8 @@ export default function StepResult() {
       if (navigator.share && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
-            title: `The Wedding of ${couple}`,
-            text: `Kenangan foto pernikahan dari ${guest}`,
+            title: isWedding ? `The Wedding of ${couple}` : `${couple} Photobooth`,
+            text: isWedding ? `Kenangan foto pernikahan dari ${guest}` : `Kenangan photobooth dari ${guest} di ${couple}`,
             files: [file],
           });
           toast('Berhasil dibagikan', 'success');

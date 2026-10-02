@@ -11,7 +11,16 @@ export function PhotoboothProvider({ children }) {
   const [events, setEvents] = useState(() => {
     try {
       const raw = localStorage.getItem(EVENTS_STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : INITIAL_EVENTS;
+      let parsed = raw ? JSON.parse(raw) : INITIAL_EVENTS;
+
+      // Auto-merge newly added default events (like pestapora, void-vision, jakcloth) if not yet in localStorage
+      const existingSlugs = new Set(parsed.map(e => e.slug));
+      INITIAL_EVENTS.forEach(initEvt => {
+        if (!existingSlugs.has(initEvt.slug)) {
+          parsed.push(initEvt);
+        }
+      });
+
       return parsed.map(evt => {
         // Ensure Mempelai Pria comes before Mempelai Wanita
         if (evt.groomName && evt.brideName && evt.displayName === `${evt.brideName} & ${evt.groomName}`) {
@@ -148,20 +157,48 @@ export function PhotoboothProvider({ children }) {
   }, []);
 
   // Event Management (Create, Edit, Delete, Expire, Update Hero Photos)
-  const createEvent = useCallback(({ groomName, brideName, slug, eventDate, package: pkgKey, pin, templateIds, heroPhotos }) => {
+  const createEvent = useCallback(({ 
+    eventType = 'wedding',
+    eventName = '',
+    groomName = '', 
+    brideName = '', 
+    venue = '',
+    slug, 
+    eventDate, 
+    package: pkgKey, 
+    pin, 
+    templateIds, 
+    heroPhotos 
+  }) => {
     const pkg = PACKAGES[pkgKey] || PACKAGES.standard;
     const activeDays = pkg.activeDays || 10;
     const now = Date.now();
 
+    const isWedding = eventType === 'wedding';
+    const cleanGroom = (groomName || '').trim();
+    const cleanBride = (brideName || '').trim();
+    const cleanEventName = (eventName || '').trim();
+    
+    let computedDisplayName = cleanEventName;
+    if (isWedding) {
+      computedDisplayName = (cleanGroom && cleanBride) 
+        ? `${cleanGroom} & ${cleanBride}` 
+        : (cleanEventName || cleanGroom || cleanBride || 'Mempelai');
+    } else if (!computedDisplayName) {
+      computedDisplayName = 'Special Event';
+    }
+
     const newEvt = {
       id: `evt_${now}`,
       slug: slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, ''),
-      groomName: groomName.trim(),
-      brideName: brideName.trim(),
-      displayName: `${groomName.trim()} & ${brideName.trim()}`,
+      eventType: eventType || 'wedding',
+      eventName: cleanEventName,
+      groomName: cleanGroom,
+      brideName: cleanBride,
+      displayName: computedDisplayName,
       eventDate: eventDate || new Date().toISOString().split('T')[0],
       formattedDate: new Date(eventDate || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
-      venue: 'Wedding Venue',
+      venue: (venue || '').trim() || (isWedding ? 'Wedding Venue' : 'Event Venue'),
       package: pkgKey,
       pin: pin || '',
       templateIds: templateIds || ['wedding-classic', 'gold-luxury'],
@@ -206,17 +243,35 @@ export function PhotoboothProvider({ children }) {
   const updateEventConfig = useCallback((eventId, updates) => {
     setEvents(prev => prev.map(e => {
       if (e.id === eventId || e.slug === eventId) {
-        const groom = updates.groomName !== undefined ? updates.groomName : e.groomName;
-        const bride = updates.brideName !== undefined ? updates.brideName : e.brideName;
-        const displayName = (groom && bride) ? `${groom} & ${bride}` : (updates.displayName || e.displayName);
+        const eventType = updates.eventType !== undefined ? updates.eventType : (e.eventType || 'wedding');
+        const isWedding = eventType === 'wedding';
+        const groom = updates.groomName !== undefined ? updates.groomName : (e.groomName || '');
+        const bride = updates.brideName !== undefined ? updates.brideName : (e.brideName || '');
+        const eventName = updates.eventName !== undefined ? updates.eventName : (e.eventName || '');
+        const venue = updates.venue !== undefined ? updates.venue : (e.venue || '');
+
+        let displayName = updates.displayName;
+        if (!displayName) {
+          if (isWedding && groom && bride) {
+            displayName = `${groom} & ${bride}`;
+          } else if (eventName) {
+            displayName = eventName;
+          } else {
+            displayName = e.displayName;
+          }
+        }
+
         const eventDate = updates.eventDate !== undefined ? updates.eventDate : e.eventDate;
         const formattedDate = eventDate ? new Date(eventDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : e.formattedDate;
 
         return {
           ...e,
           ...updates,
-          brideName: bride,
+          eventType,
+          eventName,
           groomName: groom,
+          brideName: bride,
+          venue,
           displayName,
           eventDate,
           formattedDate

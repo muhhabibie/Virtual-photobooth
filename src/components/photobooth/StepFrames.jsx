@@ -104,10 +104,12 @@ export default function StepFrames() {
 
     // Header branding
     const coupleTitle = activeEvent?.displayName || 'Raka & Sabrina';
+    const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
+    const headerTitle = isWedding ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH';
     ctx.fillStyle = theme.textHex;
     ctx.font = 'bold 11px Georgia, serif';
     ctx.textAlign = 'center';
-    ctx.fillText('THE WEDDING OF', w / 2, pad + 18);
+    ctx.fillText(headerTitle, w / 2, pad + 18);
 
     ctx.font = 'italic bold 17px Georgia, serif';
     ctx.fillText(coupleTitle, w / 2, pad + 38);
@@ -128,16 +130,18 @@ export default function StepFrames() {
       ctx.fillText(`Pose #${i + 1}`, w / 2, y + photoH / 2 + 13);
     }
 
-    // Footer signature: Line 1 (With Love & Blessings) & Line 2 (Marko - Aesthetic & Crystal Clear Font)
-    const displayName = guestName.trim() ? guestName.trim() : 'Tamu Undangan';
+    // Footer signature: Line 1 (With Love & Blessings or Memories & Best Wishes) & Line 2 (Marko - Aesthetic & Crystal Clear Font)
+    const displayName = guestName.trim() ? guestName.trim() : (isWedding ? 'Tamu Undangan' : 'Pengunjung Event');
     ctx.fillStyle = theme.hex === '#FDFBF7' ? '#6B111F' : 'rgba(255,255,255,0.85)';
     ctx.font = 'italic 10.5px Georgia, serif';
-    ctx.fillText('With Love & Blessings,', w / 2, totalH - pad - 24);
+    ctx.fillText(isWedding ? 'With Love & Blessings,' : 'Memories & Best Wishes,', w / 2, totalH - pad - 24);
 
     ctx.fillStyle = theme.textHex;
     ctx.font = "italic bold 17px 'Playfair Display', 'Cormorant Garamond', Georgia, serif";
     ctx.fillText(displayName, w / 2, totalH - pad - 6);
-  }, [targetPhotoCount, activeTheme, guestName]);
+  }, [targetPhotoCount, activeTheme, guestName, activeEvent]);
+
+  const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
 
   return (
     <div className="fixed inset-0 z-[100] w-full h-[100dvh] max-h-[100dvh] bg-[#FBF8F2] text-gray-900 flex flex-col font-sans overflow-hidden select-none">
@@ -150,7 +154,7 @@ export default function StepFrames() {
         <div className="flex items-start justify-between mb-3 sm:mb-4">
           <div>
             <p className="text-[9px] sm:text-[10px] font-serif font-bold uppercase tracking-widest text-[#C4A46C]">
-              THE WEDDING OF SABRINA & RAKA
+              {isWedding ? `THE WEDDING OF ${activeEvent?.displayName?.toUpperCase() || 'SABRINA & RAKA'}` : `OFFICIAL PHOTOBOOTH ${activeEvent?.displayName?.toUpperCase() || 'EVENT'}`}
             </p>
             <h1 className="text-xl sm:text-3xl font-serif font-bold text-gray-900 leading-tight mt-0.5">
               Studio Pemilihan <span className="text-[#6B111F]">Strip & Bingkai</span>
@@ -252,7 +256,7 @@ export default function StepFrames() {
                   1
                 </div>
                 <h2 className="text-xs sm:text-sm font-serif font-bold text-gray-900">
-                  Nama Tamu & Doa Restu
+                  {isWedding ? 'Nama Tamu & Doa Restu' : 'Nama & Pesan Kesan'}
                 </h2>
               </div>
             </div>
@@ -261,7 +265,7 @@ export default function StepFrames() {
               <div className="mb-2.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-amber-900 font-bold">
                   <UserCheck size={13} className="text-amber-600" />
-                  <span>Undangan: <b>{guestName.trim()}</b></span>
+                  <span>{isWedding ? 'Undangan' : 'Pengunjung'}: <b>{guestName.trim()}</b></span>
                 </div>
                 <span className="text-[9px] sm:text-[10px] text-amber-700 bg-amber-200/60 px-1.5 py-0.5 rounded-md font-mono">
                   Tercetak di Strip
@@ -284,7 +288,7 @@ export default function StepFrames() {
                       className="absolute -top-7 left-2.5 z-30 inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white text-[11px] font-bold shadow-xl shadow-red-950/30 border border-red-300/60 pointer-events-none"
                     >
                       <AlertCircle size={13} className="animate-pulse text-amber-200 flex-shrink-0" />
-                      <span>Isi Nama Tamu kamu terlebih dahulu!</span>
+                      <span>{isWedding ? 'Isi Nama Tamu kamu terlebih dahulu!' : 'Isi Nama kamu terlebih dahulu!'}</span>
                       {/* Downward Caret Arrow pointing to the input */}
                       <div className="absolute -bottom-1 left-6 w-2.5 h-2.5 bg-rose-600 rotate-45 border-r border-b border-red-300/60" />
                     </motion.div>
@@ -293,7 +297,7 @@ export default function StepFrames() {
 
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-[11px] sm:text-xs font-bold text-gray-700 flex items-center gap-1">
-                    <span>Nama Lengkap Tamu</span>
+                    <span>{isWedding ? 'Nama Lengkap Tamu' : 'Nama Lengkap'}</span>
                     <span className="text-red-500 font-bold">*</span>
                   </label>
                 </div>
@@ -317,11 +321,11 @@ export default function StepFrames() {
               </div>
               <div>
                 <label className="text-[11px] sm:text-xs font-medium text-gray-600 mb-1 block">
-                  Pesan / Doa Singkat <span className="text-gray-400 font-normal">(opsional)</span>
+                  {isWedding ? 'Pesan / Doa Singkat' : 'Pesan / Ucapan Singkat'} <span className="text-gray-400 font-normal">(opsional)</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Doa singkat (Contoh: Bahagia selalu Sabrina & Raka!)..."
+                  placeholder={isWedding ? `Doa singkat (Contoh: Bahagia selalu ${activeEvent?.displayName || 'kedua mempelai'}!)...` : `Pesan singkat (Contoh: Seru banget di ${activeEvent?.displayName || 'event'}!)...`}
                   value={guestMessage}
                   onChange={e => setGuestMessage(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleStartCamera()}

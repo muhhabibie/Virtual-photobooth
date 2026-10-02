@@ -47,11 +47,14 @@ export default function ClientSetupPage() {
 
   // If slug doesn't match an existing event, fallback to first event
   const event = activeEvent || events.find(e => e.slug === currentSlug) || events[0];
+  const isWedding = (event?.eventType || 'wedding') === 'wedding';
 
-  // Form State - Mempelai Pria (groom) first, then Mempelai Wanita (bride)
+  // Form State
   const [heroPhotos, setHeroPhotos] = useState(event?.heroPhotos || DEFAULT_HERO_PHOTOS);
+  const [eventName, setEventName] = useState(event?.eventName || (isWedding ? '' : (event?.displayName || '')));
   const [groomName, setGroomName] = useState(event?.groomName || 'Raka');
   const [brideName, setBrideName] = useState(event?.brideName || 'Sabrina');
+  const [venue, setVenue] = useState(event?.venue || (isWedding ? 'Grand Ballroom Jakarta' : 'Venue Acara'));
   const [eventDate, setEventDate] = useState(event?.eventDate || '2026-05-30');
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -156,8 +159,11 @@ export default function ClientSetupPage() {
   // Save all changes
   const handleSaveAll = () => {
     updateEventConfig(event.id, {
+      eventType: event.eventType || 'wedding',
+      eventName,
       groomName,
       brideName,
+      venue,
       eventDate,
       heroPhotos,
     });
@@ -172,10 +178,10 @@ export default function ClientSetupPage() {
     toast('Tautan web tamu berhasil disalin', 'success');
   };
 
-  // Mempelai Pria duluan, baru Mempelai Wanita (Raka & Sabrina)
-  const combinedDisplayName = (groomName && brideName) 
-    ? `${groomName} & ${brideName}` 
-    : (event.displayName || 'Mempelai');
+  // Display Name logic: wedding = groom & bride, non-wedding = eventName
+  const combinedDisplayName = isWedding
+    ? ((groomName && brideName) ? `${groomName} & ${brideName}` : (groomName || brideName || event.displayName || 'Mempelai'))
+    : (eventName || event.displayName || 'Event');
 
   const formattedDisplayDate = formatIndoDate(eventDate) || event.formattedDate || '30 Mei 2026';
   const activeStripTheme = PREVIEW_FRAME_THEMES[activeFrameThemeIdx] || PREVIEW_FRAME_THEMES[0];
@@ -218,7 +224,7 @@ export default function ClientSetupPage() {
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-[10px] font-mono tracking-widest text-[#8C7A6B] uppercase font-bold">
-              PORTAL PENGANTIN
+              {isWedding ? 'PORTAL PENGANTIN' : 'PORTAL PENYELENGGARA'}
             </span>
             <h2 className="text-sm font-serif font-bold text-stone-900 tracking-wide truncate max-w-[200px] xs:max-w-[280px]">
               {combinedDisplayName}
@@ -245,13 +251,15 @@ export default function ClientSetupPage() {
         <div className="rounded-3xl bg-white border border-[#EADBCC]/80 p-5 sm:p-6 shadow-[0_8px_30px_rgba(107,17,31,0.04)] relative overflow-hidden">
           <div className="relative z-10">
             <span className="inline-block text-[10px] font-mono uppercase tracking-[0.25em] text-[#8C7A6B] mb-1 font-bold">
-              ATUR PHOTOBOOTH PERNIKAHAN
+              {isWedding ? 'ATUR PHOTOBOOTH PERNIKAHAN' : 'ATUR PHOTOBOOTH ACARA'}
             </span>
             <h1 className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight">
-              Persiapkan Sambutan Tamu
+              {isWedding ? 'Persiapkan Sambutan Tamu' : 'Persiapkan Display Photobooth Acara'}
             </h1>
             <p className="text-stone-600 text-xs mt-1.5 leading-relaxed">
-              Atur nama kedua mempelai dan foto prewedding yang akan menyambut seluruh tamu undangan saat memindai QR code di meja resepsi.
+              {isWedding 
+                ? 'Atur nama kedua mempelai dan foto prewedding yang akan menyambut seluruh tamu undangan saat memindai QR code di meja resepsi.'
+                : 'Atur nama acara, lokasi venue, serta foto display/poster yang menyambut pengunjung saat memindai QR code di photobooth event.'}
             </p>
 
             {/* Quick Guest Link Bar */}
@@ -347,16 +355,28 @@ export default function ClientSetupPage() {
                   {/* Top Wedding Names & Header */}
                   <div className="relative z-10 pt-5 flex flex-col items-center">
                     <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-semibold text-amber-200 uppercase tracking-[0.2em] border border-white/15 shadow-sm">
-                      THE WEDDING CELEBRATION OF
+                      {isWedding 
+                        ? 'THE WEDDING CELEBRATION OF' 
+                        : (event.eventType === 'concert' 
+                            ? 'OFFICIAL FESTIVAL PHOTOBOOTH' 
+                            : (event.eventType === 'exhibition' 
+                                ? 'EXHIBITION PHOTOBOOTH' 
+                                : (event.eventType === 'festival' 
+                                    ? 'OFFICIAL EXPO PHOTOBOOTH' 
+                                    : 'OFFICIAL EVENT PHOTOBOOTH')))}
                     </span>
 
-                    {/* Live Couple Calligraphy (Updates Live!) */}
+                    {/* Live Couple Calligraphy or Modern Bold Display */}
                     <h1 
-                      style={{ 
+                      style={isWedding ? { 
                         fontFamily: "'Alex Brush', 'Great Vibes', cursive",
                         textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.4)'
+                      } : {
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                        textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.3)',
+                        letterSpacing: '-0.02em'
                       }}
-                      className="text-4xl xs:text-5xl text-white font-normal leading-tight mt-1 px-1 drop-shadow-2xl"
+                      className={`${isWedding ? 'text-4xl xs:text-5xl font-normal' : 'text-2xl xs:text-3xl font-serif font-black tracking-tight'} text-white leading-tight mt-1 px-1 drop-shadow-2xl`}
                     >
                       {combinedDisplayName}
                     </h1>
@@ -364,7 +384,7 @@ export default function ClientSetupPage() {
                     {/* Live Date & Venue */}
                     <div className="mt-1 px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15">
                       <p className="text-[9.5px] text-rose-100 font-medium">
-                        {formattedDisplayDate} • {event.venue || 'Grand Ballroom Jakarta'}
+                        {formattedDisplayDate} • {venue || event.venue || (isWedding ? 'Grand Ballroom Jakarta' : 'Venue Acara')}
                       </p>
                     </div>
                   </div>
@@ -427,7 +447,7 @@ export default function ClientSetupPage() {
                     {/* Header Strip */}
                     <div className="text-center pb-1">
                       <span className="text-[6.5px] font-mono tracking-widest block uppercase opacity-80">
-                        THE WEDDING OF
+                        {isWedding ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH'}
                       </span>
                       <strong 
                         className="text-[9.5px] font-serif tracking-wide block truncate"
@@ -497,11 +517,11 @@ export default function ClientSetupPage() {
           </p>
         </div>
 
-        {/* Group B: Informasi Mempelai (Mempelai Pria Dulu Baru Wanita) */}
+        {/* Group B: Informasi Mempelai atau Acara */}
         <div className="rounded-3xl bg-white border border-[#EADBCC]/80 p-5 sm:p-6 shadow-[0_8px_30px_rgba(107,17,31,0.04)] space-y-4">
           <div className="flex items-center justify-between border-b border-stone-100 pb-3">
             <h3 className="text-xs font-mono uppercase tracking-wider text-[#6B111F] font-bold">
-              01 • INFORMASI MEMPELAI
+              {isWedding ? '01 • INFORMASI MEMPELAI' : '01 • INFORMASI ACARA & LOKASI'}
             </h3>
             <span className="text-[10px] font-mono text-stone-400">
               Tercetak di foto tamu
@@ -509,44 +529,84 @@ export default function ClientSetupPage() {
           </div>
 
           <div className="space-y-3.5">
-            {/* 1. Mempelai Pria First */}
-            <div>
-              <label className="text-xs text-stone-700 font-medium block mb-1.5">
-                Nama Panggilan Mempelai Pria
-              </label>
-              <input
-                type="text"
-                placeholder="Contoh: Raka"
-                value={groomName}
-                onChange={(e) => {
-                  setGroomName(e.target.value);
-                  setIsSaved(false);
-                }}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-sm focus:outline-none focus:border-[#6B111F] focus:bg-white focus:ring-2 focus:ring-[#6B111F]/10 transition placeholder-stone-400 font-serif"
-              />
-            </div>
+            {isWedding ? (
+              <>
+                {/* 1. Mempelai Pria First */}
+                <div>
+                  <label className="text-xs text-stone-700 font-medium block mb-1.5">
+                    Nama Panggilan Mempelai Pria
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Raka"
+                    value={groomName}
+                    onChange={(e) => {
+                      setGroomName(e.target.value);
+                      setIsSaved(false);
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-sm focus:outline-none focus:border-[#6B111F] focus:bg-white focus:ring-2 focus:ring-[#6B111F]/10 transition placeholder-stone-400 font-serif"
+                  />
+                </div>
 
-            {/* 2. Mempelai Wanita Second */}
-            <div>
-              <label className="text-xs text-stone-700 font-medium block mb-1.5">
-                Nama Panggilan Mempelai Wanita
-              </label>
-              <input
-                type="text"
-                placeholder="Contoh: Sabrina"
-                value={brideName}
-                onChange={(e) => {
-                  setBrideName(e.target.value);
-                  setIsSaved(false);
-                }}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-sm focus:outline-none focus:border-[#6B111F] focus:bg-white focus:ring-2 focus:ring-[#6B111F]/10 transition placeholder-stone-400 font-serif"
-              />
-            </div>
+                {/* 2. Mempelai Wanita Second */}
+                <div>
+                  <label className="text-xs text-stone-700 font-medium block mb-1.5">
+                    Nama Panggilan Mempelai Wanita
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Sabrina"
+                    value={brideName}
+                    onChange={(e) => {
+                      setBrideName(e.target.value);
+                      setIsSaved(false);
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-sm focus:outline-none focus:border-[#6B111F] focus:bg-white focus:ring-2 focus:ring-[#6B111F]/10 transition placeholder-stone-400 font-serif"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Nama Acara */}
+                <div>
+                  <label className="text-xs text-stone-700 font-medium block mb-1.5">
+                    Nama Acara / Festival / Pameran
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Pestapora 2026 / Void Vision Exhibition / Jakcloth Fest"
+                    value={eventName}
+                    onChange={(e) => {
+                      setEventName(e.target.value);
+                      setIsSaved(false);
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-sm focus:outline-none focus:border-[#6B111F] focus:bg-white focus:ring-2 focus:ring-[#6B111F]/10 transition placeholder-stone-400 font-serif"
+                  />
+                </div>
 
-            {/* 3. Tanggal Pernikahan */}
+                {/* Lokasi / Venue */}
+                <div>
+                  <label className="text-xs text-stone-700 font-medium block mb-1.5">
+                    Lokasi / Venue Acara
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Gambir Expo Kemayoran Jakarta / Spazio Hall Surabaya"
+                    value={venue}
+                    onChange={(e) => {
+                      setVenue(e.target.value);
+                      setIsSaved(false);
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-sm focus:outline-none focus:border-[#6B111F] focus:bg-white focus:ring-2 focus:ring-[#6B111F]/10 transition placeholder-stone-400 font-sans"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Tanggal */}
             <div>
               <label className="text-xs text-stone-700 font-medium block mb-1.5">
-                Tanggal Pernikahan
+                {isWedding ? 'Tanggal Pernikahan' : 'Tanggal Penyelenggaraan'}
               </label>
               <input
                 type="date"
@@ -569,11 +629,11 @@ export default function ClientSetupPage() {
           </div>
         </div>
 
-        {/* Group C: Foto Prewedding (Landscape & Portrait Responsive) */}
+        {/* Group C: Foto Prewedding atau Display Event */}
         <div className="rounded-3xl bg-white border border-[#EADBCC]/80 p-5 sm:p-6 shadow-[0_8px_30px_rgba(107,17,31,0.04)] space-y-4">
           <div className="flex items-center justify-between border-b border-stone-100 pb-3">
             <h3 className="text-xs font-mono uppercase tracking-wider text-[#6B111F] font-bold">
-              02 • FOTO PREWEDDING ({heroPhotos.length})
+              {isWedding ? `02 • FOTO PREWEDDING (${heroPhotos.length})` : `02 • FOTO COVER & DISPLAY ACARA (${heroPhotos.length})`}
             </h3>
             <span className="text-[10px] font-mono text-stone-400">
               Slideshow Layar Tamu
@@ -584,7 +644,7 @@ export default function ClientSetupPage() {
           <div className="rounded-2xl bg-[#FAF7F2] border border-[#EADBCC] p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs font-serif font-bold text-stone-900">
               <Info size={15} className="text-[#6B111F] flex-shrink-0" />
-              <span>Panduan Format Foto (Landscape & Portrait)</span>
+              <span>{isWedding ? 'Panduan Format Foto (Landscape & Portrait)' : 'Panduan Foto / Poster Acara (Landscape & Portrait)'}</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[11px]">
@@ -593,7 +653,9 @@ export default function ClientSetupPage() {
                   Foto Landscape (Mendatar)
                 </span>
                 <p className="text-stone-600 leading-relaxed">
-                  Format paling umum dari fotografer. Sangat cocok! Bagian tengah kedua mempelai akan otomatis menjadi fokus di layar ponsel para tamu.
+                  {isWedding 
+                    ? 'Format paling umum dari fotografer. Sangat cocok! Bagian tengah kedua mempelai akan otomatis menjadi fokus di layar ponsel para tamu.'
+                    : 'Format mendatar atau dokumentasi stage/venue. Area tengah otomatis menjadi fokus utama di ponsel pengunjung.'}
                 </p>
               </div>
 
@@ -602,7 +664,9 @@ export default function ClientSetupPage() {
                   Foto Portrait (Tegak)
                 </span>
                 <p className="text-stone-600 leading-relaxed">
-                  Juga sangat bagus karena otomatis mengisi penuh layar ponsel para tamu dari atas ke bawah.
+                  {isWedding 
+                    ? 'Juga sangat bagus karena otomatis mengisi penuh layar ponsel para tamu dari atas ke bawah.'
+                    : 'Format poster resmi atau flyer line-up. Otomatis mengisi layar smartphone pengunjung secara presisi.'}
                 </p>
               </div>
             </div>
@@ -695,10 +759,10 @@ export default function ClientSetupPage() {
                 <Plus size={20} />
               </div>
               <span className="text-xs font-serif font-bold text-stone-900 block">
-                Unggah Foto Prewedding
+                {isWedding ? 'Unggah Foto Prewedding' : 'Unggah Foto / Poster Acara'}
               </span>
               <span className="text-[10.5px] text-stone-500 mt-0.5 block">
-                Bisa Foto Landscape maupun Portrait
+                {isWedding ? 'Bisa Foto Landscape maupun Portrait' : 'Format Poster, Stage, atau Dokumentasi'}
               </span>
             </button>
           </div>
@@ -794,7 +858,7 @@ export default function ClientSetupPage() {
           setCurrentCropImage(null);
           setActiveCropIdx(null);
         }}
-        title="Sesuaikan Foto Prewedding (Landscape / Portrait)"
+        title={isWedding ? 'Sesuaikan Foto Prewedding (Landscape / Portrait)' : 'Sesuaikan Foto / Poster Acara (Landscape / Portrait)'}
       />
 
     </motion.div>

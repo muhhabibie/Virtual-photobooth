@@ -34,6 +34,17 @@ export default function EventHero() {
 
   if (!activeEvent) return null;
 
+  const isWedding = (activeEvent.eventType || 'wedding') === 'wedding';
+  const eventBadge = isWedding
+    ? 'THE WEDDING CELEBRATION OF'
+    : (activeEvent.eventType === 'concert'
+        ? 'OFFICIAL FESTIVAL PHOTOBOOTH'
+        : (activeEvent.eventType === 'exhibition'
+            ? 'EXHIBITION PHOTOBOOTH'
+            : (activeEvent.eventType === 'festival'
+                ? 'OFFICIAL EXPO PHOTOBOOTH'
+                : 'OFFICIAL EVENT PHOTOBOOTH')));
+
   const pkgInfo = PACKAGES[activeEvent.package] || PACKAGES.standard;
   const isPrivate = !!activeEvent.pin && !isPinAuthenticated;
 
@@ -103,19 +114,27 @@ export default function EventHero() {
             className="inline-flex items-center px-4 sm:px-5 py-1 sm:py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 shadow-lg mb-2"
           >
             <span className="text-[10px] sm:text-xs font-sans font-semibold tracking-[0.22em] sm:tracking-[0.28em] text-amber-200 uppercase">
-              THE WEDDING CELEBRATION OF
+              {eventBadge}
             </span>
           </motion.div>
 
-          {/* Item 2: Wedding Couple Names (Dreamy Blur to Sharp Romantic Script) */}
+          {/* Item 2: Wedding Couple Names or Event Name */}
           <motion.h1 
             initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
             animate={introReady ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 30, filter: 'blur(10px)' }}
             transition={{ duration: 1.0, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
-            className="text-5xl xs:text-6xl sm:text-8xl md:text-9xl lg:text-[115px] font-normal text-white mt-1 leading-tight sm:leading-none drop-shadow-2xl"
-            style={{ 
+            className={`text-white mt-1 leading-tight sm:leading-none drop-shadow-2xl ${
+              isWedding 
+                ? 'text-5xl xs:text-6xl sm:text-8xl md:text-9xl lg:text-[115px] font-normal' 
+                : 'text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-black tracking-tight'
+            }`}
+            style={isWedding ? { 
               fontFamily: "'Alex Brush', 'Great Vibes', cursive",
               textShadow: '0 4px 30px rgba(0,0,0,0.85), 0 0 50px rgba(245,215,127,0.45)'
+            } : {
+              fontFamily: "'Playfair Display', Georgia, serif",
+              textShadow: '0 4px 30px rgba(0,0,0,0.85), 0 0 40px rgba(245,215,127,0.3)',
+              letterSpacing: '-0.02em'
             }}
           >
             {activeEvent.displayName}
@@ -129,7 +148,7 @@ export default function EventHero() {
             className="mt-2 sm:mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 shadow-md"
           >
             <p className="text-[11px] sm:text-sm text-rose-100 font-medium tracking-wide">
-              {activeEvent.formattedDate} • {activeEvent.venue || 'Wedding Venue'}
+              {activeEvent.formattedDate} • {activeEvent.venue || (isWedding ? 'Wedding Venue' : 'Event Venue')}
             </p>
           </motion.div>
 
@@ -179,7 +198,15 @@ export default function EventHero() {
           transition={{ duration: 0.8, delay: 0.80, ease: [0.25, 1, 0.5, 1] }}
           className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed mb-6 font-normal px-2"
         >
-          Abadikan momen kebahagiaan bersama <strong>{activeEvent.displayName}</strong>. Ambil pose foto terbaikmu dan rekam pesan doa restu yang tersimpan di galeri pernikahan.
+          {isWedding ? (
+            <>
+              Abadikan momen kebahagiaan bersama <strong>{activeEvent.displayName}</strong>. Ambil pose foto terbaikmu dan rekam pesan doa restu yang tersimpan di galeri pernikahan.
+            </>
+          ) : (
+            <>
+              Abadikan keseruanmu di <strong>{activeEvent.displayName}</strong>! Ambil pose terbaikmu bersama teman dan tinggalkan jejak memori tak terlupakan di galeri photobooth event.
+            </>
+          )}
         </motion.p>
 
         {/* Warning if Event is Expired */}
@@ -225,7 +252,7 @@ export default function EventHero() {
           className="w-full bg-white pt-6 pb-4 overflow-hidden"
         >
           <div className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-[#6B111F] mb-3 font-sans">
-            BINGKAI KHUSUS PERNIKAHAN {activeEvent.displayName.toUpperCase()}
+            BINGKAI KHUSUS {isWedding ? 'PERNIKAHAN' : 'EVENT'} {activeEvent.displayName.toUpperCase()}
           </div>
           <Marquee />
         </motion.div>
@@ -241,11 +268,11 @@ export default function EventHero() {
             </div>
 
             <h3 className="text-base font-serif font-bold text-amber-200">
-              Galeri Mempelai Dilindungi PIN
+              Galeri {isWedding ? 'Mempelai' : 'Event'} Dilindungi PIN
             </h3>
 
             <p className="text-xs text-gray-300 mt-1">
-              Masukkan PIN yang diberikan oleh pengantin ({activeEvent.displayName}) untuk membuka galeri.
+              Masukkan PIN yang diberikan oleh {isWedding ? 'pengantin' : 'penyelenggara'} ({activeEvent.displayName}) untuk membuka galeri.
             </p>
 
             <form onSubmit={handlePinSubmit} className="mt-4 space-y-3">
@@ -260,7 +287,7 @@ export default function EventHero() {
 
               {pinError && (
                 <span className="text-[11px] text-rose-400 block font-medium">
-                  PIN salah, mohon tanyakan ke mempelai.
+                  PIN salah, mohon tanyakan ke {isWedding ? 'mempelai' : 'penyelenggara'}.
                 </span>
               )}
 

@@ -18,8 +18,16 @@ export default function TentCardModal({ isOpen, onClose, event }) {
   if (!isOpen || !event) return null;
 
   const coupleName = event.displayName || 'Sabrina & Raka';
-  const eventDate = event.formattedDate || event.eventDate || 'Hari Bahagia';
-  const eventVenue = event.venue || 'Wedding Venue';
+  const isWedding = (event.eventType || 'wedding') === 'wedding';
+  const eventSubtitle = isWedding 
+    ? 'THE WEDDING CELEBRATION OF' 
+    : (event.eventType === 'concert' 
+        ? 'OFFICIAL FESTIVAL PHOTOBOOTH' 
+        : (event.eventType === 'exhibition' 
+            ? 'EXHIBITION PHOTOBOOTH' 
+            : 'OFFICIAL EVENT PHOTOBOOTH'));
+  const eventDate = event.formattedDate || event.eventDate || (isWedding ? 'Hari Bahagia' : 'Tanggal Acara');
+  const eventVenue = event.venue || (isWedding ? 'Wedding Venue' : 'Event Venue');
   const eventUrl = `${window.location.origin}/${event.slug}`;
   
   // Clean QR Code URL without loud styling
@@ -73,7 +81,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
         ctx.font = '500 20px Georgia, serif';
         ctx.textAlign = 'center';
         ctx.letterSpacing = '4px';
-        ctx.fillText('THE WEDDING CELEBRATION OF', canvas.width / 2, centerY + 105);
+        ctx.fillText(eventSubtitle, canvas.width / 2, centerY + 105);
 
         // Couple Names
         ctx.fillStyle = isBurgundy ? '#FFFFFF' : '#1A1A1A';
@@ -328,7 +336,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                 <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium ${
                   isBurgundy ? 'text-[#D4AF37]' : 'text-[#8A1828]'
                 }`}>
-                  The Wedding Celebration of
+                  {eventSubtitle}
                 </span>
 
                 <h2 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1">
@@ -411,7 +419,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                   <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium ${
                     isBurgundy ? 'text-[#D4AF37]' : 'text-[#8A1828]'
                   }`}>
-                    Terima Kasih Atas Kehadiran Anda
+                    {isWedding ? 'Terima Kasih Atas Kehadiran Anda' : 'Official Event Photobooth'}
                   </span>
 
                   <h2 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1">
