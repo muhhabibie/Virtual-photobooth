@@ -2,10 +2,9 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Calendar, QrCode, Trash2, Check, Lock, 
-  ExternalLink, ShieldCheck, Eye, 
-  Image as ImageIcon, Upload, MessageCircle, Share2, LogOut, Crop,
-  Printer, Archive, Music, Palette, Tent, Building2, Tag,
-  ChevronRight, ChevronLeft, Sparkles, Filter, Smartphone, X, Camera
+  ExternalLink, Eye, Image as ImageIcon, Upload, 
+  MessageCircle, Share2, LogOut, Crop, Printer, Archive, 
+  ChevronRight, ChevronLeft, Smartphone, X, Camera, Copy
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { PACKAGES, DEFAULT_HERO_PHOTOS, EVENT_CATEGORIES } from '../../data/mockEvents';
@@ -14,7 +13,6 @@ import { exportEventSubmissionsZip } from '../../utils/zipExport';
 import QRCodeCanvas from '../ui/QRCodeCanvas';
 import PhotoCropModal from '../ui/PhotoCropModal';
 import TentCardModal from '../ui/TentCardModal';
-import logoPhotoboothWhite from '../../assets/logo photobooth white.png';
 import { useToast } from '../ui/Toast';
 
 const PREVIEW_FRAME_THEMES = [
@@ -56,7 +54,7 @@ export default function AdminDashboardPage() {
 
   // Active Tab inside Dashboard: 'events' | 'qr'
   const [activeTab, setActiveTab] = useState('events');
-  // Category Filter in Event List: 'all' | 'wedding' | 'concert' | 'exhibition' | 'festival'
+  // Category Filter in Event List: 'all' | category ids
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
 
   // Form State for "Create Event"
@@ -105,7 +103,7 @@ export default function AdminDashboardPage() {
     if (adminPinInput === '1234' || adminPinInput === 'sirklen2026') {
       setIsAdminAuthenticated(true);
       setPinError(false);
-      toast('Login Admin Berhasil! Selamat datang di Portal Sirklen.', 'success');
+      toast('Login Admin Berhasil. Selamat datang di Portal Sirklen.', 'success');
     } else {
       setPinError(true);
     }
@@ -149,7 +147,7 @@ export default function AdminDashboardPage() {
     setEventSlug('');
     setEventPin('');
     setSelectedQrEvent(newEvt);
-    toast(`Event "${newEvt.displayName}" berhasil dibuat!`, 'success');
+    toast(`Event "${newEvt.displayName}" berhasil dibuat`, 'success');
   };
 
   // Copy Setup Link for Event Host / Couple
@@ -157,7 +155,7 @@ export default function AdminDashboardPage() {
     const fullUrl = `${window.location.origin}/setup/${slug}`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedSlug(`setup_${slug}`);
-    toast('Link Setup berhasil disalin! Kirimkan ke penyelenggara/pengantin.', 'success');
+    toast('Link Setup berhasil disalin', 'success');
     setTimeout(() => setCopiedSlug(null), 3000);
   };
 
@@ -174,7 +172,7 @@ export default function AdminDashboardPage() {
     const fullUrl = `${window.location.origin}/${slug}`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedSlug(`guest_${slug}`);
-    toast('Tautan web pengunjung berhasil disalin!', 'success');
+    toast('Tautan web pengunjung berhasil disalin', 'success');
     setTimeout(() => setCopiedSlug(null), 3000);
   };
 
@@ -186,7 +184,7 @@ export default function AdminDashboardPage() {
       if (eventSubs.length === 0) {
         eventSubs = MOCK_GALLERY_PHOTOS;
       }
-      toast(`Menyiapkan arsip ZIP foto kenangan untuk ${evt.displayName}...`, 'info');
+      toast(`Menyiapkan arsip ZIP untuk ${evt.displayName}...`, 'info');
       const result = await exportEventSubmissionsZip({
         event: evt,
         submissions: eventSubs,
@@ -259,7 +257,7 @@ export default function AdminDashboardPage() {
     if (!heroModalEvent) return;
     updateEventHeroPhotos(heroModalEvent.id, editHeroPhotos);
     setHeroModalEvent(null);
-    toast('Foto banner acara berhasil diperbarui', 'success');
+    toast('Foto banner acara berhasil disimpan', 'success');
   };
 
   // Filtered Events
@@ -275,37 +273,28 @@ export default function AdminDashboardPage() {
   // Helper for category badge
   const getCategoryMeta = (typeKey) => {
     const found = EVENT_CATEGORIES.find(c => c.id === typeKey);
-    return found || { id: 'general', name: 'Acara Khusus', icon: '🎪', label: 'Event' };
+    return found || { id: 'general', name: 'Corporate & Acara', label: 'Event' };
   };
 
-  // ================= 🌟 SCREEN 1: ADMIN LOGIN SCREEN (LUXURY MINIMALIST OBSIDIAN) 🌟 =================
+  // ================= 🌟 SCREEN 1: ADMIN LOGIN SCREEN (MINIMALIST OBSIDIAN) 🌟 =================
   if (!isAdminAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0A070B] text-stone-100 flex items-center justify-center p-4 selection:bg-[#6B111F] selection:text-[#F5D77F] relative overflow-hidden">
-        {/* Soft Ambient Backdrop Light */}
-        <div 
-          className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[500px] pointer-events-none opacity-25 blur-[140px]"
-          style={{ background: 'radial-gradient(circle, rgba(107,17,31,0.9) 0%, rgba(245,215,127,0.3) 50%, transparent 70%)' }}
-        />
-
+      <div className="min-h-screen bg-[#09090B] text-zinc-100 flex items-center justify-center p-4 selection:bg-zinc-800 selection:text-white relative">
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-sm rounded-3xl bg-[#140E16]/90 border border-stone-800/90 p-7 sm:p-9 text-center shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative z-10 backdrop-blur-xl"
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-sm rounded-2xl bg-[#121215] border border-zinc-800 p-7 sm:p-8 text-center shadow-2xl relative z-10"
         >
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6B111F] to-[#2B060C] border border-[#F5D77F]/30 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-950/40">
-            <Lock size={22} className="text-[#F5D77F]" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800/80 border border-zinc-700/60 text-zinc-300 text-[10px] font-mono font-medium tracking-wider mb-4">
+            ADMIN CONSOLE
           </div>
 
-          <span className="text-[10px] font-mono tracking-[0.25em] text-[#C4A46C] uppercase font-bold block mb-1">
-            PORTAL ADMINISTRASI
-          </span>
-          <h2 className="text-xl font-serif font-bold text-white mb-2">
-            Sirklen Photo Studio
+          <h2 className="text-xl font-sans font-bold text-white mb-1.5 tracking-tight">
+            Sirklen Admin
           </h2>
-          <p className="text-stone-400 text-xs mb-6 leading-relaxed">
-            Masukkan PIN Keamanan untuk membuka dashboard operasional manajemen event.
+          <p className="text-zinc-400 text-xs mb-6 leading-relaxed">
+            Masukkan PIN keamanan untuk mengelola seluruh event dan operasional photobooth.
           </p>
 
           <form onSubmit={handleAdminLogin} className="space-y-4">
@@ -313,16 +302,16 @@ export default function AdminDashboardPage() {
               <input
                 type="password"
                 maxLength={12}
-                placeholder="PIN (Default: 1234)"
+                placeholder="PIN Keamanan"
                 value={adminPinInput}
                 onChange={(e) => setAdminPinInput(e.target.value)}
                 autoFocus
-                className={`w-full text-center tracking-[0.35em] font-mono text-lg py-3 px-4 rounded-xl bg-black/60 border ${
-                  pinError ? 'border-red-500 ring-2 ring-red-500/20 text-red-200' : 'border-stone-700/80 focus:border-[#F5D77F]/80 text-[#F5D77F]'
-                } placeholder-stone-600 focus:outline-none transition shadow-inner`}
+                className={`w-full text-center tracking-[0.35em] font-mono text-lg py-2.5 px-4 rounded-xl bg-zinc-900/90 border ${
+                  pinError ? 'border-rose-500 ring-1 ring-rose-500/30 text-rose-200' : 'border-zinc-700 focus:border-zinc-400 text-white'
+                } placeholder-zinc-600 focus:outline-none transition`}
               />
               {pinError && (
-                <p className="text-rose-400 text-xs font-serif italic mt-2">
+                <p className="text-rose-400 text-xs font-sans mt-2">
                   PIN salah. Masukkan 1234 atau sirklen2026.
                 </p>
               )}
@@ -330,15 +319,17 @@ export default function AdminDashboardPage() {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-98 text-[#F5D77F] border border-[#F5D77F]/40 font-serif font-bold text-xs sm:text-sm shadow-lg shadow-rose-950/30 transition cursor-pointer"
+              className="w-full py-2.5 rounded-xl bg-white hover:bg-zinc-200 active:scale-98 text-black font-sans font-semibold text-xs shadow-sm transition cursor-pointer"
             >
-              Buka Dashboard Operasional
+              Masuk Dashboard
             </button>
           </form>
 
-          <p className="text-[10px] text-stone-500 font-mono mt-7 pt-4 border-t border-stone-800/80">
-            PT SIRKLEN KREASI USAHA • SAAS PHOTOBOOTH
-          </p>
+          <div className="mt-6 pt-4 border-t border-zinc-800/80">
+            <span className="text-[10px] text-zinc-500 font-mono tracking-wider">
+              Sirklen Photobooth Engine
+            </span>
+          </div>
         </motion.div>
       </div>
     );
@@ -349,56 +340,40 @@ export default function AdminDashboardPage() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={introReady ? { opacity: 1 } : { opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen bg-[#0C090E] text-stone-100 font-sans selection:bg-[#6B111F] selection:text-[#F5D77F] pb-24 relative"
+      transition={{ duration: 0.4 }}
+      className="min-h-screen bg-[#09090B] text-zinc-100 font-sans selection:bg-zinc-800 selection:text-white pb-24 relative"
     >
-      {/* Ambient Lighting */}
-      <div 
-        className="fixed top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[380px] pointer-events-none opacity-20 blur-[150px] z-0"
-        style={{ background: 'radial-gradient(circle, rgba(107,17,31,0.8) 0%, rgba(196,164,108,0.25) 50%, transparent 80%)' }}
-      />
-
-      {/* ================= 🌟 TOP HEADER (LUXURY GLASS) 🌟 ================= */}
-      <header className="sticky top-0 z-40 bg-[#120D15]/90 backdrop-blur-xl border-b border-stone-800/80 px-4 sm:px-8 py-3.5 shadow-sm relative">
+      {/* ================= 🌟 TOP HEADER 🌟 ================= */}
+      <header className="sticky top-0 z-40 bg-[#09090B]/90 backdrop-blur-xl border-b border-zinc-800/80 px-4 sm:px-8 py-3.5 shadow-xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           <div className="flex items-center gap-3">
-            <img 
-              src={logoPhotoboothWhite} 
-              alt="Sirklen Photo" 
-              className="w-8 h-8 sm:w-9 sm:h-9 object-contain" 
-            />
-
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-serif font-black text-base sm:text-lg text-white tracking-wide">
-                  Sirklen Photo
-                </span>
-                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-full bg-[#6B111F]/50 border border-[#F5D77F]/30 text-[#F5D77F] font-bold uppercase tracking-wider">
-                  ADMIN PORTAL
-                </span>
-              </div>
-              <span className="text-[9px] font-mono text-stone-400 uppercase tracking-widest block">
-                PT SIRKLEN KREASI USAHA • SISTEM OPERASIONAL
-              </span>
-            </div>
+            <span className="font-sans font-bold text-lg text-white tracking-tight">
+              Sirklen
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700/80 text-zinc-300 font-medium tracking-wider">
+              ADMIN
+            </span>
+            <span className="hidden sm:inline text-xs text-zinc-500 font-normal">
+              Event & Booth Management
+            </span>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 setEventType('wedding');
                 setShowCreateModal(true);
               }}
-              className="px-4 py-2.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/30 transition cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-white hover:bg-zinc-200 active:scale-95 text-black text-xs font-semibold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
             >
-              <Plus size={15} />
-              <span>Buat Event Baru</span>
+              <Plus size={14} />
+              <span>Buat Event</span>
             </button>
 
             <button
               onClick={() => setIsAdminAuthenticated(false)}
-              className="p-2.5 rounded-full bg-stone-800/80 hover:bg-stone-700/80 text-stone-300 hover:text-white border border-stone-700/60 transition cursor-pointer shadow-xs"
+              className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 transition cursor-pointer"
               title="Kunci Dashboard"
             >
               <LogOut size={15} />
@@ -409,55 +384,55 @@ export default function AdminDashboardPage() {
       </header>
 
       {/* ================= 🌟 DASHBOARD BODY 🌟 ================= */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-7 relative z-10 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 relative z-10 space-y-6">
 
         {/* 1. System Statistics Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           
-          <div className="p-4 sm:p-5 rounded-3xl bg-[#140E16]/85 border border-stone-800/90 shadow-lg backdrop-blur-md">
-            <span className="text-[10px] font-mono text-[#C4A46C] uppercase tracking-wider block font-semibold">
-              TOTAL EVENT AKTIF
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#111114] border border-zinc-800/90 shadow-xs">
+            <span className="text-xs font-medium text-zinc-400 block mb-1">
+              Event Aktif
             </span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-2xl sm:text-3xl font-serif font-bold text-white">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-sans font-semibold text-white tracking-tight">
                 {activeEventsCount}
               </span>
-              <span className="text-xs text-stone-400 font-serif">Acara</span>
+              <span className="text-xs text-zinc-500">Acara</span>
             </div>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-3xl bg-[#140E16]/85 border border-stone-800/90 shadow-lg backdrop-blur-md">
-            <span className="text-[10px] font-mono text-stone-400 uppercase tracking-wider block font-semibold">
-              SEMUA EVENT TERDAFTAR
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#111114] border border-zinc-800/90 shadow-xs">
+            <span className="text-xs font-medium text-zinc-400 block mb-1">
+              Total Event Terdaftar
             </span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-2xl sm:text-3xl font-serif font-bold text-white">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-sans font-semibold text-white tracking-tight">
                 {events.length}
               </span>
-              <span className="text-xs text-stone-400 font-serif">Klien</span>
+              <span className="text-xs text-zinc-500">Klien</span>
             </div>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-3xl bg-[#140E16]/85 border border-stone-800/90 shadow-lg backdrop-blur-md">
-            <span className="text-[10px] font-mono text-[#C4A46C] uppercase tracking-wider block font-semibold">
-              SESI FOTO TERSIMPAN
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#111114] border border-zinc-800/90 shadow-xs">
+            <span className="text-xs font-medium text-zinc-400 block mb-1">
+              Sesi Foto Tersimpan
             </span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-2xl sm:text-3xl font-serif font-bold text-white">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-sans font-semibold text-white tracking-tight">
                 {savedSubmissions.length}
               </span>
-              <span className="text-xs text-stone-400 font-serif">Sesi Tamu</span>
+              <span className="text-xs text-zinc-500">Sesi Tamu</span>
             </div>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-3xl bg-[#140E16]/85 border border-stone-800/90 shadow-lg backdrop-blur-md flex flex-col justify-between">
-            <span className="text-[10px] font-mono text-stone-400 uppercase tracking-wider block font-semibold">
-              STATUS CLOUD ENGINE
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#111114] border border-zinc-800/90 shadow-xs flex flex-col justify-between">
+            <span className="text-xs font-medium text-zinc-400 block mb-1">
+              Status Sistem
             </span>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-              <span className="text-xs font-mono font-bold text-emerald-400 tracking-wide">
-                ONLINE & TERHUBUNG
+            <div className="flex items-center gap-2 mt-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+              <span className="text-xs font-mono font-medium text-emerald-400">
+                Online & Terhubung
               </span>
             </div>
           </div>
@@ -465,44 +440,44 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* 2. Navigation Tabs & Category Filters */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-b border-stone-800/80 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-b border-zinc-800/80 pb-3">
           
           {/* Main Tab Switcher */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
             <button
               onClick={() => setActiveTab('events')}
-              className={`px-4 py-2 rounded-full text-xs font-serif font-bold transition flex items-center gap-2 cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
                 activeTab === 'events'
-                  ? 'bg-[#6B111F] text-[#F5D77F] border border-[#F5D77F]/30 shadow-md shadow-rose-950/20'
-                  : 'bg-stone-900/80 text-stone-400 hover:text-white border border-stone-800'
+                  ? 'bg-zinc-800 text-white shadow-xs font-semibold'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               <Calendar size={13} />
-              <span>Daftar Acara & Klien ({events.length})</span>
+              <span>Daftar Acara ({events.length})</span>
             </button>
 
             <button
               onClick={() => setActiveTab('qr')}
-              className={`px-4 py-2 rounded-full text-xs font-serif font-bold transition flex items-center gap-2 cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
                 activeTab === 'qr'
-                  ? 'bg-[#6B111F] text-[#F5D77F] border border-[#F5D77F]/30 shadow-md shadow-rose-950/20'
-                  : 'bg-stone-900/80 text-stone-400 hover:text-white border border-stone-800'
+                  ? 'bg-zinc-800 text-white shadow-xs font-semibold'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               <QrCode size={13} />
-              <span>Cetak QR Code Meja</span>
+              <span>Cetak QR Code</span>
             </button>
           </div>
 
-          {/* Category Filter Pills (When on Events Tab) */}
+          {/* Category Filter Pills (Zero Emojis, Clean Text) */}
           {activeTab === 'events' && (
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
               <button
                 onClick={() => setSelectedFilterCategory('all')}
-                className={`px-3 py-1 rounded-full text-[11px] font-sans font-medium transition cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer whitespace-nowrap ${
                   selectedFilterCategory === 'all'
-                    ? 'bg-white/20 text-white border border-white/30'
-                    : 'text-stone-400 hover:text-white'
+                    ? 'bg-zinc-800 text-white border border-zinc-700'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
                 }`}
               >
                 Semua
@@ -511,14 +486,13 @@ export default function AdminDashboardPage() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedFilterCategory(cat.id)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-sans font-medium transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer whitespace-nowrap ${
                     selectedFilterCategory === cat.id
-                      ? 'bg-[#6B111F]/60 text-[#F5D77F] border border-[#F5D77F]/30 shadow-xs'
-                      : 'text-stone-400 hover:text-stone-200'
+                      ? 'bg-zinc-800 text-white border border-zinc-700 shadow-xs'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
                   }`}
                 >
-                  <span>{cat.icon}</span>
-                  <span>{cat.name}</span>
+                  {cat.name}
                 </button>
               ))}
             </div>
@@ -528,10 +502,10 @@ export default function AdminDashboardPage() {
 
         {/* ================= 🌟 TAB 1: EVENTS LIST (EXECUTIVE SAAS CARDS) 🌟 ================= */}
         {activeTab === 'events' && (
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {filteredEvents.length === 0 ? (
-              <div className="p-12 text-center rounded-3xl bg-[#140E16]/80 border border-stone-800">
-                <p className="text-stone-400 text-sm font-serif">Tidak ada event pada kategori ini.</p>
+              <div className="p-12 text-center rounded-2xl bg-[#111114] border border-zinc-800">
+                <p className="text-zinc-400 text-xs">Tidak ada event pada kategori ini.</p>
               </div>
             ) : (
               filteredEvents.map((evt) => {
@@ -543,31 +517,30 @@ export default function AdminDashboardPage() {
                 return (
                   <div 
                     key={evt.id}
-                    className="p-5 sm:p-6 rounded-3xl bg-[#130E16]/90 border border-stone-800/90 hover:border-stone-700 transition shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-md"
+                    className="p-5 sm:p-6 rounded-2xl bg-[#111114] border border-zinc-800/90 hover:border-zinc-700/80 transition shadow-sm"
                   >
                     <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
                       
                       {/* Left Side: Event Identity & Meta */}
-                      <div className="flex-1 space-y-2">
+                      <div className="flex-1 space-y-2.5">
                         
                         {/* Tags Strip */}
                         <div className="flex flex-wrap items-center gap-2">
                           {/* Category Tag */}
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-800/90 border border-stone-700 text-stone-200">
-                            <span>{catMeta.icon}</span>
-                            <span>{catMeta.name}</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-zinc-800/90 border border-zinc-700/80 text-zinc-300">
+                            {catMeta.name}
                           </span>
 
                           {/* Package Badge (Paket Spesial / Standard / Basic) */}
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#6B111F]/40 border border-[#F5D77F]/30 text-[#F5D77F]">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium bg-zinc-800/60 border border-zinc-700/60 text-zinc-300">
                             {pkgInfo.name}
                           </span>
 
                           {/* Status Badge */}
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono ${
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-mono ${
                             isExpired 
-                              ? 'bg-rose-950/60 border border-rose-700/40 text-rose-300' 
-                              : 'bg-emerald-950/60 border border-emerald-700/40 text-emerald-300 font-semibold'
+                              ? 'bg-rose-950/40 border border-rose-800/40 text-rose-300' 
+                              : 'bg-emerald-950/40 border border-emerald-800/40 text-emerald-300'
                           }`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${isExpired ? 'bg-rose-500' : 'bg-emerald-400'}`} />
                             <span>{isExpired ? 'Kedaluwarsa' : `Aktif (${daysLeft} Hari Lagi)`}</span>
@@ -575,26 +548,33 @@ export default function AdminDashboardPage() {
                         </div>
 
                         {/* Event Title */}
-                        <h3 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
+                        <h3 className="text-xl sm:text-2xl font-sans font-bold text-white tracking-tight">
                           {evt.displayName}
                         </h3>
 
                         {/* Metadata Details */}
-                        <div className="flex flex-wrap items-center gap-y-1 gap-x-3.5 text-xs text-stone-400 font-sans">
+                        <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-zinc-400 font-sans">
                           <span>
-                            Tanggal: <strong className="text-stone-200 font-medium">{evt.formattedDate || evt.eventDate}</strong>
+                            Tanggal: <strong className="text-zinc-200 font-medium">{evt.formattedDate || evt.eventDate}</strong>
                           </span>
-                          <span className="text-stone-700">•</span>
+                          <span className="text-zinc-600">•</span>
                           <span>
-                            Lokasi: <strong className="text-stone-200 font-medium">{evt.venue || 'Venue Acara'}</strong>
+                            Lokasi: <strong className="text-zinc-200 font-medium">{evt.venue || 'Venue Acara'}</strong>
                           </span>
-                          <span className="text-stone-700">•</span>
-                          <span className="font-mono text-stone-300">
-                            Slug: <strong className="text-[#F5D77F]">/{evt.slug}</strong>
+                          <span className="text-zinc-600">•</span>
+                          <span className="font-mono text-zinc-300 flex items-center gap-1">
+                            Link: <strong className="text-zinc-100">/{evt.slug}</strong>
+                            <button
+                              onClick={() => handleCopyGuestLink(evt.slug)}
+                              className="text-zinc-500 hover:text-zinc-200 p-0.5 transition cursor-pointer"
+                              title="Salin Link Tamu"
+                            >
+                              <Copy size={12} />
+                            </button>
                           </span>
-                          <span className="text-stone-700">•</span>
+                          <span className="text-zinc-600">•</span>
                           <span>
-                            Foto Banner: <strong className="text-stone-200 font-medium">{evt.heroPhotos?.length || 0} Foto</strong>
+                            Foto Banner: <strong className="text-zinc-200 font-medium">{evt.heroPhotos?.length || 0} Foto</strong>
                           </span>
                         </div>
 
@@ -603,7 +583,7 @@ export default function AdminDashboardPage() {
                       {/* Right Side: Professional Unified Action System */}
                       <div className="flex flex-col gap-2.5 xl:items-end">
                         
-                        {/* Primary Row: Setup Outreach Actions & Live Preview */}
+                        {/* Primary Row: Quick Actions */}
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
@@ -612,82 +592,92 @@ export default function AdminDashboardPage() {
                               setPreviewPhotoIdx(0);
                               setActiveFrameThemeIdx(0);
                             }}
-                            className="px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap"
-                            title="Pratinjau langsung tampilan layar HP tamu untuk acara ini"
+                            className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+                            title="Pratinjau tampilan layar HP tamu"
                           >
-                            <Smartphone size={14} className="text-[#F5D77F]" />
+                            <Smartphone size={14} className="text-zinc-400" />
                             <span>Preview</span>
                           </button>
 
                           <button
                             onClick={() => handleCopySetupLink(evt.slug)}
-                            className="px-4 py-2.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap"
-                            title="Salin tautan setup khusus klien untuk dikirim ke WhatsApp"
+                            className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+                            title="Salin tautan setup khusus klien"
                           >
-                            {copiedSlug === `setup_${evt.slug}` ? <Check size={14} className="text-emerald-300" /> : <Share2 size={14} />}
+                            {copiedSlug === `setup_${evt.slug}` ? <Check size={14} className="text-emerald-400" /> : <Share2 size={14} className="text-zinc-400" />}
                             <span>Salin Link Setup</span>
                           </button>
 
                           <button
                             onClick={() => handleSendWhatsApp(evt)}
-                            className="px-4 py-2.5 rounded-full bg-emerald-950/80 hover:bg-emerald-900/80 border border-emerald-600/50 text-emerald-300 text-xs font-serif font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer whitespace-nowrap shadow-xs"
+                            className="px-3.5 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/40 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
                             title="Kirim pesan instruksi otomatis ke WhatsApp"
                           >
-                            <MessageCircle size={14} />
+                            <MessageCircle size={14} className="text-emerald-400" />
                             <span>Kirim WA</span>
                           </button>
                         </div>
 
-                        {/* Secondary Row: Tools & Utilities */}
-                        <div className="flex flex-wrap items-center gap-1.5">
+                        {/* Secondary Row: Tools & Utilities (Clean Segmented Toolbar) */}
+                        <div className="flex items-center gap-1 p-1 bg-zinc-900/80 border border-zinc-800 rounded-xl">
                           <button
                             onClick={() => openHeroPhotosManager(evt)}
-                            className="px-3 py-1.5 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
                             title="Kelola foto banner prewedding / event"
                           >
-                            <ImageIcon size={13} className="text-stone-400" />
+                            <ImageIcon size={13} />
                             <span>Foto</span>
                           </button>
+
+                          <div className="w-[1px] h-3.5 bg-zinc-800" />
 
                           <button
                             onClick={() => {
                               setSelectedQrEvent(evt);
                               setActiveTab('qr');
                             }}
-                            className="px-3 py-1.5 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
                             title="Tampilkan QR Code"
                           >
-                            <QrCode size={13} className="text-stone-400" />
+                            <QrCode size={13} />
                             <span>QR</span>
                           </button>
 
+                          <div className="w-[1px] h-3.5 bg-zinc-800" />
+
                           <button
                             onClick={() => setSelectedTentCardEvent(evt)}
-                            className="px-3 py-1.5 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
-                            title="Desain & Cetak Kartu Meja (Tent Card Siap Cetak)"
+                            className="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+                            title="Desain & Cetak Kartu Meja"
                           >
-                            <Printer size={13} className="text-stone-400" />
+                            <Printer size={13} />
                             <span>Cetak Meja</span>
                           </button>
+
+                          <div className="w-[1px] h-3.5 bg-zinc-800" />
 
                           <button
                             onClick={() => handleDownloadEventZip(evt)}
                             disabled={zippingEventId === evt.id}
-                            className="px-3 py-1.5 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
                             title="Unduh seluruh foto tamu (.ZIP)"
                           >
-                            <Archive size={13} className={zippingEventId === evt.id ? 'animate-bounce text-amber-300' : 'text-stone-400'} />
+                            <Archive size={13} className={zippingEventId === evt.id ? 'animate-bounce text-amber-300' : ''} />
                             <span>ZIP</span>
                           </button>
+
+                          <div className="w-[1px] h-3.5 bg-zinc-800" />
 
                           {/* View Guest Web */}
                           <button
                             onClick={() => navigateToEvent(evt.slug)}
-                            className="p-2 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 transition cursor-pointer"
+                            className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer"
                             title="Buka Tampilan Web Tamu"
                           >
-                            <ExternalLink size={14} />
+                            <ExternalLink size={13} />
                           </button>
+
+                          <div className="w-[1px] h-3.5 bg-zinc-800" />
 
                           {/* Delete Event */}
                           <button
@@ -697,10 +687,10 @@ export default function AdminDashboardPage() {
                                 toast('Event berhasil dihapus', 'info');
                               }
                             }}
-                            className="p-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-900/40 transition cursor-pointer"
+                            className="p-1 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 transition cursor-pointer"
                             title="Hapus Event"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={13} />
                           </button>
                         </div>
 
@@ -716,14 +706,14 @@ export default function AdminDashboardPage() {
 
         {/* ================= 🌟 TAB 2: QR CODE CARD PRINT INSPECTOR 🌟 ================= */}
         {activeTab === 'qr' && (
-          <div className="max-w-md mx-auto p-6 sm:p-7 rounded-3xl bg-[#140E16]/90 border border-stone-800/90 text-center shadow-2xl backdrop-blur-xl">
-            <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#C4A46C] font-bold block mb-1">
-              INSPEKTOR QR CODE
+          <div className="max-w-md mx-auto p-6 sm:p-7 rounded-2xl bg-[#111114] border border-zinc-800 text-center shadow-lg">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-medium block mb-1">
+              QR CODE MEJA
             </span>
-            <h3 className="text-base sm:text-lg font-serif font-bold text-white mb-1">
-              Generator Cetak Kartu Meja
+            <h3 className="text-base font-sans font-bold text-white mb-1">
+              Generator Cetak Kartu QR
             </h3>
-            <p className="text-xs text-stone-400 mb-5">
+            <p className="text-xs text-zinc-400 mb-5">
               Pilih acara yang ingin dicetak kartu QR Code atau diunduh asetnya:
             </p>
 
@@ -733,10 +723,10 @@ export default function AdminDashboardPage() {
                 const found = events.find(ev => ev.id === e.target.value);
                 setSelectedQrEvent(found);
               }}
-              className="w-full py-2.5 px-3.5 rounded-xl bg-black/60 border border-stone-700 text-[#F5D77F] text-xs font-mono mb-6 focus:outline-none focus:border-[#F5D77F]"
+              className="w-full py-2.5 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-mono mb-6 focus:outline-none focus:border-zinc-500"
             >
               {events.map(ev => (
-                <option key={ev.id} value={ev.id} className="bg-stone-900 text-white">
+                <option key={ev.id} value={ev.id} className="bg-zinc-900 text-white">
                   {ev.displayName} ({ev.slug})
                 </option>
               ))}
@@ -756,32 +746,41 @@ export default function AdminDashboardPage() {
 
       </main>
 
-      {/* ================= 🌟 MODAL: CREATE EVENT (MULTI-CATEGORY) 🌟 ================= */}
+      {/* ================= 🌟 MODAL: CREATE EVENT (CLEAN, NO EMOJIS, NO AI SLOP) 🌟 ================= */}
       <AnimatePresence>
         {showCreateModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-[#140E16] border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar"
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="w-full max-w-lg bg-[#121215] border border-zinc-800 rounded-2xl p-6 sm:p-7 shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar"
             >
-              <span className="text-[9.5px] font-mono uppercase tracking-[0.25em] text-[#C4A46C] font-bold block mb-1">
-                EVENT BARU
-              </span>
-              <h3 className="text-lg sm:text-xl font-serif font-bold text-white mb-1">
-                Buat Event Photobooth Klien
-              </h3>
-              <p className="text-xs text-stone-400 mb-5 leading-relaxed">
-                Pilih jenis acara dan masukkan informasi untuk membuat tautan photobooth instan.
-              </p>
+              {/* Modal Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-5">
+                <div>
+                  <h3 className="text-base sm:text-lg font-sans font-semibold text-white">
+                    Buat Event Baru
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Konfigurasi photobooth untuk klien atau acara baru.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
 
-              {/* 1. Category Selector Pills */}
+              {/* 1. Category Selector (Clean Segmented Control, Zero Emojis) */}
               <div className="mb-5">
-                <label className="text-[10px] font-mono text-stone-400 uppercase tracking-wider block mb-2 font-semibold">
-                  JENIS ACARA
+                <label className="text-xs font-medium text-zinc-300 block mb-2">
+                  Kategori Acara
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-zinc-900 border border-zinc-800">
                   {EVENT_CATEGORIES.map(cat => (
                     <button
                       key={cat.id}
@@ -793,14 +792,13 @@ export default function AdminDashboardPage() {
                           handleGeneralEventNameChange(cat.placeholder.split(',')[0]);
                         }
                       }}
-                      className={`p-2.5 rounded-2xl text-left border transition cursor-pointer flex flex-col gap-1 ${
+                      className={`flex-1 min-w-[95px] py-1.5 px-2.5 rounded-lg text-xs font-medium transition cursor-pointer text-center ${
                         eventType === cat.id
-                          ? 'bg-[#6B111F]/50 border-[#F5D77F]/50 text-white shadow-xs'
-                          : 'bg-stone-900/60 border-stone-800 text-stone-400 hover:text-stone-200'
+                          ? 'bg-zinc-800 text-white shadow-xs border border-zinc-700 font-semibold'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
                       }`}
                     >
-                      <span className="text-base">{cat.icon}</span>
-                      <span className="text-xs font-serif font-bold">{cat.name}</span>
+                      {cat.name}
                     </button>
                   ))}
                 </div>
@@ -813,8 +811,8 @@ export default function AdminDashboardPage() {
                   /* Wedding Inputs (Groom & Bride) */
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-mono text-stone-400 uppercase tracking-wider block mb-1 font-semibold">
-                        Mempelai Pria (Groom)
+                      <label className="text-xs font-medium text-zinc-300 block mb-1">
+                        Mempelai Pria
                       </label>
                       <input
                         type="text"
@@ -822,13 +820,13 @@ export default function AdminDashboardPage() {
                         placeholder="Raka"
                         value={groomName}
                         onChange={(e) => handleNameChange(e.target.value, brideName)}
-                        className="w-full py-2.5 px-3.5 rounded-xl bg-black/60 border border-stone-700/80 text-white text-xs focus:outline-none focus:border-[#F5D77F] font-serif"
+                        className="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-mono text-stone-400 uppercase tracking-wider block mb-1 font-semibold">
-                        Mempelai Wanita (Bride)
+                      <label className="text-xs font-medium text-zinc-300 block mb-1">
+                        Mempelai Wanita
                       </label>
                       <input
                         type="text"
@@ -836,15 +834,15 @@ export default function AdminDashboardPage() {
                         placeholder="Sabrina"
                         value={brideName}
                         onChange={(e) => handleNameChange(groomName, e.target.value)}
-                        className="w-full py-2.5 px-3.5 rounded-xl bg-black/60 border border-stone-700/80 text-white text-xs focus:outline-none focus:border-[#F5D77F] font-serif"
+                        className="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition"
                       />
                     </div>
                   </div>
                 ) : (
                   /* Non-Wedding Inputs (Concert, Exhibition, Festival) */
                   <div>
-                    <label className="text-[10px] font-mono text-stone-400 uppercase tracking-wider block mb-1 font-semibold">
-                      Nama Acara / Festival / Pameran
+                    <label className="text-xs font-medium text-zinc-300 block mb-1">
+                      Nama Acara / Pameran / Konser
                     </label>
                     <input
                       type="text"
@@ -852,14 +850,14 @@ export default function AdminDashboardPage() {
                       placeholder="Contoh: Pestapora 2026, Void Vision, Jakcloth Fest"
                       value={eventName}
                       onChange={(e) => handleGeneralEventNameChange(e.target.value)}
-                      className="w-full py-2.5 px-3.5 rounded-xl bg-black/60 border border-stone-700/80 text-white text-xs focus:outline-none focus:border-[#F5D77F] font-serif"
+                      className="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition"
                     />
                   </div>
                 )}
 
                 {/* Venue / Location */}
                 <div>
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-wider block mb-1 font-semibold">
+                  <label className="text-xs font-medium text-zinc-300 block mb-1">
                     Lokasi / Venue Acara
                   </label>
                   <input
@@ -867,25 +865,25 @@ export default function AdminDashboardPage() {
                     placeholder="Contoh: Gambir Expo Kemayoran Jakarta / Grand Ballroom"
                     value={eventVenue}
                     onChange={(e) => setEventVenue(e.target.value)}
-                    className="w-full py-2.5 px-3.5 rounded-xl bg-black/60 border border-stone-700/80 text-white text-xs focus:outline-none focus:border-[#F5D77F] font-sans"
+                    className="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition"
                   />
                 </div>
 
                 {/* Slug Link */}
                 <div>
-                  <label className="text-[10px] font-mono text-stone-400 uppercase tracking-wider block mb-1 font-semibold">
+                  <label className="text-xs font-medium text-zinc-300 block mb-1">
                     Slug Tautan Web
                   </label>
-                  <div className="flex items-center gap-1 bg-black/60 border border-stone-700/80 rounded-xl px-3.5 py-2 font-mono text-xs text-[#F5D77F]">
-                    <span className="text-stone-500">
-                      {typeof window !== 'undefined' && window.location.host ? `${window.location.host}/` : 'sirklenice.com/'}
+                  <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono">
+                    <span className="text-zinc-500 select-none">
+                      {typeof window !== 'undefined' && window.location.host ? `${window.location.host}/` : 'sirklen.id/'}
                     </span>
                     <input
                       type="text"
                       required
                       value={eventSlug}
                       onChange={(e) => setEventSlug(e.target.value)}
-                      className="flex-1 bg-transparent text-[#F5D77F] focus:outline-none font-bold"
+                      className="flex-1 bg-transparent text-white focus:outline-none font-medium ml-1"
                     />
                   </div>
                 </div>
@@ -893,46 +891,46 @@ export default function AdminDashboardPage() {
                 {/* Date & Package */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-mono text-stone-400 uppercase tracking-wider block mb-1 font-semibold">
+                    <label className="text-xs font-medium text-zinc-300 block mb-1">
                       Tanggal Acara
                     </label>
                     <input
                       type="date"
                       value={eventDate}
                       onChange={(e) => setEventDate(e.target.value)}
-                      className="w-full py-2.5 px-3.5 rounded-xl bg-black/60 border border-stone-700/80 text-white text-xs focus:outline-none focus:border-[#F5D77F] font-mono"
+                      className="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-mono text-stone-400 uppercase tracking-wider block mb-1 font-semibold">
+                    <label className="text-xs font-medium text-zinc-300 block mb-1">
                       Pilihan Paket
                     </label>
                     <select
                       value={selectedPackage}
                       onChange={(e) => setSelectedPackage(e.target.value)}
-                      className="w-full py-2.5 px-3 rounded-xl bg-black/60 border border-stone-700/80 text-white text-xs focus:outline-none focus:border-[#F5D77F] font-sans"
+                      className="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition"
                     >
-                      <option value="basic" className="bg-stone-900 text-white">Basic (7 Hari • Rp 300rb)</option>
-                      <option value="standard" className="bg-stone-900 text-white">Standard (10 Hari • Rp 400rb)</option>
-                      <option value="all_in" className="bg-stone-900 text-white">Paket Spesial (14 Hari • Rp 500rb)</option>
+                      <option value="basic" className="bg-zinc-900 text-white">Basic (7 Hari • Rp 300rb)</option>
+                      <option value="standard" className="bg-zinc-900 text-white">Standard (10 Hari • Rp 400rb)</option>
+                      <option value="all_in" className="bg-zinc-900 text-white">Paket Spesial (14 Hari • Rp 500rb)</option>
                     </select>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-stone-800 mt-2">
+                <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-zinc-800 mt-2">
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2.5 rounded-full text-stone-400 hover:text-white text-xs font-serif transition"
+                    className="px-4 py-2 rounded-xl text-zinc-400 hover:text-white text-xs font-medium transition cursor-pointer"
                   >
                     Batal
                   </button>
 
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold shadow-lg transition cursor-pointer"
+                    className="px-5 py-2 rounded-xl bg-white hover:bg-zinc-200 active:scale-95 text-black text-xs font-semibold shadow-sm transition cursor-pointer"
                   >
                     Buat Event Sekarang
                   </button>
@@ -946,45 +944,53 @@ export default function AdminDashboardPage() {
 
       {/* ================= 🌟 MODAL: HERO PHOTOS MANAGER 🌟 ================= */}
       {heroModalEvent && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-[#140E16] border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
-            <span className="text-[9.5px] font-mono uppercase tracking-[0.25em] text-[#C4A46C] font-bold block mb-1">
-              BANNER & PREWEDDING
-            </span>
-            <h3 className="text-base sm:text-lg font-serif font-bold text-white mb-1">
-              Kelola Foto Acara — {heroModalEvent.displayName}
-            </h3>
-            <p className="text-xs text-stone-400 mb-4 leading-relaxed">
-              Upload foto cover/banner dari perangkat atau masukkan URL gambar langsung.
-            </p>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-[#121215] border border-zinc-800 rounded-2xl p-6 sm:p-7 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-4">
+              <div>
+                <h3 className="text-base font-sans font-semibold text-white">
+                  Foto Banner — {heroModalEvent.displayName}
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Kelola foto banner cover untuk tampilan web photobooth tamu.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHeroModalEvent(null)}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
             {/* Photo Preview Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-72 overflow-y-auto p-1 mb-4 no-scrollbar">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-72 overflow-y-auto p-1 mb-4 no-scrollbar">
               {editHeroPhotos.map((url, idx) => (
-                <div key={idx} className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-stone-700 bg-black/40 group shadow-md">
+                <div key={idx} className="relative aspect-[3/4] rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 group shadow-sm">
                   <img src={url} alt={`Hero ${idx + 1}`} className="w-full h-full object-cover" />
                   
                   {/* Action overlays */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/60 sm:opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-[#F5D77F] font-bold bg-black/60 px-2 py-0.5 rounded-full border border-white/10">
+                      <span className="text-[10px] font-mono text-zinc-200 font-medium bg-black/60 px-2 py-0.5 rounded-full border border-white/10">
                         #{idx + 1}
                       </span>
                       <button
                         onClick={() => handleRemoveHeroPhoto(idx)}
-                        className="p-1.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white transition active:scale-90 cursor-pointer shadow-md"
+                        className="p-1.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white transition active:scale-90 cursor-pointer shadow-xs"
                         title="Hapus foto ini"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={12} />
                       </button>
                     </div>
 
                     <button
                       onClick={() => handleStartCropHeroPhoto(idx)}
-                      className="w-full py-1.5 rounded-xl bg-black/80 hover:bg-black border border-[#F5D77F]/60 text-[#F5D77F] text-[10px] font-serif font-bold flex items-center justify-center gap-1 backdrop-blur-md active:scale-95 transition shadow-md cursor-pointer"
+                      className="w-full py-1.5 rounded-lg bg-black/80 hover:bg-black border border-white/20 text-white text-[11px] font-medium flex items-center justify-center gap-1 backdrop-blur-md active:scale-95 transition cursor-pointer"
                     >
-                      <Crop size={12} className="text-[#F5D77F]" />
-                      <span>Sesuaikan / Crop</span>
+                      <Crop size={12} />
+                      <span>Sesuaikan</span>
                     </button>
                   </div>
                 </div>
@@ -992,10 +998,10 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Upload File Input */}
-            <div className="space-y-3 pt-3 border-t border-stone-800">
-              <label className="w-full py-2.5 rounded-xl border border-dashed border-[#F5D77F]/40 hover:bg-white/5 flex items-center justify-center gap-2 text-xs font-serif font-bold text-[#F5D77F] cursor-pointer transition">
+            <div className="space-y-3 pt-3 border-t border-zinc-800">
+              <label className="w-full py-2.5 rounded-xl border border-dashed border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900/50 flex items-center justify-center gap-2 text-xs font-medium text-zinc-300 cursor-pointer transition">
                 <Upload size={14} />
-                <span>+ Upload File Foto dari HP / Komputer</span>
+                <span>Upload File Foto</span>
                 <input
                   type="file"
                   multiple
@@ -1008,26 +1014,26 @@ export default function AdminDashboardPage() {
               <div className="flex gap-2">
                 <input
                   type="url"
-                  placeholder="Atau tempel link gambar (URL)..."
+                  placeholder="Tempel tautan URL gambar..."
                   value={newPhotoUrlInput}
                   onChange={(e) => setNewPhotoUrlInput(e.target.value)}
-                  className="flex-1 bg-black/50 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#F5D77F] font-mono"
+                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 font-mono"
                 />
                 <button
                   type="button"
                   onClick={handleAddHeroPhotoUrl}
-                  className="px-4 py-2 bg-[#6B111F] hover:bg-[#8A1828] text-[#F5D77F] text-xs font-serif font-bold rounded-xl transition"
+                  className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium rounded-xl transition cursor-pointer"
                 >
-                  Tambah URL
+                  Tambah
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-5 border-t border-stone-800 mt-4">
+            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-zinc-800 mt-4">
               <button
                 type="button"
                 onClick={() => setHeroModalEvent(null)}
-                className="px-4 py-2 rounded-xl text-stone-400 hover:text-white text-xs font-serif transition"
+                className="px-4 py-2 rounded-xl text-zinc-400 hover:text-white text-xs font-medium transition cursor-pointer"
               >
                 Batal
               </button>
@@ -1035,7 +1041,7 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={handleSaveHeroPhotos}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold shadow-lg transition"
+                className="px-5 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold shadow-sm transition cursor-pointer"
               >
                 Simpan Foto
               </button>
@@ -1068,26 +1074,26 @@ export default function AdminDashboardPage() {
       {/* ================= 🌟 MODAL: LIVE EVENT PHONE PREVIEW (ADMIN INSPECTOR) 🌟 ================= */}
       <AnimatePresence>
         {previewModalEvent && (
-          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.25 }}
-              className="w-full max-w-lg bg-[#140E16] border border-stone-800 rounded-3xl p-4 sm:p-6 shadow-2xl relative max-h-[95vh] flex flex-col justify-between overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-lg bg-[#121215] border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-2xl relative max-h-[95vh] flex flex-col justify-between overflow-hidden"
             >
               {/* Modal Top Bar */}
-              <div className="flex items-start justify-between gap-3 border-b border-stone-800/80 pb-3 mb-3 flex-shrink-0">
+              <div className="flex items-start justify-between gap-3 border-b border-zinc-800 pb-3 mb-3 flex-shrink-0">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono tracking-widest text-[#C4A46C] uppercase font-bold">
+                    <span className="text-[10px] font-mono tracking-wider text-zinc-400 uppercase font-medium">
                       PRATINJAU LAYAR TAMU
                     </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-stone-300">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">
                       /{previewModalEvent.slug}
                     </span>
                   </div>
-                  <h3 className="text-base sm:text-lg font-serif font-bold text-white tracking-wide truncate max-w-[260px] sm:max-w-sm mt-0.5">
+                  <h3 className="text-base font-sans font-bold text-white tracking-tight truncate max-w-[260px] sm:max-w-sm mt-0.5">
                     {previewModalEvent.displayName}
                   </h3>
                 </div>
@@ -1095,14 +1101,14 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button
                     onClick={() => navigateToEvent(previewModalEvent.slug)}
-                    className="p-2 rounded-xl bg-stone-900/90 hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 transition cursor-pointer"
-                    title="Buka Web Tamu Asli di Halaman Utama"
+                    className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition cursor-pointer"
+                    title="Buka Web Tamu"
                   >
                     <ExternalLink size={14} />
                   </button>
                   <button
                     onClick={() => setPreviewModalEvent(null)}
-                    className="p-2 rounded-xl bg-stone-900/90 hover:bg-rose-950/60 text-stone-400 hover:text-rose-300 border border-stone-800 transition cursor-pointer"
+                    className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 transition cursor-pointer"
                     title="Tutup Pratinjau"
                   >
                     <X size={15} />
@@ -1111,14 +1117,14 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Mode Switcher Pill */}
-              <div className="flex items-center justify-center gap-1.5 p-1 rounded-full bg-black/60 border border-white/10 mx-auto mb-3 flex-shrink-0">
+              <div className="flex items-center justify-center gap-1.5 p-1 rounded-xl bg-zinc-900 border border-zinc-800 mx-auto mb-3 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => setPreviewTab('hero')}
-                  className={`px-3.5 py-1 rounded-full text-xs font-serif font-bold transition cursor-pointer ${
+                  className={`px-3.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer ${
                     previewTab === 'hero'
-                      ? 'bg-[#6B111F] text-[#F5D77F] shadow-xs'
-                      : 'text-stone-400 hover:text-stone-200'
+                      ? 'bg-zinc-800 text-white shadow-xs font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   Beranda Tamu
@@ -1126,10 +1132,10 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setPreviewTab('frame')}
-                  className={`px-3.5 py-1 rounded-full text-xs font-serif font-bold transition cursor-pointer ${
+                  className={`px-3.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer ${
                     previewTab === 'frame'
-                      ? 'bg-[#6B111F] text-[#F5D77F] shadow-xs'
-                      : 'text-stone-400 hover:text-stone-200'
+                      ? 'bg-zinc-800 text-white shadow-xs font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   Hasil Strip Foto
@@ -1138,16 +1144,16 @@ export default function AdminDashboardPage() {
 
               {/* Interactive Phone Simulation Frame */}
               <div className="flex-1 min-h-0 flex items-center justify-center overflow-y-auto no-scrollbar py-1">
-                <div className="relative mx-auto w-full max-w-[280px] xs:max-w-[300px] rounded-[36px] bg-stone-950 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.6)] border-[5px] border-stone-800 select-none">
+                <div className="relative mx-auto w-full max-w-[280px] xs:max-w-[300px] rounded-[36px] bg-zinc-950 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.6)] border-[4px] border-zinc-800 select-none">
                   
                   {/* Dynamic Island */}
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-4.5 bg-stone-900 rounded-full z-40 flex items-center justify-between px-2.5 pointer-events-none">
-                    <div className="w-2 h-2 rounded-full bg-stone-950" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#1A1A24]" />
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-4 bg-zinc-900 rounded-full z-40 flex items-center justify-between px-2.5 pointer-events-none">
+                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-950" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
                   </div>
 
                   {/* Phone Screen Interior */}
-                  <div className="relative w-full aspect-[9/16] rounded-[28px] overflow-hidden bg-[#10060E]">
+                  <div className="relative w-full aspect-[9/16] rounded-[28px] overflow-hidden bg-zinc-900">
                     
                     {/* TAB 1: Beranda Tamu */}
                     {previewTab === 'hero' && (() => {
@@ -1176,17 +1182,17 @@ export default function AdminDashboardPage() {
 
                           {/* Top Header */}
                           <div className="relative z-10 pt-5 flex flex-col items-center">
-                            <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-semibold text-amber-200 uppercase tracking-[0.2em] border border-white/15 shadow-sm">
+                            <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-medium text-zinc-300 uppercase tracking-wider border border-white/10">
                               {badgeText}
                             </span>
 
                             <h1 
                               style={isWed ? { 
                                 fontFamily: "'Alex Brush', 'Great Vibes', cursive",
-                                textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.4)'
+                                textShadow: '0 3px 20px rgba(0,0,0,0.9)'
                               } : {
                                 fontFamily: "'Playfair Display', Georgia, serif",
-                                textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.3)',
+                                textShadow: '0 3px 20px rgba(0,0,0,0.9)',
                                 letterSpacing: '-0.02em'
                               }}
                               className={`${isWed ? 'text-4xl xs:text-5xl font-normal' : 'text-2xl xs:text-3xl font-serif font-black tracking-tight'} text-white leading-tight mt-1 px-1 drop-shadow-2xl`}
@@ -1195,7 +1201,7 @@ export default function AdminDashboardPage() {
                             </h1>
 
                             <div className="mt-1 px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15">
-                              <p className="text-[9px] text-rose-100 font-medium">
+                              <p className="text-[9px] text-zinc-200 font-medium">
                                 {previewModalEvent.formattedDate || previewModalEvent.eventDate} • {previewModalEvent.venue || 'Venue Acara'}
                               </p>
                             </div>
@@ -1204,7 +1210,7 @@ export default function AdminDashboardPage() {
                           {/* Bottom Action Simulation */}
                           <div className="relative z-10 pb-2 space-y-2">
                             <div className="flex flex-col gap-1.5 w-full max-w-[200px] mx-auto">
-                              <div className="py-2 px-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] text-[#F5D77F] border border-amber-300/40 text-[11px] font-serif font-bold shadow-lg flex items-center justify-center gap-1.5">
+                              <div className="py-2 px-3 rounded-full bg-white text-black text-[11px] font-sans font-semibold shadow-lg flex items-center justify-center gap-1.5">
                                 <Camera size={12} />
                                 <span>Mulai Photobooth</span>
                               </div>
@@ -1223,8 +1229,8 @@ export default function AdminDashboardPage() {
                                     onClick={() => setPreviewPhotoIdx(i)}
                                     className={`rounded-full transition-all cursor-pointer ${
                                       i === previewPhotoIdx 
-                                        ? 'w-4 h-1.5 bg-[#F5D77F]' 
-                                        : 'w-1.5 h-1.5 bg-white/50'
+                                        ? 'w-4 h-1.5 bg-white' 
+                                        : 'w-1.5 h-1.5 bg-white/40'
                                     }`}
                                   />
                                 ))}
@@ -1244,9 +1250,9 @@ export default function AdminDashboardPage() {
                         : DEFAULT_HERO_PHOTOS;
 
                       return (
-                        <div className="w-full h-full relative bg-[#F5EFEB] flex flex-col justify-between p-3 overflow-hidden text-stone-900">
+                        <div className="w-full h-full relative bg-[#F4F4F5] flex flex-col justify-between p-3 overflow-hidden text-zinc-900">
                           <div className="text-center pt-3 pb-1">
-                            <span className="px-2.5 py-0.5 rounded-full bg-black/70 text-white text-[8px] font-mono tracking-widest uppercase">
+                            <span className="px-2.5 py-0.5 rounded-full bg-black/80 text-white text-[8px] font-mono tracking-wider uppercase">
                               Pratinjau Hasil Strip
                             </span>
                           </div>
@@ -1292,17 +1298,17 @@ export default function AdminDashboardPage() {
                             <button
                               type="button"
                               onClick={() => setActiveFrameThemeIdx((prev) => (prev - 1 + PREVIEW_FRAME_THEMES.length) % PREVIEW_FRAME_THEMES.length)}
-                              className="p-1 rounded-full bg-white text-stone-700 shadow-sm border border-stone-200 cursor-pointer"
+                              className="p-1 rounded-full bg-white text-zinc-700 shadow-sm border border-zinc-200 cursor-pointer"
                             >
                               <ChevronLeft size={12} />
                             </button>
-                            <span className="text-[9px] font-serif font-bold text-stone-800">
+                            <span className="text-[9px] font-sans font-semibold text-zinc-800">
                               {theme.name}
                             </span>
                             <button
                               type="button"
                               onClick={() => setActiveFrameThemeIdx((prev) => (prev + 1) % PREVIEW_FRAME_THEMES.length)}
-                              className="p-1 rounded-full bg-white text-stone-700 shadow-sm border border-stone-200 cursor-pointer"
+                              className="p-1 rounded-full bg-white text-zinc-700 shadow-sm border border-zinc-200 cursor-pointer"
                             >
                               <ChevronRight size={12} />
                             </button>
@@ -1316,11 +1322,11 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Bottom Quick Action Footer */}
-              <div className="pt-3 border-t border-stone-800/80 flex items-center justify-between gap-2 flex-shrink-0">
+              <div className="pt-3 border-t border-zinc-800 flex items-center justify-between gap-2 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => navigateToSetup(previewModalEvent.slug)}
-                  className="px-3 py-1.5 rounded-full bg-stone-900/80 hover:bg-stone-800 text-stone-300 hover:text-white text-xs font-serif border border-stone-800 transition cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-medium border border-zinc-800 transition cursor-pointer"
                 >
                   Portal Setup Klien
                 </button>
@@ -1328,7 +1334,7 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setPreviewModalEvent(null)}
-                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] text-[#F5D77F] text-xs font-serif font-bold border border-[#F5D77F]/30 transition cursor-pointer shadow-xs"
+                  className="px-4 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold transition cursor-pointer shadow-xs"
                 >
                   Selesai
                 </button>

@@ -58,11 +58,11 @@ export const PACKAGES = {
 };
 
 export const EVENT_CATEGORIES = [
-  { id: 'wedding', name: 'Pernikahan', icon: '💍', label: 'Wedding', placeholder: 'The Wedding Celebration' },
-  { id: 'concert', name: 'Konser & Musik', icon: '🎵', label: 'Konser / Festival Musik', placeholder: 'Pestapora, Synchronize Fest, dll' },
-  { id: 'exhibition', name: 'Pameran Seni', icon: '🎨', label: 'Art Exhibition / Galeri', placeholder: 'Void Vision, Art Jakarta, dll' },
-  { id: 'festival', name: 'Bazaar / Expo', icon: '🎪', label: 'Clothing Expo / Bazaar', placeholder: 'Jakcloth, Brightspot, dll' },
-  { id: 'general', name: 'Komunitas / Kantor', icon: '🏢', label: 'Corporate / Gathering', placeholder: 'Annual Gathering, Launching, dll' },
+  { id: 'wedding', name: 'Pernikahan', label: 'Wedding', placeholder: 'The Wedding Celebration' },
+  { id: 'concert', name: 'Konser & Musik', label: 'Konser / Festival Musik', placeholder: 'Pestapora, Synchronize Fest, dll' },
+  { id: 'exhibition', name: 'Pameran Seni', label: 'Art Exhibition / Galeri', placeholder: 'Void Vision, Art Jakarta, dll' },
+  { id: 'festival', name: 'Bazaar / Expo', label: 'Clothing Expo / Bazaar', placeholder: 'Jakcloth, Brightspot, dll' },
+  { id: 'general', name: 'Corporate & Acara', label: 'Corporate / Gathering', placeholder: 'Annual Gathering, Launching, dll' },
 ];
 
 const NOW = Date.now();

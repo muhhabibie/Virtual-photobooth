@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pratinjau Dashboard Admin — Sirklen Photo Studio</title>
+  <title>Pratinjau Dashboard Admin — Sirklen</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,8 +11,8 @@
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #0C090E;
-      color: #F3F4F6;
+      background-color: #09090B;
+      color: #F4F4F5;
     }
     .font-serif {
       font-family: 'Playfair Display', Georgia, serif;
@@ -23,119 +23,101 @@
     .font-script {
       font-family: 'Alex Brush', cursive;
     }
-    /* Custom Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #120D15;
+      background: #09090B;
     }
     ::-webkit-scrollbar-thumb {
-      background: #2D2233;
+      background: #27272A;
       border-radius: 9999px;
     }
   </style>
 </head>
-<body class="min-h-screen selection:bg-[#6B111F] selection:text-[#F5D77F] pb-24 relative overflow-x-hidden">
-
-  <!-- Ambient Light Backdrop -->
-  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[380px] pointer-events-none opacity-20 blur-[150px] z-0"
-       style="background: radial-gradient(circle, rgba(107,17,31,0.85) 0%, rgba(196,164,108,0.25) 50%, transparent 80%);">
-  </div>
+<body class="min-h-screen selection:bg-zinc-800 selection:text-white pb-24 relative overflow-x-hidden">
 
   <!-- ================= 🌟 TOP HEADER 🌟 ================= -->
-  <header class="sticky top-0 z-40 bg-[#120D15]/90 backdrop-blur-xl border-b border-stone-800/80 px-4 sm:px-8 py-3.5 shadow-sm relative">
+  <header class="sticky top-0 z-40 bg-[#09090B]/90 backdrop-blur-xl border-b border-zinc-800/80 px-4 sm:px-8 py-3.5 shadow-xs">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
       
       <div class="flex items-center gap-3">
-        <!-- Logo Icon -->
-        <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#6B111F] to-[#380911] border border-[#F5D77F]/40 flex items-center justify-center shadow-md shadow-rose-950/40">
-          <svg class="w-5 h-5 text-[#F5D77F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </div>
-
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="font-serif font-black text-lg text-white tracking-wide">
-              Sirklen Photo
-            </span>
-            <span class="text-[9.5px] font-mono px-2 py-0.5 rounded-full bg-[#6B111F]/50 border border-[#F5D77F]/30 text-[#F5D77F] font-bold uppercase tracking-wider">
-              ADMIN PORTAL
-            </span>
-          </div>
-          <span class="text-[9px] font-mono text-stone-400 uppercase tracking-widest block">
-            PT SIRKLEN KREASI USAHA • SISTEM OPERASIONAL
-          </span>
-        </div>
+        <span class="font-sans font-bold text-lg text-white tracking-tight">
+          Sirklen
+        </span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700/80 text-zinc-300 font-medium tracking-wider">
+          ADMIN
+        </span>
+        <span class="hidden sm:inline text-xs text-zinc-500 font-normal">
+          Event & Booth Management
+        </span>
       </div>
 
-      <div class="flex items-center gap-2.5">
-        <button onclick="alert('Fitur Buat Event Baru aktif di web')" class="px-4 py-2 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/30 transition cursor-pointer">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-          <span>Buat Event Baru</span>
+      <div class="flex items-center gap-2">
+        <button onclick="openCreateModal()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-zinc-200 active:scale-95 text-black text-xs font-semibold flex items-center gap-1.5 shadow-sm transition cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          <span>Buat Event</span>
         </button>
 
-        <div class="p-2 rounded-full bg-stone-800/80 text-stone-400 border border-stone-700/60" title="Admin Login Aktif">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-        </div>
+        <button onclick="showToast('Sesi diamankan')" class="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 transition cursor-pointer" title="Kunci Dashboard">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
       </div>
 
     </div>
   </header>
 
   <!-- ================= 🌟 DASHBOARD MAIN BODY 🌟 ================= -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-8 pt-7 relative z-10 space-y-6">
+  <main class="max-w-7xl mx-auto px-4 sm:px-8 pt-6 relative z-10 space-y-6">
 
     <!-- 1. System Statistics Grid -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       
-      <div class="p-4 sm:p-5 rounded-3xl bg-[#140E16]/85 border border-stone-800/90 shadow-lg backdrop-blur-md">
-        <span class="text-[10px] font-mono text-[#C4A46C] uppercase tracking-wider block font-semibold">
-          TOTAL EVENT AKTIF
+      <div class="p-4 sm:p-5 rounded-2xl bg-[#111114] border border-zinc-800/90 shadow-xs">
+        <span class="text-xs font-medium text-zinc-400 block mb-1">
+          Event Aktif
         </span>
-        <div class="flex items-baseline gap-2 mt-1">
-          <span class="text-2xl sm:text-3xl font-serif font-bold text-white">
+        <div class="flex items-baseline gap-2">
+          <span class="text-2xl sm:text-3xl font-sans font-semibold text-white tracking-tight">
             5
           </span>
-          <span class="text-xs text-stone-400 font-serif">Acara Berlangsung</span>
+          <span class="text-xs text-zinc-500">Acara</span>
         </div>
       </div>
 
-      <div class="p-4 sm:p-5 rounded-3xl bg-[#140E16]/85 border border-stone-800/90 shadow-lg backdrop-blur-md">
-        <span class="text-[10px] font-mono text-stone-400 uppercase tracking-wider block font-semibold">
-          SEMUA EVENT TERDAFTAR
+      <div class="p-4 sm:p-5 rounded-2xl bg-[#111114] border border-zinc-800/90 shadow-xs">
+        <span class="text-xs font-medium text-zinc-400 block mb-1">
+          Total Event Terdaftar
         </span>
-        <div class="flex items-baseline gap-2 mt-1">
-          <span class="text-2xl sm:text-3xl font-serif font-bold text-white">
+        <div class="flex items-baseline gap-2">
+          <span class="text-2xl sm:text-3xl font-sans font-semibold text-white tracking-tight">
             5
           </span>
-          <span class="text-xs text-stone-400 font-serif">Klien Terdaftar</span>
+          <span class="text-xs text-zinc-500">Klien</span>
         </div>
       </div>
 
-      <div class="p-4 sm:p-5 rounded-3xl bg-[#140E16]/85 border border-stone-800/90 shadow-lg backdrop-blur-md">
-        <span class="text-[10px] font-mono text-[#C4A46C] uppercase tracking-wider block font-semibold">
-          SESI FOTO TERSIMPAN
+      <div class="p-4 sm:p-5 rounded-2xl bg-[#111114] border border-zinc-800/90 shadow-xs">
+        <span class="text-xs font-medium text-zinc-400 block mb-1">
+          Sesi Foto Tersimpan
         </span>
-        <div class="flex items-baseline gap-2 mt-1">
-          <span class="text-2xl sm:text-3xl font-serif font-bold text-white">
+        <div class="flex items-baseline gap-2">
+          <span class="text-2xl sm:text-3xl font-sans font-semibold text-white tracking-tight">
             48
           </span>
-          <span class="text-xs text-stone-400 font-serif">Sesi Tamu Terunggah</span>
+          <span class="text-xs text-zinc-500">Sesi Tamu</span>
         </div>
       </div>
 
-      <div class="p-4 sm:p-5 rounded-3xl bg-[#140E16]/85 border border-stone-800/90 shadow-lg backdrop-blur-md flex flex-col justify-between">
-        <span class="text-[10px] font-mono text-stone-400 uppercase tracking-wider block font-semibold">
-          STATUS CLOUD ENGINE
+      <div class="p-4 sm:p-5 rounded-2xl bg-[#111114] border border-zinc-800/90 shadow-xs flex flex-col justify-between">
+        <span class="text-xs font-medium text-zinc-400 block mb-1">
+          Status Sistem
         </span>
-        <div class="mt-2 flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
-          <span class="text-xs font-mono font-bold text-emerald-400 tracking-wide">
-            ONLINE & TERHUBUNG
+        <div class="flex items-center gap-2 mt-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
+          <span class="text-xs font-mono font-medium text-emerald-400">
+            Online & Terhubung
           </span>
         </div>
       </div>
@@ -143,282 +125,403 @@
     </div>
 
     <!-- 2. Navigation Tabs & Category Filters -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-b border-stone-800/80 pb-3">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-b border-zinc-800/80 pb-3">
       
-      <div class="flex items-center gap-2">
-        <button class="px-4 py-2 rounded-full text-xs font-serif font-bold flex items-center gap-2 bg-[#6B111F] text-[#F5D77F] border border-[#F5D77F]/30 shadow-md shadow-rose-950/20">
+      <div class="flex items-center gap-1.5 p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
+        <button class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800 text-white shadow-xs flex items-center gap-2">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <span>Daftar Acara & Klien (5)</span>
+          <span>Daftar Acara (5)</span>
         </button>
 
-        <button class="px-4 py-2 rounded-full text-xs font-serif font-bold flex items-center gap-2 bg-stone-900/80 text-stone-400 hover:text-white border border-stone-800 transition">
+        <button onclick="showToast('Silakan pilih salah satu event untuk inspeksi QR')" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-2 transition">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-          <span>Cetak QR Code Meja</span>
+          <span>Cetak QR Code</span>
         </button>
       </div>
 
-      <!-- Category Filter Pills -->
+      <!-- Category Filter Pills (Zero Emojis) -->
       <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1" id="categoryFilterContainer">
-        <button onclick="filterCategory('all')" id="btn-all" class="cat-pill px-3 py-1 rounded-full text-[11px] font-sans font-medium transition cursor-pointer bg-white/20 text-white border border-white/30 whitespace-nowrap">
+        <button onclick="filterCategory('all')" id="btn-all" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer bg-zinc-800 text-white border border-zinc-700 shadow-xs whitespace-nowrap">
           Semua
         </button>
-        <button onclick="filterCategory('concert')" id="btn-concert" class="cat-pill px-3 py-1 rounded-full text-[11px] font-sans font-medium transition cursor-pointer text-stone-400 hover:text-white whitespace-nowrap">
-          🎵 Konser & Musik
+        <button onclick="filterCategory('concert')" id="btn-concert" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 whitespace-nowrap">
+          Konser & Musik
         </button>
-        <button onclick="filterCategory('exhibition')" id="btn-exhibition" class="cat-pill px-3 py-1 rounded-full text-[11px] font-sans font-medium transition cursor-pointer text-stone-400 hover:text-white whitespace-nowrap">
-          🎨 Pameran Seni
+        <button onclick="filterCategory('exhibition')" id="btn-exhibition" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 whitespace-nowrap">
+          Pameran Seni
         </button>
-        <button onclick="filterCategory('festival')" id="btn-festival" class="cat-pill px-3 py-1 rounded-full text-[11px] font-sans font-medium transition cursor-pointer text-stone-400 hover:text-white whitespace-nowrap">
-          🎪 Bazaar / Expo
+        <button onclick="filterCategory('festival')" id="btn-festival" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 whitespace-nowrap">
+          Bazaar / Expo
         </button>
-        <button onclick="filterCategory('wedding')" id="btn-wedding" class="cat-pill px-3 py-1 rounded-full text-[11px] font-sans font-medium transition cursor-pointer text-stone-400 hover:text-white whitespace-nowrap">
-          💍 Pernikahan
+        <button onclick="filterCategory('wedding')" id="btn-wedding" class="cat-pill px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 whitespace-nowrap">
+          Pernikahan
         </button>
       </div>
 
     </div>
 
-    <!-- 3. Event Cards List -->
-    <div class="space-y-4" id="eventsList">
-      
-      <!-- EVENT 1: Pestapora 2026 -->
-      <div class="event-card p-5 sm:p-6 rounded-3xl bg-[#130E16]/90 border border-stone-800/90 hover:border-stone-700 transition shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-md" data-category="concert">
+    <!-- 3. Events List Container -->
+    <div class="space-y-3.5" id="eventsContainer">
+
+      <!-- CARD 1: PESTAPORA 2026 -->
+      <div class="event-card p-5 sm:p-6 rounded-2xl bg-[#111114] border border-zinc-800/90 hover:border-zinc-700/80 transition shadow-sm" data-category="concert">
         <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
           
-          <div class="flex-1 space-y-2">
+          <div class="flex-1 space-y-2.5">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-800/90 border border-stone-700 text-stone-200">
-                <span>🎵</span>
-                <span>Konser & Musik</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-zinc-800/90 border border-zinc-700/80 text-zinc-300">
+                Konser & Musik
               </span>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#6B111F]/40 border border-[#F5D77F]/30 text-[#F5D77F]">
-                Paket Spesial (Rp 500.000)
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium bg-zinc-800/60 border border-zinc-700/60 text-zinc-300">
+                Paket Spesial
               </span>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950/60 border border-emerald-700/40 text-emerald-300 font-semibold">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-emerald-950/40 border border-emerald-800/40 text-emerald-300">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <span>Aktif (14 Hari Lagi)</span>
               </span>
             </div>
 
-            <h3 class="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
+            <h3 class="text-xl sm:text-2xl font-sans font-bold text-white tracking-tight">
               Pestapora 2026
             </h3>
 
-            <div class="flex flex-wrap items-center gap-y-1 gap-x-3.5 text-xs text-stone-400 font-sans">
-              <span>Tanggal: <strong class="text-stone-200 font-medium">25 September 2026</strong></span>
-              <span class="text-stone-700">•</span>
-              <span>Lokasi: <strong class="text-stone-200 font-medium">Gambir Expo Kemayoran Jakarta</strong></span>
-              <span class="text-stone-700">•</span>
-              <span class="font-mono text-stone-300">Slug: <strong class="text-[#F5D77F]">/pestapora</strong></span>
-              <span class="text-stone-700">•</span>
-              <span>Banner: <strong class="text-stone-200 font-medium">3 Foto Display</strong></span>
+            <div class="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-zinc-400 font-sans">
+              <span>Tanggal: <strong class="text-zinc-200 font-medium">25 September 2026</strong></span>
+              <span class="text-zinc-600">•</span>
+              <span>Lokasi: <strong class="text-zinc-200 font-medium">Gambir Expo Kemayoran Jakarta</strong></span>
+              <span class="text-zinc-600">•</span>
+              <span class="font-mono text-zinc-300 flex items-center gap-1">
+                Link: <strong class="text-zinc-100">/pestapora</strong>
+                <button onclick="copyToClipboard('https://sirklen.id/pestapora', 'Link Tamu')" class="text-zinc-500 hover:text-zinc-200 p-0.5 transition cursor-pointer" title="Salin Link">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+              </span>
+              <span class="text-zinc-600">•</span>
+              <span>Foto Banner: <strong class="text-zinc-200 font-medium">3 Foto</strong></span>
             </div>
           </div>
 
           <!-- Actions -->
           <div class="flex flex-col gap-2.5 xl:items-end">
             <div class="flex items-center gap-2">
-              <button onclick="openPreviewModal('pestapora')" class="px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              <button onclick="openPhonePreview('Pestapora 2026', 'pestapora', 'concert', '25 September 2026', 'Gambir Expo Kemayoran Jakarta', ['https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1600&auto=format&fit=crop&q=85', 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1600&auto=format&fit=crop&q=85'])" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                 <span>Preview</span>
               </button>
-              <button onclick="alert('Link Setup disalin: /setup/pestapora')" class="px-4 py-2.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+
+              <button onclick="copyToClipboard('https://sirklen.id/setup/pestapora', 'Link Setup Penyelenggara')" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 <span>Salin Link Setup</span>
               </button>
-              <button onclick="alert('Membuka WhatsApp ke Penyelenggara Pestapora 2026')" class="px-4 py-2.5 rounded-full bg-emerald-950/80 hover:bg-emerald-900/80 border border-emerald-600/50 text-emerald-300 text-xs font-serif font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer whitespace-nowrap shadow-xs">
-                <span>💬 Kirim WA</span>
+
+              <button onclick="sendWA('Pestapora 2026', 'pestapora', 'concert')" class="px-3.5 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/40 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                <span>Kirim WA</span>
               </button>
             </div>
 
-            <div class="flex flex-wrap items-center gap-1.5">
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">Foto</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">QR</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">Cetak Meja</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">ZIP</button>
+            <!-- Toolbar Group -->
+            <div class="flex items-center gap-1 p-1 bg-zinc-900/80 border border-zinc-800 rounded-xl">
+              <button onclick="showToast('Kelola foto banner prewedding / event')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>Foto</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('QR Code siap diinspeksi')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                <span>QR</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Membuka dialog cetak kartu meja')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>Cetak Meja</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Menyiapkan arsip ZIP foto tamu...')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                <span>ZIP</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="window.open('/pestapora', '_blank')" class="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer" title="Buka Tampilan Web Tamu">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Event siap dikelola')" class="p-1 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 transition cursor-pointer" title="Hapus Event">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
             </div>
           </div>
 
         </div>
       </div>
 
-      <!-- EVENT 2: Void Vision Exhibition -->
-      <div class="event-card p-5 sm:p-6 rounded-3xl bg-[#130E16]/90 border border-stone-800/90 hover:border-stone-700 transition shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-md" data-category="exhibition">
+      <!-- CARD 2: VOID VISION -->
+      <div class="event-card p-5 sm:p-6 rounded-2xl bg-[#111114] border border-zinc-800/90 hover:border-zinc-700/80 transition shadow-sm" data-category="exhibition">
         <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
           
-          <div class="flex-1 space-y-2">
+          <div class="flex-1 space-y-2.5">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-800/90 border border-stone-700 text-stone-200">
-                <span>🎨</span>
-                <span>Pameran Seni</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-zinc-800/90 border border-zinc-700/80 text-zinc-300">
+                Pameran Seni
               </span>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#6B111F]/40 border border-[#F5D77F]/30 text-[#F5D77F]">
-                Standard (Rp 400.000)
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium bg-zinc-800/60 border border-zinc-700/60 text-zinc-300">
+                Standard
               </span>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950/60 border border-emerald-700/40 text-emerald-300 font-semibold">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-emerald-950/40 border border-emerald-800/40 text-emerald-300">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <span>Aktif (10 Hari Lagi)</span>
               </span>
             </div>
 
-            <h3 class="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
-              Void Vision Exhibition
+            <h3 class="text-xl sm:text-2xl font-sans font-bold text-white tracking-tight">
+              Void Vision
             </h3>
 
-            <div class="flex flex-wrap items-center gap-y-1 gap-x-3.5 text-xs text-stone-400 font-sans">
-              <span>Tanggal: <strong class="text-stone-200 font-medium">18 Juli 2026</strong></span>
-              <span class="text-stone-700">•</span>
-              <span>Lokasi: <strong class="text-stone-200 font-medium">Spazio Hall Surabaya</strong></span>
-              <span class="text-stone-700">•</span>
-              <span class="font-mono text-stone-300">Slug: <strong class="text-[#F5D77F]">/void-vision</strong></span>
-              <span class="text-stone-700">•</span>
-              <span>Banner: <strong class="text-stone-200 font-medium">2 Foto Galeri</strong></span>
+            <div class="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-zinc-400 font-sans">
+              <span>Tanggal: <strong class="text-zinc-200 font-medium">18 Juli 2026</strong></span>
+              <span class="text-zinc-600">•</span>
+              <span>Lokasi: <strong class="text-zinc-200 font-medium">Spazio Hall Surabaya</strong></span>
+              <span class="text-zinc-600">•</span>
+              <span class="font-mono text-zinc-300 flex items-center gap-1">
+                Link: <strong class="text-zinc-100">/void-vision</strong>
+                <button onclick="copyToClipboard('https://sirklen.id/void-vision', 'Link Tamu')" class="text-zinc-500 hover:text-zinc-200 p-0.5 transition cursor-pointer" title="Salin Link">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+              </span>
+              <span class="text-zinc-600">•</span>
+              <span>Foto Banner: <strong class="text-zinc-200 font-medium">2 Foto</strong></span>
             </div>
           </div>
 
-          <!-- Actions -->
           <div class="flex flex-col gap-2.5 xl:items-end">
             <div class="flex items-center gap-2">
-              <button onclick="openPreviewModal('void-vision')" class="px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              <button onclick="openPhonePreview('Void Vision', 'void-vision', 'exhibition', '18 Juli 2026', 'Spazio Hall Surabaya', ['https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1600&auto=format&fit=crop&q=85'])" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                 <span>Preview</span>
               </button>
-              <button onclick="alert('Link Setup disalin: /setup/void-vision')" class="px-4 py-2.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+
+              <button onclick="copyToClipboard('https://sirklen.id/setup/void-vision', 'Link Setup Penyelenggara')" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 <span>Salin Link Setup</span>
               </button>
-              <button onclick="alert('Membuka WhatsApp ke Kurator Void Vision')" class="px-4 py-2.5 rounded-full bg-emerald-950/80 hover:bg-emerald-900/80 border border-emerald-600/50 text-emerald-300 text-xs font-serif font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer whitespace-nowrap shadow-xs">
-                <span>💬 Kirim WA</span>
+
+              <button onclick="sendWA('Void Vision', 'void-vision', 'exhibition')" class="px-3.5 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/40 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                <span>Kirim WA</span>
               </button>
             </div>
 
-            <div class="flex flex-wrap items-center gap-1.5">
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">Foto</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">QR</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">Cetak Meja</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">ZIP</button>
+            <!-- Toolbar Group -->
+            <div class="flex items-center gap-1 p-1 bg-zinc-900/80 border border-zinc-800 rounded-xl">
+              <button onclick="showToast('Kelola foto banner prewedding / event')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>Foto</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('QR Code siap diinspeksi')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                <span>QR</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Membuka dialog cetak kartu meja')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>Cetak Meja</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Menyiapkan arsip ZIP foto tamu...')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                <span>ZIP</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="window.open('/void-vision', '_blank')" class="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer" title="Buka Tampilan Web Tamu">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Event siap dikelola')" class="p-1 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 transition cursor-pointer" title="Hapus Event">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
             </div>
           </div>
 
         </div>
       </div>
 
-      <!-- EVENT 3: Jakcloth Year End Fest -->
-      <div class="event-card p-5 sm:p-6 rounded-3xl bg-[#130E16]/90 border border-stone-800/90 hover:border-stone-700 transition shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-md" data-category="festival">
+      <!-- CARD 3: JAKCLOTH -->
+      <div class="event-card p-5 sm:p-6 rounded-2xl bg-[#111114] border border-zinc-800/90 hover:border-zinc-700/80 transition shadow-sm" data-category="festival">
         <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
           
-          <div class="flex-1 space-y-2">
+          <div class="flex-1 space-y-2.5">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-800/90 border border-stone-700 text-stone-200">
-                <span>🎪</span>
-                <span>Bazaar / Expo</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-zinc-800/90 border border-zinc-700/80 text-zinc-300">
+                Bazaar / Expo
               </span>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#6B111F]/40 border border-[#F5D77F]/30 text-[#F5D77F]">
-                Paket Spesial (Rp 500.000)
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium bg-zinc-800/60 border border-zinc-700/60 text-zinc-300">
+                Paket Spesial
               </span>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950/60 border border-emerald-700/40 text-emerald-300 font-semibold">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-emerald-950/40 border border-emerald-800/40 text-emerald-300">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <span>Aktif (14 Hari Lagi)</span>
               </span>
             </div>
 
-            <h3 class="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
-              Jakcloth Year End Fest
+            <h3 class="text-xl sm:text-2xl font-sans font-bold text-white tracking-tight">
+              Jakcloth Year End 2026
             </h3>
 
-            <div class="flex flex-wrap items-center gap-y-1 gap-x-3.5 text-xs text-stone-400 font-sans">
-              <span>Tanggal: <strong class="text-stone-200 font-medium">20 Desember 2026</strong></span>
-              <span class="text-stone-700">•</span>
-              <span>Lokasi: <strong class="text-stone-200 font-medium">Senayan Park Jakarta</strong></span>
-              <span class="text-stone-700">•</span>
-              <span class="font-mono text-stone-300">Slug: <strong class="text-[#F5D77F]">/jakcloth</strong></span>
-              <span class="text-stone-700">•</span>
-              <span>Banner: <strong class="text-stone-200 font-medium">2 Foto Event</strong></span>
+            <div class="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-zinc-400 font-sans">
+              <span>Tanggal: <strong class="text-zinc-200 font-medium">28 Desember 2026</strong></span>
+              <span class="text-zinc-600">•</span>
+              <span>Lokasi: <strong class="text-zinc-200 font-medium">JCC Senayan Jakarta</strong></span>
+              <span class="text-zinc-600">•</span>
+              <span class="font-mono text-zinc-300 flex items-center gap-1">
+                Link: <strong class="text-zinc-100">/jakcloth</strong>
+                <button onclick="copyToClipboard('https://sirklen.id/jakcloth', 'Link Tamu')" class="text-zinc-500 hover:text-zinc-200 p-0.5 transition cursor-pointer" title="Salin Link">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+              </span>
+              <span class="text-zinc-600">•</span>
+              <span>Foto Banner: <strong class="text-zinc-200 font-medium">3 Foto</strong></span>
             </div>
           </div>
 
-          <!-- Actions -->
           <div class="flex flex-col gap-2.5 xl:items-end">
             <div class="flex items-center gap-2">
-              <button onclick="openPreviewModal('jakcloth')" class="px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              <button onclick="openPhonePreview('Jakcloth Year End 2026', 'jakcloth', 'festival', '28 Desember 2026', 'JCC Senayan Jakarta', ['https://images.unsplash.com/photo-1523381294911-8d3cead13475?w=1600&auto=format&fit=crop&q=85'])" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                 <span>Preview</span>
               </button>
-              <button onclick="alert('Link Setup disalin: /setup/jakcloth')" class="px-4 py-2.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+
+              <button onclick="copyToClipboard('https://sirklen.id/setup/jakcloth', 'Link Setup Penyelenggara')" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 <span>Salin Link Setup</span>
               </button>
-              <button onclick="alert('Membuka WhatsApp ke EO Jakcloth Fest')" class="px-4 py-2.5 rounded-full bg-emerald-950/80 hover:bg-emerald-900/80 border border-emerald-600/50 text-emerald-300 text-xs font-serif font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer whitespace-nowrap shadow-xs">
-                <span>💬 Kirim WA</span>
+
+              <button onclick="sendWA('Jakcloth Year End 2026', 'jakcloth', 'festival')" class="px-3.5 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/40 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                <span>Kirim WA</span>
               </button>
             </div>
 
-            <div class="flex flex-wrap items-center gap-1.5">
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">Foto</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">QR</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">Cetak Meja</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">ZIP</button>
+            <!-- Toolbar Group -->
+            <div class="flex items-center gap-1 p-1 bg-zinc-900/80 border border-zinc-800 rounded-xl">
+              <button onclick="showToast('Kelola foto banner prewedding / event')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>Foto</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('QR Code siap diinspeksi')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                <span>QR</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Membuka dialog cetak kartu meja')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>Cetak Meja</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Menyiapkan arsip ZIP foto tamu...')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                <span>ZIP</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="window.open('/jakcloth', '_blank')" class="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer" title="Buka Tampilan Web Tamu">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Event siap dikelola')" class="p-1 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 transition cursor-pointer" title="Hapus Event">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
             </div>
           </div>
 
         </div>
       </div>
 
-      <!-- EVENT 4: Raka & Sabrina (Wedding) -->
-      <div class="event-card p-5 sm:p-6 rounded-3xl bg-[#130E16]/90 border border-stone-800/90 hover:border-stone-700 transition shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-md" data-category="wedding">
+      <!-- CARD 4: SABRINA & RAKA -->
+      <div class="event-card p-5 sm:p-6 rounded-2xl bg-[#111114] border border-zinc-800/90 hover:border-zinc-700/80 transition shadow-sm" data-category="wedding">
         <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
           
-          <div class="flex-1 space-y-2">
+          <div class="flex-1 space-y-2.5">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-stone-800/90 border border-stone-700 text-stone-200">
-                <span>💍</span>
-                <span>Pernikahan</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-zinc-800/90 border border-zinc-700/80 text-zinc-300">
+                Pernikahan
               </span>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#6B111F]/40 border border-[#F5D77F]/30 text-[#F5D77F]">
-                Paket Spesial (Rp 500.000)
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium bg-zinc-800/60 border border-zinc-700/60 text-zinc-300">
+                Paket Spesial
               </span>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-950/60 border border-emerald-700/40 text-emerald-300 font-semibold">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-emerald-950/40 border border-emerald-800/40 text-emerald-300">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span>Aktif (14 Hari Lagi)</span>
+                <span>Aktif (12 Hari Lagi)</span>
               </span>
             </div>
 
             <h3 class="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
-              Raka & Sabrina
+              Sabrina & Raka
             </h3>
 
-            <div class="flex flex-wrap items-center gap-y-1 gap-x-3.5 text-xs text-stone-400 font-sans">
-              <span>Tanggal: <strong class="text-stone-200 font-medium">30 Mei 2026</strong></span>
-              <span class="text-stone-700">•</span>
-              <span>Lokasi: <strong class="text-stone-200 font-medium">Grand Ballroom Hotel Mulia Jakarta</strong></span>
-              <span class="text-stone-700">•</span>
-              <span class="font-mono text-stone-300">Slug: <strong class="text-[#F5D77F]">/sabrina-raka</strong></span>
-              <span class="text-stone-700">•</span>
-              <span>Prewedding: <strong class="text-stone-200 font-medium">3 Foto Prewedding</strong></span>
+            <div class="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-zinc-400 font-sans">
+              <span>Tanggal: <strong class="text-zinc-200 font-medium">14 Februari 2026</strong></span>
+              <span class="text-zinc-600">•</span>
+              <span>Lokasi: <strong class="text-zinc-200 font-medium">The Glass House Surabaya</strong></span>
+              <span class="text-zinc-600">•</span>
+              <span class="font-mono text-zinc-300 flex items-center gap-1">
+                Link: <strong class="text-zinc-100">/sabrina-raka</strong>
+                <button onclick="copyToClipboard('https://sirklen.id/sabrina-raka', 'Link Tamu')" class="text-zinc-500 hover:text-zinc-200 p-0.5 transition cursor-pointer" title="Salin Link">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+              </span>
+              <span class="text-zinc-600">•</span>
+              <span>Foto Banner: <strong class="text-zinc-200 font-medium">4 Foto</strong></span>
             </div>
           </div>
 
-          <!-- Actions -->
           <div class="flex flex-col gap-2.5 xl:items-end">
             <div class="flex items-center gap-2">
-              <button onclick="openPreviewModal('sabrina-raka')" class="px-3.5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              <button onclick="openPhonePreview('Sabrina & Raka', 'sabrina-raka', 'wedding', '14 Februari 2026', 'The Glass House Surabaya', ['https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&auto=format&fit=crop&q=85', 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=1600&auto=format&fit=crop&q=85'])" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                 <span>Preview</span>
               </button>
-              <button onclick="alert('Link Setup disalin: /setup/sabrina-raka')" class="px-4 py-2.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+
+              <button onclick="copyToClipboard('https://sirklen.id/setup/sabrina-raka', 'Link Setup Pengantin')" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 <span>Salin Link Setup</span>
               </button>
-              <button onclick="alert('Membuka WhatsApp ke Mempelai Raka & Sabrina')" class="px-4 py-2.5 rounded-full bg-emerald-950/80 hover:bg-emerald-900/80 border border-emerald-600/50 text-emerald-300 text-xs font-serif font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer whitespace-nowrap shadow-xs">
-                <span>💬 Kirim WA</span>
+
+              <button onclick="sendWA('Sabrina & Raka', 'sabrina-raka', 'wedding')" class="px-3.5 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-800/40 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                <span>Kirim WA</span>
               </button>
             </div>
 
-            <div class="flex flex-wrap items-center gap-1.5">
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">Foto</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">QR</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">Cetak Meja</button>
-              <button class="px-3 py-1.5 rounded-xl bg-stone-900/90 text-stone-300 hover:text-white border border-stone-800 text-xs font-medium">ZIP</button>
+            <!-- Toolbar Group -->
+            <div class="flex items-center gap-1 p-1 bg-zinc-900/80 border border-zinc-800 rounded-xl">
+              <button onclick="showToast('Kelola foto banner prewedding / event')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>Foto</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('QR Code siap diinspeksi')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                <span>QR</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Membuka dialog cetak kartu meja')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>Cetak Meja</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Menyiapkan arsip ZIP foto tamu...')" class="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                <span>ZIP</span>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="window.open('/sabrina-raka', '_blank')" class="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer" title="Buka Tampilan Web Tamu">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </button>
+              <div class="w-[1px] h-3.5 bg-zinc-800"></div>
+              <button onclick="showToast('Event siap dikelola')" class="p-1 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 transition cursor-pointer" title="Hapus Event">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
             </div>
           </div>
 
@@ -429,80 +532,181 @@
 
   </main>
 
-  <!-- ================= 🌟 MODAL: LIVE EVENT PHONE PREVIEW 🌟 ================= -->
-  <div id="previewModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4">
-    <div class="w-full max-w-lg bg-[#140E16] border border-stone-800 rounded-3xl p-4 sm:p-6 shadow-2xl relative max-h-[95vh] flex flex-col justify-between overflow-hidden">
+  <!-- ================= 🌟 MODAL: BUAT EVENT BARU (CLEAN, NO EMOJIS, ZERO SLOP) 🌟 ================= -->
+  <div id="createModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-[#121215] border border-zinc-800 rounded-2xl p-6 sm:p-7 shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar">
       
-      <!-- Top Modal Bar -->
-      <div class="flex items-start justify-between gap-3 border-b border-stone-800/80 pb-3 mb-3 flex-shrink-0">
+      <div class="flex items-center justify-between pb-4 border-b border-zinc-800 mb-5">
         <div>
-          <div class="flex items-center gap-2">
-            <span class="text-[10px] font-mono tracking-widest text-[#C4A46C] uppercase font-bold">
-              PRATINJAU LAYAR TAMU
-            </span>
-            <span id="modalSlug" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-stone-300">
-              /pestapora
-            </span>
-          </div>
-          <h3 id="modalTitle" class="text-base sm:text-lg font-serif font-bold text-white tracking-wide truncate max-w-[260px] sm:max-w-sm mt-0.5">
-            Pestapora 2026
+          <h3 class="text-base sm:text-lg font-sans font-semibold text-white">
+            Buat Event Baru
           </h3>
+          <p class="text-xs text-zinc-400 mt-0.5">
+            Konfigurasi photobooth untuk klien atau acara baru.
+          </p>
         </div>
-
-        <button onclick="closePreviewModal()" class="p-2 rounded-xl bg-stone-900/90 hover:bg-rose-950/60 text-stone-400 hover:text-rose-300 border border-stone-800 transition cursor-pointer">
+        <button onclick="closeCreateModal()" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
 
-      <!-- Mode Switcher Pill -->
-      <div class="flex items-center justify-center gap-1.5 p-1 rounded-full bg-black/60 border border-white/10 mx-auto mb-3 flex-shrink-0">
-        <button id="tabBtnHero" onclick="switchPreviewTab('hero')" class="px-3.5 py-1 rounded-full text-xs font-serif font-bold bg-[#6B111F] text-[#F5D77F] shadow-xs">
+      <!-- Segmented Category Control (Zero Emojis) -->
+      <div class="mb-5">
+        <label class="text-xs font-medium text-zinc-300 block mb-2">
+          Kategori Acara
+        </label>
+        <div class="flex flex-wrap gap-1.5 p-1 rounded-xl bg-zinc-900 border border-zinc-800">
+          <button type="button" onclick="selectModalCategory('wedding')" id="mcat-wedding" class="modal-cat flex-1 min-w-[95px] py-1.5 px-2.5 rounded-lg text-xs font-medium transition cursor-pointer text-center bg-zinc-800 text-white shadow-xs border border-zinc-700 font-semibold">
+            Pernikahan
+          </button>
+          <button type="button" onclick="selectModalCategory('concert')" id="mcat-concert" class="modal-cat flex-1 min-w-[95px] py-1.5 px-2.5 rounded-lg text-xs font-medium transition cursor-pointer text-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40">
+            Konser & Musik
+          </button>
+          <button type="button" onclick="selectModalCategory('exhibition')" id="mcat-exhibition" class="modal-cat flex-1 min-w-[95px] py-1.5 px-2.5 rounded-lg text-xs font-medium transition cursor-pointer text-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40">
+            Pameran Seni
+          </button>
+          <button type="button" onclick="selectModalCategory('festival')" id="mcat-festival" class="modal-cat flex-1 min-w-[95px] py-1.5 px-2.5 rounded-lg text-xs font-medium transition cursor-pointer text-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40">
+            Bazaar / Expo
+          </button>
+          <button type="button" onclick="selectModalCategory('general')" id="mcat-general" class="modal-cat flex-1 min-w-[95px] py-1.5 px-2.5 rounded-lg text-xs font-medium transition cursor-pointer text-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40">
+            Corporate
+          </button>
+        </div>
+      </div>
+
+      <form onsubmit="handleModalSubmit(event)" class="space-y-4">
+        
+        <div id="weddingInputs" class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-medium text-zinc-300 block mb-1">Mempelai Pria</label>
+            <input type="text" id="inputGroom" placeholder="Raka" class="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition">
+          </div>
+          <div>
+            <label class="text-xs font-medium text-zinc-300 block mb-1">Mempelai Wanita</label>
+            <input type="text" id="inputBride" placeholder="Sabrina" class="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition">
+          </div>
+        </div>
+
+        <div id="generalInput" class="hidden">
+          <label class="text-xs font-medium text-zinc-300 block mb-1">Nama Acara / Festival / Pameran</label>
+          <input type="text" id="inputEventName" placeholder="Contoh: Pestapora 2026, Void Vision" class="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition">
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-zinc-300 block mb-1">Lokasi / Venue Acara</label>
+          <input type="text" placeholder="Contoh: Gambir Expo Kemayoran Jakarta" class="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition">
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-zinc-300 block mb-1">Slug Tautan Web</label>
+          <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono">
+            <span class="text-zinc-500 select-none">sirklen.id/</span>
+            <input type="text" placeholder="event-anda" class="flex-1 bg-transparent text-white focus:outline-none font-medium ml-1">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-medium text-zinc-300 block mb-1">Tanggal Acara</label>
+            <input type="date" value="2026-09-25" class="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs focus:outline-none focus:border-zinc-500 transition">
+          </div>
+          <div>
+            <label class="text-xs font-medium text-zinc-300 block mb-1">Pilihan Paket</label>
+            <select class="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs focus:outline-none focus:border-zinc-500 transition">
+              <option>Paket Spesial (14 Hari)</option>
+              <option>Standard (10 Hari)</option>
+              <option>Basic (7 Hari)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-zinc-800 mt-2">
+          <button type="button" onclick="closeCreateModal()" class="px-4 py-2 rounded-xl text-zinc-400 hover:text-white text-xs font-medium transition cursor-pointer">
+            Batal
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-white hover:bg-zinc-200 active:scale-95 text-black text-xs font-semibold shadow-sm transition cursor-pointer">
+            Buat Event Sekarang
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= 🌟 MODAL: LIVE PHONE PREVIEW 🌟 ================= -->
+  <div id="phonePreviewModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+    <div class="w-full max-w-lg bg-[#121215] border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-2xl relative max-h-[95vh] flex flex-col justify-between overflow-hidden">
+      
+      <!-- Modal Top Bar -->
+      <div class="flex items-start justify-between gap-3 border-b border-zinc-800 pb-3 mb-3 flex-shrink-0">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-mono tracking-wider text-zinc-400 uppercase font-medium">
+              PRATINJAU LAYAR TAMU
+            </span>
+            <span id="previewSlugTag" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">
+              /pestapora
+            </span>
+          </div>
+          <h3 id="previewTitle" class="text-base font-sans font-bold text-white tracking-tight truncate max-w-[260px] sm:max-w-sm mt-0.5">
+            Pestapora 2026
+          </h3>
+        </div>
+
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button onclick="closePhonePreview()" class="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 transition cursor-pointer" title="Tutup">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Segmented Tab -->
+      <div class="flex items-center justify-center gap-1.5 p-1 rounded-xl bg-zinc-900 border border-zinc-800 mx-auto mb-3 flex-shrink-0">
+        <button id="pTabHero" onclick="switchPreviewTab('hero')" class="px-3.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer bg-zinc-800 text-white shadow-xs font-semibold">
           Beranda Tamu
         </button>
-        <button id="tabBtnFrame" onclick="switchPreviewTab('frame')" class="px-3.5 py-1 rounded-full text-xs font-serif font-bold text-stone-400 hover:text-stone-200">
+        <button id="pTabStrip" onclick="switchPreviewTab('strip')" class="px-3.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer text-zinc-400 hover:text-zinc-200">
           Hasil Strip Foto
         </button>
       </div>
 
-      <!-- Interactive Phone Simulation Frame -->
-      <div class="flex-1 min-h-0 flex items-center justify-center overflow-y-auto py-1">
-        <div class="relative mx-auto w-full max-w-[280px] xs:max-w-[300px] rounded-[36px] bg-stone-950 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.7)] border-[5px] border-stone-800 select-none">
+      <!-- Interactive Phone Mockup -->
+      <div class="flex-1 min-h-0 flex items-center justify-center overflow-y-auto no-scrollbar py-1">
+        <div class="relative mx-auto w-full max-w-[280px] xs:max-w-[300px] rounded-[36px] bg-zinc-950 p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.6)] border-[4px] border-zinc-800 select-none">
           
           <!-- Dynamic Island -->
-          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-4.5 bg-stone-900 rounded-full z-40 flex items-center justify-between px-2.5 pointer-events-none">
-            <div class="w-2 h-2 rounded-full bg-stone-950"></div>
-            <div class="w-1.5 h-1.5 rounded-full bg-[#1A1A24]"></div>
+          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-4 bg-zinc-900 rounded-full z-40 flex items-center justify-between px-2.5 pointer-events-none">
+            <div class="w-1.5 h-1.5 rounded-full bg-zinc-950"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-zinc-800"></div>
           </div>
 
-          <!-- Phone Screen Interior -->
-          <div class="relative w-full aspect-[9/16] rounded-[28px] overflow-hidden bg-[#10060E]">
+          <!-- Interior Screen -->
+          <div class="relative w-full aspect-[9/16] rounded-[28px] overflow-hidden bg-zinc-900">
             
-            <!-- VIEW A: Beranda Tamu -->
-            <div id="viewHero" class="w-full h-full relative flex flex-col justify-between p-4 text-center">
-              <img id="phoneBackdrop" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1600&auto=format&fit=crop&q=85" alt="Backdrop" class="absolute inset-0 w-full h-full object-cover filter brightness-[0.82] contrast-105">
+            <!-- VIEW 1: HERO VIEW -->
+            <div id="phoneViewHero" class="w-full h-full relative flex flex-col justify-between p-4 text-center">
+              <img id="phoneHeroBg" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1600&auto=format&fit=crop&q=85" alt="Backdrop" class="absolute inset-0 w-full h-full object-cover filter brightness-[0.82] contrast-105">
               <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/25 to-black/90 pointer-events-none"></div>
 
-              <!-- Top Header -->
               <div class="relative z-10 pt-5 flex flex-col items-center">
-                <span id="phoneBadge" class="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-semibold text-amber-200 uppercase tracking-[0.2em] border border-white/15 shadow-sm">
+                <span id="phoneCategoryBadge" class="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-medium text-zinc-300 uppercase tracking-wider border border-white/10">
                   OFFICIAL FESTIVAL PHOTOBOOTH
                 </span>
 
-                <h1 id="phoneTitle" class="text-2xl xs:text-3xl text-white font-serif font-black tracking-tight leading-tight mt-1 px-1 drop-shadow-2xl">
+                <h1 id="phoneEventTitle" class="text-2xl xs:text-3xl font-sans font-black tracking-tight text-white leading-tight mt-1 px-1 drop-shadow-2xl">
                   Pestapora 2026
                 </h1>
 
                 <div class="mt-1 px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15">
-                  <p id="phoneVenue" class="text-[9px] text-rose-100 font-medium">
+                  <p id="phoneEventMeta" class="text-[9px] text-zinc-200 font-medium">
                     25 September 2026 • Gambir Expo Kemayoran Jakarta
                   </p>
                 </div>
               </div>
 
-              <!-- Bottom Action Simulation -->
               <div class="relative z-10 pb-2 space-y-2">
                 <div class="flex flex-col gap-1.5 w-full max-w-[200px] mx-auto">
-                  <div class="py-2 px-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] text-[#F5D77F] border border-amber-300/40 text-[11px] font-serif font-bold shadow-lg flex items-center justify-center gap-1.5">
+                  <div class="py-2 px-3 rounded-full bg-white text-black text-[11px] font-sans font-semibold shadow-lg flex items-center justify-center gap-1.5">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     <span>Mulai Photobooth</span>
                   </div>
@@ -510,39 +714,33 @@
                     Lihat Galeri Foto
                   </div>
                 </div>
-
-                <div class="flex items-center justify-center gap-1 pt-1">
-                  <div class="w-4 h-1.5 bg-[#F5D77F] rounded-full"></div>
-                  <div class="w-1.5 h-1.5 bg-white/50 rounded-full"></div>
-                  <div class="w-1.5 h-1.5 bg-white/50 rounded-full"></div>
-                </div>
               </div>
             </div>
 
-            <!-- VIEW B: Strip Foto -->
-            <div id="viewFrame" class="w-full h-full relative bg-[#F5EFEB] hidden flex-col justify-between p-3 overflow-hidden text-stone-900">
+            <!-- VIEW 2: PHOTO STRIP VIEW -->
+            <div id="phoneViewStrip" class="w-full h-full relative bg-[#F4F4F5] hidden flex-col justify-between p-3 overflow-hidden text-zinc-900">
               <div class="text-center pt-3 pb-1">
-                <span class="px-2.5 py-0.5 rounded-full bg-black/70 text-white text-[8px] font-mono tracking-widest uppercase">
+                <span class="px-2.5 py-0.5 rounded-full bg-black/80 text-white text-[8px] font-mono tracking-wider uppercase">
                   Pratinjau Hasil Strip
                 </span>
               </div>
 
-              <div id="stripCard" class="relative mx-auto w-[150px] rounded-xl shadow-2xl p-2 flex flex-col justify-between transition-colors duration-300 bg-[#6B111F] text-[#F5D77F] border border-[#8A1828]">
+              <div id="stripCard" class="relative mx-auto w-[150px] rounded-xl shadow-2xl p-2 flex flex-col justify-between bg-[#2D3748] text-[#E2E8F0] border border-[#4A5568]">
                 <div class="text-center pb-1">
-                  <span id="stripHeader" class="text-[6px] font-mono tracking-widest block uppercase opacity-80">
+                  <span class="text-[6px] font-mono tracking-widest block uppercase opacity-80">
                     OFFICIAL PHOTOBOOTH
                   </span>
-                  <strong id="stripTitle" class="text-[9px] font-serif tracking-wide block truncate text-[#F5D77F]">
+                  <strong id="stripEventName" class="text-[9px] font-serif tracking-wide block truncate text-[#E2E8F0]">
                     Pestapora 2026
                   </strong>
                 </div>
 
                 <div class="space-y-1.5 py-1">
                   <div class="aspect-[4/3] rounded-lg overflow-hidden bg-black/20 border border-black/10">
-                    <img id="stripPhoto1" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80" alt="Pose 1" class="w-full h-full object-cover">
+                    <img id="stripPhoto1" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1600&auto=format&fit=crop&q=85" alt="Pose 1" class="w-full h-full object-cover">
                   </div>
                   <div class="aspect-[4/3] rounded-lg overflow-hidden bg-black/20 border border-black/10">
-                    <img id="stripPhoto2" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80" alt="Pose 2" class="w-full h-full object-cover">
+                    <img id="stripPhoto2" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1600&auto=format&fit=crop&q=85" alt="Pose 2" class="w-full h-full object-cover">
                   </div>
                 </div>
 
@@ -553,12 +751,17 @@
                 </div>
               </div>
 
-              <!-- Theme Switcher Pills -->
-              <div class="pt-1 flex items-center justify-center gap-1.5">
-                <button onclick="setStripTheme('#6B111F', '#F5D77F')" class="w-4 h-4 rounded-full bg-[#6B111F] border border-amber-300" title="Burgundy"></button>
-                <button onclick="setStripTheme('#2D3748', '#E2E8F0')" class="w-4 h-4 rounded-full bg-[#2D3748]" title="Slate"></button>
-                <button onclick="setStripTheme('#FDFBF7', '#6B111F')" class="w-4 h-4 rounded-full bg-[#FDFBF7] border border-stone-300" title="Ivory"></button>
-                <button onclick="setStripTheme('#C4A46C', '#FFFFFF')" class="w-4 h-4 rounded-full bg-[#C4A46C]" title="Gold"></button>
+              <!-- Theme Controls -->
+              <div class="pt-1 flex items-center justify-between">
+                <button onclick="cycleFrameTheme(-1)" class="p-1 rounded-full bg-white text-zinc-700 shadow-sm border border-zinc-200 cursor-pointer">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <span id="themeNameLabel" class="text-[9px] font-sans font-semibold text-zinc-800">
+                  Noir Slate
+                </span>
+                <button onclick="cycleFrameTheme(1)" class="p-1 rounded-full bg-white text-zinc-700 shadow-sm border border-zinc-200 cursor-pointer">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
               </div>
             </div>
 
@@ -566,12 +769,12 @@
         </div>
       </div>
 
-      <!-- Bottom Modal Bar -->
-      <div class="pt-3 border-t border-stone-800/80 flex items-center justify-between gap-2 flex-shrink-0">
-        <span class="text-[10px] font-mono text-stone-500">
-          Simulasi presisi layar smartphone tamu
-        </span>
-        <button onclick="closePreviewModal()" class="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] text-[#F5D77F] text-xs font-serif font-bold border border-[#F5D77F]/30 transition cursor-pointer shadow-xs">
+      <div class="pt-3 border-t border-zinc-800 flex items-center justify-between gap-2 flex-shrink-0">
+        <button onclick="window.open('/setup/' + currentActiveSlug, '_blank')" class="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-medium border border-zinc-800 transition cursor-pointer">
+          Portal Setup Klien
+        </button>
+
+        <button onclick="closePhonePreview()" class="px-4 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold transition cursor-pointer shadow-xs">
           Selesai
         </button>
       </div>
@@ -579,133 +782,175 @@
     </div>
   </div>
 
-  <script>
-    const EVENT_DATA = {
-      'pestapora': {
-        title: 'Pestapora 2026',
-        slug: '/pestapora',
-        isWedding: false,
-        badge: 'OFFICIAL FESTIVAL PHOTOBOOTH',
-        stripHeader: 'OFFICIAL PHOTOBOOTH',
-        venue: '25 September 2026 • Gambir Expo Kemayoran Jakarta',
-        date: '25 September 2026',
-        photo: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1600&auto=format&fit=crop&q=85',
-        photo2: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
-        fontClass: 'font-serif font-black tracking-tight text-2xl xs:text-3xl'
-      },
-      'void-vision': {
-        title: 'Void Vision Exhibition',
-        slug: '/void-vision',
-        isWedding: false,
-        badge: 'EXHIBITION PHOTOBOOTH',
-        stripHeader: 'OFFICIAL PHOTOBOOTH',
-        venue: '18 Juli 2026 • Spazio Hall Surabaya',
-        date: '18 Juli 2026',
-        photo: 'https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=1600&auto=format&fit=crop&q=85',
-        photo2: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80',
-        fontClass: 'font-serif font-bold tracking-normal text-2xl'
-      },
-      'jakcloth': {
-        title: 'Jakcloth Year End Fest',
-        slug: '/jakcloth',
-        isWedding: false,
-        badge: 'OFFICIAL EXPO PHOTOBOOTH',
-        stripHeader: 'OFFICIAL PHOTOBOOTH',
-        venue: '20 Desember 2026 • Senayan Park Jakarta',
-        date: '20 Desember 2026',
-        photo: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1600&auto=format&fit=crop&q=85',
-        photo2: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&auto=format&fit=crop&q=80',
-        fontClass: 'font-serif font-black tracking-tight text-2xl'
-      },
-      'sabrina-raka': {
-        title: 'Raka & Sabrina',
-        slug: '/sabrina-raka',
-        isWedding: true,
-        badge: 'THE WEDDING CELEBRATION OF',
-        stripHeader: 'THE WEDDING OF',
-        venue: '30 Mei 2026 • Grand Ballroom Jakarta',
-        date: '30 Mei 2026',
-        photo: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&auto=format&fit=crop&q=85',
-        photo2: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&auto=format&fit=crop&q=80',
-        fontClass: 'font-script text-4xl xs:text-5xl font-normal'
-      }
-    };
+  <!-- Toast Notification Container -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-xs shadow-2xl flex items-center gap-2">
+    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <span id="toastMsg">Notifikasi</span>
+  </div>
 
-    function filterCategory(cat) {
+  <script>
+    let currentActiveSlug = 'pestapora';
+    let currentThemeIdx = 0;
+    const themes = [
+      { name: 'Noir Slate', hex: '#2D3748', textHex: '#E2E8F0', borderHex: '#4A5568' },
+      { name: 'Royal Burgundy', hex: '#6B111F', textHex: '#F5D77F', borderHex: '#8A1828' },
+      { name: 'Ivory Bliss', hex: '#FDFBF7', textHex: '#6B111F', borderHex: '#E2DDD5' },
+      { name: 'Antique Gold', hex: '#C4A46C', textHex: '#FFFFFF', borderHex: '#D4AF37' }
+    ];
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2800);
+    }
+
+    function copyToClipboard(text, label) {
+      navigator.clipboard.writeText(text);
+      showToast(label + ' berhasil disalin!');
+    }
+
+    function sendWA(displayName, slug, type) {
+      const role = type === 'wedding' ? 'Kak' : 'Rekan Penyelenggara';
+      const text = `Halo ${role} ${displayName}!\n\nTerima kasih telah mempercayakan photobooth acara kepada *Sirklen Photo*.\n\nSilakan buka tautan berikut untuk mengunggah foto cover/banner & menyesuaikan informasi photobooth:\n👉 https://sirklen.id/setup/${slug}\n\nJika ada pertanyaan, tim kami siap membantu ya! 🙏`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    function filterCategory(catId) {
       document.querySelectorAll('.cat-pill').forEach(btn => {
-        btn.classList.remove('bg-white/20', 'text-white', 'border', 'border-white/30');
-        btn.classList.add('text-stone-400');
+        btn.classList.remove('bg-zinc-800', 'text-white', 'border', 'border-zinc-700', 'shadow-xs');
+        btn.classList.add('text-zinc-400', 'hover:text-zinc-200');
       });
-      const activeBtn = document.getElementById('btn-' + cat);
+
+      const activeBtn = document.getElementById('btn-' + catId);
       if (activeBtn) {
-        activeBtn.classList.add('bg-white/20', 'text-white', 'border', 'border-white/30');
-        activeBtn.classList.remove('text-stone-400');
+        activeBtn.classList.add('bg-zinc-800', 'text-white', 'border', 'border-zinc-700', 'shadow-xs');
+        activeBtn.classList.remove('text-zinc-400', 'hover:text-zinc-200');
       }
 
       document.querySelectorAll('.event-card').forEach(card => {
-        if (cat === 'all' || card.getAttribute('data-category') === cat) {
-          card.style.display = 'block';
+        if (catId === 'all' || card.getAttribute('data-category') === catId) {
+          card.classList.remove('hidden');
         } else {
-          card.style.display = 'none';
+          card.classList.add('hidden');
         }
       });
     }
 
-    function openPreviewModal(eventId) {
-      const data = EVENT_DATA[eventId] || EVENT_DATA['pestapora'];
-      document.getElementById('modalTitle').textContent = data.title;
-      document.getElementById('modalSlug').textContent = data.slug;
-      document.getElementById('phoneBackdrop').src = data.photo;
-      document.getElementById('phoneBadge').textContent = data.badge;
-      
-      const phoneTitleEl = document.getElementById('phoneTitle');
-      phoneTitleEl.textContent = data.title;
-      phoneTitleEl.className = 'text-white leading-tight mt-1 px-1 drop-shadow-2xl ' + data.fontClass;
-
-      document.getElementById('phoneVenue').textContent = data.venue;
-
-      // Strip elements
-      document.getElementById('stripHeader').textContent = data.stripHeader;
-      document.getElementById('stripTitle').textContent = data.title;
-      document.getElementById('stripPhoto1').src = data.photo;
-      document.getElementById('stripPhoto2').src = data.photo2;
-      document.getElementById('stripDate').textContent = data.date;
-
-      switchPreviewTab('hero');
-      document.getElementById('previewModal').classList.remove('hidden');
-      document.getElementById('previewModal').classList.add('flex');
+    // Modal Create Event
+    function openCreateModal() {
+      document.getElementById('createModal').classList.remove('hidden');
+      document.getElementById('createModal').classList.add('flex');
     }
 
-    function closePreviewModal() {
-      document.getElementById('previewModal').classList.add('hidden');
-      document.getElementById('previewModal').classList.remove('flex');
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.add('hidden');
+      document.getElementById('createModal').classList.remove('flex');
     }
 
-    function switchPreviewTab(tab) {
-      if (tab === 'hero') {
-        document.getElementById('viewHero').classList.remove('hidden');
-        document.getElementById('viewHero').classList.add('flex');
-        document.getElementById('viewFrame').classList.add('hidden');
-        document.getElementById('viewFrame').classList.remove('flex');
+    function selectModalCategory(cat) {
+      document.querySelectorAll('.modal-cat').forEach(b => {
+        b.classList.remove('bg-zinc-800', 'text-white', 'shadow-xs', 'border', 'border-zinc-700', 'font-semibold');
+        b.classList.add('text-zinc-400', 'hover:text-zinc-200');
+      });
+      const active = document.getElementById('mcat-' + cat);
+      if (active) {
+        active.classList.add('bg-zinc-800', 'text-white', 'shadow-xs', 'border', 'border-zinc-700', 'font-semibold');
+        active.classList.remove('text-zinc-400');
+      }
 
-        document.getElementById('tabBtnHero').className = 'px-3.5 py-1 rounded-full text-xs font-serif font-bold bg-[#6B111F] text-[#F5D77F] shadow-xs';
-        document.getElementById('tabBtnFrame').className = 'px-3.5 py-1 rounded-full text-xs font-serif font-bold text-stone-400 hover:text-stone-200';
+      if (cat === 'wedding') {
+        document.getElementById('weddingInputs').classList.remove('hidden');
+        document.getElementById('generalInput').classList.add('hidden');
       } else {
-        document.getElementById('viewHero').classList.add('hidden');
-        document.getElementById('viewHero').classList.remove('flex');
-        document.getElementById('viewFrame').classList.remove('hidden');
-        document.getElementById('viewFrame').classList.add('flex');
-
-        document.getElementById('tabBtnHero').className = 'px-3.5 py-1 rounded-full text-xs font-serif font-bold text-stone-400 hover:text-stone-200';
-        document.getElementById('tabBtnFrame').className = 'px-3.5 py-1 rounded-full text-xs font-serif font-bold bg-[#6B111F] text-[#F5D77F] shadow-xs';
+        document.getElementById('weddingInputs').classList.add('hidden');
+        document.getElementById('generalInput').classList.remove('hidden');
       }
     }
 
-    function setStripTheme(bgHex, textHex) {
+    function handleModalSubmit(e) {
+      e.preventDefault();
+      closeCreateModal();
+      showToast('Event berhasil dibuat!');
+    }
+
+    // Phone Live Preview
+    function openPhonePreview(title, slug, type, date, venue, photos) {
+      currentActiveSlug = slug;
+      document.getElementById('previewTitle').innerText = title;
+      document.getElementById('previewSlugTag').innerText = '/' + slug;
+      document.getElementById('phoneEventTitle').innerText = title;
+      document.getElementById('phoneEventMeta').innerText = `${date} • ${venue}`;
+      document.getElementById('phoneHeroBg').src = photos[0];
+      
+      const badge = document.getElementById('phoneCategoryBadge');
+      if (type === 'wedding') {
+        badge.innerText = 'THE WEDDING CELEBRATION OF';
+        document.getElementById('phoneEventTitle').style.fontFamily = "'Alex Brush', cursive";
+        document.getElementById('phoneEventTitle').classList.add('text-4xl');
+        document.getElementById('phoneEventTitle').classList.remove('text-2xl', 'font-black');
+      } else if (type === 'concert') {
+        badge.innerText = 'OFFICIAL FESTIVAL PHOTOBOOTH';
+        document.getElementById('phoneEventTitle').style.fontFamily = "'Playfair Display', Georgia, serif";
+        document.getElementById('phoneEventTitle').classList.remove('text-4xl');
+        document.getElementById('phoneEventTitle').classList.add('text-2xl', 'font-black');
+      } else if (type === 'exhibition') {
+        badge.innerText = 'EXHIBITION PHOTOBOOTH';
+        document.getElementById('phoneEventTitle').style.fontFamily = "'Playfair Display', Georgia, serif";
+      } else {
+        badge.innerText = 'OFFICIAL EVENT PHOTOBOOTH';
+        document.getElementById('phoneEventTitle').style.fontFamily = "'Playfair Display', Georgia, serif";
+      }
+
+      document.getElementById('stripEventName').innerText = title;
+      document.getElementById('stripDate').innerText = date;
+      document.getElementById('stripPhoto1').src = photos[0];
+      document.getElementById('stripPhoto2').src = photos[1] || photos[0];
+
+      switchPreviewTab('hero');
+      document.getElementById('phonePreviewModal').classList.remove('hidden');
+      document.getElementById('phonePreviewModal').classList.add('flex');
+    }
+
+    function closePhonePreview() {
+      document.getElementById('phonePreviewModal').classList.add('hidden');
+      document.getElementById('phonePreviewModal').classList.remove('flex');
+    }
+
+    function switchPreviewTab(tab) {
+      const heroTab = document.getElementById('pTabHero');
+      const stripTab = document.getElementById('pTabStrip');
+      const vHero = document.getElementById('phoneViewHero');
+      const vStrip = document.getElementById('phoneViewStrip');
+
+      if (tab === 'hero') {
+        heroTab.className = 'px-3.5 py-1 rounded-lg text-xs font-semibold bg-zinc-800 text-white shadow-xs';
+        stripTab.className = 'px-3.5 py-1 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-200';
+        vHero.classList.remove('hidden');
+        vStrip.classList.add('hidden');
+        vStrip.classList.remove('flex');
+      } else {
+        stripTab.className = 'px-3.5 py-1 rounded-lg text-xs font-semibold bg-zinc-800 text-white shadow-xs';
+        heroTab.className = 'px-3.5 py-1 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-200';
+        vHero.classList.add('hidden');
+        vStrip.classList.remove('hidden');
+        vStrip.classList.add('flex');
+      }
+    }
+
+    function cycleFrameTheme(delta) {
+      currentThemeIdx = (currentThemeIdx + delta + themes.length) % themes.length;
+      const th = themes[currentThemeIdx];
       const card = document.getElementById('stripCard');
-      card.style.backgroundColor = bgHex;
-      card.style.color = textHex;
-      document.getElementById('stripTitle').style.color = textHex;
+      card.style.backgroundColor = th.hex;
+      card.style.borderColor = th.borderHex;
+      card.style.color = th.textHex;
+      document.getElementById('stripEventName').style.color = th.textHex;
+      document.getElementById('themeNameLabel').innerText = th.name;
     }
   </script>
 </body>
