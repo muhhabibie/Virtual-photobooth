@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
   // Send WhatsApp to the Couple with pre-filled message
   const handleSendWhatsApp = (evt) => {
     const setupUrl = `${window.location.origin}/setup/${evt.slug}`;
-    const text = `Halo Kak ${evt.displayName}! 💍✨\n\nTerima kasih telah mempercayakan photobooth pernikahan kalian kepada *Sirklen Photo*.\n\nSilakan buka link berikut dari HP untuk mengunggah foto prewedding & memilih desain bingkai photobooth kalian:\n👉 ${setupUrl}\n\nJika ada pertanyaan, kami siap membantu ya! 🙏`;
+    const text = `Halo Kak ${evt.displayName}!\n\nTerima kasih telah mempercayakan photobooth pernikahan kalian kepada *Sirklen Photo*.\n\nSilakan buka link berikut dari HP untuk mengunggah foto prewedding & memilih desain bingkai photobooth kalian:\n👉 ${setupUrl}\n\nJika ada pertanyaan, kami siap membantu ya! 🙏`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 

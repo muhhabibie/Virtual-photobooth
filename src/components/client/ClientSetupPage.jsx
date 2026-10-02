@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   Camera, Image as ImageIcon, Save, Check, 
   Trash2, Plus, ExternalLink, Eye, Share2, Upload, Crop,
-  Info, Sparkle, Layers, Star, Move
+  Info, Layers, Move
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
@@ -353,7 +353,7 @@ export default function ClientSetupPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[11px]">
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
                 <span className="font-semibold text-[#F5D77F] flex items-center gap-1.5">
-                  🖼️ Foto Landscape (Mendatar)
+                  Foto Landscape (Mendatar)
                 </span>
                 <p className="text-stone-300/80 leading-relaxed">
                   Format paling umum dari fotografer. Sangat cocok! Bagian tengah kedua mempelai akan otomatis menjadi fokus di layar ponsel para tamu.
@@ -362,7 +362,7 @@ export default function ClientSetupPage() {
 
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
                 <span className="font-semibold text-rose-200 flex items-center gap-1.5">
-                  📱 Foto Portrait (Tegak)
+                  Foto Portrait (Tegak)
                 </span>
                 <p className="text-stone-300/80 leading-relaxed">
                   Juga sangat bagus karena otomatis mengisi penuh layar ponsel para tamu dari atas ke bawah.
@@ -372,7 +372,7 @@ export default function ClientSetupPage() {
 
             <div className="text-[10.5px] font-mono text-stone-400 flex flex-wrap items-center justify-between gap-1 pt-1 border-t border-white/5">
               <span>Format: JPG, PNG, WEBP, atau kamera HP (Maks. 15 MB)</span>
-              <span className="text-amber-300/80">★ Foto #1 otomatis jadi Cover Pembuka</span>
+              <span className="text-amber-300/80">Foto #1 otomatis jadi Cover Pembuka</span>
             </div>
           </div>
 
@@ -397,9 +397,8 @@ export default function ClientSetupPage() {
                 {/* Top Overlay Badges */}
                 <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between z-20 pointer-events-none">
                   {idx === 0 ? (
-                    <span className="px-2.5 py-0.5 rounded-full bg-black/85 backdrop-blur-md text-[9.5px] font-mono text-[#F5D77F] font-bold border border-[#F5D77F]/50 flex items-center gap-1 shadow-lg">
-                      <Star size={10} className="fill-[#F5D77F]" />
-                      <span>Cover Utama #1</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-black/85 backdrop-blur-md text-[9.5px] font-mono text-[#F5D77F] font-bold border border-[#F5D77F]/50 shadow-lg">
+                      Cover Utama #1
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded-full bg-black/80 backdrop-blur-md text-[9.5px] font-mono text-stone-300 font-bold border border-white/15 shadow-sm">
@@ -414,11 +413,10 @@ export default function ClientSetupPage() {
                     <button
                       type="button"
                       onClick={() => handleSetCoverPhoto(idx)}
-                      className="px-2.5 py-1.5 rounded-xl bg-black/60 hover:bg-black/90 text-[10.5px] font-serif font-semibold text-amber-200 border border-white/20 backdrop-blur-md transition active:scale-95 cursor-pointer flex items-center gap-1"
+                      className="px-2.5 py-1.5 rounded-xl bg-black/60 hover:bg-black/90 text-[10.5px] font-serif font-semibold text-amber-200 border border-white/20 backdrop-blur-md transition active:scale-95 cursor-pointer"
                       title="Jadikan foto pembuka utama"
                     >
-                      <Star size={11} />
-                      <span>Jadikan Cover</span>
+                      Jadikan Cover
                     </button>
                   ) : (
                     <span className="text-[10px] font-mono text-stone-400 pl-1">

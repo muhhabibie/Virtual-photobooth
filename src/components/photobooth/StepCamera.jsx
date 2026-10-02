@@ -311,7 +311,7 @@ export default function StepCamera() {
     ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
     ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('✦ THE WEDDING OF ✦', totalW / 2, pad + 38 * scale);
+    ctx.fillText('THE WEDDING OF', totalW / 2, pad + 38 * scale);
 
     let drawY = pad + headerH;
     photoLayouts.forEach(({ photo, h }, idx) => {
@@ -678,7 +678,7 @@ export default function StepCamera() {
               className="text-[8px] sm:text-[9.5px] font-mono font-bold uppercase tracking-widest"
               style={{ color: isLight ? '#8C7A6B' : (currentTheme.textHex || '#F5D77F') }}
             >
-              ✦ THE WEDDING OF ✦
+              THE WEDDING OF
             </p>
           </div>
 
@@ -711,7 +711,7 @@ export default function StepCamera() {
             {swipeToast ? (
               <div className="absolute inset-x-0 top-6 z-30 flex justify-center pointer-events-none animate-bounce">
                 <div className="bg-black/75 backdrop-blur-md border border-amber-400/90 text-amber-200 px-4 py-1.5 rounded-full text-xs font-mono font-bold shadow-2xl tracking-wider uppercase flex items-center gap-2">
-                  <span>✨ {swipeToast}</span>
+                  <span>{swipeToast}</span>
                 </div>
               </div>
             ) : (

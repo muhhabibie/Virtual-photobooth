@@ -54,7 +54,7 @@ export default function StepReview() {
     ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
     ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('✦ THE WEDDING OF ✦', totalW / 2, pad + 38 * scale);
+    ctx.fillText('THE WEDDING OF', totalW / 2, pad + 38 * scale);
 
     let drawY = pad + headerH;
     photoLayouts.forEach(({ photo, h }, idx) => {
@@ -122,7 +122,7 @@ export default function StepReview() {
       {/* ================= 🌟 1. TOP HEADER ("Foto Siap!") 🌟 ================= */}
       <div className="text-center w-full z-10 flex-shrink-0">
         <p className="text-[9px] sm:text-[10px] font-mono tracking-[0.25em] text-[#E5C158] uppercase font-bold">
-          ✦ SESI FOTO SELESAI ✦
+          SESI FOTO SELESAI
         </p>
 
         <h1 

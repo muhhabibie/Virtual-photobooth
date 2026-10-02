@@ -67,7 +67,7 @@ export default function StepVoice() {
     ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
     ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('✦ THE WEDDING OF ✦', totalW / 2, pad + 38 * scale);
+    ctx.fillText('THE WEDDING OF', totalW / 2, pad + 38 * scale);
 
     let drawY = pad + headerH;
     photoLayouts.forEach(({ photo, h }) => {

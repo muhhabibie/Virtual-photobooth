@@ -3,7 +3,7 @@
 export const FRAMES = [
   {
     id: 'wedding-classic-burgundy',
-    name: '💍 Royal Burgundy Gold',
+    name: 'Royal Burgundy Gold',
     draw(ctx, w, h) {
       ctx.fillStyle = '#6B111F';
       ctx.fillRect(0, 0, w, h * 0.16);
@@ -35,7 +35,7 @@ export const FRAMES = [
   },
   {
     id: 'floral-blush-romance',
-    name: '🌸 Blush Floral Romance',
+    name: 'Blush Floral Romance',
     draw(ctx, w, h) {
       const gt = ctx.createLinearGradient(0, 0, 0, h * 0.26);
       gt.addColorStop(0, 'rgba(255, 235, 240, 0.9)');
@@ -67,7 +67,7 @@ export const FRAMES = [
   },
   {
     id: 'gold-champagne-luxury',
-    name: '✨ Champagne Gold Luxury',
+    name: 'Champagne Gold Luxury',
     draw(ctx, w, h) {
       ctx.strokeStyle = '#D4AF37';
       ctx.lineWidth = 4;
@@ -101,7 +101,7 @@ export const FRAMES = [
   },
   {
     id: 'vintage-noir-gold',
-    name: '🖤 Minimalist Noir Gold',
+    name: 'Minimalist Noir Gold',
     draw(ctx, w, h) {
       ctx.fillStyle = '#0F172A';
       ctx.fillRect(0, 0, w, h * 0.14);
@@ -123,7 +123,7 @@ export const FRAMES = [
   },
   {
     id: 'botanical-garden-sage',
-    name: '🌿 Sage Botanical Garden',
+    name: 'Sage Botanical Garden',
     draw(ctx, w, h) {
       const gt = ctx.createLinearGradient(0, 0, 0, h * 0.22);
       gt.addColorStop(0, 'rgba(40,75,55,0.75)');
@@ -152,12 +152,12 @@ export const FRAMES = [
 
       ctx.fillStyle = '#D9F99D';
       ctx.font = `${w * 0.04}px Georgia, serif`;
-      ctx.fillText('🌿 Together Forever in Love 🌿', w / 2, h * 0.96);
+      ctx.fillText('Together Forever in Love', w / 2, h * 0.96);
     },
   },
   {
     id: 'film-strip-wedding',
-    name: '🎞️ Life4Cuts Wedding Strip',
+    name: 'Life4Cuts Wedding Strip',
     draw(ctx, w, h) {
       ctx.fillStyle = 'rgba(0,0,0,0.82)';
       ctx.fillRect(0, 0, w, h * 0.11);

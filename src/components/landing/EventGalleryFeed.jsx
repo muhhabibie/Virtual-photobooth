@@ -186,7 +186,7 @@ export default function EventGalleryFeed() {
                     style={{ color: subTextColor }}
                     className="text-[7px] sm:text-[8px] font-mono font-bold uppercase tracking-widest"
                   >
-                    ✦ THE WEDDING OF ✦
+                    THE WEDDING OF
                   </p>
                 </div>
 

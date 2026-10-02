@@ -4,7 +4,7 @@ import { BookOpen, Camera, Volume2, Sparkles, MessageCircle, Star, ThumbsUp, Che
 import { useBooth } from '../../context/PhotoboothContext';
 
 const REVIEWS_ROW_1 = [
-  { name: 'Andi Prasetyo', time: '2 Hari yang Lalu', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', text: 'Selamat menempuh hidup baru Sabrina & Raka! Hasil fotonya estetik banget dengan bingkai wedding burgundy ✨', helpful: 45, tag: 'Royal Wedding' },
+  { name: 'Andi Prasetyo', time: '2 Hari yang Lalu', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', text: 'Selamat menempuh hidup baru Sabrina & Raka! Hasil fotonya estetik banget dengan bingkai wedding burgundy.', helpful: 45, tag: 'Royal Wedding' },
   { name: 'Siti Rahmawati', time: 'Kemarin', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80', text: 'Terharu banget bisa ninggalin doa lewat pesan suara. Semoga langgeng dan samawa till jannah yaa 💕', helpful: 38, tag: 'Floral Romance' },
   { name: 'Dimas Kurniawan', time: '3 Hari yang Lalu', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', text: 'Praktis banget tinggal scan QR dari undangan atau meja resepsi langsung foto dengan filter iPhone! ⭐⭐⭐⭐⭐', helpful: 52, tag: 'Wedding Strip' },
   { name: 'Naufal & Sarah', time: '1 Hari yang Lalu', avatar: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=150&auto=format&fit=crop&q=80', text: 'Happy wedding sahabatku! Suka banget sama fitur filter glow dan hasil cetak 4-cutnya!', helpful: 64, tag: 'Gold Luxury' },

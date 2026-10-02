@@ -114,13 +114,13 @@ export default function FullGalleryModal() {
       try {
         await navigator.share({
           title: `Photo Strip ${item.guestName} • The Wedding of Sabrina & Raka`,
-          text: `Lihat photo strip pernikahan dari ${item.guestName}! 💍✨ (${item.takenDate})`,
+          text: `Lihat photo strip pernikahan dari ${item.guestName} (${item.takenDate})`,
           url: window.location.href,
         });
       } catch (err) {}
     } else {
       navigator.clipboard?.writeText(window.location.href);
-      toast('🔗 Tautan berhasil disalin!', 'success');
+      toast('Tautan berhasil disalin', 'success');
     }
   };
 
@@ -351,7 +351,7 @@ export default function FullGalleryModal() {
                         style={{ color: subTextColor }}
                         className="text-[6.5px] sm:text-[7.5px] font-mono font-bold uppercase tracking-widest"
                       >
-                        ✦ THE WEDDING OF ✦
+                        THE WEDDING OF
                       </p>
                     </div>
 
@@ -473,7 +473,7 @@ export default function FullGalleryModal() {
                       style={{ color: modalSubTextColor }}
                       className="text-[7.5px] sm:text-[8.5px] font-mono font-bold uppercase tracking-widest"
                     >
-                      ✦ THE WEDDING OF ✦
+                      THE WEDDING OF
                     </p>
                   </div>
 

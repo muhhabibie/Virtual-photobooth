@@ -49,7 +49,7 @@ export default function StepResult() {
       hasSubmittedRef.current = true;
       submitSession().then((res) => {
         if (res) {
-          toast('Photo strip & doa restu tersimpan di database! 💍✨', 'success');
+          toast('Photo strip dan doa restu berhasil tersimpan', 'success');
         }
       }).catch((err) => {
         console.warn('Auto submit error:', err);
@@ -180,7 +180,7 @@ export default function StepResult() {
 
     // Frame Header Branding
     const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
-    const coupleTitle = activeEvent?.displayName ? `✦ ${activeEvent.displayName.toUpperCase()} ✦` : '✦ THE WEDDING OF ✦';
+    const coupleTitle = activeEvent?.displayName ? activeEvent.displayName.toUpperCase() : 'THE WEDDING OF';
     ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
     ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
     ctx.textAlign = 'center';
@@ -336,10 +336,10 @@ export default function StepResult() {
         try {
           await navigator.share({
             title: `The Wedding of ${couple}`,
-            text: `Kenangan foto pernikahan dari ${guest}! 💍✨`,
+            text: `Kenangan foto pernikahan dari ${guest}`,
             files: [file],
           });
-          toast('Berhasil dibagikan!', 'success');
+          toast('Berhasil dibagikan', 'success');
         } catch (e) {
           // User cancelled
         }
@@ -432,7 +432,7 @@ export default function StepResult() {
           </div>
 
           <p className="text-[9px] sm:text-[10px] text-amber-200/80 text-center font-mono mt-1 tracking-wide">
-            ✦ Geser stiker di atas foto untuk memindahkan posisi ✦
+            Geser stiker di atas foto untuk memindahkan posisi
           </p>
         </div>
 

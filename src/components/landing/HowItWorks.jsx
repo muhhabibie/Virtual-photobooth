@@ -367,7 +367,7 @@ export default function HowItWorks() {
                     {/* Step 2 Header Badge */}
                     <div className="absolute top-1.5 inset-x-1 flex justify-center">
                       <span className="px-2 py-0.5 rounded-full bg-[#6B111F]/90 backdrop-blur-xs text-[7.5px] sm:text-[8.5px] font-serif font-bold text-[#F5D77F] border border-[#F5D77F]/40 shadow-sm">
-                        ✨ 2. Hasil Potret
+                        2. Hasil Potret
                       </span>
                     </div>
 

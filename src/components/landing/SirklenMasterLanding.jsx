@@ -72,7 +72,7 @@ export default function SirklenMasterLanding() {
                   onClick={() => navigateToSlug(evt.slug)}
                   className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-amber-400/30 text-amber-200 text-xs font-serif font-medium transition cursor-pointer flex items-center gap-1.5"
                 >
-                  <span>✦ {evt.displayName}</span>
+                  <span>{evt.displayName}</span>
                   <span className="text-[10px] font-mono text-gray-400">({evt.slug})</span>
                 </button>
               ))}

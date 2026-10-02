@@ -46,7 +46,7 @@ export default function SirklenPricing({ onOrderClick }) {
                 {isPopular && (
                   <div className="absolute -top-3.5 inset-x-0 flex justify-center">
                     <span className="bg-gradient-to-r from-[#C4A46C] to-[#F5D77F] text-[#240C17] text-[10px] font-mono font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-md">
-                      ✦ {pkg.badge} ✦
+                      {pkg.badge}
                     </span>
                   </div>
                 )}

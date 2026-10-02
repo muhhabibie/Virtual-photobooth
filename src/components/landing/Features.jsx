@@ -40,7 +40,6 @@ export default function Features() {
               <div className="absolute right-0 bottom-0 w-48 h-68 bg-purple-400 p-2.5 rounded-2xl shadow-2xl transform rotate-6 border-4 border-white z-10">
                 <div className="w-full h-48 rounded-xl overflow-hidden bg-white mb-2 relative">
                   <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80" alt="Girl 2" className="w-full h-full object-cover" />
-                  <span className="absolute top-2 right-2 text-base">✨</span>
                   <span className="absolute bottom-2 left-2 text-base">🌸</span>
                 </div>
                 <div className="text-center text-white font-bold text-xs tracking-wider">PRETTY PHOTO</div>

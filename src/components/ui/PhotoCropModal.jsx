@@ -310,7 +310,7 @@ export default function PhotoCropModal({
           {/* Touch Helper Badge */}
           <div className="absolute bottom-2 inset-x-0 text-center pointer-events-none z-10">
             <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[9px] font-mono text-amber-200/90 border border-white/10">
-              ✦ Geser / Cubit layar untuk zoom ✦
+              Geser atau cubit layar untuk zoom
             </span>
           </div>
         </div>
