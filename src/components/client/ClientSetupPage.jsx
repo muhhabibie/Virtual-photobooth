@@ -2,12 +2,16 @@ import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Camera, Image as ImageIcon, Sparkles, QrCode, Download, Check, 
-  Trash2, Plus, ArrowRight, ExternalLink, Heart, Palette, Eye, Share2, Upload, Crop
+  Trash2, Plus, ArrowRight, ExternalLink, Heart, Palette, Eye, Share2, Upload, Crop,
+  Printer, Archive
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
+import { exportEventSubmissionsZip } from '../../utils/zipExport';
+import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
 import QRCodeCanvas from '../ui/QRCodeCanvas';
 import PhotoCropModal from '../ui/PhotoCropModal';
+import TentCardModal from '../ui/TentCardModal';
 import logoPhotobooth from '../../assets/logo photobooth.png';
 import logoPhotoboothWhite from '../../assets/logo photobooth white.png';
 
@@ -28,7 +32,8 @@ export default function ClientSetupPage() {
     updateEventHeroPhotos, 
     navigateToEvent,
     navigateToAdmin,
-    introReady 
+    introReady,
+    savedSubmissions
   } = useBooth();
 
   const { toast } = useToast();
@@ -46,12 +51,41 @@ export default function ClientSetupPage() {
   const [activeTab, setActiveTab] = useState('photos'); // 'photos' | 'theme' | 'qr'
   const [isSaved, setIsSaved] = useState(false);
 
+  // Tent Card & ZIP Export State
+  const [showTentCardModal, setShowTentCardModal] = useState(false);
+  const [isZipping, setIsZipping] = useState(false);
+
   // Photo Crop Modal State
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [currentCropImage, setCurrentCropImage] = useState(null);
   const [activeCropIdx, setActiveCropIdx] = useState(null); // null = add new, number = re-crop existing
 
   const fileInputRef = useRef(null);
+
+  // Handle Bulk ZIP Download for the couple
+  const handleDownloadZip = async () => {
+    setIsZipping(true);
+    try {
+      let eventSubs = (savedSubmissions || []).filter(s => s.eventSlug === event.slug || s.eventId === event.id);
+      if (eventSubs.length === 0) {
+        eventSubs = MOCK_GALLERY_PHOTOS;
+      }
+      toast(`Menyiapkan album ZIP kenangan pernikahan ${event.displayName}...`, 'info');
+      const result = await exportEventSubmissionsZip({
+        event,
+        submissions: eventSubs,
+        onProgress: ({ message }) => {
+          // progress callback
+        }
+      });
+      toast(`File ZIP berhasil diunduh (${result.totalPhotos} foto)! 💍`, 'success');
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'Gagal mengunduh ZIP', 'error');
+    } finally {
+      setIsZipping(false);
+    }
+  };
 
   if (!event) {
     return (
@@ -473,6 +507,26 @@ export default function ClientSetupPage() {
               showDownload={true} 
             />
 
+            {/* Quick Actions: Tent Card & ZIP Album Download */}
+            <div className="w-full max-w-xs space-y-2 pt-2">
+              <button
+                onClick={() => setShowTentCardModal(true)}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-stone-950 text-xs font-serif font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition cursor-pointer"
+              >
+                <Printer size={15} />
+                <span>Desain & Cetak Kartu Meja (Tent Card)</span>
+              </button>
+
+              <button
+                onClick={handleDownloadZip}
+                disabled={isZipping}
+                className="w-full py-2.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/40 border border-purple-400/40 text-purple-200 text-xs font-serif font-bold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+              >
+                <Archive size={15} className={isZipping ? 'animate-bounce' : ''} />
+                <span>{isZipping ? 'Mengompres Album...' : 'Unduh Seluruh Foto Tamu (.ZIP)'}</span>
+              </button>
+            </div>
+
             {/* Share Guest Link Button */}
             <div className="w-full max-w-xs space-y-2">
               <button
@@ -527,6 +581,13 @@ export default function ClientSetupPage() {
           setActiveCropIdx(null);
         }}
         title="Sesuaikan & Crop Foto Prewedding"
+      />
+
+      {/* ================= 🌟 MODAL: PRINTABLE TABLE TENT CARD 🌟 ================= */}
+      <TentCardModal
+        isOpen={showTentCardModal}
+        onClose={() => setShowTentCardModal(false)}
+        event={event}
       />
 
     </motion.div>

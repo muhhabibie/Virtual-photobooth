@@ -41,7 +41,7 @@ export function blobToBase64(blob) {
 }
 
 // Save submission (Cloud Firebase + LocalStorage fallback)
-export async function saveSubmission({ guestName, guestMessage, photos, stripColor, voiceBlob, voiceUrl }) {
+export async function saveSubmission({ eventId, eventSlug, guestName, guestMessage, photos, stripColor, voiceBlob, voiceUrl }) {
   let finalVoiceUrl = voiceUrl || null;
   if (voiceBlob) {
     try {
@@ -53,6 +53,8 @@ export async function saveSubmission({ guestName, guestMessage, photos, stripCol
 
   const newSubmission = {
     id: `sub_${Date.now()}`,
+    eventId: eventId || 'master',
+    eventSlug: eventSlug || 'master',
     guestName: guestName || 'Tamu Undangan',
     message: guestMessage || '',
     photos: photos.map(p => typeof p === 'string' ? p : p.dataUrl),
@@ -93,6 +95,8 @@ export async function saveSubmission({ guestName, guestMessage, photos, stripCol
       }
 
       const cloudDoc = {
+        eventId: newSubmission.eventId,
+        eventSlug: newSubmission.eventSlug,
         guestName: newSubmission.guestName,
         message: newSubmission.message,
         photos: uploadedPhotoUrls,

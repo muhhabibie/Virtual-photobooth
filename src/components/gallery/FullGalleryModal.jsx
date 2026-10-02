@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, Share2, Download, Volume2, Search, X, Calendar, Clock, Camera } from 'lucide-react';
+import { ArrowLeft, Plus, Share2, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
+import { exportEventSubmissionsZip } from '../../utils/zipExport';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
 
@@ -32,7 +33,9 @@ export default function FullGalleryModal() {
     guestName,
     guestMessage,
     stripColor,
-    voiceUrl 
+    voiceUrl,
+    activeEvent,
+    savedSubmissions
   } = useBooth();
   const { toast } = useToast();
 
@@ -40,6 +43,27 @@ export default function FullGalleryModal() {
   const [activeTypeFilter, setActiveTypeFilter] = useState('all'); // 'all' | '1-cut' | '2-cut' | '4-cut'
   const [likes, setLikes] = useState({});
   const [fullFrameModal, setFullFrameModal] = useState(null);
+  const [isZipping, setIsZipping] = useState(false);
+
+  // Handle Bulk ZIP Download from Full Gallery
+  const handleDownloadZip = async () => {
+    setIsZipping(true);
+    try {
+      const eventToUse = activeEvent || { displayName: 'Sabrina & Raka', slug: 'sabrina-raka' };
+      const itemsToExport = fullList;
+      toast(`Menyiapkan file ZIP foto kenangan untuk ${eventToUse.displayName}...`, 'info');
+      const result = await exportEventSubmissionsZip({
+        event: eventToUse,
+        submissions: itemsToExport,
+      });
+      toast(`File ZIP berhasil diunduh (${result.totalPhotos} foto)! 📦`, 'success');
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'Gagal mengunduh ZIP', 'error');
+    } finally {
+      setIsZipping(false);
+    }
+  };
 
   if (!galleryModalOpen) return null;
 
@@ -222,10 +246,22 @@ export default function FullGalleryModal() {
               "Setiap senyuman, doa restu, dan kenangan manis yang terabadikan abadi dari seluruh tamu tercinta."
             </p>
 
-            {/* Date & Collection Count Pill */}
-            <div className="mt-2.5 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/65 backdrop-blur-xl border border-amber-400/40 shadow-xl text-xs text-amber-200 font-serif">
-              <Calendar size={12} className="text-[#F5D77F]" />
-              <span>{fullList.length} Koleksi Photo Strip & Ucapan Doa Tamu</span>
+            {/* Date & Collection Count Pill + ZIP Download Button */}
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/65 backdrop-blur-xl border border-amber-400/40 shadow-xl text-xs text-amber-200 font-serif">
+                <Calendar size={12} className="text-[#F5D77F]" />
+                <span>{fullList.length} Koleksi Photo Strip & Ucapan Doa Tamu</span>
+              </div>
+
+              <button
+                onClick={handleDownloadZip}
+                disabled={isZipping}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/25 via-amber-400/35 to-amber-500/25 hover:from-amber-500/40 hover:to-amber-500/40 text-[#F5D77F] border border-amber-400/60 shadow-xl text-xs font-serif font-bold transition active:scale-95 cursor-pointer backdrop-blur-md"
+                title="Unduh seluruh album foto & ucapan tamu (.ZIP)"
+              >
+                <Archive size={13} className={isZipping ? 'animate-bounce' : ''} />
+                <span>{isZipping ? 'Mengompres...' : 'Unduh Semua (.ZIP)'}</span>
+              </button>
             </div>
 
           </div>
@@ -523,11 +559,16 @@ export default function FullGalleryModal() {
                 </button>
                 <button
                   onClick={() => {
+                    const sanitize = (name) => (name || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
+                    const guest = sanitize(fullFrameModal.guestName) || 'Tamu';
+                    const couple = sanitize(activeEvent?.displayName) || 'Sabrina & Raka';
+                    const filename = `${guest}_${couple}.jpg`;
+
                     const a = document.createElement('a');
                     a.href = fullFrameModal.photos[0];
-                    a.download = `wedding_photostrip_${fullFrameModal.guestName}.jpg`;
+                    a.download = filename;
                     a.click();
-                    toast('Photo strip berhasil diunduh HD! 💍', 'success');
+                    toast(`Photo strip berhasil diunduh (${filename})! 💍`, 'success');
                   }}
                   className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] border border-[#E5C158]/50 text-xs font-bold flex items-center justify-center gap-1.5 shadow-xl transition active:scale-95 cursor-pointer"
                 >

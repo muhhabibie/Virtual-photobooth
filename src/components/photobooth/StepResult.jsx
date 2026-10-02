@@ -307,25 +307,36 @@ export default function StepResult() {
   const handleDownload = () => {
     const canvas = getExportCanvas();
     if (!canvas) return;
+
+    const sanitize = (str) => (str || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
+    const guest = sanitize(guestName) || 'Tamu';
+    const couple = sanitize(activeEvent?.displayName) || 'Pengantin';
+    const filename = `${guest}_${couple}.jpg`;
+
     const a = document.createElement('a');
-    a.download = `wedding_photostrip_${Date.now()}.jpg`;
+    a.download = filename;
     a.href = canvas.toDataURL('image/jpeg', 0.96);
     a.click();
-    toast('Photo strip berhasil diunduh! 💍', 'success');
+    toast(`Photo strip berhasil diunduh (${filename})! 💍`, 'success');
   };
 
   const handleShare = async () => {
     const canvas = getExportCanvas();
     if (!canvas) return;
 
+    const sanitize = (str) => (str || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
+    const guest = sanitize(guestName) || 'Tamu';
+    const couple = sanitize(activeEvent?.displayName) || 'Pengantin';
+    const filename = `${guest}_${couple}.jpg`;
+
     canvas.toBlob(async (blob) => {
       if (!blob) return;
-      const file = new File([blob], `wedding_strip_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      const file = new File([blob], filename, { type: 'image/jpeg' });
       if (navigator.share && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
-            title: 'The Wedding of Sabrina & Raka',
-            text: `Kenangan foto pernikahan dari ${guestName || 'Tamu Undangan'}! 💍✨`,
+            title: `The Wedding of ${couple}`,
+            text: `Kenangan foto pernikahan dari ${guest}! 💍✨`,
             files: [file],
           });
           toast('Berhasil dibagikan!', 'success');

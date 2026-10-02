@@ -3,12 +3,16 @@ import { motion } from 'framer-motion';
 import { 
   Plus, Calendar, QrCode, Copy, Trash2, Check, Lock, 
   ExternalLink, Sparkles, Layers, ShieldCheck, Clock, Eye, AlertTriangle, RefreshCw, 
-  Image as ImageIcon, Upload, MessageCircle, Share2, LogOut, Crop
+  Image as ImageIcon, Upload, MessageCircle, Share2, LogOut, Crop,
+  Printer, Download, Archive
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { PACKAGES, DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
+import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
+import { exportEventSubmissionsZip } from '../../utils/zipExport';
 import QRCodeCanvas from '../ui/QRCodeCanvas';
 import PhotoCropModal from '../ui/PhotoCropModal';
+import TentCardModal from '../ui/TentCardModal';
 import logoPhotobooth from '../../assets/logo photobooth.png';
 import logoPhotoboothWhite from '../../assets/logo photobooth white.png';
 import { useToast } from '../ui/Toast';
@@ -57,8 +61,10 @@ export default function AdminDashboardPage() {
   const [selectedFrames, setSelectedFrames] = useState(['wedding-classic', 'gold-luxury']);
   const [copiedSlug, setCopiedSlug] = useState(null);
 
-  // Active Event for QR Code Inspector
+  // Active Event for QR Code Inspector & Tent Card
   const [selectedQrEvent, setSelectedQrEvent] = useState(null);
+  const [selectedTentCardEvent, setSelectedTentCardEvent] = useState(null);
+  const [zippingEventId, setZippingEventId] = useState(null);
 
   // Auto-generate slug when Groom/Bride names change
   const handleNameChange = (groom, bride) => {
@@ -129,6 +135,31 @@ export default function AdminDashboardPage() {
     setCopiedSlug(`guest_${slug}`);
     toast('Link tamu berhasil disalin!', 'success');
     setTimeout(() => setCopiedSlug(null), 3000);
+  };
+
+  // Download all photos in ZIP with custom naming: [Nama Pengunjung]_[Nama Pengantin]
+  const handleDownloadEventZip = async (evt) => {
+    setZippingEventId(evt.id);
+    try {
+      let eventSubs = (savedSubmissions || []).filter(s => s.eventSlug === evt.slug || s.eventId === evt.id);
+      if (eventSubs.length === 0) {
+        eventSubs = MOCK_GALLERY_PHOTOS;
+      }
+      toast(`Menyiapkan file ZIP foto kenangan untuk ${evt.displayName}...`, 'info');
+      const result = await exportEventSubmissionsZip({
+        event: evt,
+        submissions: eventSubs,
+        onProgress: ({ message }) => {
+          // progress callback
+        }
+      });
+      toast(`File ZIP berhasil diunduh (${result.totalPhotos} foto)! 📦`, 'success');
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'Gagal mengunduh ZIP', 'error');
+    } finally {
+      setZippingEventId(null);
+    }
   };
 
   // Open Hero Photos Manager Modal
@@ -460,10 +491,32 @@ export default function AdminDashboardPage() {
                           setSelectedQrEvent(evt);
                           setActiveTab('qr');
                         }}
-                        className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-serif font-medium flex items-center gap-1.5 transition cursor-pointer"
+                        className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-serif font-medium flex items-center gap-1.5 transition cursor-pointer"
+                        title="Lihat QR Code"
                       >
                         <QrCode size={14} />
-                        <span>QR Meja</span>
+                        <span>QR</span>
+                      </button>
+
+                      {/* Print Table Tent Card */}
+                      <button
+                        onClick={() => setSelectedTentCardEvent(evt)}
+                        className="px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer"
+                        title="Desain & Cetak Kartu Meja (Tent Card Siap Cetak)"
+                      >
+                        <Printer size={14} />
+                        <span>Cetak Meja</span>
+                      </button>
+
+                      {/* Download All Photos ZIP */}
+                      <button
+                        onClick={() => handleDownloadEventZip(evt)}
+                        disabled={zippingEventId === evt.id}
+                        className="px-3 py-2 rounded-xl bg-purple-600/25 hover:bg-purple-600/40 border border-purple-400/40 text-purple-200 text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer"
+                        title="Unduh seluruh foto & ucapan tamu (.ZIP) dengan format Nama Pengunjung_Nama Pengantin"
+                      >
+                        <Archive size={14} className={zippingEventId === evt.id ? 'animate-bounce' : ''} />
+                        <span>{zippingEventId === evt.id ? 'Mengompres...' : 'Unduh ZIP'}</span>
                       </button>
 
                       {/* View Guest Booth */}
@@ -746,6 +799,13 @@ export default function AdminDashboardPage() {
           setActiveCropIdx(null);
         }}
         title="Sesuaikan & Crop Foto Hero Prewedding"
+      />
+
+      {/* ================= 🌟 MODAL: PRINTABLE TABLE TENT CARD 🌟 ================= */}
+      <TentCardModal
+        isOpen={!!selectedTentCardEvent}
+        onClose={() => setSelectedTentCardEvent(null)}
+        event={selectedTentCardEvent}
       />
 
     </motion.div>
