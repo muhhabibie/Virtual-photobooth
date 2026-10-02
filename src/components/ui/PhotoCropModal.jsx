@@ -4,7 +4,9 @@ import {
 } from 'lucide-react';
 
 const ASPECT_RATIOS = [
-  { id: '3:4', name: '3:4 Portrait (Rekomendasi Hero)', ratio: 3 / 4, desc: 'Paling Pas untuk Carousel' },
+  { id: '16:9', name: '16:9 Landscape', ratio: 16 / 9, desc: 'Mendatar / Layar Lebar' },
+  { id: '4:3', name: '4:3 Landscape', ratio: 4 / 3, desc: 'Standar Kamera' },
+  { id: '3:4', name: '3:4 Portrait', ratio: 3 / 4, desc: 'Tegak / Layar HP' },
   { id: '1:1', name: '1:1 Persegi', ratio: 1 / 1, desc: 'Bujur Sangkar' },
   { id: '9:16', name: '9:16 Story', ratio: 9 / 16, desc: 'Layar Penuh HP' },
 ];
@@ -78,6 +80,12 @@ export default function PhotoCropModal({
     const { naturalWidth, naturalHeight } = e.target;
     setImgDimensions({ width: naturalWidth, height: naturalHeight });
     setImgLoaded(true);
+    // If photo is landscape, default to 16:9 or 4:3
+    if (naturalWidth > naturalHeight) {
+      setSelectedRatioId('16:9');
+    } else {
+      setSelectedRatioId('3:4');
+    }
   };
 
   // Base rendered image dimensions to cover the crop box
@@ -391,7 +399,7 @@ export default function PhotoCropModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-2.5 pt-1">
+        <div className="grid grid-cols-3 gap-2 pt-1">
           <button
             onClick={onCancel}
             className="py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white text-xs font-serif font-bold transition active:scale-95 cursor-pointer"
@@ -400,11 +408,19 @@ export default function PhotoCropModal({
           </button>
 
           <button
-            onClick={handleApplyCrop}
-            className="py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-black text-xs font-serif font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-amber-400/25 active:scale-95 transition cursor-pointer"
+            onClick={() => onCropComplete(imageUrl)}
+            className="py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs font-serif font-bold transition active:scale-95 cursor-pointer text-center px-1"
+            title="Gunakan foto landscape/portrait asli tanpa crop"
           >
-            <Check size={16} />
-            <span>Gunakan Foto Ini</span>
+            Pakai Asli
+          </button>
+
+          <button
+            onClick={handleApplyCrop}
+            className="py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-black text-xs font-serif font-bold flex items-center justify-center gap-1 shadow-lg shadow-amber-400/25 active:scale-95 transition cursor-pointer"
+          >
+            <Check size={14} />
+            <span>Terapkan</span>
           </button>
         </div>
 
