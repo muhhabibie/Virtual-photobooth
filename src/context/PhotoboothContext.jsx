@@ -11,7 +11,14 @@ export function PhotoboothProvider({ children }) {
   const [events, setEvents] = useState(() => {
     try {
       const raw = localStorage.getItem(EVENTS_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : INITIAL_EVENTS;
+      const parsed = raw ? JSON.parse(raw) : INITIAL_EVENTS;
+      return parsed.map(evt => {
+        // Ensure Mempelai Pria comes before Mempelai Wanita
+        if (evt.groomName && evt.brideName && evt.displayName === `${evt.brideName} & ${evt.groomName}`) {
+          return { ...evt, displayName: `${evt.groomName} & ${evt.brideName}` };
+        }
+        return evt;
+      });
     } catch (e) {
       return INITIAL_EVENTS;
     }
@@ -149,9 +156,9 @@ export function PhotoboothProvider({ children }) {
     const newEvt = {
       id: `evt_${now}`,
       slug: slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, ''),
-      brideName: brideName.trim(),
       groomName: groomName.trim(),
-      displayName: `${brideName.trim()} & ${groomName.trim()}`,
+      brideName: brideName.trim(),
+      displayName: `${groomName.trim()} & ${brideName.trim()}`,
       eventDate: eventDate || new Date().toISOString().split('T')[0],
       formattedDate: new Date(eventDate || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
       venue: 'Wedding Venue',
@@ -199,9 +206,9 @@ export function PhotoboothProvider({ children }) {
   const updateEventConfig = useCallback((eventId, updates) => {
     setEvents(prev => prev.map(e => {
       if (e.id === eventId || e.slug === eventId) {
-        const bride = updates.brideName !== undefined ? updates.brideName : e.brideName;
         const groom = updates.groomName !== undefined ? updates.groomName : e.groomName;
-        const displayName = (bride && groom) ? `${bride} & ${groom}` : (updates.displayName || e.displayName);
+        const bride = updates.brideName !== undefined ? updates.brideName : e.brideName;
+        const displayName = (groom && bride) ? `${groom} & ${bride}` : (updates.displayName || e.displayName);
         const eventDate = updates.eventDate !== undefined ? updates.eventDate : e.eventDate;
         const formattedDate = eventDate ? new Date(eventDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : e.formattedDate;
 

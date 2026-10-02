@@ -49,7 +49,7 @@ export default function FullGalleryModal() {
   const handleDownloadZip = async () => {
     setIsZipping(true);
     try {
-      const eventToUse = activeEvent || { displayName: 'Sabrina & Raka', slug: 'sabrina-raka' };
+      const eventToUse = activeEvent || { displayName: 'Raka & Sabrina', slug: 'sabrina-raka' };
       const itemsToExport = fullList;
       toast(`Menyiapkan file ZIP foto kenangan untuk ${eventToUse.displayName}...`, 'info');
       const result = await exportEventSubmissionsZip({
@@ -561,7 +561,7 @@ export default function FullGalleryModal() {
                   onClick={() => {
                     const sanitize = (name) => (name || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
                     const guest = sanitize(fullFrameModal.guestName) || 'Tamu';
-                    const couple = sanitize(activeEvent?.displayName) || 'Sabrina & Raka';
+                    const couple = sanitize(activeEvent?.displayName) || 'Raka & Sabrina';
                     const filename = `${guest}_${couple}.jpg`;
 
                     const a = document.createElement('a');

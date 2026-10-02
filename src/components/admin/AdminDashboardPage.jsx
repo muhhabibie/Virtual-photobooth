@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
     const cleanGroom = (groom || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
     const cleanBride = (bride || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
     if (cleanGroom || cleanBride) {
-      const generated = [cleanBride, cleanGroom].filter(Boolean).join('-');
+      const generated = [cleanGroom, cleanBride].filter(Boolean).join('-');
       setEventSlug(generated);
     }
   };

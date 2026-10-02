@@ -43,8 +43,10 @@ const DEMO_THEMES = [
 ];
 
 export default function HowItWorks() {
-  const { openBooth } = useBooth();
+  const { openBooth, activeEvent } = useBooth();
   const { toast } = useToast();
+
+  const coupleName = activeEvent?.displayName || 'Raka & Sabrina';
 
   // Interactive step state
   const [activeStep, setActiveStep] = useState(1);
@@ -256,7 +258,7 @@ export default function HowItWorks() {
                     style={{ color: activeDemoTheme.text }}
                     className="text-[6.5px] sm:text-[7px] font-serif font-bold uppercase tracking-widest pb-1 border-b border-black/10"
                   >
-                    THE WEDDING OF SABRINA & RAKA
+                    THE WEDDING OF {coupleName.toUpperCase()}
                   </p>
                   
                   <div className="flex flex-col gap-1 sm:gap-1.5 py-1 sm:py-1.5">
@@ -385,10 +387,10 @@ export default function HowItWorks() {
                       </button>
                     </div>
 
-                    {/* Watermark Sabrina & Raka */}
+                    {/* Watermark Mempelai */}
                     <div className="absolute bottom-1.5 right-1.5 pointer-events-none">
                       <span className="text-[6.5px] sm:text-[7.5px] font-script text-white/90 drop-shadow-md">
-                        Sabrina & Raka ♡
+                        {coupleName} ♡
                       </span>
                     </div>
                   </div>
@@ -449,7 +451,7 @@ export default function HowItWorks() {
                         {demoRecording ? 'Merekam Doa untuk Mempelai...' : 'Rekam Pesan Doa Ucapan'}
                       </p>
                       <p className="text-[8px] sm:text-[9px] text-[#F5D77F]">
-                        {demoRecording ? '00:24 / 01:00 • Doa Restu Aktif' : 'Untuk Sabrina & Raka (Maks. 60s)'}
+                        {demoRecording ? '00:24 / 01:00 • Doa Restu Aktif' : `Untuk ${coupleName} (Maks. 60s)`}
                       </p>
                     </div>
                   </div>
@@ -491,7 +493,7 @@ export default function HowItWorks() {
                 {/* Ready Photostrip Card */}
                 <div className="w-40 sm:w-48 bg-[#6B111F] rounded-xl sm:rounded-2xl p-2 sm:p-2.5 shadow-2xl border border-amber-300/30 mb-3 sm:mb-4">
                   <p className="text-[6.5px] sm:text-[7px] font-serif font-bold uppercase tracking-widest text-[#F5D77F] pb-1 border-b border-white/10">
-                    THE WEDDING OF SABRINA & RAKA
+                    THE WEDDING OF {coupleName.toUpperCase()}
                   </p>
                   <div className="my-1 sm:my-1.5 aspect-[4/3] rounded-lg overflow-hidden bg-black/40">
                     <img

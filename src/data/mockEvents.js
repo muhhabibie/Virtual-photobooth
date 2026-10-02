@@ -70,9 +70,9 @@ export const INITIAL_EVENTS = [
   {
     id: 'event_sabrina_raka',
     slug: 'sabrina-raka',
-    brideName: 'Sabrina',
     groomName: 'Raka',
-    displayName: 'Sabrina & Raka',
+    brideName: 'Sabrina',
+    displayName: 'Raka & Sabrina',
     eventDate: '2026-05-30',
     formattedDate: '30 Mei 2026',
     venue: 'Grand Ballroom Jakarta',

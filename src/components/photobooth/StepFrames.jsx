@@ -103,7 +103,7 @@ export default function StepFrames() {
     ctx.fillRect(0, 0, w, totalH);
 
     // Header branding
-    const coupleTitle = activeEvent?.displayName || 'Sabrina & Raka';
+    const coupleTitle = activeEvent?.displayName || 'Raka & Sabrina';
     ctx.fillStyle = theme.textHex;
     ctx.font = 'bold 11px Georgia, serif';
     ctx.textAlign = 'center';

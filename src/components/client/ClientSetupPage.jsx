@@ -163,7 +163,7 @@ export default function ClientSetupPage() {
       heroPhotos,
     });
     setIsSaved(true);
-    toast('Semua perubahan berhasil disimpan', 'success');
+    toast('Semua perubahan berhasil disimpan & langsung aktif di web utama!', 'success');
   };
 
   const guestUrl = `${window.location.origin}/${event.slug}`;
@@ -782,13 +782,24 @@ export default function ClientSetupPage() {
             </span>
           </div>
 
-          <button
-            onClick={handleSaveAll}
-            className="flex-1 xs:flex-none xs:px-9 py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-98 text-[#F5D77F] border border-[#F5D77F]/40 text-xs sm:text-sm font-serif font-bold flex items-center justify-center gap-2 shadow-lg shadow-rose-950/20 transition cursor-pointer"
-          >
-            <Check size={16} />
-            <span>Simpan Pengaturan</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigateToEvent(event.slug)}
+              className="px-4 py-3 rounded-full bg-[#FAF7F2] hover:bg-stone-100 active:scale-98 border border-stone-200 text-stone-800 text-xs sm:text-sm font-serif font-medium flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
+              title="Buka Tampilan Web Tamu Utama"
+            >
+              <Eye size={15} className="text-[#6B111F]" />
+              <span>Web Tamu</span>
+            </button>
+
+            <button
+              onClick={handleSaveAll}
+              className="flex-1 xs:flex-none xs:px-8 py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-98 text-[#F5D77F] border border-[#F5D77F]/40 text-xs sm:text-sm font-serif font-bold flex items-center justify-center gap-2 shadow-lg shadow-rose-950/20 transition cursor-pointer"
+            >
+              <Check size={16} />
+              <span>Simpan Pengaturan</span>
+            </button>
+          </div>
         </div>
       </div>
 

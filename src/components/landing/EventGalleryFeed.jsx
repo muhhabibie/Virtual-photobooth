@@ -11,15 +11,17 @@ const romanticTransition = {
 };
 
 export default function EventGalleryFeed() {
-  const { openBooth, openGalleryModal, capturedPhotos, guestName } = useBooth();
+  const { openBooth, openGalleryModal, capturedPhotos, guestName, activeEvent } = useBooth();
   const { toast } = useToast();
+
+  const coupleName = activeEvent?.displayName || 'Raka & Sabrina';
 
   const handleShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Galeri Pengunjung The Wedding of Sabrina & Raka',
-          text: 'Lihat photo strip kenangan pernikahan Sabrina & Raka!',
+          title: `Galeri Pengunjung The Wedding of ${coupleName}`,
+          text: `Lihat photo strip kenangan pernikahan ${coupleName}!`,
           url: window.location.href,
         });
       } catch (e) {}
@@ -33,7 +35,7 @@ export default function EventGalleryFeed() {
   const userCard = capturedPhotos.length > 0 ? {
     id: 'user-submission',
     guestName: guestName || 'Tamu Undangan (Kamu)',
-    date: '30 - 05 - 2026',
+    date: activeEvent?.formattedDate || '30 Mei 2026',
     photos: capturedPhotos.map(p => p.dataUrl),
     colorHex: '#6B111F',
     textHex: '#F5D77F',
@@ -45,6 +47,10 @@ export default function EventGalleryFeed() {
   // Duplicated for infinite continuous seamless loop from right to left
   const doubledCards = [...baseCards, ...baseCards];
 
+  const backdropPhoto = activeEvent?.heroPhotos && activeEvent.heroPhotos.length > 0
+    ? activeEvent.heroPhotos[0]
+    : 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&auto=format&fit=crop&q=85';
+
   return (
     <section id="gallery-feed" className="relative bg-gradient-to-b from-[#0E050A] via-[#0E050A] to-[#14060C] text-white pt-0 pb-24 sm:pb-28 overflow-hidden select-none">
       
@@ -52,8 +58,8 @@ export default function EventGalleryFeed() {
       <div className="relative w-full h-[280px] sm:h-[340px] overflow-hidden bg-[#0E050A]">
         {/* Background Wedding Couple Photo with Mask Fade */}
         <img
-          src="https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&auto=format&fit=crop&q=85"
-          alt="Sabrina & Raka"
+          src={backdropPhoto}
+          alt={coupleName}
           style={{
             WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
             maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
@@ -140,7 +146,7 @@ export default function EventGalleryFeed() {
           <div className="flex items-center justify-center gap-3 my-1 w-full max-w-sm mx-auto">
             <div className="h-px bg-gradient-to-r from-transparent via-[#C4A46C]/60 to-transparent flex-1" />
             <span className="text-[9px] font-serif tracking-[0.25em] text-[#F5D77F] uppercase font-bold">
-              THE WEDDING OF SABRINA & RAKA
+              THE WEDDING OF {coupleName.toUpperCase()}
             </span>
             <div className="h-px bg-gradient-to-r from-transparent via-[#C4A46C]/60 to-transparent flex-1" />
           </div>
@@ -225,10 +231,10 @@ export default function EventGalleryFeed() {
                     }}
                     className="text-lg sm:text-2xl font-serif italic leading-tight drop-shadow-xs"
                   >
-                    Sabrina & Raka
+                    {coupleName}
                   </h3>
                   <p className="text-[7px] sm:text-[8px] font-mono tracking-widest mt-0.5" style={{ color: subTextColor }}>
-                    {card.date || '30 · 05 · 2026'}
+                    {card.date || activeEvent?.formattedDate || '30 Mei 2026'}
                   </p>
                   <h4 
                     style={{ color: guestNameColor }}
