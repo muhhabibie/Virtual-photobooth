@@ -7,6 +7,7 @@ import { sanitizeFilename } from '../../utils/zipExport';
 import { QR_THEMES, resolveEventQrTheme } from '../../utils/qrTheme';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
 import MonochromeFloralOrnament from './MonochromeFloralOrnament';
+import RibbonBowOrnament from './RibbonBowOrnament';
 import { useToast } from './Toast';
 
 export default function TentCardModal({ isOpen, onClose, event }) {
@@ -78,7 +79,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
             bgImg.crossOrigin = 'anonymous';
             bgImg.onload = () => {
               ctx.save();
-              ctx.globalAlpha = 0.75; // Clear visibility of hero photo
+              ctx.globalAlpha = 0.75;
               const bannerH = 500;
               const aspect = bgImg.width / bgImg.height;
               let dw = canvas.width;
@@ -123,34 +124,32 @@ export default function TentCardModal({ isOpen, onClose, event }) {
         ctx.font = '500 22px Georgia, serif';
         ctx.textAlign = 'center';
         ctx.letterSpacing = '4px';
-        ctx.fillText(eventSubtitle, canvas.width / 2, centerY + 110);
+        ctx.fillText(`${eventSubtitle} • ${eventDate.toUpperCase()}`, canvas.width / 2, centerY + 110);
 
         ctx.fillStyle = activeTheme.canvasTextHex;
         ctx.font = 'bold 54px "Playfair Display", Georgia, serif';
         ctx.letterSpacing = '1px';
         ctx.fillText(coupleName, canvas.width / 2, centerY + 180);
 
-        ctx.fillStyle = activeTheme.canvasSubtextHex;
-        ctx.font = '19px "Plus Jakarta Sans", sans-serif';
-        ctx.letterSpacing = '2px';
-        ctx.fillText(`${eventDate.toUpperCase()} • ${eventVenue.toUpperCase()}`, canvas.width / 2, centerY + 220);
+        // Poetic Quote Lines (Reference kisahkan style)
+        if (activeTheme.poeticQuoteLines && activeTheme.poeticQuoteLines.length > 0) {
+          ctx.fillStyle = activeTheme.canvasSubtextHex;
+          ctx.font = 'italic 18px "Georgia", serif';
+          let lineY = centerY + 222;
+          activeTheme.poeticQuoteLines.forEach((line) => {
+            ctx.fillText(line, canvas.width / 2, lineY);
+            lineY += 24;
+          });
+        }
 
-        // Hairline Divider
-        ctx.strokeStyle = activeTheme.goldAccent;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(canvas.width / 2 - 120, centerY + 240);
-        ctx.lineTo(canvas.width / 2 + 120, centerY + 240);
-        ctx.stroke();
-
-        // 6. Clean White High Contrast QR Code Container (No emoji overlay)
+        // 6. Clean White High Contrast QR Code Container
         await new Promise((resolve) => {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.onload = () => {
             const qrSize = 360;
             const qrX = (canvas.width - qrSize) / 2;
-            const qrY = centerY + 270;
+            const qrY = centerY + 320;
 
             // Pure Bright White Background
             ctx.fillStyle = '#FFFFFF';
@@ -171,19 +170,19 @@ export default function TentCardModal({ isOpen, onClose, event }) {
         ctx.fillStyle = activeTheme.canvasAccentHex;
         ctx.font = 'bold 22px "Plus Jakarta Sans", sans-serif';
         ctx.letterSpacing = '3px';
-        ctx.fillText('PINDAI KODE QR UNTUK BERFOTO', canvas.width / 2, centerY + 700);
+        ctx.fillText('PINDAI KODE QR UNTUK BERFOTO & KIRIM DOA', canvas.width / 2, centerY + 740);
 
         ctx.fillStyle = activeTheme.canvasSubtextHex;
         ctx.font = '18px "Plus Jakarta Sans", sans-serif';
         ctx.letterSpacing = '0.5px';
-        ctx.fillText('01 • Buka kamera di ponsel Anda', canvas.width / 2, centerY + 745);
-        ctx.fillText('02 • Arahkan lensa ke kode QR di atas', canvas.width / 2, centerY + 780);
-        ctx.fillText('03 • Ambil foto & simpan kenangan Anda', canvas.width / 2, centerY + 815);
+        ctx.fillText('01 • Buka kamera di ponsel Anda', canvas.width / 2, centerY + 785);
+        ctx.fillText('02 • Arahkan lensa ke kode QR di atas', canvas.width / 2, centerY + 820);
+        ctx.fillText('03 • Ambil foto & simpan kenangan Anda', canvas.width / 2, centerY + 855);
 
         ctx.fillStyle = activeTheme.canvasSubtextHex;
         ctx.font = '14px monospace';
         ctx.letterSpacing = '1px';
-        ctx.fillText(`sirklenice.com/${event.slug}`, canvas.width / 2, centerY + 880);
+        ctx.fillText(`sirklenice.com/${event.slug}`, canvas.width / 2, centerY + 910);
       };
 
       // Draw Side A (Front)
@@ -340,22 +339,29 @@ export default function TentCardModal({ isOpen, onClose, event }) {
               {/* CARD SIDE A (FRONT) */}
               <div className="relative z-20 flex flex-col items-center text-center py-2">
                 <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium ${activeTheme.headerText}`}>
-                  {eventSubtitle}
+                  {eventSubtitle} • {eventDate}
                 </span>
 
                 <h2 className={`text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1 drop-shadow-md ${activeTheme.titleText}`}>
                   {coupleName}
                 </h2>
 
-                <p className={`text-[11px] font-sans tracking-wider mb-4 ${activeTheme.subtitleText}`}>
-                  {eventDate.toUpperCase()} • {eventVenue.toUpperCase()}
-                </p>
+                {/* Poetic Quote Lines */}
+                {activeTheme.poeticQuoteLines && activeTheme.poeticQuoteLines.length > 0 && (
+                  <div className="my-1.5 space-y-0.5 max-w-[270px] mx-auto">
+                    {activeTheme.poeticQuoteLines.map((line, idx) => (
+                      <p key={idx} className="text-[10px] font-serif italic text-amber-200/90 leading-tight drop-shadow-xs">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                )}
 
                 {/* Hairline Accent */}
-                <div className="w-16 h-px mb-5 bg-amber-400/50" />
+                <div className="w-16 h-px mb-4 bg-amber-400/50" />
 
                 {/* Bright Clean White High Contrast QR Container (100% Scannable) */}
-                <div className="p-3 rounded-2xl border-2 border-amber-400/80 bg-white mb-4 shadow-2xl flex items-center justify-center">
+                <div className="p-3 rounded-2xl border-2 border-amber-400/80 bg-white mb-3 shadow-2xl flex items-center justify-center">
                   <img 
                     src={qrCodeUrl} 
                     alt={`QR Code ${coupleName}`} 
@@ -363,13 +369,16 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                   />
                 </div>
 
+                {/* Bottom Ribbon Bows Line Art */}
+                <RibbonBowOrnament className="my-1 text-amber-300/75" count={4} />
+
                 {/* CTA Text & Instructions */}
-                <div className={`flex items-center gap-1.5 text-xs font-serif font-bold tracking-widest uppercase mb-3 ${activeTheme.headerText}`}>
+                <div className={`flex items-center gap-1.5 text-xs font-serif font-bold tracking-widest uppercase mb-2 ${activeTheme.headerText}`}>
                   <Camera size={13} />
                   <span>Pindai untuk Berfoto</span>
                 </div>
 
-                <div className="w-full max-w-[270px] space-y-1.5 text-[11px] text-left mb-4 p-3 rounded-xl border bg-black/50 backdrop-blur-md border-white/15 text-stone-200">
+                <div className="w-full max-w-[270px] space-y-1 text-[10px] text-left mb-3 p-2.5 rounded-xl border bg-black/50 backdrop-blur-md border-white/15 text-stone-200">
                   <div className="flex items-start gap-2">
                     <span className="font-mono font-bold text-amber-400 text-[10px]">01.</span>
                     <span>Buka kamera di ponsel Anda</span>
@@ -434,11 +443,11 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                     {coupleName}
                   </h2>
 
-                  <p className={`text-[11px] font-sans tracking-wider mb-4 z-10 ${activeTheme.subtitleText}`}>
+                  <p className={`text-[11px] font-sans tracking-wider mb-3 z-10 ${activeTheme.subtitleText}`}>
                     Abadikan momen Anda bersama kami hari ini
                   </p>
 
-                  <div className="w-16 h-px mb-5 bg-amber-400/50 z-10" />
+                  <div className="w-16 h-px mb-4 bg-amber-400/50 z-10" />
 
                   {/* Bright Clean White High Contrast QR Container */}
                   <div className="p-3 rounded-2xl border-2 border-amber-400/80 bg-white mb-3 shadow-2xl flex items-center justify-center z-10">
@@ -448,6 +457,9 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                       className="w-40 h-40 sm:w-48 sm:h-48 object-contain rounded-lg"
                     />
                   </div>
+
+                  {/* Bottom Ribbon Bows */}
+                  <RibbonBowOrnament className="my-1 text-amber-300/75 z-10" count={4} />
 
                   <p className={`text-[11px] font-serif font-semibold tracking-wider z-10 ${activeTheme.headerText}`}>
                     Pindai untuk Berfoto & Kirim Doa

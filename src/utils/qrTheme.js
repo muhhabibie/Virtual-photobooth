@@ -1,4 +1,4 @@
-// Theme configurations for QR Code & Tent Cards matching guest web design aesthetics
+// Theme configurations for QR Code & Tent Cards matching kisahkan / bespoke photobooth references
 
 export const QR_THEMES = {
   burgundy: {
@@ -22,6 +22,13 @@ export const QR_THEMES = {
     canvasAccentHex: '#D4AF37',
     canvasSubtextHex: '#F5D77F',
     scanInstruction: 'Arahkan kamera ponsel untuk berfoto & kirim doa',
+    poeticQuoteLines: [
+      'Hand in hand side by side',
+      'We walk through life together',
+      'Sharing moments and creating memories that will last forever',
+      'فِي الدُّنْيَا وَالْآخِرَةِ',
+      'In this world and the next'
+    ]
   },
   ivory: {
     id: 'ivory',
@@ -44,6 +51,13 @@ export const QR_THEMES = {
     canvasAccentHex: '#8A1828',
     canvasSubtextHex: '#555555',
     scanInstruction: 'Arahkan kamera ponsel untuk berfoto & kirim doa',
+    poeticQuoteLines: [
+      'Hand in hand side by side',
+      'We walk through life together',
+      'Sharing moments and creating memories that will last forever',
+      'فِي الدُّنْيَا وَالْآخِرَةِ',
+      'In this world and the next'
+    ]
   },
   neon: {
     id: 'neon',
@@ -66,6 +80,10 @@ export const QR_THEMES = {
     canvasAccentHex: '#C084FC',
     canvasSubtextHex: '#A5F3FC',
     scanInstruction: 'Scan QR untuk buka virtual photobooth konser',
+    poeticQuoteLines: [
+      'LOUD MUSIC • BRIGHT LIGHTS • UNFORGETTABLE MEMORIES',
+      'Scan to capture your night at the booth'
+    ]
   },
   slate: {
     id: 'slate',
@@ -88,6 +106,10 @@ export const QR_THEMES = {
     canvasAccentHex: '#38BDF8',
     canvasSubtextHex: '#94A3B8',
     scanInstruction: 'Scan QR Code untuk akses galeri pameran',
+    poeticQuoteLines: [
+      'ART • PERSPECTIVE • MOMENTS IN TIME',
+      'Scan QR Code to enter the virtual exhibition'
+    ]
   }
 };
 
