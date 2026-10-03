@@ -54,46 +54,6 @@ export default function QRCodeCanvas({
       ctx.fillStyle = activeTheme.canvasBgHex;
       ctx.fillRect(0, 0, w, h);
 
-      // 2. Top Hero Photo Banner (Clearly Visible in Top Section)
-      if (coverPhoto) {
-        await new Promise((resolve) => {
-          const bgImg = new Image();
-          bgImg.crossOrigin = 'anonymous';
-          bgImg.onload = () => {
-            ctx.save();
-            ctx.globalAlpha = 0.75;
-            const bannerH = 440;
-            const aspect = bgImg.width / bgImg.height;
-            let dw = w;
-            let dh = w / aspect;
-            if (dh < bannerH) {
-              dh = bannerH;
-              dw = bannerH * aspect;
-            }
-            const dx = (w - dw) / 2;
-            const dy = 0;
-            ctx.drawImage(bgImg, dx, dy, dw, dh);
-            ctx.restore();
-            resolve();
-          };
-          bgImg.onerror = resolve;
-          bgImg.src = coverPhoto;
-        });
-      }
-
-      // 3. Top Banner Gradient Fade Out into Dark Background Below
-      const heroGrad = ctx.createLinearGradient(0, 0, 0, 460);
-      const [r, g, b] = (activeTheme.canvasOverlayRgb || '59, 6, 13').split(',').map(n => n.trim());
-      heroGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.35)`);
-      heroGrad.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, 0.75)`);
-      heroGrad.addColorStop(1, activeTheme.canvasBgHex);
-      ctx.fillStyle = heroGrad;
-      ctx.fillRect(0, 0, w, 460);
-
-      // Fill lower portion with theme background
-      ctx.fillStyle = activeTheme.canvasBgHex;
-      ctx.fillRect(0, 458, w, h - 458);
-
       // 4. Double Line Thin Gold Hairline Borders & Corner Flourishes
       ctx.strokeStyle = activeTheme.goldAccent;
       ctx.lineWidth = 3.5;
@@ -205,28 +165,7 @@ export default function QRCodeCanvas({
         className={`w-full p-5 sm:p-6 rounded-3xl border shadow-2xl transition-all duration-300 relative flex flex-col items-center text-center overflow-hidden ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
       >
         
-        {/* 1. Hero Main Cover Photo Background Banner with Feather-Soft Gradient Blur Fade */}
-        <div className="absolute top-0 inset-x-0 h-48 sm:h-56 overflow-hidden pointer-events-none z-0">
-          {coverPhoto && (
-            <img 
-              src={coverPhoto} 
-              alt="" 
-              className="w-full h-full object-cover object-top opacity-70 filter brightness-105" 
-            />
-          )}
-          {/* Feather-Soft Gradient Blur Fade Masking Bottom Edge into Card Background */}
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(to bottom, 
-                rgba(0, 0, 0, 0.25) 0%, 
-                rgba(0, 0, 0, 0.50) 45%, 
-                rgba(0, 0, 0, 0.85) 75%, 
-                ${activeTheme.canvasBgHex} 98%
-              )`
-            }}
-          />
-        </div>
+
 
         {/* 2. Elegant Thin Gold Line Art & Corner Flourishes */}
         <MonochromeFloralOrnament variant="corner-tr" className={`absolute -top-3 -right-3 w-32 h-32 ${activeTheme.flourishClass} pointer-events-none z-10`} />

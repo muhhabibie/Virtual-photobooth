@@ -72,44 +72,9 @@ export default function TentCardModal({ isOpen, onClose, event }) {
       const drawCardSide = async (topY, height) => {
         const centerY = topY;
 
-        // 2. Top Hero Photo Background Banner
-        if (coverPhoto) {
-          await new Promise((resolve) => {
-            const bgImg = new Image();
-            bgImg.crossOrigin = 'anonymous';
-            bgImg.onload = () => {
-              ctx.save();
-              ctx.globalAlpha = 0.75;
-              const bannerH = 500;
-              const aspect = bgImg.width / bgImg.height;
-              let dw = canvas.width;
-              let dh = canvas.width / aspect;
-              if (dh < bannerH) {
-                dh = bannerH;
-                dw = bannerH * aspect;
-              }
-              const dx = (canvas.width - dw) / 2;
-              const dy = centerY;
-              ctx.drawImage(bgImg, dx, dy, dw, dh);
-              ctx.restore();
-              resolve();
-            };
-            bgImg.onerror = resolve;
-            bgImg.src = coverPhoto;
-          });
-        }
-
-        // 3. Monochromatic Gradient Tint Layer with Bottom Fade Out
-        const grad = ctx.createLinearGradient(0, centerY, 0, centerY + 520);
-        const [r, g, b] = (activeTheme.canvasOverlayRgb || '59, 6, 13').split(',').map(n => n.trim());
-        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.35)`);
-        grad.addColorStop(0.65, `rgba(${r}, ${g}, ${b}, 0.82)`);
-        grad.addColorStop(1, activeTheme.canvasBgHex);
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, centerY, canvas.width, 520);
-
+        // 1. Base Dark Theme Fill
         ctx.fillStyle = activeTheme.canvasBgHex;
-        ctx.fillRect(0, centerY + 518, canvas.width, height - 518);
+        ctx.fillRect(0, centerY, canvas.width, height);
 
         // 4. Double Line Hairline Gold Borders
         ctx.strokeStyle = activeTheme.goldAccent;
@@ -303,28 +268,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
               className={`w-full max-w-sm transition-colors duration-200 rounded-2xl p-6 sm:p-8 border relative select-none overflow-hidden ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
             >
               
-              {/* 1. Top Hero Photo Background Banner with Smooth Bottom Opacity Blur Fade */}
-              <div className="absolute top-0 inset-x-0 h-48 sm:h-56 overflow-hidden pointer-events-none z-0">
-                {coverPhoto && (
-                  <img 
-                    src={coverPhoto} 
-                    alt="" 
-                    className="w-full h-full object-cover object-top opacity-70 filter brightness-105" 
-                  />
-                )}
-                {/* Feather-Soft Gradient Blur Fade Masking Bottom Edge into Card Background */}
-                <div 
-                  className="absolute inset-0"
-                  style={{
-                    background: `linear-gradient(to bottom, 
-                      rgba(0, 0, 0, 0.25) 0%, 
-                      rgba(0, 0, 0, 0.50) 45%, 
-                      rgba(0, 0, 0, 0.85) 75%, 
-                      ${activeTheme.canvasBgHex} 98%
-                    )`
-                  }}
-                />
-              </div>
+
 
               {/* 2. Pure Vector Botanical Corner Flourishes */}
               <MonochromeFloralOrnament variant="corner-tr" className={`absolute -top-3 -right-3 w-28 h-28 ${activeTheme.flourishClass} pointer-events-none z-10`} />
@@ -413,27 +357,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
               {/* CARD SIDE B (BACK / INVERTED FOR OPPOSITE TABLE VIEW) */}
               {layoutMode === 'foldable' && (
                 <div className="relative z-20 flex flex-col items-center text-center py-2">
-                  {/* Side B Top Hero Banner */}
-                  <div className="absolute top-0 inset-x-0 h-44 overflow-hidden pointer-events-none z-0 rounded-b-2xl">
-                    {coverPhoto && (
-                      <img 
-                        src={coverPhoto} 
-                        alt="" 
-                        className="w-full h-full object-cover object-top opacity-70 filter brightness-105" 
-                      />
-                    )}
-                    <div 
-                      className="absolute inset-0"
-                      style={{
-                        background: `linear-gradient(to bottom, 
-                          rgba(0, 0, 0, 0.25) 0%, 
-                          rgba(0, 0, 0, 0.50) 45%, 
-                          rgba(0, 0, 0, 0.85) 75%, 
-                          ${activeTheme.canvasBgHex} 98%
-                        )`
-                      }}
-                    />
-                  </div>
+
 
                   <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium z-10 ${activeTheme.headerText}`}>
                     {isWedding ? 'Terima Kasih Atas Kehadiran Anda' : 'Official Event Photobooth'}
