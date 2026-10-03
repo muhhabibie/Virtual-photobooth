@@ -773,9 +773,12 @@ export default function AdminDashboardPage() {
             {selectedQrEvent && (
               <div className="flex flex-col items-center">
                 <QRCodeCanvas 
+                  event={selectedQrEvent}
                   url={`${window.location.origin}/${selectedQrEvent.slug}`} 
                   displayName={selectedQrEvent.displayName} 
                   showDownload={true} 
+                  showOptions={true}
+                  onOpenTentCard={() => setSelectedTentCardEvent(selectedQrEvent)}
                 />
               </div>
             )}

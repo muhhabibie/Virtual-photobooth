@@ -121,6 +121,26 @@ export default function TentCardModal({ isOpen, onClose, event }) {
             ctx.strokeRect(qrX - 12, qrY - 12, qrSize + 24, qrSize + 24);
 
             ctx.drawImage(img, qrX, qrY, qrSize, qrSize);
+
+            // Aesthetic Central Icon Badge on Canvas
+            const badgeRadius = 26;
+            const badgeX = canvas.width / 2;
+            const badgeY = qrY + qrSize / 2;
+
+            ctx.beginPath();
+            ctx.arc(badgeX, badgeY, badgeRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = isBurgundy ? '#C5A059' : '#8A1828';
+            ctx.stroke();
+
+            ctx.font = '24px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const themeIcon = isWedding ? '💍' : (event.eventType === 'concert' ? '⚡' : '🎨');
+            ctx.fillText(themeIcon, badgeX, badgeY + 2);
+
             resolve();
           };
           img.onerror = resolve;
@@ -355,12 +375,19 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                 }`} />
 
                 {/* QR Code Container */}
-                <div className="p-3 rounded-lg border border-stone-200 bg-white mb-4 shadow-xs">
+                <div className="p-3 rounded-lg border border-stone-200 bg-white mb-4 shadow-xs relative flex items-center justify-center">
                   <img 
                     src={qrCodeUrl} 
                     alt={`QR Code ${coupleName}`} 
                     className="w-44 h-44 sm:w-52 sm:h-52 object-contain"
                   />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className={`w-9 h-9 rounded-full bg-white border-2 shadow-md flex items-center justify-center text-base ${
+                      isBurgundy ? 'border-[#C5A059]' : 'border-[#8A1828]'
+                    }`}>
+                      {isWedding ? '💍' : (event.eventType === 'concert' ? '⚡' : '🎨')}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Clean Call to Action */}
@@ -437,12 +464,19 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                   }`} />
 
                   {/* QR Code Container */}
-                  <div className="p-3 rounded-lg border border-stone-200 bg-white mb-3 shadow-xs">
+                  <div className="p-3 rounded-lg border border-stone-200 bg-white mb-3 shadow-xs relative flex items-center justify-center">
                     <img 
                       src={qrCodeUrl} 
                       alt={`QR Code ${coupleName}`} 
                       className="w-40 h-40 sm:w-48 sm:h-48 object-contain"
                     />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className={`w-8 h-8 rounded-full bg-white border-2 shadow-md flex items-center justify-center text-sm ${
+                        isBurgundy ? 'border-[#C5A059]' : 'border-[#8A1828]'
+                      }`}>
+                        {isWedding ? '💍' : (event.eventType === 'concert' ? '⚡' : '🎨')}
+                      </div>
+                    </div>
                   </div>
 
                   <p className={`text-[11px] font-serif font-semibold tracking-wider ${
