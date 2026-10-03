@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Download, Copy, Check, Printer, QrCode, Sparkles } from 'lucide-react';
+import { Download, Copy, Check, Printer, Sparkles } from 'lucide-react';
 import logoPhotobooth from '../../assets/logo photobooth.png';
 import MonochromeFloralOrnament from './MonochromeFloralOrnament';
 import { QR_THEMES, resolveEventQrTheme } from '../../utils/qrTheme';
@@ -24,10 +24,10 @@ export default function QRCodeCanvas({
   const targetUrl = url || (event ? `${window.location.origin}/${event.slug}` : window.location.href);
   const title = displayName || event?.displayName || 'Sirklen Photo Event';
   
-  // Hero Main Cover Photo from active event
+  // Hero Main Cover Portrait Photo from active event
   const coverPhoto = event?.heroPhotos?.[0] || DEFAULT_HERO_PHOTOS[0];
 
-  // Custom QR Code API
+  // Clean, high contrast QR Code URL (No logo/emoji in center)
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(targetUrl)}&color=${activeTheme.qrColor}&bgcolor=${activeTheme.bgColor}&margin=1`;
 
   const handleCopy = () => {
@@ -48,24 +48,25 @@ export default function QRCodeCanvas({
       canvas.width = w;
       canvas.height = h;
 
-      // 1. Base Dark Background
+      // 1. Base Dark Theme Background
       ctx.fillStyle = activeTheme.canvasBgHex;
       ctx.fillRect(0, 0, w, h);
 
-      // 2. Vivid Translucent Hero Cover Photo Background (50% Opacity)
+      // 2. Large Subtle Background Portrait Watermark (Enlarged, Soft Opacity)
       if (coverPhoto) {
         await new Promise((resolve) => {
           const bgImg = new Image();
           bgImg.crossOrigin = 'anonymous';
           bgImg.onload = () => {
             ctx.save();
-            ctx.globalAlpha = 0.48; // Vivid cover photo visibility
+            ctx.globalAlpha = 0.35; // Soft opacity watermark
+            const scaleFactor = 1.4; // Significantly enlarged
             const aspect = bgImg.width / bgImg.height;
-            let dw = w;
-            let dh = w / aspect;
-            if (dh < h) {
-              dh = h;
-              dw = h * aspect;
+            let dw = w * scaleFactor;
+            let dh = (w / aspect) * scaleFactor;
+            if (dh < h * scaleFactor) {
+              dh = h * scaleFactor;
+              dw = (h * aspect) * scaleFactor;
             }
             const dx = (w - dw) / 2;
             const dy = (h - dh) / 2;
@@ -78,77 +79,75 @@ export default function QRCodeCanvas({
         });
       }
 
-      // 3. Luxurious Overlay Gradient (preserves cover photo while enhancing contrast)
+      // 3. Monochromatic Gradient Tint Layer (Fades portrait edges into background)
       const grad = ctx.createLinearGradient(0, 0, 0, h);
-      grad.addColorStop(0, 'rgba(30, 8, 14, 0.65)');
-      grad.addColorStop(0.5, 'rgba(20, 5, 10, 0.78)');
-      grad.addColorStop(1, 'rgba(10, 2, 5, 0.92)');
+      const [r, g, b] = (activeTheme.canvasOverlayRgb || '59, 6, 13').split(',').map(n => n.trim());
+      grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.72)`);
+      grad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.85)`);
+      grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0.95)`);
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
 
-      // 4. Double Line Gold Hairline Border Frame
+      // 4. Subtle Radial Vignette Fade
+      const radGrad = ctx.createRadialGradient(w / 2, h / 2, 100, w / 2, h / 2, 550);
+      radGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      radGrad.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
+      ctx.fillStyle = radGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // 5. Double Line Thin Gold Hairline Borders & Corner Flourishes
       ctx.strokeStyle = activeTheme.goldAccent;
-      ctx.lineWidth = 3.5;
-      ctx.strokeRect(30, 30, w - 60, h - 60);
+      ctx.lineWidth = 3;
+      ctx.strokeRect(32, 32, w - 64, h - 64);
 
       ctx.lineWidth = 1.2;
-      ctx.strokeRect(42, 42, w - 84, h - 84);
+      ctx.strokeRect(44, 44, w - 88, h - 88);
 
-      // 5. Hero Thumbnail Badge in Header
-      if (coverPhoto) {
-        await new Promise((resolve) => {
-          const thumbImg = new Image();
-          thumbImg.crossOrigin = 'anonymous';
-          thumbImg.onload = () => {
-            ctx.save();
-            const thumbSize = 80;
-            const thumbX = w / 2 - thumbSize / 2;
-            const thumbY = 60;
+      // Corner flourishes line art
+      const drawCornerFlourish = (x, y, flipX, flipY) => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+        ctx.strokeStyle = activeTheme.goldAccent;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 30);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(30, 0);
+        ctx.moveTo(8, 8);
+        ctx.arc(16, 16, 8, Math.PI, Math.PI * 1.5);
+        ctx.stroke();
+        ctx.restore();
+      };
+      drawCornerFlourish(55, 55, false, false);
+      drawCornerFlourish(w - 55, 55, true, false);
+      drawCornerFlourish(55, h - 55, false, true);
+      drawCornerFlourish(w - 55, h - 55, true, true);
 
-            ctx.beginPath();
-            ctx.arc(w / 2, thumbY + thumbSize / 2, thumbSize / 2, 0, Math.PI * 2);
-            ctx.clip();
-            ctx.drawImage(thumbImg, thumbX, thumbY, thumbSize, thumbSize);
-            ctx.restore();
-
-            // Gold Ring Border
-            ctx.beginPath();
-            ctx.arc(w / 2, thumbY + thumbSize / 2, thumbSize / 2 + 2, 0, Math.PI * 2);
-            ctx.strokeStyle = activeTheme.goldAccent;
-            ctx.lineWidth = 2.5;
-            ctx.stroke();
-
-            resolve();
-          };
-          thumbImg.onerror = resolve;
-          thumbImg.src = coverPhoto;
-        });
-      }
-
-      // 6. Header Branding & Event Title
+      // 6. Header Text & Event Title
       ctx.fillStyle = activeTheme.canvasAccentHex;
       ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('SIRKLEN PHOTO • VIRTUAL PHOTOBOOTH', w / 2, 168);
+      ctx.fillText('SIRKLEN PHOTO • VIRTUAL PHOTOBOOTH', w / 2, 135);
 
       ctx.fillStyle = activeTheme.canvasTextHex;
       ctx.font = 'bold 44px "Playfair Display", Georgia, serif';
-      ctx.fillText(title, w / 2, 222);
+      ctx.fillText(title, w / 2, 195);
 
       ctx.fillStyle = activeTheme.canvasSubtextHex;
       ctx.font = 'italic 18px "Georgia", serif';
-      ctx.fillText(activeTheme.scanInstruction, w / 2, 260);
+      ctx.fillText(activeTheme.scanInstruction, w / 2, 235);
 
-      // 7. Draw Clean QR Code Image Container
+      // 7. Clean, High-Contrast QR Code Area (Bright white container)
       await new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
-          const qrSize = 450;
+          const qrSize = 460;
           const qrX = (w - qrSize) / 2;
-          const qrY = 290;
+          const qrY = 275;
 
-          // Crisp White Background Container
+          // Pure Bright White Container
           ctx.fillStyle = '#FFFFFF';
           ctx.fillRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
 
@@ -183,7 +182,7 @@ export default function QRCodeCanvas({
         a.download = filename;
         a.href = blobUrl;
         a.click();
-        toast('QR Code HD dengan ornamen hero cover berhasil diunduh', 'success');
+        toast('QR Code HD dengan background portrait watermark berhasil diunduh', 'success');
       }, 'image/png');
 
     } catch (e) {
@@ -194,66 +193,56 @@ export default function QRCodeCanvas({
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto select-none">
       
-      {/* Dynamic Aesthetic Card Frame with Vivid Hero Cover Background & Vector Botanical Ornaments */}
+      {/* Dynamic Aesthetic Card Frame with Portrait Background Watermark & Gold Flourishes */}
       <div 
         ref={containerRef} 
-        className={`w-full p-5 sm:p-6 rounded-3xl border shadow-2xl transition-all duration-300 relative flex flex-col items-center text-center overflow-hidden ${activeTheme.cardBorder}`}
+        className={`w-full p-5 sm:p-6 rounded-3xl border shadow-2xl transition-all duration-300 relative flex flex-col items-center text-center overflow-hidden ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
       >
-        {/* 1. Vivid Hero Cover Background Image */}
+        
+        {/* 1. Large Subtle Background Portrait Watermark (Enlarged, Soft Blur, Monochromatic Tint) */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           {coverPhoto && (
             <img 
               src={coverPhoto} 
               alt="" 
-              className="w-full h-full object-cover object-center opacity-50 filter brightness-105 scale-105" 
+              className="w-full h-full object-cover object-center scale-150 filter blur-[1.5px] opacity-35 mix-blend-overlay" 
             />
           )}
-          {/* Translucent Dark Gradient Layer for Contrast */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#2A050A]/75 via-[#3B060D]/85 to-[#1A0306]/95" />
+          {/* Monochromatic Color Tint & Gradient Edge Fading */}
+          <div className={`absolute inset-0 bg-gradient-to-b ${activeTheme.overlayGradient}`} />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-stone-950/40 to-stone-950/80" />
         </div>
 
-        {/* 2. Pure Vector Botanical Corner Ornaments from Web Design */}
-        <MonochromeFloralOrnament variant="corner-tr" className="absolute -top-3 -right-3 w-28 h-28 text-amber-300/45 pointer-events-none z-10" />
-        <MonochromeFloralOrnament variant="corner-tl" className="absolute -top-3 -left-3 w-28 h-28 text-amber-300/45 pointer-events-none z-10" />
-        <MonochromeFloralOrnament variant="corner-br" className="absolute -bottom-3 -right-3 w-24 h-24 text-amber-300/35 pointer-events-none z-10" />
-        <MonochromeFloralOrnament variant="corner-bl" className="absolute -bottom-3 -left-3 w-24 h-24 text-amber-300/35 pointer-events-none z-10" />
+        {/* 2. Elegant Thin Gold Line Art & Corner Flourishes */}
+        <MonochromeFloralOrnament variant="corner-tr" className={`absolute -top-3 -right-3 w-32 h-32 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+        <MonochromeFloralOrnament variant="corner-tl" className={`absolute -top-3 -left-3 w-32 h-32 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+        <MonochromeFloralOrnament variant="corner-br" className={`absolute -bottom-3 -right-3 w-28 h-28 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+        <MonochromeFloralOrnament variant="corner-bl" className={`absolute -bottom-3 -left-3 w-28 h-28 ${activeTheme.flourishClass} pointer-events-none z-10`} />
 
-        {/* 3. Inner Gold Foil Hairline Border */}
+        {/* 3. Double Hairline Thin Gold Borders */}
         <div className="absolute inset-2.5 rounded-2xl border border-amber-400/40 pointer-events-none z-10" />
+        <div className="absolute inset-4 rounded-xl border border-amber-400/20 pointer-events-none z-10" />
 
-        {/* 4. Hero Cover Thumbnail Badge & Brand Header */}
-        <div className="flex flex-col items-center z-20 mb-2.5">
-          
-          {/* Circular Hero Cover Photo Preview Badge */}
-          {coverPhoto && (
-            <div className="relative mb-2 mt-1">
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400/90 shadow-lg shadow-amber-950/50">
-                <img src={coverPhoto} alt="" className="w-full h-full object-cover object-center" />
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#6B111F] border border-amber-300 text-amber-200 flex items-center justify-center text-[9px] shadow-sm">
-                ✨
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-1.5 mb-0.5">
+        {/* 4. Brand Header & Event Title (No Circle Image Badge) */}
+        <div className="flex flex-col items-center z-20 mb-3 pt-1">
+          <div className="flex items-center gap-1.5 mb-1">
             <img src={logoPhotobooth} alt="Sirklen Photo" className="w-5 h-5 object-contain" />
-            <span className={`text-[10px] font-mono tracking-widest uppercase font-bold text-amber-200`}>
+            <span className={`text-[10px] font-mono tracking-widest uppercase font-bold ${activeTheme.headerText}`}>
               SIRKLEN PHOTO
             </span>
           </div>
 
-          <h4 className={`text-xl sm:text-2xl font-bold tracking-tight text-white ${activeTheme.fontStyle}`}>
+          <h4 className={`text-xl sm:text-2xl font-bold tracking-tight ${activeTheme.titleText} ${activeTheme.fontStyle}`}>
             {title}
           </h4>
 
-          <p className={`text-xs font-serif italic mt-0.5 text-amber-200/90`}>
+          <p className={`text-xs font-serif italic mt-0.5 ${activeTheme.subtitleText}`}>
             {activeTheme.scanInstruction}
           </p>
         </div>
 
-        {/* 5. Clean QR Code Container */}
-        <div className="relative z-20 p-3 bg-white rounded-2xl border border-amber-300/70 shadow-2xl flex items-center justify-center my-1">
+        {/* 5. Clean, Bright White High-Contrast QR Code Area (100% Scannable) */}
+        <div className="relative z-20 p-3.5 bg-white rounded-2xl border-2 border-amber-400/80 shadow-2xl flex items-center justify-center my-1">
           <img 
             src={qrImageUrl} 
             alt={`QR Code ${title}`} 
@@ -262,7 +251,7 @@ export default function QRCodeCanvas({
         </div>
 
         {/* 6. URL Chip */}
-        <div className="w-full bg-black/50 backdrop-blur-md border border-white/20 rounded-xl py-1.5 px-3 mt-3 z-20 flex items-center justify-between gap-2">
+        <div className="w-full bg-black/50 backdrop-blur-md border border-white/20 rounded-xl py-1.5 px-3 mt-3.5 z-20 flex items-center justify-between gap-2">
           <span className="text-[11px] font-mono text-gray-200 truncate">
             {targetUrl}
           </span>

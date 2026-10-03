@@ -4,11 +4,14 @@ import {
   X, Printer, Download, Copy, Check, Camera
 } from 'lucide-react';
 import { sanitizeFilename } from '../../utils/zipExport';
+import { QR_THEMES, resolveEventQrTheme } from '../../utils/qrTheme';
+import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
+import MonochromeFloralOrnament from './MonochromeFloralOrnament';
 import { useToast } from './Toast';
 
 export default function TentCardModal({ isOpen, onClose, event }) {
   const { toast } = useToast();
-  const [theme, setTheme] = useState('ivory'); // 'ivory' (clean ink-saver) | 'burgundy' (bespoke dark)
+  const [selectedThemeKey, setSelectedThemeKey] = useState('auto'); // 'auto' | 'burgundy' | 'ivory' | 'neon' | 'slate'
   const [layoutMode, setLayoutMode] = useState('foldable'); // 'foldable' | 'single'
   const [isCopied, setIsCopied] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
@@ -17,6 +20,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
 
   if (!isOpen || !event) return null;
 
+  const activeTheme = resolveEventQrTheme(event, selectedThemeKey);
   const coupleName = event.displayName || 'Sabrina & Raka';
   const isWedding = (event.eventType || 'wedding') === 'wedding';
   const eventSubtitle = isWedding 
@@ -29,11 +33,10 @@ export default function TentCardModal({ isOpen, onClose, event }) {
   const eventDate = event.formattedDate || event.eventDate || (isWedding ? 'Hari Bahagia' : 'Tanggal Acara');
   const eventVenue = event.venue || (isWedding ? 'Wedding Venue' : 'Event Venue');
   const eventUrl = `${window.location.origin}/${event.slug}`;
+  const coverPhoto = event?.heroPhotos?.[0] || DEFAULT_HERO_PHOTOS[0];
   
   // Clean QR Code URL without loud styling
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(eventUrl)}&color=${theme === 'burgundy' ? '4A0811' : '1A1A1A'}&bgcolor=ffffff`;
-
-  const isBurgundy = theme === 'burgundy';
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(eventUrl)}&color=${activeTheme.qrColor}&bgcolor=ffffff&margin=1`;
 
   // Handle native browser print
   const handlePrint = () => {
@@ -48,77 +51,111 @@ export default function TentCardModal({ isOpen, onClose, event }) {
     setTimeout(() => setIsCopied(false), 2500);
   };
 
-  // High-Res 300DPI PNG Canvas Generator for WhatsApp sharing to print shops
+  // High-Res 300DPI PNG Canvas Generator for WhatsApp sharing & print shops
   const handleDownloadPng = async () => {
     setIsExportingPng(true);
-    toast('Merender kartu meja cetak...', 'info');
+    toast('Merender kartu meja cetak HD...', 'info');
 
     try {
       const canvas = document.createElement('canvas');
       const isFold = layoutMode === 'foldable';
       canvas.width = 1200;
-      canvas.height = isFold ? 1800 : 1200;
+      canvas.height = isFold ? 2400 : 1200;
       const ctx = canvas.getContext('2d');
 
-      // Background
-      ctx.fillStyle = isBurgundy ? '#4A0811' : '#FFFFFF';
+      // 1. Base Theme Fill Background
+      ctx.fillStyle = activeTheme.canvasBgHex;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Clean Bespoke Stationery Borders
-      ctx.strokeStyle = isBurgundy ? '#C5A059' : '#C4A46C';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(36, 36, canvas.width - 72, canvas.height - 72);
-
-      ctx.lineWidth = 1;
-      ctx.strokeRect(46, 46, canvas.width - 92, canvas.height - 92);
 
       // Helper function to render a clean, professional card side onto the canvas
       const drawCardSide = async (topY, height) => {
         const centerY = topY;
 
-        // Subtitle
-        ctx.fillStyle = isBurgundy ? '#D4AF37' : '#8A1828';
-        ctx.font = '500 20px Georgia, serif';
+        // 2. Large Subtle Background Portrait Watermark (Enlarged, Soft Opacity Watermark)
+        if (coverPhoto) {
+          await new Promise((resolve) => {
+            const bgImg = new Image();
+            bgImg.crossOrigin = 'anonymous';
+            bgImg.onload = () => {
+              ctx.save();
+              ctx.globalAlpha = 0.32; // Soft translucent opacity
+              const scaleFactor = 1.4;
+              const aspect = bgImg.width / bgImg.height;
+              let dw = canvas.width * scaleFactor;
+              let dh = (canvas.width / aspect) * scaleFactor;
+              if (dh < height * scaleFactor) {
+                dh = height * scaleFactor;
+                dw = (height * aspect) * scaleFactor;
+              }
+              const dx = (canvas.width - dw) / 2;
+              const dy = centerY + (height - dh) / 2;
+              ctx.drawImage(bgImg, dx, dy, dw, dh);
+              ctx.restore();
+              resolve();
+            };
+            bgImg.onerror = resolve;
+            bgImg.src = coverPhoto;
+          });
+        }
+
+        // 3. Monochromatic Gradient Tint Layer over portrait
+        const grad = ctx.createLinearGradient(0, centerY, 0, centerY + height);
+        const [r, g, b] = (activeTheme.canvasOverlayRgb || '59, 6, 13').split(',').map(n => n.trim());
+        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.75)`);
+        grad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.85)`);
+        grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0.95)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, centerY, canvas.width, height);
+
+        // 4. Double Line Hairline Gold Borders
+        ctx.strokeStyle = activeTheme.goldAccent;
+        ctx.lineWidth = 3.5;
+        ctx.strokeRect(36, centerY + 36, canvas.width - 72, height - 72);
+
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(48, centerY + 48, canvas.width - 96, height - 96);
+
+        // 5. Card Subtitle, Title & Date
+        ctx.fillStyle = activeTheme.canvasAccentHex;
+        ctx.font = '500 22px Georgia, serif';
         ctx.textAlign = 'center';
         ctx.letterSpacing = '4px';
-        ctx.fillText(eventSubtitle, canvas.width / 2, centerY + 105);
+        ctx.fillText(eventSubtitle, canvas.width / 2, centerY + 110);
 
-        // Couple Names
-        ctx.fillStyle = isBurgundy ? '#FFFFFF' : '#1A1A1A';
-        ctx.font = 'bold 52px "Playfair Display", Georgia, serif';
+        ctx.fillStyle = activeTheme.canvasTextHex;
+        ctx.font = 'bold 54px "Playfair Display", Georgia, serif';
         ctx.letterSpacing = '1px';
-        ctx.fillText(coupleName, canvas.width / 2, centerY + 170);
+        ctx.fillText(coupleName, canvas.width / 2, centerY + 180);
 
-        // Date & Venue
-        ctx.fillStyle = isBurgundy ? '#E6D5B8' : '#555555';
+        ctx.fillStyle = activeTheme.canvasSubtextHex;
         ctx.font = '19px "Plus Jakarta Sans", sans-serif';
         ctx.letterSpacing = '2px';
-        ctx.fillText(`${eventDate.toUpperCase()} • ${eventVenue.toUpperCase()}`, canvas.width / 2, centerY + 208);
+        ctx.fillText(`${eventDate.toUpperCase()} • ${eventVenue.toUpperCase()}`, canvas.width / 2, centerY + 220);
 
-        // Thin Accent Divider
-        ctx.strokeStyle = isBurgundy ? 'rgba(197, 160, 89, 0.4)' : 'rgba(196, 164, 108, 0.4)';
+        // Hairline Divider
+        ctx.strokeStyle = activeTheme.goldAccent;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(canvas.width / 2 - 120, centerY + 225);
-        ctx.lineTo(canvas.width / 2 + 120, centerY + 225);
+        ctx.moveTo(canvas.width / 2 - 120, centerY + 240);
+        ctx.lineTo(canvas.width / 2 + 120, centerY + 240);
         ctx.stroke();
 
-        // Load & Draw QR Code
+        // 6. Clean White High Contrast QR Code Container (No emoji overlay)
         await new Promise((resolve) => {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.onload = () => {
-            const qrSize = 340;
+            const qrSize = 360;
             const qrX = (canvas.width - qrSize) / 2;
-            const qrY = centerY + 255;
+            const qrY = centerY + 270;
 
-            // QR white background & crisp thin border
+            // Pure Bright White Background
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(qrX - 12, qrY - 12, qrSize + 24, qrSize + 24);
+            ctx.fillRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
 
-            ctx.strokeStyle = isBurgundy ? '#C5A059' : '#D1D5DB';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(qrX - 12, qrY - 12, qrSize + 24, qrSize + 24);
+            ctx.strokeStyle = activeTheme.goldAccent;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
 
             ctx.drawImage(img, qrX, qrY, qrSize, qrSize);
             resolve();
@@ -127,287 +164,226 @@ export default function TentCardModal({ isOpen, onClose, event }) {
           img.src = qrCodeUrl;
         });
 
-        // Clean CTA Text
-        ctx.fillStyle = isBurgundy ? '#D4AF37' : '#1A1A1A';
+        // 7. CTA Text & Instructions
+        ctx.fillStyle = activeTheme.canvasAccentHex;
         ctx.font = 'bold 22px "Plus Jakarta Sans", sans-serif';
         ctx.letterSpacing = '3px';
-        ctx.fillText('PINDAI KODE QR UNTUK BERFOTO', canvas.width / 2, centerY + 665);
+        ctx.fillText('PINDAI KODE QR UNTUK BERFOTO', canvas.width / 2, centerY + 700);
 
-        // 3 Clean Instructions
-        ctx.fillStyle = isBurgundy ? '#E5E7EB' : '#4B5563';
+        ctx.fillStyle = activeTheme.canvasSubtextHex;
         ctx.font = '18px "Plus Jakarta Sans", sans-serif';
         ctx.letterSpacing = '0.5px';
-        ctx.fillText('01 • Buka kamera di ponsel Anda', canvas.width / 2, centerY + 705);
-        ctx.fillText('02 • Arahkan lensa ke kode QR di atas', canvas.width / 2, centerY + 738);
-        ctx.fillText('03 • Ambil foto & simpan kenangan Anda', canvas.width / 2, centerY + 771);
+        ctx.fillText('01 • Buka kamera di ponsel Anda', canvas.width / 2, centerY + 745);
+        ctx.fillText('02 • Arahkan lensa ke kode QR di atas', canvas.width / 2, centerY + 780);
+        ctx.fillText('03 • Ambil foto & simpan kenangan Anda', canvas.width / 2, centerY + 815);
 
-        // Subtle Domain Footer
-        ctx.fillStyle = isBurgundy ? '#9CA3AF' : '#9CA3AF';
+        ctx.fillStyle = activeTheme.canvasSubtextHex;
         ctx.font = '14px monospace';
         ctx.letterSpacing = '1px';
-        ctx.fillText(`sirklenice.com/${event.slug}`, canvas.width / 2, centerY + 825);
+        ctx.fillText(`sirklenice.com/${event.slug}`, canvas.width / 2, centerY + 880);
       };
 
-      if (isFold) {
-        await drawCardSide(0, 900);
+      // Draw Side A (Front)
+      await drawCardSide(0, 1200);
 
-        // Center fold line
-        ctx.strokeStyle = isBurgundy ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([8, 6]);
+      // Draw Side B (Back) if Foldable
+      if (isFold) {
+        ctx.strokeStyle = activeTheme.goldAccent;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([12, 12]);
         ctx.beginPath();
-        ctx.moveTo(60, 900);
-        ctx.lineTo(canvas.width - 60, 900);
+        ctx.moveTo(0, 1200);
+        ctx.lineTo(1200, 1200);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.fillStyle = isBurgundy ? '#C5A059' : '#888888';
-        ctx.font = '13px monospace';
-        ctx.letterSpacing = '2px';
-        ctx.textAlign = 'center';
-        ctx.fillText('— GARIS LIPAT MEJA (FOLD HERE) —', canvas.width / 2, 904);
-
-        await drawCardSide(900, 900);
-      } else {
-        await drawCardSide(100, 1000);
+        await drawCardSide(1200, 1200);
       }
 
-      // Trigger download
-      const cleanCouple = sanitizeFilename(coupleName);
-      const filename = `Kartu_Meja_${cleanCouple}.png`;
-      const dataUrl = canvas.toDataURL('image/png', 0.98);
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // Export Canvas to HD PNG File
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const filename = `KartuMeja_QR_${sanitizeFilename(coupleName)}.png`;
+        a.download = filename;
+        a.href = blobUrl;
+        a.click();
+        setIsExportingPng(false);
+        toast('Kartu meja cetak HD berhasil diunduh', 'success');
+      }, 'image/png');
 
-      toast('Desain Kartu Meja berhasil diunduh', 'success');
-    } catch (err) {
-      console.error(err);
-      toast('Gagal memproses gambar kartu meja', 'error');
-    } finally {
+    } catch (e) {
       setIsExportingPng(false);
+      handlePrint();
     }
   };
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-        {/* Backdrop */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
-        />
-
-        {/* Modal Window */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.96 }}
-          className="relative z-50 w-full max-w-3xl bg-[#140810] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]"
+      <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="relative w-full max-w-xl bg-stone-950 border border-stone-800 rounded-3xl overflow-hidden shadow-2xl my-auto text-white flex flex-col max-h-[92vh]"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/30">
-            <div>
-              <h3 className="text-base sm:text-lg font-serif font-bold text-white tracking-wide">
-                Desain Kartu Meja (Tent Card)
+          {/* Top Modal Controls Header */}
+          <div className="px-5 py-4 bg-stone-900/90 border-b border-stone-800 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <Printer size={18} className="text-amber-400" />
+              <h3 className="text-sm font-serif font-bold text-amber-200">
+                Generator Kartu Meja (Tent Card)
               </h3>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {coupleName} • Format cetak bersih & profesional untuk meja tamu
-              </p>
             </div>
-
-            <button 
+            <button
               onClick={onClose}
-              className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              className="w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-700 flex items-center justify-center text-stone-400 hover:text-white transition cursor-pointer"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
 
-          {/* Controls Bar */}
-          <div className="px-6 py-3 bg-white/[0.02] border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
-            {/* Theme Toggle */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400 font-mono">Warna:</span>
-              <div className="flex p-0.5 rounded-lg bg-black/60 border border-white/15">
-                <button
-                  onClick={() => setTheme('ivory')}
-                  className={`px-3 py-1 rounded-md text-xs font-serif font-bold transition cursor-pointer ${
-                    theme === 'ivory' 
-                      ? 'bg-stone-100 text-stone-900 shadow-sm' 
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Ivory (Hemat Tinta)
-                </button>
-                <button
-                  onClick={() => setTheme('burgundy')}
-                  className={`px-3 py-1 rounded-md text-xs font-serif font-bold transition cursor-pointer ${
-                    theme === 'burgundy' 
-                      ? 'bg-[#4A0811] text-[#E6D5B8] shadow-sm' 
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Deep Burgundy
-                </button>
-              </div>
-            </div>
-
-            {/* Layout Toggle */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400 font-mono">Format:</span>
-              <div className="flex p-0.5 rounded-lg bg-black/60 border border-white/15">
-                <button
-                  onClick={() => setLayoutMode('foldable')}
-                  className={`px-3 py-1 rounded-md text-xs font-serif font-bold transition cursor-pointer ${
-                    layoutMode === 'foldable' 
-                      ? 'bg-amber-400 text-stone-950 shadow-sm' 
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Lipat Meja
-                </button>
-                <button
-                  onClick={() => setLayoutMode('single')}
-                  className={`px-3 py-1 rounded-md text-xs font-serif font-bold transition cursor-pointer ${
-                    layoutMode === 'single' 
-                      ? 'bg-amber-400 text-stone-950 shadow-sm' 
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Single A6
-                </button>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2 ml-auto">
+          {/* Action Bar (Layout & Theme Switcher) */}
+          <div className="px-5 py-3 bg-stone-900/50 border-b border-stone-800/80 flex flex-wrap items-center justify-between gap-3 text-xs flex-shrink-0">
+            
+            {/* Mode Switcher */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-stone-900 border border-stone-800">
               <button
-                onClick={handleCopyUrl}
-                className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs text-gray-200 border border-white/10 flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+                onClick={() => setLayoutMode('foldable')}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                  layoutMode === 'foldable'
+                    ? 'bg-amber-500 text-stone-950 shadow-sm'
+                    : 'text-stone-400 hover:text-white'
+                }`}
               >
-                {isCopied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                <span>{isCopied ? 'Tersalin' : 'Salin URL'}</span>
+                Kartu Lipat Meja (2 Sisi)
               </button>
+              <button
+                onClick={() => setLayoutMode('single')}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                  layoutMode === 'single'
+                    ? 'bg-amber-500 text-stone-950 shadow-sm'
+                    : 'text-stone-400 hover:text-white'
+                }`}
+              >
+                Kartu Tunggal (1 Sisi)
+              </button>
+            </div>
 
+            {/* Print & Download Action Buttons */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={handleDownloadPng}
                 disabled={isExportingPng}
-                className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-200 border border-white/15 text-xs font-serif font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 border border-white/15 text-xs font-serif font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
               >
                 <Download size={14} />
-                <span>{isExportingPng ? 'Merender...' : 'Download PNG'}</span>
+                <span>{isExportingPng ? 'Merender...' : 'Download PNG HD'}</span>
               </button>
 
               <button
                 onClick={handlePrint}
-                className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md transition active:scale-95 cursor-pointer"
+                className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md transition active:scale-95 cursor-pointer"
               >
                 <Printer size={14} />
-                <span>Cetak / PDF</span>
+                <span>Cetak PDF</span>
               </button>
             </div>
           </div>
 
-          {/* Interactive Printable Preview Container */}
-          <div className="p-4 sm:p-6 overflow-y-auto flex justify-center bg-black/40">
+          {/* Interactive Printable Preview Area */}
+          <div className="p-4 sm:p-6 overflow-y-auto flex justify-center bg-black/60">
             <div 
               id="tent-card-print-area"
               ref={printAreaRef}
-              className={`w-full max-w-sm transition-colors duration-200 rounded-lg p-6 sm:p-8 border relative select-none ${
-                isBurgundy 
-                  ? 'bg-[#4A0811] text-[#FFFFFF] border-[#C5A059]' 
-                  : 'bg-[#FFFFFF] text-[#1A1A1A] border-[#D1D5DB]'
-              }`}
+              className={`w-full max-w-sm transition-colors duration-200 rounded-2xl p-6 sm:p-8 border relative select-none overflow-hidden ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
             >
-              {/* Clean Double Line Frame */}
-              <div className={`absolute inset-2 border pointer-events-none ${
-                isBurgundy ? 'border-[#C5A059]/40' : 'border-[#C4A46C]/40'
-              }`} />
+              
+              {/* 1. Large Subtle Background Portrait Watermark */}
+              <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+                {coverPhoto && (
+                  <img 
+                    src={coverPhoto} 
+                    alt="" 
+                    className="w-full h-full object-cover object-center scale-150 filter blur-[1.5px] opacity-35 mix-blend-overlay" 
+                  />
+                )}
+                {/* Monochromatic Gradient Tint Layer & Edge Fade */}
+                <div className={`absolute inset-0 bg-gradient-to-b ${activeTheme.overlayGradient}`} />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-black/40 to-black/80" />
+              </div>
+
+              {/* 2. Pure Vector Botanical Corner Flourishes */}
+              <MonochromeFloralOrnament variant="corner-tr" className={`absolute -top-3 -right-3 w-28 h-28 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+              <MonochromeFloralOrnament variant="corner-tl" className={`absolute -top-3 -left-3 w-28 h-28 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+              <MonochromeFloralOrnament variant="corner-br" className={`absolute -bottom-3 -right-3 w-24 h-24 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+              <MonochromeFloralOrnament variant="corner-bl" className={`absolute -bottom-3 -left-3 w-24 h-24 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+
+              {/* 3. Double Hairline Thin Gold Borders */}
+              <div className="absolute inset-2.5 rounded-xl border border-amber-400/40 pointer-events-none z-10" />
+              <div className="absolute inset-4 rounded-lg border border-amber-400/20 pointer-events-none z-10" />
 
               {/* CARD SIDE A (FRONT) */}
-              <div className="flex flex-col items-center text-center py-2">
-                <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium ${
-                  isBurgundy ? 'text-[#D4AF37]' : 'text-[#8A1828]'
-                }`}>
+              <div className="relative z-20 flex flex-col items-center text-center py-2">
+                <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium ${activeTheme.headerText}`}>
                   {eventSubtitle}
                 </span>
 
-                <h2 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1">
+                <h2 className={`text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1 ${activeTheme.titleText}`}>
                   {coupleName}
                 </h2>
 
-                <p className={`text-[11px] font-sans tracking-wider mb-4 ${
-                  isBurgundy ? 'text-amber-100/70' : 'text-stone-500'
-                }`}>
+                <p className={`text-[11px] font-sans tracking-wider mb-4 ${activeTheme.subtitleText}`}>
                   {eventDate.toUpperCase()} • {eventVenue.toUpperCase()}
                 </p>
 
-                {/* Clean Hairline Accent */}
-                <div className={`w-16 h-px mb-5 ${
-                  isBurgundy ? 'bg-[#C5A059]/50' : 'bg-[#C4A46C]/50'
-                }`} />
+                {/* Hairline Accent */}
+                <div className="w-16 h-px mb-5 bg-amber-400/50" />
 
-                {/* QR Code Container */}
-                <div className="p-3 rounded-lg border border-stone-200 bg-white mb-4 shadow-xs flex items-center justify-center">
+                {/* Bright Clean White High Contrast QR Container (100% Scannable) */}
+                <div className="p-3 rounded-2xl border-2 border-amber-400/80 bg-white mb-4 shadow-2xl flex items-center justify-center">
                   <img 
                     src={qrCodeUrl} 
                     alt={`QR Code ${coupleName}`} 
-                    className="w-44 h-44 sm:w-52 sm:h-52 object-contain"
+                    className="w-44 h-44 sm:w-52 sm:h-52 object-contain rounded-lg"
                   />
                 </div>
 
-                {/* Clean Call to Action */}
-                <div className="flex items-center gap-1.5 text-xs font-serif font-bold tracking-widest uppercase mb-3 text-current">
+                {/* CTA Text & Instructions */}
+                <div className={`flex items-center gap-1.5 text-xs font-serif font-bold tracking-widest uppercase mb-3 ${activeTheme.headerText}`}>
                   <Camera size={13} />
                   <span>Pindai untuk Berfoto</span>
                 </div>
 
-                {/* 3 Step Instruction */}
-                <div className={`w-full max-w-[270px] space-y-1.5 text-[11px] text-left mb-4 p-3 rounded-md border ${
-                  isBurgundy 
-                    ? 'bg-black/20 border-white/10 text-gray-200' 
-                    : 'bg-stone-50 border-stone-200 text-stone-700'
-                }`}>
+                <div className="w-full max-w-[270px] space-y-1.5 text-[11px] text-left mb-4 p-3 rounded-xl border bg-black/40 backdrop-blur-sm border-white/15 text-stone-200">
                   <div className="flex items-start gap-2">
-                    <span className="font-mono font-bold text-amber-500 text-[10px]">01.</span>
+                    <span className="font-mono font-bold text-amber-400 text-[10px]">01.</span>
                     <span>Buka kamera di ponsel Anda</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="font-mono font-bold text-amber-500 text-[10px]">02.</span>
+                    <span className="font-mono font-bold text-amber-400 text-[10px]">02.</span>
                     <span>Arahkan lensa ke kode QR di atas</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="font-mono font-bold text-amber-500 text-[10px]">03.</span>
+                    <span className="font-mono font-bold text-amber-400 text-[10px]">03.</span>
                     <span>Ambil foto & simpan kenangan Anda</span>
                   </div>
                 </div>
 
-                {/* Minimalist Footnote */}
-                <p className="text-[10px] font-mono text-gray-400 tracking-wider">
+                <p className="text-[10px] font-mono text-gray-300 tracking-wider">
                   sirklenice.com/{event.slug}
                 </p>
               </div>
 
               {/* FOLD LINE (Only for Foldable Mode) */}
               {layoutMode === 'foldable' && (
-                <div className="my-8 relative flex items-center justify-center">
+                <div className="my-8 relative flex items-center justify-center z-20">
                   <div className="absolute inset-0 flex items-center">
-                    <div className={`w-full border-t border-dashed ${
-                      isBurgundy ? 'border-white/20' : 'border-black/20'
-                    }`} />
+                    <div className="w-full border-t border-dashed border-amber-400/40" />
                   </div>
-                  <span className={`relative px-3 py-0.5 text-[9px] font-mono tracking-widest uppercase ${
-                    isBurgundy 
-                      ? 'bg-[#4A0811] text-amber-200' 
-                      : 'bg-[#FFFFFF] text-stone-500'
-                  }`}>
+                  <span className="relative px-3 py-0.5 text-[9px] font-mono tracking-widest uppercase bg-stone-950 text-amber-300 rounded-full border border-amber-400/40">
                     — GARIS LIPAT MEJA —
                   </span>
                 </div>
@@ -415,43 +391,36 @@ export default function TentCardModal({ isOpen, onClose, event }) {
 
               {/* CARD SIDE B (BACK / INVERTED FOR OPPOSITE TABLE VIEW) */}
               {layoutMode === 'foldable' && (
-                <div className="flex flex-col items-center text-center py-2">
-                  <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium ${
-                    isBurgundy ? 'text-[#D4AF37]' : 'text-[#8A1828]'
-                  }`}>
+                <div className="relative z-20 flex flex-col items-center text-center py-2">
+                  <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium ${activeTheme.headerText}`}>
                     {isWedding ? 'Terima Kasih Atas Kehadiran Anda' : 'Official Event Photobooth'}
                   </span>
 
-                  <h2 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1">
+                  <h2 className={`text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1 ${activeTheme.titleText}`}>
                     {coupleName}
                   </h2>
 
-                  <p className={`text-[11px] font-sans tracking-wider mb-4 ${
-                    isBurgundy ? 'text-amber-100/70' : 'text-stone-500'
-                  }`}>
+                  <p className={`text-[11px] font-sans tracking-wider mb-4 ${activeTheme.subtitleText}`}>
                     Abadikan momen Anda bersama kami hari ini
                   </p>
 
-                  <div className={`w-16 h-px mb-5 ${
-                    isBurgundy ? 'bg-[#C5A059]/50' : 'bg-[#C4A46C]/50'
-                  }`} />
+                  <div className="w-16 h-px mb-5 bg-amber-400/50" />
 
-                  {/* QR Code Container */}
-                  <div className="p-3 rounded-lg border border-stone-200 bg-white mb-3 shadow-xs flex items-center justify-center">
+                  {/* Bright Clean White High Contrast QR Container */}
+                  <div className="p-3 rounded-2xl border-2 border-amber-400/80 bg-white mb-3 shadow-2xl flex items-center justify-center">
                     <img 
                       src={qrCodeUrl} 
                       alt={`QR Code ${coupleName}`} 
-                      className="w-40 h-40 sm:w-48 sm:h-48 object-contain"
+                      className="w-40 h-40 sm:w-48 sm:h-48 object-contain rounded-lg"
                     />
                   </div>
 
-                  <p className={`text-[11px] font-serif font-semibold tracking-wider ${
-                    isBurgundy ? 'text-[#D4AF37]' : 'text-[#8A1828]'
-                  }`}>
+                  <p className={`text-[11px] font-serif font-semibold tracking-wider ${activeTheme.headerText}`}>
                     Pindai untuk Berfoto & Kirim Doa
                   </p>
                 </div>
               )}
+
             </div>
           </div>
         </motion.div>
