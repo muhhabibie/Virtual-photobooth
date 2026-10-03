@@ -24,7 +24,7 @@ export default function QRCodeCanvas({
   const targetUrl = url || (event ? `${window.location.origin}/${event.slug}` : window.location.href);
   const title = displayName || event?.displayName || 'Sirklen Photo Event';
   
-  // Hero Main Cover Portrait Photo from active event
+  // Hero Main Cover Photo from active event
   const coverPhoto = event?.heroPhotos?.[0] || DEFAULT_HERO_PHOTOS[0];
 
   // Clean, high contrast QR Code URL (No logo/emoji in center)
@@ -52,24 +52,24 @@ export default function QRCodeCanvas({
       ctx.fillStyle = activeTheme.canvasBgHex;
       ctx.fillRect(0, 0, w, h);
 
-      // 2. Large Subtle Background Portrait Watermark (Enlarged, Soft Opacity)
+      // 2. Top Hero Photo Banner (Clearly Visible in Top Section)
       if (coverPhoto) {
         await new Promise((resolve) => {
           const bgImg = new Image();
           bgImg.crossOrigin = 'anonymous';
           bgImg.onload = () => {
             ctx.save();
-            ctx.globalAlpha = 0.35; // Soft opacity watermark
-            const scaleFactor = 1.4; // Significantly enlarged
+            ctx.globalAlpha = 0.75; // Clear visibility of hero photo
+            const bannerH = 400;
             const aspect = bgImg.width / bgImg.height;
-            let dw = w * scaleFactor;
-            let dh = (w / aspect) * scaleFactor;
-            if (dh < h * scaleFactor) {
-              dh = h * scaleFactor;
-              dw = (h * aspect) * scaleFactor;
+            let dw = w;
+            let dh = w / aspect;
+            if (dh < bannerH) {
+              dh = bannerH;
+              dw = bannerH * aspect;
             }
             const dx = (w - dw) / 2;
-            const dy = (h - dh) / 2;
+            const dy = 0;
             ctx.drawImage(bgImg, dx, dy, dw, dh);
             ctx.restore();
             resolve();
@@ -79,25 +79,22 @@ export default function QRCodeCanvas({
         });
       }
 
-      // 3. Monochromatic Gradient Tint Layer (Fades portrait edges into background)
-      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      // 3. Top Banner Gradient Fade Out into Dark Background Below
+      const heroGrad = ctx.createLinearGradient(0, 0, 0, 420);
       const [r, g, b] = (activeTheme.canvasOverlayRgb || '59, 6, 13').split(',').map(n => n.trim());
-      grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.72)`);
-      grad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.85)`);
-      grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0.95)`);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
+      heroGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.35)`);
+      heroGrad.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, 0.75)`);
+      heroGrad.addColorStop(1, activeTheme.canvasBgHex);
+      ctx.fillStyle = heroGrad;
+      ctx.fillRect(0, 0, w, 420);
 
-      // 4. Subtle Radial Vignette Fade
-      const radGrad = ctx.createRadialGradient(w / 2, h / 2, 100, w / 2, h / 2, 550);
-      radGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      radGrad.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
-      ctx.fillStyle = radGrad;
-      ctx.fillRect(0, 0, w, h);
+      // Fill lower portion with theme background
+      ctx.fillStyle = activeTheme.canvasBgHex;
+      ctx.fillRect(0, 418, w, h - 418);
 
-      // 5. Double Line Thin Gold Hairline Borders & Corner Flourishes
+      // 4. Double Line Thin Gold Hairline Borders & Corner Flourishes
       ctx.strokeStyle = activeTheme.goldAccent;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 3.5;
       ctx.strokeRect(32, 32, w - 64, h - 64);
 
       ctx.lineWidth = 1.2;
@@ -124,7 +121,7 @@ export default function QRCodeCanvas({
       drawCornerFlourish(55, h - 55, false, true);
       drawCornerFlourish(w - 55, h - 55, true, true);
 
-      // 6. Header Text & Event Title
+      // 5. Header Text & Event Title
       ctx.fillStyle = activeTheme.canvasAccentHex;
       ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
       ctx.textAlign = 'center';
@@ -138,7 +135,7 @@ export default function QRCodeCanvas({
       ctx.font = 'italic 18px "Georgia", serif';
       ctx.fillText(activeTheme.scanInstruction, w / 2, 235);
 
-      // 7. Clean, High-Contrast QR Code Area (Bright white container)
+      // 6. Clean, High-Contrast QR Code Area (Bright white container)
       await new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -163,7 +160,7 @@ export default function QRCodeCanvas({
         img.src = qrImageUrl;
       });
 
-      // 8. Footer Info
+      // 7. Footer Info
       ctx.fillStyle = activeTheme.canvasAccentHex;
       ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
       ctx.textAlign = 'center';
@@ -182,7 +179,7 @@ export default function QRCodeCanvas({
         a.download = filename;
         a.href = blobUrl;
         a.click();
-        toast('QR Code HD dengan background portrait watermark berhasil diunduh', 'success');
+        toast('QR Code HD dengan background hero banner berhasil diunduh', 'success');
       }, 'image/png');
 
     } catch (e) {
@@ -193,24 +190,23 @@ export default function QRCodeCanvas({
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto select-none">
       
-      {/* Dynamic Aesthetic Card Frame with Portrait Background Watermark & Gold Flourishes */}
+      {/* Dynamic Aesthetic Card Frame with Top Hero Background Banner & Bottom Blur Fade */}
       <div 
         ref={containerRef} 
         className={`w-full p-5 sm:p-6 rounded-3xl border shadow-2xl transition-all duration-300 relative flex flex-col items-center text-center overflow-hidden ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
       >
         
-        {/* 1. Large Subtle Background Portrait Watermark (Enlarged, Soft Blur, Monochromatic Tint) */}
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* 1. Hero Main Cover Photo Background Banner (Top Section Above QR Code) */}
+        <div className="absolute top-0 inset-x-0 h-44 sm:h-52 overflow-hidden pointer-events-none z-0">
           {coverPhoto && (
             <img 
               src={coverPhoto} 
               alt="" 
-              className="w-full h-full object-cover object-center scale-150 filter blur-[1.5px] opacity-35 mix-blend-overlay" 
+              className="w-full h-full object-cover object-center opacity-75 filter brightness-105" 
             />
           )}
-          {/* Monochromatic Color Tint & Gradient Edge Fading */}
-          <div className={`absolute inset-0 bg-gradient-to-b ${activeTheme.overlayGradient}`} />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-stone-950/40 to-stone-950/80" />
+          {/* Opacity Blur Fade Out at the Bottom */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/70 to-[#120406]" />
         </div>
 
         {/* 2. Elegant Thin Gold Line Art & Corner Flourishes */}
@@ -223,25 +219,25 @@ export default function QRCodeCanvas({
         <div className="absolute inset-2.5 rounded-2xl border border-amber-400/40 pointer-events-none z-10" />
         <div className="absolute inset-4 rounded-xl border border-amber-400/20 pointer-events-none z-10" />
 
-        {/* 4. Brand Header & Event Title (No Circle Image Badge) */}
+        {/* 4. Brand Header & Event Title (Overlaid Prominently on Hero Photo Banner) */}
         <div className="flex flex-col items-center z-20 mb-3 pt-1">
           <div className="flex items-center gap-1.5 mb-1">
             <img src={logoPhotobooth} alt="Sirklen Photo" className="w-5 h-5 object-contain" />
-            <span className={`text-[10px] font-mono tracking-widest uppercase font-bold ${activeTheme.headerText}`}>
+            <span className={`text-[10px] font-mono tracking-widest uppercase font-bold text-amber-200 drop-shadow-md`}>
               SIRKLEN PHOTO
             </span>
           </div>
 
-          <h4 className={`text-xl sm:text-2xl font-bold tracking-tight ${activeTheme.titleText} ${activeTheme.fontStyle}`}>
+          <h4 className={`text-xl sm:text-2xl font-bold tracking-tight text-white drop-shadow-md ${activeTheme.fontStyle}`}>
             {title}
           </h4>
 
-          <p className={`text-xs font-serif italic mt-0.5 ${activeTheme.subtitleText}`}>
+          <p className={`text-xs font-serif italic mt-0.5 text-amber-200/90 drop-shadow-sm`}>
             {activeTheme.scanInstruction}
           </p>
         </div>
 
-        {/* 5. Clean, Bright White High-Contrast QR Code Area (100% Scannable) */}
+        {/* 5. Clean, Bright White High-Contrast QR Code Area (Below Hero Photo, 100% Scannable) */}
         <div className="relative z-20 p-3.5 bg-white rounded-2xl border-2 border-amber-400/80 shadow-2xl flex items-center justify-center my-1">
           <img 
             src={qrImageUrl} 
@@ -251,7 +247,7 @@ export default function QRCodeCanvas({
         </div>
 
         {/* 6. URL Chip */}
-        <div className="w-full bg-black/50 backdrop-blur-md border border-white/20 rounded-xl py-1.5 px-3 mt-3.5 z-20 flex items-center justify-between gap-2">
+        <div className="w-full bg-black/60 backdrop-blur-md border border-white/20 rounded-xl py-1.5 px-3 mt-3.5 z-20 flex items-center justify-between gap-2">
           <span className="text-[11px] font-mono text-gray-200 truncate">
             {targetUrl}
           </span>

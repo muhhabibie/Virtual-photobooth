@@ -71,24 +71,24 @@ export default function TentCardModal({ isOpen, onClose, event }) {
       const drawCardSide = async (topY, height) => {
         const centerY = topY;
 
-        // 2. Large Subtle Background Portrait Watermark (Enlarged, Soft Opacity Watermark)
+        // 2. Top Hero Photo Background Banner
         if (coverPhoto) {
           await new Promise((resolve) => {
             const bgImg = new Image();
             bgImg.crossOrigin = 'anonymous';
             bgImg.onload = () => {
               ctx.save();
-              ctx.globalAlpha = 0.32; // Soft translucent opacity
-              const scaleFactor = 1.4;
+              ctx.globalAlpha = 0.75; // Clear visibility of hero photo
+              const bannerH = 500;
               const aspect = bgImg.width / bgImg.height;
-              let dw = canvas.width * scaleFactor;
-              let dh = (canvas.width / aspect) * scaleFactor;
-              if (dh < height * scaleFactor) {
-                dh = height * scaleFactor;
-                dw = (height * aspect) * scaleFactor;
+              let dw = canvas.width;
+              let dh = canvas.width / aspect;
+              if (dh < bannerH) {
+                dh = bannerH;
+                dw = bannerH * aspect;
               }
               const dx = (canvas.width - dw) / 2;
-              const dy = centerY + (height - dh) / 2;
+              const dy = centerY;
               ctx.drawImage(bgImg, dx, dy, dw, dh);
               ctx.restore();
               resolve();
@@ -98,14 +98,17 @@ export default function TentCardModal({ isOpen, onClose, event }) {
           });
         }
 
-        // 3. Monochromatic Gradient Tint Layer over portrait
-        const grad = ctx.createLinearGradient(0, centerY, 0, centerY + height);
+        // 3. Monochromatic Gradient Tint Layer with Bottom Fade Out
+        const grad = ctx.createLinearGradient(0, centerY, 0, centerY + 520);
         const [r, g, b] = (activeTheme.canvasOverlayRgb || '59, 6, 13').split(',').map(n => n.trim());
-        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.75)`);
-        grad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.85)`);
-        grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0.95)`);
+        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.35)`);
+        grad.addColorStop(0.65, `rgba(${r}, ${g}, ${b}, 0.82)`);
+        grad.addColorStop(1, activeTheme.canvasBgHex);
         ctx.fillStyle = grad;
-        ctx.fillRect(0, centerY, canvas.width, height);
+        ctx.fillRect(0, centerY, canvas.width, 520);
+
+        ctx.fillStyle = activeTheme.canvasBgHex;
+        ctx.fillRect(0, centerY + 518, canvas.width, height - 518);
 
         // 4. Double Line Hairline Gold Borders
         ctx.strokeStyle = activeTheme.goldAccent;
@@ -301,18 +304,17 @@ export default function TentCardModal({ isOpen, onClose, event }) {
               className={`w-full max-w-sm transition-colors duration-200 rounded-2xl p-6 sm:p-8 border relative select-none overflow-hidden ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
             >
               
-              {/* 1. Large Subtle Background Portrait Watermark */}
-              <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+              {/* 1. Top Hero Photo Background Banner with Bottom Gradient Blur Fade */}
+              <div className="absolute top-0 inset-x-0 h-48 sm:h-56 overflow-hidden pointer-events-none z-0">
                 {coverPhoto && (
                   <img 
                     src={coverPhoto} 
                     alt="" 
-                    className="w-full h-full object-cover object-center scale-150 filter blur-[1.5px] opacity-35 mix-blend-overlay" 
+                    className="w-full h-full object-cover object-center opacity-75 filter brightness-105" 
                   />
                 )}
-                {/* Monochromatic Gradient Tint Layer & Edge Fade */}
-                <div className={`absolute inset-0 bg-gradient-to-b ${activeTheme.overlayGradient}`} />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-black/40 to-black/80" />
+                {/* Opacity Blur Fade Out at the Bottom */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/70 to-stone-950" />
               </div>
 
               {/* 2. Pure Vector Botanical Corner Flourishes */}
@@ -331,7 +333,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                   {eventSubtitle}
                 </span>
 
-                <h2 className={`text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1 ${activeTheme.titleText}`}>
+                <h2 className={`text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1 drop-shadow-md ${activeTheme.titleText}`}>
                   {coupleName}
                 </h2>
 
@@ -357,7 +359,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                   <span>Pindai untuk Berfoto</span>
                 </div>
 
-                <div className="w-full max-w-[270px] space-y-1.5 text-[11px] text-left mb-4 p-3 rounded-xl border bg-black/40 backdrop-blur-sm border-white/15 text-stone-200">
+                <div className="w-full max-w-[270px] space-y-1.5 text-[11px] text-left mb-4 p-3 rounded-xl border bg-black/50 backdrop-blur-md border-white/15 text-stone-200">
                   <div className="flex items-start gap-2">
                     <span className="font-mono font-bold text-amber-400 text-[10px]">01.</span>
                     <span>Buka kamera di ponsel Anda</span>
@@ -392,22 +394,34 @@ export default function TentCardModal({ isOpen, onClose, event }) {
               {/* CARD SIDE B (BACK / INVERTED FOR OPPOSITE TABLE VIEW) */}
               {layoutMode === 'foldable' && (
                 <div className="relative z-20 flex flex-col items-center text-center py-2">
-                  <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium ${activeTheme.headerText}`}>
+                  {/* Side B Top Hero Banner */}
+                  <div className="absolute top-0 inset-x-0 h-44 overflow-hidden pointer-events-none z-0 rounded-b-2xl">
+                    {coverPhoto && (
+                      <img 
+                        src={coverPhoto} 
+                        alt="" 
+                        className="w-full h-full object-cover object-center opacity-75 filter brightness-105" 
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/70 to-stone-950" />
+                  </div>
+
+                  <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium z-10 ${activeTheme.headerText}`}>
                     {isWedding ? 'Terima Kasih Atas Kehadiran Anda' : 'Official Event Photobooth'}
                   </span>
 
-                  <h2 className={`text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1 ${activeTheme.titleText}`}>
+                  <h2 className={`text-2xl sm:text-3xl font-serif font-bold tracking-tight mb-1 z-10 drop-shadow-md ${activeTheme.titleText}`}>
                     {coupleName}
                   </h2>
 
-                  <p className={`text-[11px] font-sans tracking-wider mb-4 ${activeTheme.subtitleText}`}>
+                  <p className={`text-[11px] font-sans tracking-wider mb-4 z-10 ${activeTheme.subtitleText}`}>
                     Abadikan momen Anda bersama kami hari ini
                   </p>
 
-                  <div className="w-16 h-px mb-5 bg-amber-400/50" />
+                  <div className="w-16 h-px mb-5 bg-amber-400/50 z-10" />
 
                   {/* Bright Clean White High Contrast QR Container */}
-                  <div className="p-3 rounded-2xl border-2 border-amber-400/80 bg-white mb-3 shadow-2xl flex items-center justify-center">
+                  <div className="p-3 rounded-2xl border-2 border-amber-400/80 bg-white mb-3 shadow-2xl flex items-center justify-center z-10">
                     <img 
                       src={qrCodeUrl} 
                       alt={`QR Code ${coupleName}`} 
@@ -415,7 +429,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                     />
                   </div>
 
-                  <p className={`text-[11px] font-serif font-semibold tracking-wider ${activeTheme.headerText}`}>
+                  <p className={`text-[11px] font-serif font-semibold tracking-wider z-10 ${activeTheme.headerText}`}>
                     Pindai untuk Berfoto & Kirim Doa
                   </p>
                 </div>
