@@ -304,17 +304,27 @@ export default function TentCardModal({ isOpen, onClose, event }) {
               className={`w-full max-w-sm transition-colors duration-200 rounded-2xl p-6 sm:p-8 border relative select-none overflow-hidden ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
             >
               
-              {/* 1. Top Hero Photo Background Banner with Bottom Gradient Blur Fade */}
+              {/* 1. Top Hero Photo Background Banner with Smooth Bottom Opacity Blur Fade */}
               <div className="absolute top-0 inset-x-0 h-48 sm:h-56 overflow-hidden pointer-events-none z-0">
                 {coverPhoto && (
                   <img 
                     src={coverPhoto} 
                     alt="" 
-                    className="w-full h-full object-cover object-center opacity-75 filter brightness-105" 
+                    className="w-full h-full object-cover object-top opacity-70 filter brightness-105" 
                   />
                 )}
-                {/* Opacity Blur Fade Out at the Bottom */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/70 to-stone-950" />
+                {/* Feather-Soft Gradient Blur Fade Masking Bottom Edge into Card Background */}
+                <div 
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(to bottom, 
+                      rgba(0, 0, 0, 0.25) 0%, 
+                      rgba(0, 0, 0, 0.50) 45%, 
+                      rgba(0, 0, 0, 0.85) 75%, 
+                      ${activeTheme.canvasBgHex} 98%
+                    )`
+                  }}
+                />
               </div>
 
               {/* 2. Pure Vector Botanical Corner Flourishes */}
@@ -400,10 +410,20 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                       <img 
                         src={coverPhoto} 
                         alt="" 
-                        className="w-full h-full object-cover object-center opacity-75 filter brightness-105" 
+                        className="w-full h-full object-cover object-top opacity-70 filter brightness-105" 
                       />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/70 to-stone-950" />
+                    <div 
+                      className="absolute inset-0"
+                      style={{
+                        background: `linear-gradient(to bottom, 
+                          rgba(0, 0, 0, 0.25) 0%, 
+                          rgba(0, 0, 0, 0.50) 45%, 
+                          rgba(0, 0, 0, 0.85) 75%, 
+                          ${activeTheme.canvasBgHex} 98%
+                        )`
+                      }}
+                    />
                   </div>
 
                   <span className={`text-[10px] font-serif uppercase tracking-[0.25em] block mb-1 font-medium z-10 ${activeTheme.headerText}`}>

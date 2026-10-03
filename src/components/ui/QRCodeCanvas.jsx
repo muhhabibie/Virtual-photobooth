@@ -196,17 +196,27 @@ export default function QRCodeCanvas({
         className={`w-full p-5 sm:p-6 rounded-3xl border shadow-2xl transition-all duration-300 relative flex flex-col items-center text-center overflow-hidden ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
       >
         
-        {/* 1. Hero Main Cover Photo Background Banner (Top Section Above QR Code) */}
-        <div className="absolute top-0 inset-x-0 h-44 sm:h-52 overflow-hidden pointer-events-none z-0">
+        {/* 1. Hero Main Cover Photo Background Banner with Smooth Bottom Opacity Blur Fade */}
+        <div className="absolute top-0 inset-x-0 h-48 sm:h-56 overflow-hidden pointer-events-none z-0">
           {coverPhoto && (
             <img 
               src={coverPhoto} 
               alt="" 
-              className="w-full h-full object-cover object-center opacity-75 filter brightness-105" 
+              className="w-full h-full object-cover object-top opacity-70 filter brightness-105" 
             />
           )}
-          {/* Opacity Blur Fade Out at the Bottom */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/70 to-[#120406]" />
+          {/* Feather-Soft Gradient Blur Fade Masking Bottom Edge into Card Background */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(to bottom, 
+                rgba(0, 0, 0, 0.25) 0%, 
+                rgba(0, 0, 0, 0.50) 45%, 
+                rgba(0, 0, 0, 0.85) 75%, 
+                ${activeTheme.canvasBgHex} 98%
+              )`
+            }}
+          />
         </div>
 
         {/* 2. Elegant Thin Gold Line Art & Corner Flourishes */}
