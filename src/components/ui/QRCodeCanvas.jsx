@@ -2,7 +2,6 @@ import { useState, useRef } from 'react';
 import { Download, Copy, Check, Printer, Sparkles } from 'lucide-react';
 import logoPhotobooth from '../../assets/logo photobooth.png';
 import MonochromeFloralOrnament from './MonochromeFloralOrnament';
-import RibbonBowOrnament from './RibbonBowOrnament';
 import { QR_THEMES, resolveEventQrTheme } from '../../utils/qrTheme';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
 import { useToast } from './Toast';
@@ -17,6 +16,7 @@ export default function QRCodeCanvas({
   onOpenTentCard = null
 }) {
   const { toast } = useToast();
+  const [viewMode, setViewMode] = useState('pureQr'); // 'pureQr' | 'kartuMeja'
   const [selectedThemeKey, setSelectedThemeKey] = useState('auto');
   const [isCopied, setIsCopied] = useState(false);
   const containerRef = useRef(null);
@@ -24,13 +24,13 @@ export default function QRCodeCanvas({
   const activeTheme = resolveEventQrTheme(event, selectedThemeKey);
   const targetUrl = url || (event ? `${window.location.origin}/${event.slug}` : window.location.href);
   const title = displayName || event?.displayName || 'Sirklen Photo Event';
-  const eventDate = event?.formattedDate || event?.eventDate || 'Hari Bahagia';
-  
-  // Hero Main Cover Photo from active event
   const coverPhoto = event?.heroPhotos?.[0] || DEFAULT_HERO_PHOTOS[0];
 
-  // Clean, high contrast QR Code URL (No logo/emoji in center)
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(targetUrl)}&color=${activeTheme.qrColor}&bgcolor=${activeTheme.bgColor}&margin=1`;
+  // Clean pure QR Code image URL (Black on White)
+  const pureQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=450x450&data=${encodeURIComponent(targetUrl)}&color=000000&bgcolor=ffffff&margin=1`;
+  
+  // Theme styled QR Code URL for Kartu Meja
+  const cardQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(targetUrl)}&color=${activeTheme.qrColor}&bgcolor=${activeTheme.bgColor}&margin=1`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(targetUrl);
@@ -39,235 +39,270 @@ export default function QRCodeCanvas({
     setTimeout(() => setIsCopied(false), 2200);
   };
 
-  const handleDownloadHD = async () => {
+  // Mode 1 Download: Pure QR Code Only
+  const handleDownloadPureQr = () => {
+    const a = document.createElement('a');
+    a.download = `PureQRCode_${(title || 'Event').replace(/\s+/g, '_')}.png`;
+    a.href = pureQrImageUrl;
+    a.click();
+    toast('Aset Pure QR Code (PNG HD) berhasil diunduh', 'success');
+  };
+
+  // DOM to PNG rasterizer for 100% exact visual match with web preview
+  const exportDomToPng = async (element, filename) => {
+    if (!element) return false;
     try {
-      toast('Merender QR Code HD...', 'info');
-      
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const w = 800;
-      const h = 1050;
-      canvas.width = w;
-      canvas.height = h;
+      const width = element.offsetWidth || 360;
+      const height = element.offsetHeight || 520;
+      const scale = 3; // 300 DPI HD
 
-      // 1. Base Dark Theme Background
-      ctx.fillStyle = activeTheme.canvasBgHex;
-      ctx.fillRect(0, 0, w, h);
+      const clone = element.cloneNode(true);
+      const wrapper = document.createElement('div');
+      wrapper.style.width = width + 'px';
+      wrapper.style.height = height + 'px';
+      wrapper.appendChild(clone);
 
-      // 4. Double Line Thin Gold Hairline Borders & Corner Flourishes
-      ctx.strokeStyle = activeTheme.goldAccent;
-      ctx.lineWidth = 3.5;
-      ctx.strokeRect(32, 32, w - 64, h - 64);
-
-      ctx.lineWidth = 1.2;
-      ctx.strokeRect(44, 44, w - 88, h - 88);
-
-      // Corner flourishes line art
-      const drawCornerFlourish = (x, y, flipX, flipY) => {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
-        ctx.strokeStyle = activeTheme.goldAccent;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(0, 30);
-        ctx.lineTo(0, 0);
-        ctx.lineTo(30, 0);
-        ctx.moveTo(8, 8);
-        ctx.arc(16, 16, 8, Math.PI, Math.PI * 1.5);
-        ctx.stroke();
-        ctx.restore();
-      };
-      drawCornerFlourish(55, 55, false, false);
-      drawCornerFlourish(w - 55, 55, true, false);
-      drawCornerFlourish(55, h - 55, false, true);
-      drawCornerFlourish(w - 55, h - 55, true, true);
-
-      // 5. Header Text, Event Date & Title (Reference Layout)
-      ctx.fillStyle = activeTheme.canvasAccentHex;
-      ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`SIRKLEN PHOTO • ${eventDate.toUpperCase()}`, w / 2, 95);
-
-      ctx.fillStyle = activeTheme.canvasTextHex;
-      ctx.font = 'bold 46px "Playfair Display", Georgia, serif';
-      ctx.fillText(title, w / 2, 150);
-
-      // Poetic Quote Lines (kisah.kekal reference)
-      if (activeTheme.poeticQuoteLines && activeTheme.poeticQuoteLines.length > 0) {
-        ctx.fillStyle = activeTheme.canvasSubtextHex;
-        ctx.font = 'italic 16px "Georgia", serif';
-        let quoteY = 190;
-        activeTheme.poeticQuoteLines.forEach((line) => {
-          ctx.fillText(line, w / 2, quoteY);
-          quoteY += 22;
-        });
+      const imgs = clone.querySelectorAll('img');
+      for (const img of imgs) {
+        if (img.src && !img.src.startsWith('data:')) {
+          const dataUrl = await new Promise((resolve) => {
+            const tempImg = new Image();
+            tempImg.crossOrigin = 'anonymous';
+            tempImg.onload = () => {
+              try {
+                const c = document.createElement('canvas');
+                c.width = tempImg.naturalWidth || tempImg.width || 300;
+                c.height = tempImg.naturalHeight || tempImg.height || 300;
+                const ctx = c.getContext('2d');
+                ctx.drawImage(tempImg, 0, 0);
+                resolve(c.toDataURL('image/png'));
+              } catch (e) {
+                resolve(img.src);
+              }
+            };
+            tempImg.onerror = () => resolve(img.src);
+            tempImg.src = img.src;
+          });
+          img.src = dataUrl;
+        }
       }
 
-      // 6. Clean, High-Contrast QR Code Area (Bright white container)
-      await new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          const qrSize = 420;
-          const qrX = (w - qrSize) / 2;
-          const qrY = 330;
+      const serialized = new XMLSerializer().serializeToString(wrapper);
+      const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">
+        <foreignObject width="100%" height="100%">
+          <div xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+              * { box-sizing: border-box; }
+            </style>
+            ${serialized}
+          </div>
+        </foreignObject>
+      </svg>`;
 
-          // Pure Bright White Container
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
+      const base64Svg = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+      const imgNode = new Image();
 
-          ctx.strokeStyle = activeTheme.goldAccent;
-          ctx.lineWidth = 2;
-          ctx.strokeRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
+      return await new Promise((resolve) => {
+        imgNode.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = width * scale;
+          canvas.height = height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(imgNode, 0, 0);
 
-          // Draw QR Image clean
-          ctx.drawImage(img, qrX, qrY, qrSize, qrSize);
-          resolve();
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const a = document.createElement('a');
+              a.download = filename;
+              a.href = URL.createObjectURL(blob);
+              a.click();
+              resolve(true);
+            } else {
+              resolve(false);
+            }
+          }, 'image/png');
         };
-        img.onerror = resolve;
-        img.src = qrImageUrl;
+        imgNode.onerror = (err) => {
+          console.warn('SVG imgNode load error:', err);
+          resolve(false);
+        };
+        imgNode.src = base64Svg;
       });
-
-      // 7. Footer Info & Domain
-      ctx.fillStyle = activeTheme.canvasAccentHex;
-      ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('PINDAI QR CODE DI ATAS UNTUK BERFOTO & KIRIM DOA', w / 2, h - 110);
-
-      ctx.fillStyle = activeTheme.canvasSubtextHex;
-      ctx.font = '15px monospace';
-      ctx.fillText(targetUrl, w / 2, h - 75);
-
-      // Export Blob & Download
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        const filename = `QR_Sirklen_${(title || 'Event').replace(/\s+/g, '_')}.png`;
-        a.download = filename;
-        a.href = blobUrl;
-        a.click();
-        toast('QR Code HD dengan gaya poster estetik berhasil diunduh', 'success');
-      }, 'image/png');
-
     } catch (e) {
-      window.open(qrImageUrl, '_blank');
+      console.error('DOM export error', e);
+      return false;
+    }
+  };
+
+  const handleDownloadHD = async () => {
+    if (viewMode === 'pureQr') {
+      handleDownloadPureQr();
+      return;
+    }
+
+    toast('Merender kartu meja cetak HD...', 'info');
+    const filename = `KartuMeja_${(title || 'Event').replace(/\s+/g, '_')}.png`;
+    const success = await exportDomToPng(containerRef.current, filename);
+    if (success) {
+      toast('Kartu meja cetak HD berhasil diunduh', 'success');
+    } else {
+      handleDownloadPureQr();
     }
   };
 
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto select-none">
       
-      {/* Dynamic Aesthetic Card Frame with Top Hero Background Banner & Bottom Ribbon Ornaments */}
-      <div 
-        ref={containerRef} 
-        className={`w-full p-5 sm:p-6 rounded-3xl border shadow-2xl transition-all duration-300 relative flex flex-col items-center text-center overflow-hidden ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
-      >
-        
+      {/* Primary View Mode Switcher Pills (1. QR Code Murni vs 2. Kartu Meja) */}
+      <div className="w-full flex items-center justify-center gap-1.5 p-1 rounded-2xl bg-stone-900 border border-stone-800 mb-4 text-xs font-serif font-bold">
+        <button
+          onClick={() => setViewMode('pureQr')}
+          className={`flex-1 py-1.5 px-2 rounded-xl transition cursor-pointer ${
+            viewMode === 'pureQr'
+              ? 'bg-[#6B111F] text-[#F5D77F] border border-amber-400/40 shadow-xs'
+              : 'text-stone-400 hover:text-white'
+          }`}
+        >
+          1. QR Code (Murni)
+        </button>
 
+        <button
+          onClick={() => setViewMode('kartuMeja')}
+          className={`flex-1 py-1.5 px-2 rounded-xl transition cursor-pointer ${
+            viewMode === 'kartuMeja'
+              ? 'bg-[#6B111F] text-[#F5D77F] border border-amber-400/40 shadow-xs'
+              : 'text-stone-400 hover:text-white'
+          }`}
+        >
+          2. Kartu Meja (Full Design)
+        </button>
+      </div>
 
-        {/* 2. Elegant Thin Gold Line Art & Corner Flourishes */}
-        <MonochromeFloralOrnament variant="corner-tr" className={`absolute -top-3 -right-3 w-32 h-32 ${activeTheme.flourishClass} pointer-events-none z-10`} />
-        <MonochromeFloralOrnament variant="corner-tl" className={`absolute -top-3 -left-3 w-32 h-32 ${activeTheme.flourishClass} pointer-events-none z-10`} />
-        <MonochromeFloralOrnament variant="corner-br" className={`absolute -bottom-3 -right-3 w-28 h-28 ${activeTheme.flourishClass} pointer-events-none z-10`} />
-        <MonochromeFloralOrnament variant="corner-bl" className={`absolute -bottom-3 -left-3 w-28 h-28 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+      {viewMode === 'pureQr' ? (
+        /* Mode 1: QR Code Murni (Zero Border, Zero Ornaments, Zero Photos, Zero Titles, Zero URLs, Zero Extra Text) */
+        <div className="w-full p-6 rounded-3xl bg-white border border-stone-200 shadow-xl flex flex-col items-center justify-center text-center">
+          <img 
+            src={pureQrImageUrl} 
+            alt={`Pure QR Code ${title}`} 
+            className="w-56 h-56 object-contain"
+          />
+          {showDownload && (
+            <button
+              onClick={handleDownloadPureQr}
+              className="w-full mt-5 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-serif font-bold flex items-center justify-center gap-1.5 shadow-md transition cursor-pointer"
+            >
+              <Download size={15} />
+              <span>Download Pure QR (PNG HD)</span>
+            </button>
+          )}
+        </div>
+      ) : (
+        /* Mode 2: Kartu Meja Full Design */
+        <div 
+          ref={containerRef} 
+          className={`w-full p-5 sm:p-6 rounded-3xl border shadow-2xl transition-all duration-300 relative flex flex-col items-center text-center overflow-hidden ${activeTheme.cardBg} ${activeTheme.cardBorder}`}
+        >
+          {/* 1. Large Subtle Background Portrait Watermark */}
+          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+            {coverPhoto && (
+              <img 
+                src={coverPhoto} 
+                alt="" 
+                className="w-full h-full object-cover object-center scale-150 filter blur-[1.5px] opacity-35 mix-blend-overlay" 
+              />
+            )}
+            <div className={`absolute inset-0 bg-gradient-to-b ${activeTheme.overlayGradient}`} />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-stone-950/40 to-stone-950/80" />
+          </div>
 
-        {/* 3. Double Hairline Thin Gold Borders */}
-        <div className="absolute inset-2.5 rounded-2xl border border-amber-400/40 pointer-events-none z-10" />
-        <div className="absolute inset-4 rounded-xl border border-amber-400/20 pointer-events-none z-10" />
+          {/* 2. Pure Vector Botanical Corner Flourishes */}
+          <MonochromeFloralOrnament variant="corner-tr" className={`absolute -top-3 -right-3 w-32 h-32 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+          <MonochromeFloralOrnament variant="corner-tl" className={`absolute -top-3 -left-3 w-32 h-32 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+          <MonochromeFloralOrnament variant="corner-br" className={`absolute -bottom-3 -right-3 w-28 h-28 ${activeTheme.flourishClass} pointer-events-none z-10`} />
+          <MonochromeFloralOrnament variant="corner-bl" className={`absolute -bottom-3 -left-3 w-28 h-28 ${activeTheme.flourishClass} pointer-events-none z-10`} />
 
-        {/* 4. Brand Header, Event Date & Title (Bespoke Reference Layout) */}
-        <div className="flex flex-col items-center z-20 mb-2 pt-1">
-          <div className="flex items-center justify-between w-full px-2 mb-1">
-            <div className="flex items-center gap-1.5">
+          {/* 3. Double Hairline Thin Gold Borders */}
+          <div className="absolute inset-2.5 rounded-2xl border border-amber-400/40 pointer-events-none z-10" />
+          <div className="absolute inset-4 rounded-xl border border-amber-400/20 pointer-events-none z-10" />
+
+          {/* 4. Brand Header & Event Title */}
+          <div className="flex flex-col items-center z-20 mb-3 pt-1">
+            <div className="flex items-center gap-1.5 mb-1">
               <img src={logoPhotobooth} alt="Sirklen Photo" className="w-5 h-5 object-contain" />
-              <span className={`text-[10px] font-mono tracking-widest uppercase font-bold text-amber-200 drop-shadow-md`}>
+              <span className={`text-[10px] font-mono tracking-widest uppercase font-bold ${activeTheme.headerText}`}>
                 SIRKLEN PHOTO
               </span>
             </div>
-            <span className="text-[11px] font-serif font-bold text-amber-200 drop-shadow-md">
-              {eventDate}
-            </span>
+
+            <h4 className={`text-xl sm:text-2xl font-bold tracking-tight ${activeTheme.titleText} ${activeTheme.fontStyle}`}>
+              {title}
+            </h4>
+
+            <p className={`text-xs font-serif italic mt-0.5 ${activeTheme.subtitleText}`}>
+              {activeTheme.scanInstruction}
+            </p>
           </div>
 
-          <h4 className={`text-2xl sm:text-3xl font-bold tracking-tight text-white drop-shadow-md my-0.5 ${activeTheme.fontStyle}`}>
-            {title}
-          </h4>
+          {/* 5. Clean, Bright White High-Contrast QR Code Area */}
+          <div className="relative z-20 p-3.5 bg-white rounded-2xl border-2 border-amber-400/80 shadow-2xl flex items-center justify-center my-1">
+            <img 
+              src={cardQrImageUrl} 
+              alt={`QR Code ${title}`} 
+              className="w-48 h-48 sm:w-56 sm:h-56 object-contain rounded-lg"
+            />
+          </div>
 
-          {/* Poetic Romantic Quote Lines (kisah.kekal reference) */}
-          {activeTheme.poeticQuoteLines && activeTheme.poeticQuoteLines.length > 0 && (
-            <div className="my-1 space-y-0.5 max-w-[270px] mx-auto">
-              {activeTheme.poeticQuoteLines.map((line, idx) => (
-                <p key={idx} className="text-[10px] font-serif italic text-amber-200/90 leading-tight drop-shadow-xs">
-                  {line}
-                </p>
-              ))}
+          {/* 6. URL Chip */}
+          <div className="w-full bg-black/50 backdrop-blur-md border border-white/20 rounded-xl py-1.5 px-3 mt-3.5 z-20 flex items-center justify-between gap-2">
+            <span className="text-[11px] font-mono text-gray-200 truncate">
+              {targetUrl}
+            </span>
+            <button
+              onClick={handleCopy}
+              className="p-1 text-amber-300 hover:text-amber-100 transition cursor-pointer flex-shrink-0"
+              title="Salin Link"
+            >
+              {isCopied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+            </button>
+          </div>
+
+          {/* 7. Action Buttons */}
+          {showDownload && (
+            <div className="w-full grid grid-cols-2 gap-2 mt-3.5 z-20">
+              <button
+                onClick={handleDownloadHD}
+                className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-stone-950 text-xs font-serif font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
+              >
+                <Download size={14} />
+                <span>Download Kartu Meja</span>
+              </button>
+
+              {onOpenTentCard ? (
+                <button
+                  onClick={onOpenTentCard}
+                  className="py-2.5 px-3 rounded-xl bg-black/40 hover:bg-black/60 border border-amber-400/40 text-amber-200 text-xs font-serif font-semibold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition cursor-pointer"
+                >
+                  <Printer size={14} />
+                  <span>Pratinjau Lipat</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleCopy}
+                  className="py-2.5 px-3 rounded-xl bg-black/40 hover:bg-black/60 border border-amber-400/40 text-amber-200 text-xs font-serif font-semibold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition cursor-pointer"
+                >
+                  {isCopied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                  <span>{isCopied ? 'Tersalin' : 'Salin Link'}</span>
+                </button>
+              )}
             </div>
           )}
+
         </div>
+      )}
 
-        {/* 5. Clean, Bright White High-Contrast QR Code Area (Below Hero Photo & Quote, 100% Scannable) */}
-        <div className="relative z-20 p-3 bg-white rounded-2xl border-2 border-amber-400/80 shadow-2xl flex items-center justify-center my-1.5">
-          <img 
-            src={qrImageUrl} 
-            alt={`QR Code ${title}`} 
-            className="w-48 h-48 sm:w-56 sm:h-56 object-contain rounded-lg"
-          />
-        </div>
-
-        {/* 6. Ribbon Bow Line Art Ornaments along Bottom (Reference Video Feature) */}
-        <RibbonBowOrnament className="z-20 my-1 text-amber-300/75" count={4} />
-
-        {/* 7. URL Chip */}
-        <div className="w-full bg-black/60 backdrop-blur-md border border-white/20 rounded-xl py-1.5 px-3 mt-2.5 z-20 flex items-center justify-between gap-2">
-          <span className="text-[11px] font-mono text-gray-200 truncate">
-            {targetUrl}
-          </span>
-          <button
-            onClick={handleCopy}
-            className="p-1 text-amber-300 hover:text-amber-100 transition cursor-pointer flex-shrink-0"
-            title="Salin Link"
-          >
-            {isCopied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-          </button>
-        </div>
-
-        {/* 8. Action Buttons */}
-        {showDownload && (
-          <div className="w-full grid grid-cols-2 gap-2 mt-3 z-20">
-            <button
-              onClick={handleDownloadHD}
-              className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-stone-950 text-xs font-serif font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
-            >
-              <Download size={14} />
-              <span>Download HD</span>
-            </button>
-
-            {onOpenTentCard ? (
-              <button
-                onClick={onOpenTentCard}
-                className="py-2.5 px-3 rounded-xl bg-black/40 hover:bg-black/60 border border-amber-400/40 text-amber-200 text-xs font-serif font-semibold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition cursor-pointer"
-              >
-                <Printer size={14} />
-                <span>Kartu Meja</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleCopy}
-                className="py-2.5 px-3 rounded-xl bg-black/40 hover:bg-black/60 border border-amber-400/40 text-amber-200 text-xs font-serif font-semibold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition cursor-pointer"
-              >
-                {isCopied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                <span>{isCopied ? 'Tersalin' : 'Salin Link'}</span>
-              </button>
-            )}
-          </div>
-        )}
-
-      </div>
-
-      {/* Theme Presets Switcher (If showOptions enabled) */}
-      {showOptions && (
+      {/* Theme Presets Switcher (If showOptions enabled & Mode 2 active) */}
+      {showOptions && viewMode === 'kartuMeja' && (
         <div className="w-full mt-4 p-2 rounded-2xl bg-stone-900/90 border border-stone-800 backdrop-blur-md">
           <div className="flex items-center justify-between px-2 mb-1.5">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Share2, Plus, Volume2, ArrowRight, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
@@ -11,7 +11,7 @@ const romanticTransition = {
 };
 
 export default function EventGalleryFeed() {
-  const { openBooth, openGalleryModal, capturedPhotos, guestName, activeEvent } = useBooth();
+  const { openBooth, openGalleryModal, capturedPhotos, guestName, activeEvent, savedSubmissions } = useBooth();
   const { toast } = useToast();
 
   const coupleName = activeEvent?.displayName || 'Raka & Sabrina';
@@ -42,7 +42,23 @@ export default function EventGalleryFeed() {
     hasVoice: true,
   } : null;
 
-  const baseCards = userCard ? [userCard, ...MOCK_GALLERY_PHOTOS] : MOCK_GALLERY_PHOTOS;
+  // Filter real-time savedSubmissions strictly by active event
+  const eventSubmissions = useMemo(() => {
+    if (!savedSubmissions || savedSubmissions.length === 0) return [];
+    if (!activeEvent) return savedSubmissions;
+    return savedSubmissions.filter(sub => 
+      sub.eventSlug === activeEvent.slug || sub.eventId === activeEvent.id
+    );
+  }, [savedSubmissions, activeEvent]);
+
+  // Base cards list per event
+  const baseCards = useMemo(() => {
+    let list = eventSubmissions;
+    if (list.length === 0 && (!activeEvent || activeEvent.slug === 'sabrina-raka' || activeEvent.slug === 'raka-sabrina')) {
+      list = MOCK_GALLERY_PHOTOS;
+    }
+    return userCard ? [userCard, ...list.filter(s => s.id !== userCard.id)] : list;
+  }, [eventSubmissions, activeEvent, userCard]);
   
   // Duplicated for infinite continuous seamless loop from right to left
   const doubledCards = [...baseCards, ...baseCards];

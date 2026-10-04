@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Camera, BookOpen, Lock, ShieldAlert, Calendar } from 'lucide-react';
+import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
 import { DEFAULT_HERO_PHOTOS, PACKAGES } from '../../data/mockEvents';
+import GuestQrModal from '../ui/GuestQrModal';
 
 export default function EventHero() {
   const { 
@@ -20,6 +21,7 @@ export default function EventHero() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const slideImages = activeEvent?.heroPhotos && activeEvent.heroPhotos.length > 0 
     ? activeEvent.heroPhotos 
@@ -224,11 +226,11 @@ export default function EventHero() {
             initial={{ opacity: 0, y: 22 }}
             animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
             transition={{ duration: 0.9, delay: 0.95, ease: [0.25, 1, 0.5, 1] }}
-            className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-center justify-center gap-3 relative z-20 max-w-md mx-auto"
+            className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-center justify-center gap-2.5 relative z-20 max-w-md mx-auto"
           >
             <button
               onClick={handleStartBooth}
-              className="w-full sm:flex-1 py-4 px-6 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] font-serif font-bold text-xs sm:text-sm border border-amber-300/40 shadow-2xl shadow-rose-950/35 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
+              className="w-full sm:flex-1 py-3.5 px-5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] font-serif font-bold text-xs sm:text-sm border border-amber-300/40 shadow-2xl shadow-rose-950/35 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
             >
               <Camera size={18} />
               <span>Mulai Photobooth</span>
@@ -236,10 +238,10 @@ export default function EventHero() {
 
             <button
               onClick={handleStartGallery}
-              className="w-full sm:flex-1 py-4 px-6 rounded-full bg-white hover:bg-amber-50/80 text-[#6B111F] font-serif font-bold text-xs sm:text-sm border border-[#6B111F]/30 shadow-xl flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
+              className="w-full sm:flex-1 py-3.5 px-5 rounded-full bg-white hover:bg-amber-50/80 text-[#6B111F] font-serif font-bold text-xs sm:text-sm border border-[#6B111F]/30 shadow-xl flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
             >
               <BookOpen size={18} />
-              <span>Lihat Galeri Foto</span>
+              <span>Lihat Galeri</span>
             </button>
           </motion.div>
         )}
@@ -310,6 +312,9 @@ export default function EventHero() {
           </div>
         </div>
       )}
+
+      {/* Guest QR Code Modal */}
+      <GuestQrModal isOpen={showQrModal} onClose={() => setShowQrModal(false)} />
 
     </section>
   );

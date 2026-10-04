@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ArrowLeft, Plus, Share2, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
@@ -83,7 +83,30 @@ export default function FullGalleryModal() {
     likes: 1,
   } : null;
 
-  const fullList = userSubmission ? [userSubmission, ...MOCK_GALLERY_PHOTOS] : MOCK_GALLERY_PHOTOS;
+  // Filter real-time savedSubmissions strictly by active event
+  const eventSubmissions = useMemo(() => {
+    if (!savedSubmissions || savedSubmissions.length === 0) return [];
+    if (!activeEvent) return savedSubmissions;
+    return savedSubmissions.filter(sub => 
+      sub.eventSlug === activeEvent.slug || sub.eventId === activeEvent.id
+    );
+  }, [savedSubmissions, activeEvent]);
+
+  // Base list fallback (mock items only for default demo wedding)
+  const baseList = useMemo(() => {
+    if (eventSubmissions.length > 0) {
+      return eventSubmissions;
+    }
+    if (!activeEvent || activeEvent.slug === 'sabrina-raka' || activeEvent.slug === 'raka-sabrina') {
+      return MOCK_GALLERY_PHOTOS;
+    }
+    return [];
+  }, [eventSubmissions, activeEvent]);
+
+  const fullList = useMemo(() => {
+    if (!userSubmission) return baseList;
+    return [userSubmission, ...baseList.filter(s => s.id !== userSubmission.id)];
+  }, [userSubmission, baseList]);
 
   // Search & Category Type Filter
   const filteredList = fullList.filter(item => {

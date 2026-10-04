@@ -1,7 +1,7 @@
 // Service to handle saving and subscribing to photo submissions
 // Supports both Firebase Cloud Persistence (Multi-device Realtime) & LocalStorage Fallback
 
-import { db, storage } from '../config/firebase';
+import { db, storage } from '../config/firebase.js';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -17,16 +17,26 @@ export function getLocalSubmissions() {
   }
 }
 
-// Helper to save submission to LocalStorage
+// Helper to save submission to LocalStorage with automatic quota management (LRU Cache)
 export function saveLocalSubmission(submission) {
   try {
     const existing = getLocalSubmissions();
-    const updated = [submission, ...existing];
+    // Keep at most 30 recent items locally to avoid QuotaExceededError (5MB limit)
+    const MAX_LOCAL_ITEMS = 30;
+    const updated = [submission, ...existing.filter(item => item.id !== submission.id)].slice(0, MAX_LOCAL_ITEMS);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
     return updated;
   } catch (e) {
-    console.warn("Failed to save to localStorage:", e);
-    return [];
+    try {
+      // Aggressive fallback pruning to 10 items if quota is tight
+      const existing = getLocalSubmissions();
+      const pruned = [submission, ...existing].slice(0, 10);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(pruned));
+      return pruned;
+    } catch (err2) {
+      console.warn("Storage quota limit reached, retaining submission in memory:", err2);
+      return [submission];
+    }
   }
 }
 
