@@ -1,9 +1,6 @@
 import { motion } from 'framer-motion';
-import { useBooth } from '../../context/PhotoboothContext';
 
 export default function InvalidCodePage() {
-  const { navigateToAdmin } = useBooth();
-
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col items-center justify-center p-6 selection:bg-rose-100 selection:text-rose-900 relative font-sans">
       {/* Container */}
@@ -53,24 +50,6 @@ export default function InvalidCodePage() {
           <p className="text-gray-500 text-base font-normal">
             Please Scan the QR Code
           </p>
-        </div>
-
-        {/* Info Box */}
-        <div className="pt-6 w-full">
-          <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-xs text-gray-500 space-y-1">
-            <p className="font-semibold text-gray-700">Petunjuk Akses Photobooth:</p>
-            <p>Silakan gunakan kamera HP Anda untuk memindai Meja QR Code yang disediakan oleh panitia / pengantin di lokasi acara.</p>
-          </div>
-        </div>
-
-        {/* Discreet Link to Admin Portal */}
-        <div className="pt-8">
-          <button
-            onClick={navigateToAdmin}
-            className="text-xs text-gray-400 hover:text-gray-700 transition-colors underline underline-offset-4 cursor-pointer"
-          >
-            Masuk Portal Admin / Panitia
-          </button>
         </div>
       </motion.div>
     </div>
