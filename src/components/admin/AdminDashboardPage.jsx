@@ -403,10 +403,11 @@ export default function AdminDashboardPage() {
                 setEventType('wedding');
                 setShowCreateModal(true);
               }}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/20 transition cursor-pointer"
+              className="px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap"
             >
               <Plus size={14} />
-              <span>Buat Event Baru</span>
+              <span className="hidden xs:inline">Buat Event Baru</span>
+              <span className="xs:hidden">Event Baru</span>
             </button>
 
             <button
@@ -619,10 +620,10 @@ export default function AdminDashboardPage() {
                       </div>
 
                       {/* Right Side: Professional Unified Action System */}
-                      <div className="flex flex-col gap-2.5 xl:items-end">
+                      <div className="flex flex-col gap-2.5 xl:items-end w-full xl:w-auto">
                         
                         {/* Primary Row: Quick Actions */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full xl:w-auto">
                           <button
                             onClick={() => {
                               setPreviewModalEvent(evt);
@@ -630,7 +631,7 @@ export default function AdminDashboardPage() {
                               setPreviewPhotoIdx(0);
                               setActiveFrameThemeIdx(0);
                             }}
-                            className="px-3.5 py-2 rounded-full bg-[#FAF7F2] hover:bg-stone-100 text-stone-800 border border-[#E5DACB] text-xs font-serif font-bold flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                            className="flex-1 sm:flex-none justify-center px-3.5 py-2 rounded-full bg-[#FAF7F2] hover:bg-stone-100 text-stone-800 border border-[#E5DACB] text-xs font-serif font-bold flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
                             title="Pratinjau tampilan layar HP tamu"
                           >
                             <Smartphone size={13} className="text-[#8C7A6B]" />
@@ -639,7 +640,7 @@ export default function AdminDashboardPage() {
 
                           <button
                             onClick={() => handleCopySetupLink(evt.slug)}
-                            className="px-4 py-2 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/15 transition cursor-pointer whitespace-nowrap"
+                            className="flex-1 sm:flex-none justify-center px-4 py-2 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1.5 shadow-md shadow-rose-950/15 transition cursor-pointer whitespace-nowrap"
                             title="Salin tautan setup khusus klien"
                           >
                             {copiedSlug === `setup_${evt.slug}` ? <Check size={13} className="text-emerald-300" /> : <Share2 size={13} />}
@@ -648,7 +649,7 @@ export default function AdminDashboardPage() {
 
                           <button
                             onClick={() => handleSendWhatsApp(evt)}
-                            className="px-3.5 py-2 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300/80 text-xs font-serif font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs whitespace-nowrap"
+                            className="flex-1 sm:flex-none justify-center px-3.5 py-2 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300/80 text-xs font-serif font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs whitespace-nowrap"
                             title="Kirim pesan instruksi otomatis ke WhatsApp"
                           >
                             <MessageCircle size={13} className="text-emerald-700" />
@@ -656,66 +657,66 @@ export default function AdminDashboardPage() {
                           </button>
                         </div>
 
-                        {/* Secondary Row: Tools & Utilities (Clean Segmented Toolbar) */}
-                        <div className="flex items-center gap-1 p-1 bg-[#FAF7F2] border border-[#E5DACB] rounded-2xl shadow-xs">
+                        {/* Secondary Row: Tools & Utilities (Clean Segmented Toolbar, Fully Responsive Scroll) */}
+                        <div className="flex items-center gap-1 p-1 bg-[#FAF7F2] border border-[#E5DACB] rounded-2xl shadow-xs overflow-x-auto max-w-full no-scrollbar">
                           <button
                             onClick={() => openHeroPhotosManager(evt)}
-                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap flex-shrink-0"
                             title="Kelola foto banner prewedding / event"
                           >
                             <ImageIcon size={13} />
                             <span>Foto</span>
                           </button>
 
-                          <div className="w-[1px] h-3.5 bg-stone-300" />
+                          <div className="w-[1px] h-3.5 bg-stone-300 flex-shrink-0" />
 
                           <button
                             onClick={() => {
                               setSelectedQrEvent(evt);
                               setActiveTab('qr');
                             }}
-                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap flex-shrink-0"
                             title="Tampilkan QR Code"
                           >
                             <QrCode size={13} />
                             <span>QR</span>
                           </button>
 
-                          <div className="w-[1px] h-3.5 bg-stone-300" />
+                          <div className="w-[1px] h-3.5 bg-stone-300 flex-shrink-0" />
 
                           <button
                             onClick={() => setSelectedTentCardEvent(evt)}
-                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap flex-shrink-0"
                             title="Desain & Cetak Kartu Meja"
                           >
                             <Printer size={13} />
-                            <span>Cetak Meja</span>
+                            <span className="whitespace-nowrap">Cetak Meja</span>
                           </button>
 
-                          <div className="w-[1px] h-3.5 bg-stone-300" />
+                          <div className="w-[1px] h-3.5 bg-stone-300 flex-shrink-0" />
 
                           <button
                             onClick={() => handleDownloadEventZip(evt)}
                             disabled={zippingEventId === evt.id}
-                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer"
+                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap flex-shrink-0"
                             title="Unduh seluruh foto tamu (.ZIP)"
                           >
                             <Archive size={13} className={zippingEventId === evt.id ? 'animate-bounce text-amber-600' : ''} />
                             <span>ZIP</span>
                           </button>
 
-                          <div className="w-[1px] h-3.5 bg-stone-300" />
+                          <div className="w-[1px] h-3.5 bg-stone-300 flex-shrink-0" />
 
                           {/* View Guest Web */}
                           <button
                             onClick={() => navigateToEvent(evt.slug)}
-                            className="p-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white transition cursor-pointer"
+                            className="p-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white transition cursor-pointer flex-shrink-0"
                             title="Buka Tampilan Web Tamu"
                           >
                             <ExternalLink size={13} />
                           </button>
 
-                          <div className="w-[1px] h-3.5 bg-stone-300" />
+                          <div className="w-[1px] h-3.5 bg-stone-300 flex-shrink-0" />
 
                           {/* Delete Event */}
                           <button
@@ -725,7 +726,7 @@ export default function AdminDashboardPage() {
                                 toast('Event berhasil dihapus', 'info');
                               }
                             }}
-                            className="p-1 rounded-xl text-stone-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                            className="p-1 rounded-xl text-stone-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer flex-shrink-0"
                             title="Hapus Event"
                           >
                             <Trash2 size={13} />
