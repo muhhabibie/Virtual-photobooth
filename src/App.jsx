@@ -6,6 +6,7 @@ import PhotoboothModal from './components/photobooth/PhotoboothModal';
 import FullGalleryModal from './components/gallery/FullGalleryModal';
 import AdminDashboardPage from './components/admin/AdminDashboardPage';
 import ClientSetupPage from './components/client/ClientSetupPage';
+import InvalidCodePage from './components/ui/InvalidCodePage';
 import IntroSplashLoader from './components/ui/IntroSplashLoader';
 import { PhotoboothProvider, useBooth } from './context/PhotoboothContext';
 import { ToastProvider } from './components/ui/Toast';
@@ -18,9 +19,14 @@ function AppContent() {
     return <ClientSetupPage />;
   }
 
-  // 2. Admin Portal (/admin or root /)
-  if (currentRoute === 'admin' || !activeEvent) {
+  // 2. Admin Portal (/admin)
+  if (currentRoute === 'admin') {
     return <AdminDashboardPage />;
+  }
+
+  // 3. Invalid Code / Scan QR Page (Root / without QR scan, or non-existent event slug)
+  if (currentRoute === 'invalid' || !activeEvent) {
+    return <InvalidCodePage />;
   }
 
   // 3. Wedding Guest Photobooth Landing (/:slug)

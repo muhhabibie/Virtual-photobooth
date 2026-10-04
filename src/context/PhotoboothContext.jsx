@@ -62,15 +62,18 @@ export function PhotoboothProvider({ children }) {
       if (setupQuery) {
         return { route: 'setup', slug: setupQuery.toLowerCase().trim() };
       }
-      const eventQuery = params.get('event') || params.get('slug') || params.get('e');
+      const eventQuery = params.get('event') || params.get('slug') || params.get('e') || params.get('code');
       if (eventQuery) {
         return { route: 'event', slug: eventQuery.toLowerCase().trim() };
       }
 
       const rawPath = window.location.pathname.replace(/^\/|\/$/g, '').toLowerCase().trim();
-      if (!rawPath || rawPath === 'admin') {
-        // Landing page tidak diperlukan -> root / dan /admin langsung ke Portal Admin
+      if (rawPath === 'admin') {
         return { route: 'admin', slug: '' };
+      }
+      if (!rawPath) {
+        // Root / tanpa QR code -> tampilkan halaman "Invalid Code / Scan QR Code"
+        return { route: 'invalid', slug: '' };
       }
       if (rawPath.startsWith('setup/')) {
         const setupSlug = rawPath.replace(/^setup\//, '').trim();
@@ -79,7 +82,7 @@ export function PhotoboothProvider({ children }) {
       // Path lainnya adalah event pengantin (e.g. /sabrina-raka)
       return { route: 'event', slug: rawPath };
     } catch (e) {
-      return { route: 'admin', slug: '' };
+      return { route: 'invalid', slug: '' };
     }
   }, []);
 
