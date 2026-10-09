@@ -10,7 +10,7 @@ export default function SirklenMasterLanding() {
   const [selectedDemoSlug, setSelectedDemoSlug] = useState('sabrina-raka');
 
   const handleOrderClick = (pkg) => {
-    window.open(`https://lynk.id/sirklenphoto?package=${pkg.id}`, '_blank');
+    window.open(`https://lynk.id/sirklenice?package=${pkg.id}`, '_blank');
   };
 
   return (
