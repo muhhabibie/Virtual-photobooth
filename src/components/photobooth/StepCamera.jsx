@@ -148,12 +148,6 @@ export default function StepCamera() {
 
   // Click handlers with scrollIntoView
   const selectAccessoryByClick = (id) => {
-    if (selectedAccessory === id) {
-      if (capturedPhotos.length < targetPhotoCount && !capturing) {
-        handleShutterClick();
-      }
-      return;
-    }
     isProgrammaticScrollRef.current = true;
     setSelectedAccessory(id);
     const el = accessoryRefs.current[id];
@@ -361,13 +355,6 @@ export default function StepCamera() {
   useEffect(() => {
     renderModalStrip();
   }, [renderModalStrip]);
-
-  // Auto-show pop-up tooltip whenever new photos exist
-  useEffect(() => {
-    if (capturedPhotos.length > 0) {
-      setShowTooltip(true);
-    }
-  }, [capturedPhotos.length]);
 
   // Smoothly center the active AR accessory or tone filter in the carousel view (Instagram Style)
   useEffect(() => {
