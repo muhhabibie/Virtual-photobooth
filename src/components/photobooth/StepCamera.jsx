@@ -45,6 +45,7 @@ export default function StepCamera() {
     selectedTimer, 
     guestName,
     guestMessage,
+    activeEvent,
     addPhoto, 
     capturedPhotos, 
     setCapturedPhotos,
