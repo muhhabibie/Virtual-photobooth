@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
+import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 
 const STRIP_TYPES = [
   { id: 1, name: 'Polaroid', sub: '1 frame', badge: 'CLASSIC', badgeColor: 'bg-[#6B111F]', slots: 1 },
@@ -103,16 +104,11 @@ export default function StepFrames() {
     ctx.fillRect(0, 0, w, totalH);
 
     // Header branding
-    const coupleTitle = activeEvent?.displayName || 'Raka & Sabrina';
-    const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
-    const headerTitle = isWedding ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH';
+    const headerTitle = getEventHeaderTitle(activeEvent);
     ctx.fillStyle = theme.textHex;
     ctx.font = 'bold 11px Georgia, serif';
     ctx.textAlign = 'center';
-    ctx.fillText(headerTitle, w / 2, pad + 18);
-
-    ctx.font = 'italic bold 17px Georgia, serif';
-    ctx.fillText(coupleTitle, w / 2, pad + 38);
+    ctx.fillText(headerTitle, w / 2, pad + 25);
 
     // Photo slots
     for (let i = 0; i < count; i++) {
@@ -130,15 +126,30 @@ export default function StepFrames() {
       ctx.fillText(`Pose #${i + 1}`, w / 2, y + photoH / 2 + 13);
     }
 
-    // Footer signature: Line 1 (With Love & Blessings or Memories & Best Wishes) & Line 2 (Marko - Aesthetic & Crystal Clear Font)
-    const displayName = guestName.trim() ? guestName.trim() : (isWedding ? 'Tamu Undangan' : 'Pengunjung Event');
-    ctx.fillStyle = theme.hex === '#FDFBF7' ? '#6B111F' : 'rgba(255,255,255,0.85)';
-    ctx.font = 'italic 10.5px Georgia, serif';
-    ctx.fillText(isWedding ? 'With Love & Blessings,' : 'Memories & Best Wishes,', w / 2, totalH - pad - 24);
+    // Footer signature (100% Identical to Gambar 2 Viewfinder & Physical Strip)
+    const coupleName = getEventDisplayName(activeEvent);
+    const dateText = getEventFormattedDate(activeEvent);
+    const guestTitle = guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
 
-    ctx.fillStyle = theme.textHex;
-    ctx.font = "italic bold 17px 'Playfair Display', 'Cormorant Garamond', Georgia, serif";
-    ctx.fillText(displayName, w / 2, totalH - pad - 6);
+    const isLightBg = theme.hex === '#FDFBF7' || theme.hex === '#FAF6F0' || theme.hex === '#ffffff' || theme.hex === '#F3C5CB';
+    const coupleColor = isLightBg ? '#3A2D28' : theme.textHex;
+    const dateColor = isLightBg ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)';
+    const guestColor = isLightBg ? '#5A4A3E' : '#FFFFFF';
+
+    // Line 1: Couple Calligraphy ("Sabrina & Raka")
+    ctx.fillStyle = coupleColor;
+    ctx.font = "italic 16px 'Great Vibes', 'Alex Brush', 'Playfair Display', Georgia, serif";
+    ctx.fillText(coupleName, w / 2, totalH - pad - 34);
+
+    // Line 2: Event Date ("30 · 05 · 2026")
+    ctx.fillStyle = dateColor;
+    ctx.font = 'bold 7.5px monospace, sans-serif';
+    ctx.fillText(dateText, w / 2, totalH - pad - 20);
+
+    // Line 3: Guest Name ("sf")
+    ctx.fillStyle = guestColor;
+    ctx.font = 'bold 9.5px system-ui, -apple-system, sans-serif';
+    ctx.fillText(guestTitle, w / 2, totalH - pad - 7);
   }, [targetPhotoCount, activeTheme, guestName, activeEvent]);
 
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';

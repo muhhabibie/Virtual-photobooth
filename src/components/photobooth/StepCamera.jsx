@@ -10,6 +10,7 @@ import { useCamera } from '../../hooks/useCamera';
 import { useFaceMesh } from '../../hooks/useFaceMesh';
 import { useToast } from '../ui/Toast';
 import { AR_ACCESSORIES, drawAccessoryOverlay } from '../../config/accessories';
+import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 
 const ACCESSORY_ICONS = {
   'none': { icon: Wand2, color: 'text-amber-200' },
@@ -313,7 +314,7 @@ export default function StepCamera() {
     ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
     ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('THE WEDDING OF', totalW / 2, pad + 38 * scale);
+    ctx.fillText(getEventHeaderTitle(activeEvent), totalW / 2, pad + 38 * scale);
 
     let drawY = pad + headerH;
     photoLayouts.forEach(({ photo, h }, idx) => {

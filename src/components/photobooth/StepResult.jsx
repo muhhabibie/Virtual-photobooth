@@ -3,6 +3,7 @@ import { Download, Share2, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
+import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 
 const PHOTO_FILTERS = [
   { id: 'natural', name: 'NATURAL', css: 'none', desc: 'Asli', previewClass: 'from-amber-200 via-rose-300 to-amber-100' },
@@ -180,12 +181,11 @@ export default function StepResult() {
 
     // Frame Header Branding
     const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
-    const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
-    const coupleTitle = activeEvent?.displayName ? activeEvent.displayName.toUpperCase() : (isWedding ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH');
+    const headerTitle = getEventHeaderTitle(activeEvent);
     ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
     ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(coupleTitle, totalW / 2, pad + 38 * scale);
+    ctx.fillText(headerTitle, totalW / 2, pad + 38 * scale);
 
     // Render Photos with Applied Filter (100% UNCROPPED - EXACT WYSIWYG MATCH)
     const activeFilterObj = PHOTO_FILTERS.find(f => f.id === selectedFilter) || PHOTO_FILTERS[0];
@@ -220,8 +220,8 @@ export default function StepResult() {
     });
 
     // Frame Footer Signature (100% Identical to Gambar 2 Viewfinder & Physical Strip)
-    const coupleName = activeEvent?.displayName || 'Sabrina & Raka';
-    const dateText = activeEvent?.eventDate ? activeEvent.eventDate.replace(/-/g, ' · ') : '30 · 05 · 2026';
+    const coupleName = getEventDisplayName(activeEvent);
+    const dateText = getEventFormattedDate(activeEvent);
     const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
 
     const coupleColor = isLightBg ? '#3A2D28' : '#F5D77F';

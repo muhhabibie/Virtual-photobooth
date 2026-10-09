@@ -6,6 +6,7 @@ import { useToast } from '../ui/Toast';
 import { exportEventSubmissionsZip } from '../../utils/zipExport';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
+import { getEventHeaderTitle, getEventDisplayName } from '../../utils/eventHeader';
 
 function getNowIndonesianDate() {
   const now = new Date();
@@ -263,7 +264,7 @@ export default function FullGalleryModal() {
             <div className="flex items-center justify-center gap-3 my-1 w-full max-w-sm">
               <div className="h-px bg-gradient-to-r from-transparent via-[#C4A46C]/60 to-transparent flex-1" />
               <span className="text-[9px] font-serif tracking-[0.25em] text-[#F5D77F] uppercase font-bold">
-                THE WEDDING OF SABRINA & RAKA
+                {getEventHeaderTitle(activeEvent)} {getEventDisplayName(activeEvent).toUpperCase()}
               </span>
               <div className="h-px bg-gradient-to-r from-transparent via-[#C4A46C]/60 to-transparent flex-1" />
             </div>
@@ -369,7 +370,7 @@ export default function FullGalleryModal() {
                         style={{ color: subTextColor }}
                         className="text-[6.5px] sm:text-[7.5px] font-mono font-bold uppercase tracking-widest"
                       >
-                        THE WEDDING OF
+                        {getEventHeaderTitle(activeEvent)}
                       </p>
                     </div>
 
@@ -408,7 +409,7 @@ export default function FullGalleryModal() {
                         }}
                         className="text-base sm:text-xl font-serif italic leading-tight drop-shadow-xs"
                       >
-                        Sabrina & Raka
+                        {item.eventDisplayName || getEventDisplayName(activeEvent)}
                       </h3>
                       <p className="text-[6.5px] sm:text-[7.5px] font-mono tracking-widest mt-0.5" style={{ color: subTextColor }}>
                         {item.shortDate || '30 · 05 · 2026'}
@@ -491,7 +492,7 @@ export default function FullGalleryModal() {
                       style={{ color: modalSubTextColor }}
                       className="text-[7.5px] sm:text-[8.5px] font-mono font-bold uppercase tracking-widest"
                     >
-                      THE WEDDING OF
+                      {getEventHeaderTitle(activeEvent)}
                     </p>
                   </div>
 
@@ -518,7 +519,7 @@ export default function FullGalleryModal() {
                       }}
                       className="text-xl sm:text-2xl font-serif italic leading-tight"
                     >
-                      Sabrina & Raka
+                      {fullFrameModal.eventDisplayName || getEventDisplayName(activeEvent)}
                     </h3>
                     <p className="text-[7.5px] sm:text-[8.5px] font-mono tracking-widest mt-0.5" style={{ color: modalSubTextColor }}>
                       {fullFrameModal.shortDate || '30 · 05 · 2026'}
