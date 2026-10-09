@@ -5,6 +5,7 @@ import { useBooth } from '../../context/PhotoboothContext';
 import { useRecorder } from '../../hooks/useRecorder';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
+import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 
 export default function StepVoice() {
   const {
@@ -16,6 +17,7 @@ export default function StepVoice() {
     setVoiceBlob,
     setVoiceUrl,
     setCurrentStep,
+    activeEvent,
     closeBooth
   } = useBooth();
 
@@ -40,7 +42,7 @@ export default function StepVoice() {
     const pad = 30 * scale;
     const gap = 18 * scale;
     const headerH = 65 * scale;
-    const footerH = 85 * scale;
+    const footerH = 100 * scale;
 
     const photoLayouts = capturedPhotos.map((photo) => {
       const srcEl = photo.canvas;
@@ -64,10 +66,11 @@ export default function StepVoice() {
     ctx.fillRect(0, 0, totalW, totalH);
 
     const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
+    const headerTitle = getEventHeaderTitle(activeEvent, activeEvent?.slug);
     ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
     ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('THE WEDDING OF', totalW / 2, pad + 38 * scale);
+    ctx.fillText(headerTitle, totalW / 2, pad + 38 * scale);
 
     let drawY = pad + headerH;
     photoLayouts.forEach(({ photo, h }) => {
@@ -90,16 +93,31 @@ export default function StepVoice() {
       drawY += h + gap;
     });
 
-    const displayName = guestName ? guestName.trim() : 'Sabrina & Raka';
-    ctx.fillStyle = isLightBg ? '#6B111F' : 'rgba(255,255,255,0.85)';
-    ctx.font = `italic bold ${13 * scale}px Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('With Love & Blessings,', totalW / 2, totalH - pad - 38 * scale);
+    // Frame Footer Signature (100% Identical across all steps & events)
+    const coupleName = getEventDisplayName(activeEvent, activeEvent?.slug);
+    const dateText = getEventFormattedDate(activeEvent);
+    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
 
-    ctx.fillStyle = isLightBg ? '#6B111F' : '#F5D77F';
-    ctx.font = `italic bold ${24 * scale}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-    ctx.fillText(displayName, totalW / 2, totalH - pad - 10 * scale);
-  }, [capturedPhotos, stripColor, guestName]);
+    const coupleColor = isLightBg ? '#3A2D28' : '#F5D77F';
+    const dateColor = isLightBg ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)';
+    const guestColor = isLightBg ? '#5A4A3E' : '#FFFFFF';
+
+    // Line 1: Event/Couple Name ("Pestapora 2026" / "Sabrina & Raka")
+    ctx.fillStyle = coupleColor;
+    ctx.font = `${28 * scale}px 'Great Vibes', 'Alex Brush', 'Playfair Display', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(coupleName, totalW / 2, totalH - pad - 60 * scale);
+
+    // Line 2: Event Date ("30 · 05 · 2026")
+    ctx.fillStyle = dateColor;
+    ctx.font = `bold ${10 * scale}px monospace, sans-serif`;
+    ctx.fillText(dateText, totalW / 2, totalH - pad - 36 * scale);
+
+    // Line 3: Guest Name
+    ctx.fillStyle = guestColor;
+    ctx.font = `bold ${13 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(guestTitle, totalW / 2, totalH - pad - 14 * scale);
+  }, [capturedPhotos, stripColor, guestName, activeEvent]);
 
   useEffect(() => {
     renderStrip();
@@ -135,7 +153,7 @@ export default function StepVoice() {
 
         {/* Center Title Badge */}
         <div className="px-4 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-amber-200 text-[11px] font-mono font-bold tracking-widest uppercase flex items-center justify-center shadow-md">
-          <span>REKAM DOA RESTU</span>
+          <span>REKAM PESAN SUARA</span>
         </div>
 
         {/* Right Close X Button */}
@@ -163,7 +181,9 @@ export default function StepVoice() {
         <div className="w-full bg-[#160B12]/90 backdrop-blur-xl border border-white/15 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-2xl text-center flex-shrink-0">
           
           <h2 className="text-sm sm:text-base font-serif text-amber-200 font-bold leading-tight">
-            Doa Restu untuk Mempelai
+            {activeEvent?.eventType === 'concert' || activeEvent?.eventType === 'festival' || (activeEvent?.slug && activeEvent.slug.includes('pestapora'))
+              ? `Pesan Suara & Kesan Acara`
+              : `Doa Restu & Pesan Suara`}
           </h2>
 
           <p className="text-[10px] sm:text-xs text-gray-300 mt-0.5">

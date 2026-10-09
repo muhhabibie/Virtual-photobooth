@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { RotateCcw, ArrowRight, X } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
+import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 
 export default function StepReview() {
   const {
@@ -11,6 +12,7 @@ export default function StepReview() {
     capturedPhotos,
     setCapturedPhotos,
     setCurrentStep,
+    activeEvent,
     closeBooth
   } = useBooth();
 
@@ -26,7 +28,7 @@ export default function StepReview() {
     const pad = 30 * scale;
     const gap = 18 * scale;
     const headerH = 65 * scale;
-    const footerH = 85 * scale;
+    const footerH = 100 * scale;
 
     const photoLayouts = Array.from({ length: count }).map((_, idx) => {
       const photo = capturedPhotos[idx];
@@ -51,10 +53,11 @@ export default function StepReview() {
     ctx.fillRect(0, 0, totalW, totalH);
 
     const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
+    const headerTitle = getEventHeaderTitle(activeEvent, activeEvent?.slug);
     ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
     ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('THE WEDDING OF', totalW / 2, pad + 38 * scale);
+    ctx.fillText(headerTitle, totalW / 2, pad + 38 * scale);
 
     let drawY = pad + headerH;
     photoLayouts.forEach(({ photo, h }, idx) => {
@@ -83,16 +86,31 @@ export default function StepReview() {
       drawY += h + gap;
     });
 
-    const displayName = guestName ? guestName.trim() : 'Sabrina & Raka';
-    ctx.fillStyle = isLightBg ? '#6B111F' : 'rgba(255,255,255,0.85)';
-    ctx.font = `italic bold ${13 * scale}px Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('With Love & Blessings,', totalW / 2, totalH - pad - 38 * scale);
+    // Frame Footer Signature (100% Identical across all steps & events)
+    const coupleName = getEventDisplayName(activeEvent, activeEvent?.slug);
+    const dateText = getEventFormattedDate(activeEvent);
+    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
 
-    ctx.fillStyle = isLightBg ? '#6B111F' : '#F5D77F';
-    ctx.font = `italic bold ${24 * scale}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-    ctx.fillText(displayName, totalW / 2, totalH - pad - 10 * scale);
-  }, [capturedPhotos, targetPhotoCount, stripColor, guestName]);
+    const coupleColor = isLightBg ? '#3A2D28' : '#F5D77F';
+    const dateColor = isLightBg ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)';
+    const guestColor = isLightBg ? '#5A4A3E' : '#FFFFFF';
+
+    // Line 1: Event/Couple Name ("Pestapora 2026" / "Sabrina & Raka")
+    ctx.fillStyle = coupleColor;
+    ctx.font = `${28 * scale}px 'Great Vibes', 'Alex Brush', 'Playfair Display', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(coupleName, totalW / 2, totalH - pad - 60 * scale);
+
+    // Line 2: Event Date ("30 · 05 · 2026")
+    ctx.fillStyle = dateColor;
+    ctx.font = `bold ${10 * scale}px monospace, sans-serif`;
+    ctx.fillText(dateText, totalW / 2, totalH - pad - 36 * scale);
+
+    // Line 3: Guest Name
+    ctx.fillStyle = guestColor;
+    ctx.font = `bold ${13 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(guestTitle, totalW / 2, totalH - pad - 14 * scale);
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, activeEvent]);
 
   useEffect(() => {
     renderStrip();
@@ -136,7 +154,7 @@ export default function StepReview() {
         </h1>
 
         <p className="text-[11px] sm:text-xs text-[#C4A46C] font-serif italic tracking-wide">
-          Sabrina & Raka Wedding
+          {getEventDisplayName(activeEvent, activeEvent?.slug)} {activeEvent?.eventType === 'wedding' || (!activeEvent?.eventType && !activeEvent?.slug) ? 'Wedding' : ''}
         </p>
       </div>
 
