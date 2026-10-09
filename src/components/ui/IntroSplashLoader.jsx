@@ -185,20 +185,6 @@ export default function IntroSplashLoader({ onComplete }) {
               })}
             </h1>
 
-            {/* Subtitle perusahaan */}
-            <motion.p
-              initial={{ opacity: 0, y: 4 }}
-              animate={isOut ? { opacity: 0, y: -4 } : { opacity: 1, y: 0 }}
-              transition={{
-                duration: isOut ? 0.6 : 0.9,
-                delay: isOut ? 0.1 : 1.8,
-                ease: EASE_SOFT
-              }}
-              className="text-[9px] sm:text-[10px] font-mono tracking-[0.25em] text-[#8C7A6B] uppercase mt-1.5"
-            >
-              PT SIRKLEN KREASI USAHA
-            </motion.p>
-
             {/* Tagline */}
             <motion.p
               initial={{ opacity: 0 }}
