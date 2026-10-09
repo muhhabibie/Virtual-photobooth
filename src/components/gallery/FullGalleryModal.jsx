@@ -45,43 +45,24 @@ export default function FullGalleryModal() {
   const [fullFrameModal, setFullFrameModal] = useState(null);
   const [isZipping, setIsZipping] = useState(false);
 
-  // Handle Bulk ZIP Download from Full Gallery
-  const handleDownloadZip = async () => {
-    setIsZipping(true);
-    try {
-      const eventToUse = activeEvent || { displayName: 'Raka & Sabrina', slug: 'sabrina-raka' };
-      const itemsToExport = fullList;
-      toast(`Menyiapkan file ZIP foto kenangan untuk ${eventToUse.displayName}...`, 'info');
-      const result = await exportEventSubmissionsZip({
-        event: eventToUse,
-        submissions: itemsToExport,
-      });
-      toast(`File ZIP berhasil diunduh (${result.totalPhotos} foto)! 📦`, 'success');
-    } catch (err) {
-      console.error(err);
-      toast(err.message || 'Gagal mengunduh ZIP', 'error');
-    } finally {
-      setIsZipping(false);
-    }
-  };
-
-  if (!galleryModalOpen) return null;
-
   // Real-time user submission card
-  const userSubmission = capturedPhotos.length > 0 ? {
-    id: 'user-latest-live',
-    guestName: guestName || 'Tamu Undangan (Kamu)',
-    takenDate: getNowIndonesianDate(),
-    shortDate: getNowShortDate(),
-    photos: capturedPhotos.map(p => p.dataUrl),
-    type: capturedPhotos.length === 1 ? 'polaroid' : `${capturedPhotos.length}-cut`,
-    colorHex: stripColor || '#6B111F',
-    textHex: stripColor === '#FDFBF7' || stripColor === '#F3C5CB' ? '#6B111F' : '#F5D77F',
-    hasVoice: !!voiceUrl,
-    voiceUrl: voiceUrl,
-    message: guestMessage && guestMessage.trim() ? guestMessage.trim() : '',
-    likes: 1,
-  } : null;
+  const userSubmission = useMemo(() => {
+    if (!capturedPhotos || capturedPhotos.length === 0) return null;
+    return {
+      id: 'user-latest-live',
+      guestName: guestName || 'Tamu Undangan (Kamu)',
+      takenDate: getNowIndonesianDate(),
+      shortDate: getNowShortDate(),
+      photos: capturedPhotos.map(p => p.dataUrl),
+      type: capturedPhotos.length === 1 ? 'polaroid' : `${capturedPhotos.length}-cut`,
+      colorHex: stripColor || '#6B111F',
+      textHex: stripColor === '#FDFBF7' || stripColor === '#F3C5CB' ? '#6B111F' : '#F5D77F',
+      hasVoice: !!voiceUrl,
+      voiceUrl: voiceUrl,
+      message: guestMessage && guestMessage.trim() ? guestMessage.trim() : '',
+      likes: 1,
+    };
+  }, [capturedPhotos, guestName, stripColor, voiceUrl, guestMessage]);
 
   // Filter real-time savedSubmissions strictly by active event
   const eventSubmissions = useMemo(() => {
@@ -107,6 +88,28 @@ export default function FullGalleryModal() {
     if (!userSubmission) return baseList;
     return [userSubmission, ...baseList.filter(s => s.id !== userSubmission.id)];
   }, [userSubmission, baseList]);
+
+  // Handle Bulk ZIP Download from Full Gallery
+  const handleDownloadZip = async () => {
+    setIsZipping(true);
+    try {
+      const eventToUse = activeEvent || { displayName: 'Raka & Sabrina', slug: 'sabrina-raka' };
+      const itemsToExport = fullList;
+      toast(`Menyiapkan file ZIP foto kenangan untuk ${eventToUse.displayName}...`, 'info');
+      const result = await exportEventSubmissionsZip({
+        event: eventToUse,
+        submissions: itemsToExport,
+      });
+      toast(`File ZIP berhasil diunduh (${result.totalPhotos} foto)! 📦`, 'success');
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'Gagal mengunduh ZIP', 'error');
+    } finally {
+      setIsZipping(false);
+    }
+  };
+
+  if (!galleryModalOpen) return null;
 
   // Search & Category Type Filter
   const filteredList = fullList.filter(item => {
