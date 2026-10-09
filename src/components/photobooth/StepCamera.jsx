@@ -933,11 +933,11 @@ export default function StepCamera() {
               </button>
             </div>
 
-            {/* Photo Strip Retina Canvas Preview (100% Identical to StepResult Output) */}
-            <div className="flex-1 min-h-0 w-full flex items-center justify-center py-2 overflow-hidden">
+            {/* Photo Strip Retina Canvas Preview - Scrollable Viewport */}
+            <div className="flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden my-1 py-2 px-1 flex flex-col items-center no-scrollbar touch-pan-y border border-white/10 rounded-xl bg-black/50">
               <canvas 
                 ref={modalCanvasRef} 
-                className="h-full max-h-full w-auto max-w-full object-contain block shadow-2xl rounded-2xl mx-auto border border-white/20" 
+                className="w-full max-w-[260px] xs:max-w-[280px] sm:max-w-[300px] h-auto block shadow-2xl rounded-xl mx-auto border border-amber-400/40" 
               />
             </div>
 
