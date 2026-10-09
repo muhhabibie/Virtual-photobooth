@@ -60,16 +60,23 @@ export default function StepCamera() {
   const arCanvasRef = useRef(null);
   const animFrameRef = useRef(null);
 
-  const [captureMode, setCaptureMode] = useState('manual'); // 'manual' | 'auto'
   const [capturing, setCapturing] = useState(false);
-  const [countdown, setCountdown] = useState(null);
   const [cameraError, setCameraError] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('natural');
   const [selectedAccessory, setSelectedAccessory] = useState('royal-crown'); // Default to Royal Crown
   const [controlTab, setControlTab] = useState('accessories'); // 'accessories' | 'filters'
   const [showPreviewModal, setShowPreviewModal] = useState(false); // Full photo strip preview modal
-  const [showTooltip, setShowTooltip] = useState(true); // Pop-up speech bubble state above bottom left button
   const [facingMode, setFacingMode] = useState('user'); // 'user' | 'environment'
+  const [topNotice, setTopNotice] = useState(null);
+  const topNoticeTimerRef = useRef(null);
+
+  const triggerTopNotice = useCallback((msg) => {
+    if (topNoticeTimerRef.current) clearTimeout(topNoticeTimerRef.current);
+    setTopNotice(msg);
+    topNoticeTimerRef.current = setTimeout(() => {
+      setTopNotice(null);
+    }, 1600);
+  }, []);
 
   const accessoryRefs = useRef({});
   const filterRefs = useRef({});
@@ -575,8 +582,8 @@ export default function StepCamera() {
     toast(`Foto Pose ${index + 1} berhasil dihapus`, 'default');
   };
 
-  // Shutter Trigger
-  const handleShutterClick = async () => {
+  // Instant Shutter Trigger (100% Instant Capture - Zero Countdown Delay)
+  const handleShutterClick = useCallback(() => {
     if (capturing) return;
 
     if (capturedPhotos.length >= targetPhotoCount) {
@@ -585,32 +592,16 @@ export default function StepCamera() {
       return;
     }
 
-    if (captureMode === 'manual') {
-      setCapturing(true);
-      for (let i = selectedTimer; i > 0; i--) {
-        setCountdown(i);
-        await new Promise(r => setTimeout(r, 1000));
-      }
-      setCountdown(null);
-      doCapture();
+    setCapturing(true);
+    doCapture();
+
+    const photoNum = capturedPhotos.length + 1;
+    triggerTopNotice(`Foto Pose #${photoNum} Berhasil Diambil 📸`);
+
+    setTimeout(() => {
       setCapturing(false);
-    } else {
-      setCapturing(true);
-      const remaining = targetPhotoCount - capturedPhotos.length;
-      for (let shot = 0; shot < remaining; shot++) {
-        for (let i = selectedTimer; i > 0; i--) {
-          setCountdown(i);
-          await new Promise(r => setTimeout(r, 1000));
-        }
-        setCountdown(null);
-        doCapture();
-        if (shot < remaining - 1) {
-          await new Promise(r => setTimeout(r, 1200));
-        }
-      }
-      setCapturing(false);
-    }
-  };
+    }, 200);
+  }, [capturing, capturedPhotos.length, targetPhotoCount, stop, setCurrentStep, doCapture, triggerTopNotice]);
 
   const handleToggleCamera = async () => {
     try {
@@ -722,28 +713,13 @@ export default function StepCamera() {
               </div>
             )}
 
-            {/* Camera Error / Fallback */}
-            {cameraError && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-[#120910] z-20">
-                <div className="w-10 h-10 rounded-full bg-white/5 border border-amber-500/30 flex items-center justify-center text-amber-300 mb-1.5">
-                  <Camera size={18} />
+            {/* Top Notification Toast (Positioned at TOP of camera viewfinder, away from shutter button) */}
+            {topNotice && (
+              <div className="absolute top-3 inset-x-0 z-40 flex justify-center pointer-events-none animate-fadeIn">
+                <div className="bg-emerald-950/90 backdrop-blur-md border border-emerald-400/80 text-emerald-200 px-4 py-1.5 rounded-full text-xs font-mono font-bold shadow-2xl tracking-wide flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{topNotice}</span>
                 </div>
-                <h4 className="text-xs font-bold text-white mb-0.5">Kamera Tidak Tersedia</h4>
-                <button
-                  onClick={initCamera}
-                  className="px-4 py-1 rounded-full border border-amber-500/50 bg-amber-950/40 text-amber-200 text-[10px] font-bold cursor-pointer"
-                >
-                  Coba Lagi
-                </button>
-              </div>
-            )}
-
-            {/* Countdown Large Numeral */}
-            {countdown !== null && (
-              <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-xs">
-                <span className="text-8xl font-black text-amber-300 animate-ping font-mono drop-shadow-2xl">
-                  {countdown}
-                </span>
               </div>
             )}
 
@@ -881,94 +857,66 @@ export default function StepCamera() {
 
       </div>
 
-      {/* ================= 🌟 4. INSTAGRAM BOTTOM CONTROL DOCK WITH POP-UP SPEECH BUBBLE 🌟 ================= */}
-      <div className="relative z-30 w-full max-w-md mx-auto pt-1 pb-1 px-2 flex items-center justify-between gap-3 flex-shrink-0">
+      {/* ================= 🌟 4. INSTAGRAM BOTTOM CONTROL DOCK 🌟 ================= */}
+      <div className="relative z-30 w-full max-w-md mx-auto pt-1 pb-1 px-3 flex items-center justify-between gap-3 flex-shrink-0">
         
-        {/* Left: Gallery Thumbnail Card with Floating Pop-up Bubble */}
-        <div className="relative flex-shrink-0">
-          
-          {/* 🌟 POP-UP SPEECH BUBBLE TOOLTIP ("Lihat preview foto Anda di sini") 🌟 */}
-          {capturedPhotos.length > 0 && showTooltip && (
-            <div className="absolute -top-13 -left-1 z-50 animate-bounce pointer-events-auto flex flex-col items-start min-w-max">
-              <button
-                onClick={() => {
-                  setShowPreviewModal(true);
-                }}
-                className="bg-[#1C0D17]/95 border border-amber-400/90 text-amber-200 px-3 py-1.5 rounded-xl shadow-[0_4px_25px_rgba(245,215,127,0.4)] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer hover:scale-105 transition backdrop-blur-md"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>Lihat preview foto anda disini 📸</span>
-                <ChevronRight size={12} className="text-amber-300 ml-0.5" />
-              </button>
-              {/* Downward triangle tail */}
-              <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-amber-400/90 ml-5 -mt-[1px]" />
+        {/* Left: Gallery Thumbnail Button */}
+        <button
+          onClick={() => setShowPreviewModal(true)}
+          className="w-12 h-12 rounded-2xl bg-[#1C1C1E] border border-amber-400/50 overflow-hidden flex items-center justify-center text-white text-xs font-mono font-bold shadow-lg active:scale-95 transition cursor-pointer relative group flex-shrink-0"
+          title="Buka Preview Foto & Strip"
+        >
+          {capturedPhotos.length > 0 ? (
+            <>
+              <img 
+                src={capturedPhotos[capturedPhotos.length - 1].dataUrl} 
+                alt="Hasil Foto" 
+                className="w-full h-full object-cover group-hover:scale-110 transition duration-300" 
+              />
+              {/* Counter Pill Badge */}
+              <div className="absolute bottom-0 right-0 bg-amber-400 text-black text-[8.5px] font-black px-1.5 py-0.2 rounded-tl-md font-mono shadow-sm">
+                {capturedPhotos.length}/{targetPhotoCount}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] font-bold text-amber-300 font-mono">0/{targetPhotoCount}</span>
             </div>
           )}
+        </button>
 
-          <button
-            onClick={() => {
-              setShowPreviewModal(true);
-            }}
-            className="w-11 h-11 rounded-xl bg-[#1C1C1E] border border-amber-400/50 overflow-hidden flex items-center justify-center text-white text-xs font-mono font-bold shadow-lg active:scale-95 transition cursor-pointer relative group"
-            title="Buka Preview Foto & Strip"
-          >
-            {capturedPhotos.length > 0 ? (
-              <>
-                <img 
-                  src={capturedPhotos[capturedPhotos.length - 1].dataUrl} 
-                  alt="Hasil Foto" 
-                  className="w-full h-full object-cover group-hover:scale-110 transition duration-300" 
-                />
-                {/* Counter Pill Badge */}
-                <div className="absolute bottom-0 right-0 bg-amber-400 text-black text-[8px] font-black px-1 py-0.1 rounded-tl-md font-mono shadow-sm">
-                  {capturedPhotos.length}/{targetPhotoCount}
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center">
-                <span className="text-[10px] font-bold text-amber-300 font-mono">0/{targetPhotoCount}</span>
-              </div>
-            )}
-          </button>
-        </div>
-
-        {/* Center: Instagram Info Pill (Filter Name display & Reset X) */}
-        <div className="flex-1 bg-[#1C1C1E] border border-white/15 rounded-full px-3 py-2 flex items-center justify-between text-xs text-white shadow-lg max-w-[210px] min-w-0">
-          <span className="font-bold text-[11px] uppercase tracking-wider text-amber-100 truncate flex-1 text-center pl-2">
-            {controlTab === 'accessories' 
-              ? (AR_ACCESSORIES.find(a => a.id === selectedAccessory)?.name || 'N.O.W')
-              : (CAMERA_FILTERS.find(f => f.id === selectedFilter)?.label || 'NATURAL')
-            }
-          </span>
-
-          <button 
-            onClick={() => {
-              setSelectedAccessory('none');
-              setSelectedFilter('natural');
-            }}
-            className="w-5 h-5 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white/80 transition flex-shrink-0 ml-1 cursor-pointer"
-            title="Reset Filter"
-          >
-            <X size={12} />
-          </button>
-        </div>
+        {/* Center: DEDICATED PROMINENT INSTANT SHUTTER BUTTON */}
+        <button
+          onClick={handleShutterClick}
+          disabled={capturing}
+          className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full border-4 border-white flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.4)] active:scale-90 transition transform cursor-pointer flex-shrink-0 relative ${
+            capturing 
+              ? 'bg-rose-700 ring-4 ring-rose-500/50 animate-pulse' 
+              : 'bg-gradient-to-tr from-[#6B111F] via-[#8A1828] to-rose-600 hover:brightness-110 active:brightness-125'
+          }`}
+          title="Ambil Foto Instan"
+        >
+          <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full border-2 border-amber-300/60 flex items-center justify-center">
+            <Camera size={26} className="text-amber-200 drop-shadow-md" />
+          </div>
+        </button>
 
         {/* Right: Next / Proceed Button or Flip Camera */}
         {isComplete ? (
           <button
             onClick={() => { stop(); setCurrentStep('review'); }}
-            className="w-11 h-11 rounded-full bg-[#6B111F] border border-amber-400/60 text-amber-200 flex items-center justify-center shadow-lg active:scale-95 transition cursor-pointer flex-shrink-0"
+            className="w-12 h-12 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 border border-emerald-300/60 text-white flex items-center justify-center shadow-lg active:scale-95 transition cursor-pointer flex-shrink-0"
             title="Lanjut ke Peninjauan"
           >
-            <ArrowRight size={20} />
+            <ArrowRight size={22} />
           </button>
         ) : (
           <button
             onClick={handleToggleCamera}
-            className="w-11 h-11 rounded-full bg-[#1C1C1E] border border-white/20 text-white flex items-center justify-center shadow-lg active:scale-90 transition cursor-pointer flex-shrink-0"
+            className="w-12 h-12 rounded-2xl bg-[#1C1C1E] border border-white/20 text-white flex items-center justify-center shadow-lg active:scale-90 transition cursor-pointer flex-shrink-0"
             title="Putar Kamera"
           >
-            <RefreshCw size={18} />
+            <RefreshCw size={19} />
           </button>
         )}
 
