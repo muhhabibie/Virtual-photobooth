@@ -130,24 +130,33 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
 
 // Subscribe to real-time submissions stream
 export function subscribeSubmissions(callback) {
+  // Always trigger immediate initial callback with local data
+  try {
+    callback(getLocalSubmissions());
+  } catch (e) {
+    console.warn("Initial local submissions callback error:", e);
+  }
+
   if (db) {
     try {
       const q = query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
       return onSnapshot(q, (snapshot) => {
-        const cloudData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const localData = getLocalSubmissions();
-        const merged = [...cloudData, ...localData];
-        callback(merged);
+        try {
+          const cloudData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const localData = getLocalSubmissions();
+          const merged = [...cloudData, ...localData];
+          callback(merged);
+        } catch (err) {
+          callback(getLocalSubmissions());
+        }
       }, (err) => {
-        console.warn("Firestore subscription error:", err);
+        console.warn("Firestore subscription error (using LocalStorage fallback):", err.message);
         callback(getLocalSubmissions());
       });
     } catch (e) {
-      callback(getLocalSubmissions());
       return () => {};
     }
   } else {
-    callback(getLocalSubmissions());
     return () => {};
   }
 }

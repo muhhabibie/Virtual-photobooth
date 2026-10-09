@@ -1,29 +1,33 @@
 // Firebase configuration
-// User can replace with their own Firebase credentials
+// Replace with your own Firebase credentials from https://console.firebase.google.com
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBXwuiEMIbV5eM8Qjf3h02Z_rM5DKWq72E",
-  authDomain: "notesapp-fbb6e.firebaseapp.com",
-  projectId: "notesapp-fbb6e",
-  storageBucket: "notesapp-fbb6e.firebasestorage.app",
-  messagingSenderId: "1054916046669",
-  appId: "1:1054916046669:web:584b29a2939425309d5104",
-  measurementId: "G-VTJSM3B4KZ"
+  apiKey: "YOUR_FIREBASE_API_KEY", // Put real Firebase API Key here
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
 };
 
-// Safe initialization that doesn't crash if config is placeholder
-let app, db = null, storage = null;
+// Safe initialization: Only connect to Cloud Firestore if real credentials are provided
+let app = null, db = null, storage = null;
 try {
-  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+  if (
+    firebaseConfig.apiKey && 
+    firebaseConfig.apiKey !== "YOUR_FIREBASE_API_KEY" && 
+    firebaseConfig.apiKey !== "AIzaSyBXwuiEMIbV5eM8Qjf3h02Z_rM5DKWq72E" &&
+    firebaseConfig.projectId
+  ) {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     storage = getStorage(app);
   }
 } catch (e) {
-  console.warn("Firebase init failed or placeholder config used:", e);
+  console.warn("Firebase initialization bypassed. Falling back to LocalStorage:", e);
 }
 
 export { db, storage };
