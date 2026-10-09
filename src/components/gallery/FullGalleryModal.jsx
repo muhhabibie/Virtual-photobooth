@@ -247,7 +247,7 @@ export default function FullGalleryModal() {
 
             {/* Grand Gold Calligraphy: Galeri Pengunjung */}
             <h2 
-              className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl font-normal leading-tight my-1 drop-shadow-2xl select-none pt-2 pb-2 px-6 overflow-visible"
+              className="text-4xl xs:text-5xl sm:text-7xl md:text-8xl font-normal leading-tight my-1 drop-shadow-2xl select-none pt-1 pb-1 px-2 overflow-visible text-center"
               style={{ 
                 fontFamily: "'Great Vibes', 'Alex Brush', cursive",
                 background: 'linear-gradient(135deg, #FFFFFF 10%, #FFF2CC 40%, #F5D77F 70%, #D4AF37 100%)',
@@ -272,22 +272,12 @@ export default function FullGalleryModal() {
               "Setiap senyuman, doa restu, dan kenangan manis yang terabadikan abadi dari seluruh tamu tercinta."
             </p>
 
-            {/* Date & Collection Count Pill + ZIP Download Button */}
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            {/* Date & Collection Count Pill */}
+            <div className="mt-3 flex items-center justify-center">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/65 backdrop-blur-xl border border-amber-400/40 shadow-xl text-xs text-amber-200 font-serif">
                 <Calendar size={12} className="text-[#F5D77F]" />
                 <span>{fullList.length} Koleksi Photo Strip & Ucapan Doa Tamu</span>
               </div>
-
-              <button
-                onClick={handleDownloadZip}
-                disabled={isZipping}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/25 via-amber-400/35 to-amber-500/25 hover:from-amber-500/40 hover:to-amber-500/40 text-[#F5D77F] border border-amber-400/60 shadow-xl text-xs font-serif font-bold transition active:scale-95 cursor-pointer backdrop-blur-md"
-                title="Unduh seluruh album foto & ucapan tamu (.ZIP)"
-              >
-                <Archive size={13} className={isZipping ? 'animate-bounce' : ''} />
-                <span>{isZipping ? 'Mengompres...' : 'Unduh Semua (.ZIP)'}</span>
-              </button>
             </div>
 
           </div>
@@ -295,7 +285,7 @@ export default function FullGalleryModal() {
         </div>
 
         {/* ================= 🌟 3. DARK GLASS SEARCH BAR & FILTER TABS 🌟 ================= */}
-        <div className="max-w-md sm:max-w-lg mx-auto px-4 relative z-30 -mt-6 sm:-mt-8 mb-6 sm:mb-8 flex flex-col gap-2.5">
+        <div className="w-full max-w-md sm:max-w-lg mx-auto px-3.5 sm:px-4 relative z-30 -mt-6 sm:-mt-8 mb-6 sm:mb-8 flex flex-col gap-2.5">
           <div className="bg-[#1C0816]/85 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_25px_rgba(245,215,127,0.18)] border border-[#C4A46C]/60 flex items-center gap-3 transition-all hover:border-[#F5D77F]">
             <Search size={16} className="text-[#F5D77F] ml-2 flex-shrink-0" />
             <input
@@ -315,26 +305,28 @@ export default function FullGalleryModal() {
             )}
           </div>
 
-          {/* Category Filter Pills (Filter by Strip Length/Pose Count) */}
-          <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            {[
-              { id: 'all', label: 'Semua Strip' },
-              { id: '1-cut', label: '1 Foto (Polaroid)' },
-              { id: '2-cut', label: '2 Foto (Duo)' },
-              { id: '4-cut', label: '4 Cut Classic' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTypeFilter(tab.id)}
-                className={`px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex-shrink-0 ${
-                  activeTypeFilter === tab.id
-                    ? 'bg-gradient-to-r from-[#6B111F] to-[#8A1828] text-[#F5D77F] border border-amber-400/60 shadow-lg scale-105'
-                    : 'bg-black/60 border border-white/15 text-gray-300 hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* Category Filter Pills (Filter by Strip Length/Pose Count) - Mobile Touch Scroll Friendly */}
+          <div className="w-full overflow-x-auto no-scrollbar py-1 px-1 flex justify-start sm:justify-center">
+            <div className="flex items-center gap-1.5 min-w-max px-1">
+              {[
+                { id: 'all', label: 'Semua Strip' },
+                { id: '1-cut', label: '1 Foto (Polaroid)' },
+                { id: '2-cut', label: '2 Foto (Duo)' },
+                { id: '4-cut', label: '4 Cut Classic' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTypeFilter(tab.id)}
+                  className={`px-3 py-1.5 rounded-full text-[10.5px] sm:text-[11px] font-bold transition-all cursor-pointer flex-shrink-0 ${
+                    activeTypeFilter === tab.id
+                      ? 'bg-gradient-to-r from-[#6B111F] to-[#8A1828] text-[#F5D77F] border border-amber-400/60 shadow-lg scale-105'
+                      : 'bg-black/60 border border-white/15 text-gray-300 hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
