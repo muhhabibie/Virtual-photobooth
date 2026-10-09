@@ -673,7 +673,7 @@ export default function StepCamera() {
               className="text-[8px] sm:text-[9.5px] font-mono font-bold uppercase tracking-widest"
               style={{ color: isLight ? '#8C7A6B' : (currentTheme.textHex || '#F5D77F') }}
             >
-              THE WEDDING OF
+              {getEventHeaderTitle(activeEvent, activeEvent?.slug)}
             </p>
           </div>
 
@@ -738,7 +738,7 @@ export default function StepCamera() {
               }}
               className="text-xs sm:text-sm font-serif italic leading-tight"
             >
-              Sabrina & Raka
+              {getEventDisplayName(activeEvent, activeEvent?.slug)}
             </h3>
             <p 
               className="text-[7px] sm:text-[8px] font-mono tracking-widest mt-0.5"

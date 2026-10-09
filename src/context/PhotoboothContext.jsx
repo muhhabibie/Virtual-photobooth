@@ -13,16 +13,30 @@ export function PhotoboothProvider({ children }) {
       const raw = localStorage.getItem(EVENTS_STORAGE_KEY);
       let parsed = raw ? JSON.parse(raw) : INITIAL_EVENTS;
 
-      // Auto-merge newly added default events (like pestapora, void-vision, jakcloth) if not yet in localStorage
-      const existingSlugs = new Set(parsed.map(e => e.slug));
+      const initialMap = new Map(INITIAL_EVENTS.map(e => [e.slug.toLowerCase(), e]));
+
+      let updated = parsed.map(evt => {
+        const initMatch = initialMap.get((evt.slug || '').toLowerCase());
+        if (initMatch) {
+          return {
+            ...initMatch,
+            ...evt,
+            eventType: evt.eventType || initMatch.eventType,
+            displayName: evt.displayName || initMatch.displayName,
+            eventName: evt.eventName || initMatch.eventName,
+          };
+        }
+        return evt;
+      });
+
+      const existingSlugs = new Set(updated.map(e => (e.slug || '').toLowerCase()));
       INITIAL_EVENTS.forEach(initEvt => {
-        if (!existingSlugs.has(initEvt.slug)) {
-          parsed.push(initEvt);
+        if (!existingSlugs.has(initEvt.slug.toLowerCase())) {
+          updated.push(initEvt);
         }
       });
 
-      return parsed.map(evt => {
-        // Ensure Mempelai Pria comes before Mempelai Wanita
+      return updated.map(evt => {
         if (evt.groomName && evt.brideName && evt.displayName === `${evt.brideName} & ${evt.groomName}`) {
           return { ...evt, displayName: `${evt.groomName} & ${evt.brideName}` };
         }

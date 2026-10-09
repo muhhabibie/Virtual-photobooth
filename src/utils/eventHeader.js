@@ -1,22 +1,17 @@
 // Helper utility to format event header title & branding dynamically for Photobooth Strips
 // Handles Wedding, Concert, Exhibition, Festival, Birthday, Corporate & Custom events
 
-export function getEventHeaderTitle(activeEvent) {
-  if (!activeEvent) return 'THE WEDDING OF';
+export function getEventHeaderTitle(activeEvent, slug = '') {
+  const name = (activeEvent?.eventName || activeEvent?.displayName || slug || '').toLowerCase();
+  const type = (activeEvent?.eventType || '').toLowerCase();
 
-  const type = (activeEvent.eventType || '').toLowerCase();
-  const name = (activeEvent.eventName || activeEvent.displayName || '').toLowerCase();
-
-  if (type === 'wedding' || name.includes('wedding') || name.includes('pernikahan')) {
-    return 'THE WEDDING OF';
-  }
-  if (type === 'concert' || name.includes('pestapora') || name.includes('konser') || name.includes('fest')) {
+  if (name.includes('pestapora') || type === 'concert' || name.includes('konser') || name.includes('fest')) {
     return 'MUSIC FESTIVAL & CONCERT';
   }
-  if (type === 'exhibition' || name.includes('pameran') || name.includes('gallery') || name.includes('vision')) {
+  if (name.includes('vision') || type === 'exhibition' || name.includes('pameran') || name.includes('gallery')) {
     return 'ART EXHIBITION & GALLERY';
   }
-  if (type === 'festival' || name.includes('bazaar') || name.includes('jakcloth') || name.includes('expo')) {
+  if (name.includes('jakcloth') || type === 'festival' || name.includes('bazaar') || name.includes('expo')) {
     return 'FESTIVAL & BAZAAR';
   }
   if (type === 'birthday' || name.includes('birthday') || name.includes('ultah') || name.includes('sweet 17')) {
@@ -25,15 +20,31 @@ export function getEventHeaderTitle(activeEvent) {
   if (type === 'corporate' || type === 'general' || name.includes('gathering') || name.includes('launching')) {
     return 'SPECIAL EVENT';
   }
+  if (type === 'wedding' || name.includes('wedding') || name.includes('pernikahan') || name.includes('sabrina') || name.includes('raka') || name.includes('mempelai')) {
+    return 'THE WEDDING OF';
+  }
 
-  if (activeEvent.headerTitle) return activeEvent.headerTitle.toUpperCase();
+  if (activeEvent?.headerTitle) return activeEvent.headerTitle.toUpperCase();
 
-  return 'OFFICIAL PHOTOBOOTH';
+  if (slug && !slug.includes('wedding') && !slug.includes('raka') && !slug.includes('sabrina')) {
+    return 'OFFICIAL PHOTOBOOTH';
+  }
+
+  return 'THE WEDDING OF';
 }
 
-export function getEventDisplayName(activeEvent) {
-  if (!activeEvent) return 'Sabrina & Raka';
-  return activeEvent.displayName || activeEvent.eventName || 'Sabrina & Raka';
+export function getEventDisplayName(activeEvent, slug = '') {
+  if (activeEvent && (activeEvent.displayName || activeEvent.eventName)) {
+    return activeEvent.displayName || activeEvent.eventName;
+  }
+  if (slug) {
+    const cleanSlug = slug.replace(/[-_]/g, ' ').trim();
+    if (cleanSlug.toLowerCase() === 'pestapora') return 'Pestapora 2026';
+    if (cleanSlug.toLowerCase() === 'void vision' || cleanSlug.toLowerCase() === 'void-vision') return 'Void Vision';
+    if (cleanSlug.toLowerCase() === 'jakcloth') return 'Jakcloth Fest';
+    return cleanSlug.replace(/\b\w/g, c => c.toUpperCase());
+  }
+  return 'Sabrina & Raka';
 }
 
 export function getEventFormattedDate(activeEvent) {
