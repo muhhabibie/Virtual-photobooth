@@ -547,7 +547,7 @@ export default function StepResult() {
           className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] font-serif font-bold text-xs sm:text-sm border border-amber-400/50 shadow-2xl shadow-rose-950/60 flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer"
         >
           <Download size={17} />
-          <span>Download Photo Strip HD (2X Retina)</span>
+          <span>Download Photo Strip HD</span>
         </button>
 
         {/* Secondary Actions */}
