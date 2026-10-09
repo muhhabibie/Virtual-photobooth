@@ -284,7 +284,7 @@ export default function StepCamera() {
     const pad = 30 * scale;
     const gap = 18 * scale;
     const headerH = 65 * scale;
-    const footerH = 85 * scale;
+    const footerH = 100 * scale;
 
     const photoLayouts = Array.from({ length: count }).map((_, idx) => {
       const photo = capturedPhotos[idx];
@@ -341,16 +341,31 @@ export default function StepCamera() {
       drawY += h + gap;
     });
 
-    const displayName = guestName ? guestName.trim() : 'Sabrina & Raka';
-    ctx.fillStyle = isLightBg ? '#6B111F' : 'rgba(255,255,255,0.85)';
-    ctx.font = `italic bold ${13 * scale}px Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('With Love & Blessings,', totalW / 2, totalH - pad - 38 * scale);
+    // Frame Footer Signature (100% Identical to Gambar 2 Viewfinder & Physical Strip)
+    const coupleName = activeEvent?.displayName || 'Sabrina & Raka';
+    const dateText = activeEvent?.eventDate ? activeEvent.eventDate.replace(/-/g, ' · ') : '30 · 05 · 2026';
+    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
 
-    ctx.fillStyle = isLightBg ? '#6B111F' : '#F5D77F';
-    ctx.font = `italic bold ${24 * scale}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-    ctx.fillText(displayName, totalW / 2, totalH - pad - 10 * scale);
-  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, showPreviewModal]);
+    const coupleColor = isLightBg ? '#3A2D28' : (currentTheme.textHex || '#F5D77F');
+    const dateColor = isLightBg ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)';
+    const guestColor = isLightBg ? '#5A4A3E' : '#FFFFFF';
+
+    // Line 1: Couple Calligraphy ("Sabrina & Raka")
+    ctx.fillStyle = coupleColor;
+    ctx.font = `${28 * scale}px 'Great Vibes', 'Alex Brush', 'Playfair Display', Georgia, serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(coupleName, totalW / 2, totalH - pad - 60 * scale);
+
+    // Line 2: Event Date ("30 · 05 · 2026")
+    ctx.fillStyle = dateColor;
+    ctx.font = `bold ${10 * scale}px monospace, sans-serif`;
+    ctx.fillText(dateText, totalW / 2, totalH - pad - 36 * scale);
+
+    // Line 3: Guest Name ("sf")
+    ctx.fillStyle = guestColor;
+    ctx.font = `bold ${13 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(guestTitle, totalW / 2, totalH - pad - 14 * scale);
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, showPreviewModal, activeEvent, currentTheme]);
 
   useEffect(() => {
     renderModalStrip();
