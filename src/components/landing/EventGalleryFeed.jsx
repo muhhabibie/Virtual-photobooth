@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
+import { getEventHeaderTitle } from '../../utils/eventHeader';
 
 const romanticTransition = {
   duration: 1.1,
@@ -208,7 +209,7 @@ export default function EventGalleryFeed() {
                     style={{ color: subTextColor }}
                     className="text-[7px] sm:text-[8px] font-mono font-bold uppercase tracking-widest"
                   >
-                    THE WEDDING OF
+                    {getEventHeaderTitle(activeEvent, activeEvent?.slug)}
                   </p>
                 </div>
 

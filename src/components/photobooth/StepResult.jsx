@@ -329,11 +329,18 @@ export default function StepResult() {
     const couple = sanitize(activeEvent?.displayName) || (isWedding ? 'Pengantin' : 'Event');
     const filename = `${guest}_${couple}.jpg`;
 
-    const a = document.createElement('a');
-    a.download = filename;
-    a.href = canvas.toDataURL('image/jpeg', 0.96);
-    a.click();
-    toast(`Photo strip berhasil diunduh (${filename})!`, 'success');
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast(`Photo strip berhasil diunduh (${filename})!`, 'success');
+    }, 'image/jpeg', 0.92);
   };
 
   const handleShare = async () => {
