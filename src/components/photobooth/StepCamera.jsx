@@ -636,41 +636,41 @@ export default function StepCamera() {
       />
 
       {/* ================= 🌟 1. INSTAGRAM STORY TOP HEADER BAR 🌟 ================= */}
-      <div className="relative z-30 flex items-center justify-between w-full max-w-md mx-auto flex-shrink-0 pt-1 px-2 pb-1">
+      <div className="relative z-30 flex items-center justify-between w-full max-w-sm sm:max-w-md mx-auto flex-shrink-0 pt-0.5 px-2 pb-0.5">
         {/* Left: Close X Button */}
         <button
           onClick={() => { stop(); setCurrentStep('frames'); }}
-          className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md"
           title="Tutup & Kembali"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
         {/* Center: Pose Counter Badge */}
-        <div className="px-4 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-amber-200 text-[11px] font-mono font-bold tracking-widest uppercase flex items-center justify-center shadow-md">
+        <div className="px-3.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-amber-200 text-[10.5px] font-mono font-bold tracking-widest uppercase flex items-center justify-center shadow-md">
           <span>POSE {nextPhotoNum} / {targetPhotoCount}</span>
         </div>
 
         {/* Right: Empty Spacer */}
-        <div className="w-10 h-10 pointer-events-none" />
+        <div className="w-9 h-9 sm:w-10 sm:h-10 pointer-events-none" />
       </div>
 
       {/* ================= 🌟 2. INSTAGRAM STORY VIEWFINDER WITH ROMANTIC FRAME 🌟 ================= */}
-      <div className="flex-1 min-h-0 w-full max-w-sm sm:max-w-md mx-auto relative flex flex-col justify-center items-center py-1 overflow-hidden z-10">
+      <div className="flex-1 min-h-0 w-full max-w-sm sm:max-w-md mx-auto relative flex flex-col justify-center items-center py-0.5 sm:py-1 overflow-hidden z-10">
         
-        {/* Snug & Comfortable Frame Viewport Container */}
+        {/* Responsive Flex Frame Viewport Container (Flex-1 Adaptive Height - Never Overflows) */}
         <div 
           style={{ 
             backgroundColor: currentTheme.hex,
             border: currentTheme.borderHex ? `2px solid ${currentTheme.borderHex}` : '1px solid rgba(255,255,255,0.15)'
           }}
-          className="relative w-full h-[58vh] sm:h-[62vh] max-h-[520px] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 my-auto overflow-hidden"
+          className="relative w-full h-full max-h-[460px] xs:max-h-[480px] sm:max-h-[520px] rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 overflow-hidden"
         >
           
           {/* Top Calligraphy Sub-Header */}
-          <div className="text-center pb-1.5 flex-shrink-0 z-10 w-full">
+          <div className="text-center pb-1 flex-shrink-0 z-10 w-full">
             <p 
-              className="text-[8px] sm:text-[9.5px] font-mono font-bold uppercase tracking-widest"
+              className="text-[8px] sm:text-[9px] font-mono font-bold uppercase tracking-widest"
               style={{ color: isLight ? '#8C7A6B' : (currentTheme.textHex || '#F5D77F') }}
             >
               {getEventHeaderTitle(activeEvent, activeEvent?.slug)}
@@ -704,14 +704,14 @@ export default function StepCamera() {
 
             {/* Instagram Style Swipe Toast / Floating Active Filter Toast */}
             {swipeToast ? (
-              <div className="absolute inset-x-0 top-6 z-30 flex justify-center pointer-events-none animate-bounce">
-                <div className="bg-black/75 backdrop-blur-md border border-amber-400/90 text-amber-200 px-4 py-1.5 rounded-full text-xs font-mono font-bold shadow-2xl tracking-wider uppercase flex items-center gap-2">
+              <div className="absolute inset-x-0 top-5 z-30 flex justify-center pointer-events-none animate-bounce">
+                <div className="bg-black/75 backdrop-blur-md border border-amber-400/90 text-amber-200 px-3.5 py-1 rounded-full text-xs font-mono font-bold shadow-2xl tracking-wider uppercase flex items-center gap-2">
                   <span>{swipeToast}</span>
                 </div>
               </div>
             ) : (
-              <div className="absolute top-2.5 inset-x-0 z-30 flex justify-center pointer-events-none opacity-40 group-hover:opacity-100 transition duration-300">
-                <span className="bg-black/60 backdrop-blur-xs text-amber-100/90 px-3 py-0.5 rounded-full text-[8.5px] font-mono tracking-widest uppercase shadow-md border border-white/10">
+              <div className="absolute top-2 inset-x-0 z-30 flex justify-center pointer-events-none opacity-40 group-hover:opacity-100 transition duration-300">
+                <span className="bg-black/60 backdrop-blur-xs text-amber-100/90 px-2.5 py-0.5 rounded-full text-[8px] font-mono tracking-widest uppercase shadow-md border border-white/10">
                   ‹ Swipe / Geser Layar untuk Ganti Filter ›
                 </span>
               </div>
@@ -719,8 +719,8 @@ export default function StepCamera() {
 
             {/* Top Notification Toast (Positioned at TOP of camera viewfinder, away from shutter button) */}
             {topNotice && (
-              <div className="absolute top-3 inset-x-0 z-40 flex justify-center pointer-events-none animate-fadeIn">
-                <div className="bg-emerald-950/90 backdrop-blur-md border border-emerald-400/80 text-emerald-200 px-4 py-1.5 rounded-full text-xs font-mono font-bold shadow-2xl tracking-wide flex items-center gap-2">
+              <div className="absolute top-2.5 inset-x-0 z-40 flex justify-center pointer-events-none animate-fadeIn">
+                <div className="bg-emerald-950/90 backdrop-blur-md border border-emerald-400/80 text-emerald-200 px-3.5 py-1 rounded-full text-xs font-mono font-bold shadow-2xl tracking-wide flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>{topNotice}</span>
                 </div>
@@ -730,7 +730,7 @@ export default function StepCamera() {
           </div>
 
           {/* Bottom Frame Chin Preview */}
-          <div className="text-center pt-2 pb-0.5 flex-shrink-0 flex flex-col items-center w-full">
+          <div className="text-center pt-1.5 pb-0.5 flex-shrink-0 flex flex-col items-center w-full">
             <h3 
               style={{ 
                 color: isLight ? '#3A2D28' : (currentTheme.textHex || '#F5D77F'),
@@ -741,14 +741,14 @@ export default function StepCamera() {
               {getEventDisplayName(activeEvent, activeEvent?.slug)}
             </h3>
             <p 
-              className="text-[7px] sm:text-[8px] font-mono tracking-widest mt-0.5"
+              className="text-[7px] sm:text-[7.5px] font-mono tracking-widest mt-0.5"
               style={{ color: isLight ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)' }}
             >
               30 · 05 · 2026
             </p>
             <h4 
               style={{ color: isLight ? '#5A4A3E' : '#FFFFFF' }}
-              className="text-[10px] sm:text-xs font-sans font-bold leading-tight mt-0.5 tracking-wide truncate max-w-full px-1"
+              className="text-[9.5px] sm:text-[11px] font-sans font-bold leading-tight mt-0.5 tracking-wide truncate max-w-full px-1"
             >
               {guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)'}
             </h4>
@@ -759,17 +759,17 @@ export default function StepCamera() {
       </div>
 
       {/* ================= 🌟 3. INSTAGRAM STORY FILTER CIRCLES CAROUSEL 🌟 ================= */}
-      <div className="relative z-30 flex flex-col items-center w-full max-w-md mx-auto flex-shrink-0 my-1">
+      <div className="relative z-30 flex flex-col items-center w-full max-w-sm sm:max-w-md mx-auto flex-shrink-0 gap-1 pt-0.5">
         
         {/* Tab Switcher Pills (Aksesoris AR / Tone Filter) */}
-        <div className="flex items-center gap-1.5 p-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 mb-1 shadow-md">
+        <div className="flex items-center gap-1 p-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 shadow-md">
           <button
             onClick={() => {
               isProgrammaticScrollRef.current = true;
               setControlTab('accessories');
               setTimeout(() => { isProgrammaticScrollRef.current = false; }, 500);
             }}
-            className={`px-3 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
+            className={`px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
               controlTab === 'accessories'
                 ? 'bg-gradient-to-r from-amber-600 to-rose-900 text-white shadow-sm'
                 : 'text-gray-400 hover:text-white'
@@ -785,7 +785,7 @@ export default function StepCamera() {
               setControlTab('filters');
               setTimeout(() => { isProgrammaticScrollRef.current = false; }, 500);
             }}
-            className={`px-3 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
+            className={`px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
               controlTab === 'filters'
                 ? 'bg-gradient-to-r from-amber-600 to-rose-900 text-white shadow-sm'
                 : 'text-gray-400 hover:text-white'
@@ -796,15 +796,14 @@ export default function StepCamera() {
           </button>
         </div>
 
-        {/* Lens Carousel (Dynamic AR Lenses or Tone Filters) */}
         {/* Lens Carousel (Dynamic AR Lenses or Tone Filters - Act as Direct Camera Shutter) */}
         {controlTab === 'accessories' ? (
           <div 
             ref={accessoryCarouselRef}
             onScroll={handleAccessoryScroll}
-            className="w-full overflow-x-auto no-scrollbar py-2 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth"
+            className="w-full overflow-x-auto no-scrollbar py-1 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth"
           >
-            <div className="flex items-center gap-3.5 min-w-max px-[calc(50vw-32px)] sm:px-[calc(200px-32px)]">
+            <div className="flex items-center gap-3 min-w-max px-[calc(50vw-28px)] sm:px-[calc(192px-28px)]">
               {AR_ACCESSORIES.map(acc => {
                 const isActive = selectedAccessory === acc.id;
                 const IconComp = ACCESSORY_ICONS[acc.id]?.icon || Crown;
@@ -821,8 +820,8 @@ export default function StepCamera() {
                       }
                     }}
                     disabled={capturing}
-                    className={`flex flex-col items-center gap-1 transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
-                      isActive ? 'scale-110 opacity-100 z-20' : 'scale-90 opacity-45 hover:opacity-85 hover:scale-100'
+                    className={`flex flex-col items-center gap-0.5 transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
+                      isActive ? 'scale-105 opacity-100 z-20' : 'scale-90 opacity-40 hover:opacity-80 hover:scale-95'
                     }`}
                     title={isActive ? "Ketuk untuk Memotret" : `Pilih ${acc.name}`}
                   >
@@ -830,17 +829,17 @@ export default function StepCamera() {
                       className={`rounded-full flex items-center justify-center transition-all duration-300 relative ${
                         isActive
                           ? capturing
-                            ? 'w-16 h-16 sm:w-18 sm:h-18 ring-4 ring-rose-500 bg-rose-700 animate-pulse shadow-[0_0_35px_rgba(244,63,94,0.9)]'
-                            : 'w-16 h-16 sm:w-18 sm:h-18 ring-4 ring-white ring-offset-3 ring-offset-black bg-gradient-to-br from-amber-500/70 via-amber-600/80 to-rose-950 shadow-[0_0_35px_rgba(255,255,255,0.75)] active:scale-95'
-                          : 'w-11 h-11 sm:w-12 sm:h-12 bg-black/70 border border-white/20'
+                            ? 'w-14 h-14 sm:w-16 sm:h-16 ring-4 ring-rose-500 bg-rose-700 animate-pulse shadow-[0_0_30px_rgba(244,63,94,0.9)]'
+                            : 'w-14 h-14 sm:w-16 sm:h-16 ring-4 ring-white ring-offset-2 ring-offset-black bg-gradient-to-br from-amber-500/70 via-amber-600/80 to-rose-950 shadow-[0_0_25px_rgba(255,255,255,0.7)] active:scale-95'
+                          : 'w-10 h-10 sm:w-11 sm:h-11 bg-black/70 border border-white/20'
                       }`}
                     >
-                      <IconComp size={isActive ? 26 : 18} className={isActive ? 'text-white drop-shadow-lg' : iconColor} />
+                      <IconComp size={isActive ? 24 : 17} className={isActive ? 'text-white drop-shadow-lg' : iconColor} />
                       {isActive && (
-                        <span className="absolute inset-[-5px] rounded-full border border-white/40 pointer-events-none animate-pulse" />
+                        <span className="absolute inset-[-4px] rounded-full border border-white/40 pointer-events-none animate-pulse" />
                       )}
                     </div>
-                    <span className={`text-[8.5px] font-mono tracking-wider uppercase transition-colors ${
+                    <span className={`text-[8px] font-mono tracking-wider uppercase transition-colors truncate max-w-[70px] ${
                       isActive ? 'text-amber-200 font-bold drop-shadow-sm' : 'text-gray-500'
                     }`}>
                       {acc.name}
@@ -854,9 +853,9 @@ export default function StepCamera() {
           <div 
             ref={filterCarouselRef}
             onScroll={handleFilterScroll}
-            className="w-full overflow-x-auto no-scrollbar py-2 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth"
+            className="w-full overflow-x-auto no-scrollbar py-1 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth"
           >
-            <div className="flex items-center gap-3.5 min-w-max px-[calc(50vw-32px)] sm:px-[calc(200px-32px)]">
+            <div className="flex items-center gap-3 min-w-max px-[calc(50vw-28px)] sm:px-[calc(192px-28px)]">
               {CAMERA_FILTERS.map(filter => {
                 const isActive = selectedFilter === filter.id;
                 const IconComp = filter.icon || Sparkles;
@@ -872,8 +871,8 @@ export default function StepCamera() {
                       }
                     }}
                     disabled={capturing}
-                    className={`flex flex-col items-center gap-1 transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
-                      isActive ? 'scale-110 opacity-100 z-20' : 'scale-90 opacity-45 hover:opacity-85 hover:scale-100'
+                    className={`flex flex-col items-center gap-0.5 transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
+                      isActive ? 'scale-105 opacity-100 z-20' : 'scale-90 opacity-40 hover:opacity-80 hover:scale-95'
                     }`}
                     title={isActive ? "Ketuk untuk Memotret" : `Pilih filter ${filter.label}`}
                   >
@@ -881,20 +880,20 @@ export default function StepCamera() {
                       className={`rounded-full flex flex-col items-center justify-center transition-all duration-300 relative ${
                         isActive
                           ? capturing
-                            ? 'w-16 h-16 sm:w-18 sm:h-18 ring-4 ring-rose-500 bg-rose-700 animate-pulse shadow-[0_0_35px_rgba(244,63,94,0.9)]'
-                            : `w-16 h-16 sm:w-18 sm:h-18 ring-4 ring-white ring-offset-3 ring-offset-black bg-gradient-to-br ${filter.gradient} shadow-[0_0_35px_rgba(255,255,255,0.75)] active:scale-95`
-                          : 'w-11 h-11 sm:w-12 sm:h-12 bg-black/70 border border-white/20'
+                            ? 'w-14 h-14 sm:w-16 sm:h-16 ring-4 ring-rose-500 bg-rose-700 animate-pulse shadow-[0_0_30px_rgba(244,63,94,0.9)]'
+                            : `w-14 h-14 sm:w-16 sm:h-16 ring-4 ring-white ring-offset-2 ring-offset-black bg-gradient-to-br ${filter.gradient} shadow-[0_0_25px_rgba(255,255,255,0.7)] active:scale-95`
+                          : 'w-10 h-10 sm:w-11 sm:h-11 bg-black/70 border border-white/20'
                       }`}
                     >
-                      <IconComp size={isActive ? 22 : 16} className="text-white drop-shadow-md" />
-                      <span className="text-[7.5px] font-mono font-bold text-white tracking-widest mt-0.5 uppercase drop-shadow-sm">
+                      <IconComp size={isActive ? 20 : 15} className="text-white drop-shadow-md" />
+                      <span className="text-[7px] font-mono font-bold text-white tracking-widest uppercase drop-shadow-sm">
                         {filter.short}
                       </span>
                       {isActive && (
-                        <span className="absolute inset-[-5px] rounded-full border border-white/40 pointer-events-none animate-pulse" />
+                        <span className="absolute inset-[-4px] rounded-full border border-white/40 pointer-events-none animate-pulse" />
                       )}
                     </div>
-                    <span className={`text-[8.5px] font-mono tracking-wider uppercase transition-colors ${
+                    <span className={`text-[8px] font-mono tracking-wider uppercase transition-colors truncate max-w-[70px] ${
                       isActive ? 'text-amber-200 font-bold drop-shadow-sm' : 'text-gray-500'
                     }`}>
                       {filter.label}
@@ -908,13 +907,13 @@ export default function StepCamera() {
 
       </div>
 
-      {/* ================= 🌟 4. INSTAGRAM BOTTOM CONTROL DOCK (NO REDUNDANT CAMERA SHUTTER) 🌟 ================= */}
-      <div className="relative z-30 w-full max-w-md mx-auto pt-1 pb-1 px-4 flex items-center justify-between gap-3 flex-shrink-0">
+      {/* ================= 🌟 4. INSTAGRAM BOTTOM CONTROL DOCK (CLEAN & NON-OVERLAPPING) 🌟 ================= */}
+      <div className="relative z-30 w-full max-w-sm sm:max-w-md mx-auto pt-0 pb-1 px-4 flex items-center justify-between flex-shrink-0">
         
         {/* Left: Gallery Thumbnail Button */}
         <button
           onClick={() => setShowPreviewModal(true)}
-          className="w-12 h-12 rounded-2xl bg-[#1C1C1E] border border-amber-400/50 overflow-hidden flex items-center justify-center text-white text-xs font-mono font-bold shadow-lg active:scale-95 transition cursor-pointer relative group flex-shrink-0"
+          className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#1C1C1E] border border-amber-400/50 overflow-hidden flex items-center justify-center text-white text-xs font-mono font-bold shadow-lg active:scale-95 transition cursor-pointer relative group flex-shrink-0"
           title="Buka Preview Foto & Strip"
         >
           {capturedPhotos.length > 0 ? (
@@ -936,30 +935,22 @@ export default function StepCamera() {
           )}
         </button>
 
-        {/* Center: Tap to Shoot Instruction Pill */}
-        <div className="flex flex-col items-center justify-center pointer-events-none select-none">
-          <div className="px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-sans text-amber-200/90 flex items-center gap-1.5 shadow-md">
-            <Sparkles size={11} className="text-amber-400 animate-pulse" />
-            <span>Ketuk tombol {controlTab === 'accessories' ? 'aksesoris' : 'filter'} untuk foto</span>
-          </div>
-        </div>
-
         {/* Right: Next / Proceed Button or Flip Camera */}
         {isComplete ? (
           <button
             onClick={() => { stop(); setCurrentStep('review'); }}
-            className="w-12 h-12 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 border border-emerald-300/60 text-white flex items-center justify-center shadow-lg active:scale-95 transition cursor-pointer flex-shrink-0"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 border border-emerald-300/60 text-white flex items-center justify-center shadow-lg active:scale-95 transition cursor-pointer flex-shrink-0"
             title="Lanjut ke Peninjauan"
           >
-            <ArrowRight size={22} />
+            <ArrowRight size={20} />
           </button>
         ) : (
           <button
             onClick={handleToggleCamera}
-            className="w-12 h-12 rounded-2xl bg-[#1C1C1E] border border-white/20 text-white flex items-center justify-center shadow-lg active:scale-90 transition cursor-pointer flex-shrink-0"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#1C1C1E] border border-white/20 text-white flex items-center justify-center shadow-lg active:scale-90 transition cursor-pointer flex-shrink-0"
             title="Putar Kamera"
           >
-            <RefreshCw size={19} className="text-gray-300" />
+            <RefreshCw size={18} className="text-gray-300" />
           </button>
         )}
 
