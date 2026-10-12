@@ -3,7 +3,7 @@ import {
   ArrowLeft, RefreshCw, Timer, Disc, Camera, ArrowRight, 
   Sliders, Check, Trash2, X, ChevronRight, Image as ImageIcon,
   Crown, Flower2, Glasses, Star, Heart, Smile, Wand2, Sparkle, SlidersHorizontal,
-  Infinity as InfinityIcon, Type, ChevronDown, Zap, ZapOff, Eye
+  Infinity as InfinityIcon, Type, ChevronDown, Zap, ZapOff, Eye, Sparkles, Sun
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useCamera } from '../../hooks/useCamera';
@@ -24,11 +24,11 @@ const ACCESSORY_ICONS = {
 };
 
 const CAMERA_FILTERS = [
-  { id: 'natural', label: 'NATURAL' },
-  { id: 'soft-warm', label: 'SOFT WARM' },
-  { id: 'mono-classic', label: 'MONO CLASSIC' },
-  { id: 'vintage', label: 'VINTAGE' },
-  { id: 'bright-glow', label: 'BRIGHT GLOW' },
+  { id: 'natural', label: 'Natural', short: 'NAT', gradient: 'from-amber-400 via-amber-500 to-yellow-600', icon: Sparkles },
+  { id: 'soft-warm', label: 'Soft Warm', short: 'WARM', gradient: 'from-orange-400 via-amber-600 to-rose-700', icon: Sun },
+  { id: 'mono-classic', label: 'Mono B&W', short: 'B&W', gradient: 'from-zinc-300 via-zinc-600 to-zinc-900', icon: SlidersHorizontal },
+  { id: 'vintage', label: 'Vintage 90s', short: 'VINT', gradient: 'from-amber-600 via-yellow-700 to-stone-900', icon: Wand2 },
+  { id: 'bright-glow', label: 'Bright Glow', short: 'GLOW', gradient: 'from-rose-400 via-pink-500 to-purple-800', icon: Sparkle },
 ];
 
 const COLOR_THEMES = [
@@ -797,13 +797,14 @@ export default function StepCamera() {
         </div>
 
         {/* Lens Carousel (Dynamic AR Lenses or Tone Filters) */}
+        {/* Lens Carousel (Dynamic AR Lenses or Tone Filters - Act as Direct Camera Shutter) */}
         {controlTab === 'accessories' ? (
           <div 
             ref={accessoryCarouselRef}
             onScroll={handleAccessoryScroll}
             className="w-full overflow-x-auto no-scrollbar py-2 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth"
           >
-            <div className="flex items-center gap-3.5 min-w-max px-[calc(50vw-28px)] sm:px-[calc(200px-28px)]">
+            <div className="flex items-center gap-3.5 min-w-max px-[calc(50vw-32px)] sm:px-[calc(200px-32px)]">
               {AR_ACCESSORIES.map(acc => {
                 const isActive = selectedAccessory === acc.id;
                 const IconComp = ACCESSORY_ICONS[acc.id]?.icon || Crown;
@@ -812,20 +813,38 @@ export default function StepCamera() {
                   <button
                     key={acc.id}
                     ref={el => (accessoryRefs.current[acc.id] = el)}
-                    onClick={() => selectAccessoryByClick(acc.id)}
+                    onClick={() => {
+                      if (isActive) {
+                        handleShutterClick();
+                      } else {
+                        selectAccessoryByClick(acc.id);
+                      }
+                    }}
+                    disabled={capturing}
                     className={`flex flex-col items-center gap-1 transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
                       isActive ? 'scale-110 opacity-100 z-20' : 'scale-90 opacity-45 hover:opacity-85 hover:scale-100'
                     }`}
+                    title={isActive ? "Ketuk untuk Memotret" : `Pilih ${acc.name}`}
                   >
                     <div
-                      className={`rounded-full flex items-center justify-center transition-all duration-300 ${
+                      className={`rounded-full flex items-center justify-center transition-all duration-300 relative ${
                         isActive
-                          ? 'w-14 h-14 sm:w-16 sm:h-16 ring-4 ring-white ring-offset-2 ring-offset-black bg-gradient-to-br from-amber-500/50 via-amber-600/60 to-rose-950/80 shadow-[0_0_30px_rgba(255,255,255,0.65)]'
-                          : 'w-10 h-10 sm:w-11 sm:h-11 bg-black/70 border border-white/20'
+                          ? capturing
+                            ? 'w-16 h-16 sm:w-18 sm:h-18 ring-4 ring-rose-500 bg-rose-700 animate-pulse shadow-[0_0_35px_rgba(244,63,94,0.9)]'
+                            : 'w-16 h-16 sm:w-18 sm:h-18 ring-4 ring-white ring-offset-3 ring-offset-black bg-gradient-to-br from-amber-500/70 via-amber-600/80 to-rose-950 shadow-[0_0_35px_rgba(255,255,255,0.75)] active:scale-95'
+                          : 'w-11 h-11 sm:w-12 sm:h-12 bg-black/70 border border-white/20'
                       }`}
                     >
-                      <IconComp size={isActive ? 24 : 16} className={isActive ? 'text-white drop-shadow-lg' : iconColor} />
+                      <IconComp size={isActive ? 26 : 18} className={isActive ? 'text-white drop-shadow-lg' : iconColor} />
+                      {isActive && (
+                        <span className="absolute inset-[-5px] rounded-full border border-white/40 pointer-events-none animate-pulse" />
+                      )}
                     </div>
+                    <span className={`text-[8.5px] font-mono tracking-wider uppercase transition-colors ${
+                      isActive ? 'text-amber-200 font-bold drop-shadow-sm' : 'text-gray-500'
+                    }`}>
+                      {acc.name}
+                    </span>
                   </button>
                 );
               })}
@@ -837,21 +856,49 @@ export default function StepCamera() {
             onScroll={handleFilterScroll}
             className="w-full overflow-x-auto no-scrollbar py-2 flex justify-start items-center touch-pan-x snap-x snap-mandatory scroll-smooth"
           >
-            <div className="flex items-center gap-3 min-w-max px-[calc(50vw-36px)] sm:px-[calc(200px-36px)]">
+            <div className="flex items-center gap-3.5 min-w-max px-[calc(50vw-32px)] sm:px-[calc(200px-32px)]">
               {CAMERA_FILTERS.map(filter => {
                 const isActive = selectedFilter === filter.id;
+                const IconComp = filter.icon || Sparkles;
                 return (
                   <button
                     key={filter.id}
                     ref={el => (filterRefs.current[filter.id] = el)}
-                    onClick={() => selectFilterByClick(filter.id)}
-                    className={`text-[10.5px] tracking-wider font-bold uppercase px-4 py-1.5 rounded-full backdrop-blur-md transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
-                      isActive
-                        ? 'border-2 border-white ring-2 ring-amber-300 bg-gradient-to-r from-amber-900/90 to-rose-900/90 text-white shadow-[0_0_20px_rgba(255,255,255,0.5)] scale-110 opacity-100'
-                        : 'bg-black/70 border border-white/20 text-gray-400 hover:text-white opacity-50 scale-95'
+                    onClick={() => {
+                      if (isActive) {
+                        handleShutterClick();
+                      } else {
+                        selectFilterByClick(filter.id);
+                      }
+                    }}
+                    disabled={capturing}
+                    className={`flex flex-col items-center gap-1 transition-all duration-300 cursor-pointer snap-center flex-shrink-0 ${
+                      isActive ? 'scale-110 opacity-100 z-20' : 'scale-90 opacity-45 hover:opacity-85 hover:scale-100'
                     }`}
+                    title={isActive ? "Ketuk untuk Memotret" : `Pilih filter ${filter.label}`}
                   >
-                    {filter.label}
+                    <div
+                      className={`rounded-full flex flex-col items-center justify-center transition-all duration-300 relative ${
+                        isActive
+                          ? capturing
+                            ? 'w-16 h-16 sm:w-18 sm:h-18 ring-4 ring-rose-500 bg-rose-700 animate-pulse shadow-[0_0_35px_rgba(244,63,94,0.9)]'
+                            : `w-16 h-16 sm:w-18 sm:h-18 ring-4 ring-white ring-offset-3 ring-offset-black bg-gradient-to-br ${filter.gradient} shadow-[0_0_35px_rgba(255,255,255,0.75)] active:scale-95`
+                          : 'w-11 h-11 sm:w-12 sm:h-12 bg-black/70 border border-white/20'
+                      }`}
+                    >
+                      <IconComp size={isActive ? 22 : 16} className="text-white drop-shadow-md" />
+                      <span className="text-[7.5px] font-mono font-bold text-white tracking-widest mt-0.5 uppercase drop-shadow-sm">
+                        {filter.short}
+                      </span>
+                      {isActive && (
+                        <span className="absolute inset-[-5px] rounded-full border border-white/40 pointer-events-none animate-pulse" />
+                      )}
+                    </div>
+                    <span className={`text-[8.5px] font-mono tracking-wider uppercase transition-colors ${
+                      isActive ? 'text-amber-200 font-bold drop-shadow-sm' : 'text-gray-500'
+                    }`}>
+                      {filter.label}
+                    </span>
                   </button>
                 );
               })}
@@ -861,8 +908,8 @@ export default function StepCamera() {
 
       </div>
 
-      {/* ================= 🌟 4. INSTAGRAM BOTTOM CONTROL DOCK 🌟 ================= */}
-      <div className="relative z-30 w-full max-w-md mx-auto pt-1 pb-1 px-3 flex items-center justify-between gap-3 flex-shrink-0">
+      {/* ================= 🌟 4. INSTAGRAM BOTTOM CONTROL DOCK (NO REDUNDANT CAMERA SHUTTER) 🌟 ================= */}
+      <div className="relative z-30 w-full max-w-md mx-auto pt-1 pb-1 px-4 flex items-center justify-between gap-3 flex-shrink-0">
         
         {/* Left: Gallery Thumbnail Button */}
         <button
@@ -889,21 +936,13 @@ export default function StepCamera() {
           )}
         </button>
 
-        {/* Center: DEDICATED PROMINENT INSTANT SHUTTER BUTTON */}
-        <button
-          onClick={handleShutterClick}
-          disabled={capturing}
-          className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full border-4 border-white flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.4)] active:scale-90 transition transform cursor-pointer flex-shrink-0 relative ${
-            capturing 
-              ? 'bg-rose-700 ring-4 ring-rose-500/50 animate-pulse' 
-              : 'bg-gradient-to-tr from-[#6B111F] via-[#8A1828] to-rose-600 hover:brightness-110 active:brightness-125'
-          }`}
-          title="Ambil Foto Instan"
-        >
-          <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full border-2 border-amber-300/60 flex items-center justify-center">
-            <Camera size={26} className="text-amber-200 drop-shadow-md" />
+        {/* Center: Tap to Shoot Instruction Pill */}
+        <div className="flex flex-col items-center justify-center pointer-events-none select-none">
+          <div className="px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-sans text-amber-200/90 flex items-center gap-1.5 shadow-md">
+            <Sparkles size={11} className="text-amber-400 animate-pulse" />
+            <span>Ketuk tombol {controlTab === 'accessories' ? 'aksesoris' : 'filter'} untuk foto</span>
           </div>
-        </button>
+        </div>
 
         {/* Right: Next / Proceed Button or Flip Camera */}
         {isComplete ? (
@@ -920,7 +959,7 @@ export default function StepCamera() {
             className="w-12 h-12 rounded-2xl bg-[#1C1C1E] border border-white/20 text-white flex items-center justify-center shadow-lg active:scale-90 transition cursor-pointer flex-shrink-0"
             title="Putar Kamera"
           >
-            <RefreshCw size={19} />
+            <RefreshCw size={19} className="text-gray-300" />
           </button>
         )}
 
