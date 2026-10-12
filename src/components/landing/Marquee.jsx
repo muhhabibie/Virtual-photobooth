@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
+import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
 
-// Authentic Photostrip Frame Themes for Wedding Showcase (Pure Frame Preview - Empty Slots, No Photos)
+// Authentic Photostrip Frame Themes for Wedding Showcase
 const FRAME_PREVIEWS = [
   {
     id: 1,
@@ -70,13 +71,21 @@ const FRAME_PREVIEWS = [
 ];
 
 export default function Marquee() {
-  const { openBooth } = useBooth();
+  const { openBooth, activeEvent } = useBooth();
   const duplicated = [...FRAME_PREVIEWS, ...FRAME_PREVIEWS];
 
+  const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
+  const eventTitle = activeEvent?.displayName || 'Sabrina & Raka';
+  const eventDate = activeEvent?.formattedDate || '10 · MEI · 2026';
+  const eventPhotos = (activeEvent?.heroPhotos && activeEvent.heroPhotos.length > 0)
+    ? activeEvent.heroPhotos
+    : DEFAULT_HERO_PHOTOS;
+
   return (
-    <div className="relative w-full overflow-hidden py-4 select-none">
-      <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+    <div className="relative w-full overflow-hidden py-2 select-none">
+      {/* Subtle soft edge gradient on wide screens only (never obstructing cards on mobile) */}
+      <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+      <div className="hidden sm:block absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
       <div className="marquee-track flex items-center gap-4">
         {duplicated.map((card, i) => {
@@ -97,33 +106,31 @@ export default function Marquee() {
                   style={{ color: card.textHex }}
                   className="text-[6.5px] sm:text-[7.5px] font-serif font-bold uppercase tracking-widest"
                 >
-                  THE WEDDING OF
+                  {isWedding ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH'}
                 </p>
                 <h3 
                   style={{ 
                     color: card.textHex,
-                    fontFamily: "'Alex Brush', 'Great Vibes', cursive" 
+                    fontFamily: isWedding ? "'Alex Brush', 'Great Vibes', cursive" : "'Playfair Display', Georgia, serif" 
                   }}
-                  className="text-xs sm:text-base font-script leading-none mt-0.5"
+                  className="text-xs sm:text-base font-script leading-none mt-0.5 truncate px-1"
                 >
-                  Sabrina & Raka
+                  {eventTitle}
                 </h3>
               </div>
 
-              {/* Center Empty Photo Slot Cutouts (Pure Frame Preview - No Photos) */}
+              {/* Center Photo Slots (Menampilkan foto sampel prewedding mempelai yang nyata & elegan) */}
               <div className="relative flex-1 my-1.5 w-full flex flex-col gap-1.5 min-h-0 justify-center">
                 {Array.from({ length: card.slots }).map((_, idx) => (
                   <div 
                     key={idx} 
-                    className={`w-full flex-1 rounded-md sm:rounded-lg overflow-hidden border shadow-inner flex items-center justify-center transition-all ${
-                      isLight 
-                        ? 'bg-[#EAE5DC] border-[#6B111F]/15' 
-                        : 'bg-black/35 border-white/15'
-                    }`}
+                    className="w-full flex-1 rounded-md sm:rounded-lg overflow-hidden relative bg-black/20 shadow-inner group-hover:scale-[1.01] transition-transform"
                   >
-                    <span className="text-[8.5px] sm:text-[9.5px] font-mono font-bold tracking-widest opacity-40 uppercase" style={{ color: card.textHex }}>
-                      Pose #{idx + 1}
-                    </span>
+                    <img 
+                      src={eventPhotos[idx % eventPhotos.length]} 
+                      alt={`Pose ${idx + 1}`}
+                      className="w-full h-full object-cover object-center filter brightness-[0.95] contrast-[1.02]"
+                    />
                   </div>
                 ))}
               </div>
@@ -131,7 +138,7 @@ export default function Marquee() {
               {/* Bottom Signature & Theme Name */}
               <div className={`text-center pt-1 pb-0.5 border-t ${dividerColor} flex-shrink-0`}>
                 <p className="text-[7.5px] sm:text-[8.5px] font-serif italic opacity-90" style={{ color: card.textHex }}>
-                  With Love & Blessings,
+                  {isWedding ? 'With Love & Blessings,' : 'Memories & Moments,'}
                 </p>
                 <h4 
                   style={{ 
@@ -142,8 +149,8 @@ export default function Marquee() {
                 >
                   {card.name}
                 </h4>
-                <p className="text-[7px] sm:text-[7.5px] font-mono opacity-80 mt-0.5 tracking-wider" style={{ color: card.textHex }}>
-                  10 · MEI · 2026
+                <p className="text-[7px] sm:text-[7.5px] font-mono opacity-80 mt-0.5 tracking-wider truncate px-1" style={{ color: card.textHex }}>
+                  {eventDate}
                 </p>
               </div>
 
