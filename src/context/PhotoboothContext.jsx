@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { subscribeSubmissions, saveSubmission, getLocalSubmissions } from '../services/submissionService';
+import { syncEventToCloud, subscribeCloudEvents, saveLocalEvents } from '../services/eventService';
 import { INITIAL_EVENTS, PACKAGES, DEFAULT_HERO_PHOTOS } from '../data/mockEvents';
 
 const PhotoboothContext = createContext(null);
@@ -24,6 +25,7 @@ export function PhotoboothProvider({ children }) {
             eventType: evt.eventType || initMatch.eventType,
             displayName: evt.displayName || initMatch.displayName,
             eventName: evt.eventName || initMatch.eventName,
+            heroPhotos: (evt.heroPhotos && evt.heroPhotos.length > 0) ? evt.heroPhotos : initMatch.heroPhotos,
           };
         }
         return evt;
@@ -47,14 +49,47 @@ export function PhotoboothProvider({ children }) {
     }
   });
 
-  // Save events whenever updated
+  // Save events to local storage whenever updated
   useEffect(() => {
-    try {
-      localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
-    } catch (e) {
-      console.warn("Failed to persist events:", e);
-    }
+    saveLocalEvents(events);
   }, [events]);
+
+  // Subscribe to real-time events stream from Cloud Firestore (cross-device sync)
+  useEffect(() => {
+    const unsubscribe = subscribeCloudEvents((cloudEvents) => {
+      setEvents(prev => {
+        const cloudMap = new Map(cloudEvents.map(c => [c.slug.toLowerCase(), c]));
+        let hasChanges = false;
+        const merged = prev.map(evt => {
+          const match = cloudMap.get(evt.slug.toLowerCase());
+          if (match) {
+            hasChanges = true;
+            return {
+              ...evt,
+              ...match,
+              heroPhotos: (match.heroPhotos && match.heroPhotos.length > 0) ? match.heroPhotos : evt.heroPhotos,
+            };
+          }
+          return evt;
+        });
+
+        cloudEvents.forEach(c => {
+          if (!merged.some(e => e.slug.toLowerCase() === c.slug.toLowerCase())) {
+            hasChanges = true;
+            merged.push(c);
+          }
+        });
+
+        if (hasChanges) {
+          saveLocalEvents(merged);
+          return merged;
+        }
+        return prev;
+      });
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Intro Animation State for synchronizing staggered content reveals
   const [introReady, setIntroReady] = useState(false);
@@ -252,20 +287,31 @@ export function PhotoboothProvider({ children }) {
   }, []);
 
   const updateEventHeroPhotos = useCallback((eventId, newPhotoUrls) => {
-    setEvents(prev => prev.map(e => {
-      if (e.id === eventId || e.slug === eventId) {
-        return {
-          ...e,
-          heroPhotos: newPhotoUrls
-        };
+    setEvents(prev => {
+      let updatedEvent = null;
+      const next = prev.map(e => {
+        if (e.id === eventId || e.slug === eventId) {
+          updatedEvent = {
+            ...e,
+            heroPhotos: newPhotoUrls
+          };
+          return updatedEvent;
+        }
+        return e;
+      });
+      saveLocalEvents(next);
+      if (updatedEvent) {
+        syncEventToCloud(updatedEvent);
       }
-      return e;
-    }));
+      return next;
+    });
   }, []);
 
   const updateEventConfig = useCallback((eventId, updates) => {
-    setEvents(prev => prev.map(e => {
-      if (e.id === eventId || e.slug === eventId) {
+    setEvents(prev => {
+      let updatedEvent = null;
+      const next = prev.map(e => {
+        if (e.id === eventId || e.slug === eventId) {
         const eventType = updates.eventType !== undefined ? updates.eventType : (e.eventType || 'wedding');
         const isWedding = eventType === 'wedding';
         const groom = updates.groomName !== undefined ? updates.groomName : (e.groomName || '');
@@ -287,7 +333,7 @@ export function PhotoboothProvider({ children }) {
         const eventDate = updates.eventDate !== undefined ? updates.eventDate : e.eventDate;
         const formattedDate = eventDate ? new Date(eventDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : e.formattedDate;
 
-        return {
+        updatedEvent = {
           ...e,
           ...updates,
           eventType,
@@ -299,10 +345,17 @@ export function PhotoboothProvider({ children }) {
           eventDate,
           formattedDate
         };
+        return updatedEvent;
       }
       return e;
-    }));
-  }, []);
+    });
+    saveLocalEvents(next);
+    if (updatedEvent) {
+      syncEventToCloud(updatedEvent);
+    }
+    return next;
+  });
+}, []);
 
   // 3. Guest Info & Photobooth State
   const [guestName, setGuestName] = useState(() => {

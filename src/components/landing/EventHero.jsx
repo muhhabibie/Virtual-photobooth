@@ -28,6 +28,13 @@ export default function EventHero() {
     : DEFAULT_HERO_PHOTOS;
 
   useEffect(() => {
+    if (currentSlide >= slideImages.length) {
+      setCurrentSlide(0);
+    }
+  }, [slideImages.length, currentSlide]);
+
+  useEffect(() => {
+    if (slideImages.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slideImages.length);
     }, 5000);

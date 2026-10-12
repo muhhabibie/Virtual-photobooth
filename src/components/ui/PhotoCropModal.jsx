@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   X, Check, RotateCw, ZoomIn, ZoomOut, Move, Crop, RefreshCw
 } from 'lucide-react';
+import { compressImage } from '../../utils/imageCompressor';
 
 const ASPECT_RATIOS = [
   { id: '16:9', name: '16:9 Landscape', ratio: 16 / 9, desc: 'Mendatar / Layar Lebar' },
@@ -202,7 +203,7 @@ export default function PhotoCropModal({
     ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
     ctx.restore();
 
-    const croppedBase64 = canvas.toDataURL('image/jpeg', 0.92);
+    const croppedBase64 = canvas.toDataURL('image/jpeg', 0.85);
     onCropComplete(croppedBase64);
   };
 
@@ -408,7 +409,10 @@ export default function PhotoCropModal({
           </button>
 
           <button
-            onClick={() => onCropComplete(imageUrl)}
+            onClick={async () => {
+              const compressed = await compressImage(imageUrl, 1280, 0.84);
+              onCropComplete(compressed);
+            }}
             className="py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs font-serif font-bold transition active:scale-95 cursor-pointer text-center px-1"
             title="Gunakan foto landscape/portrait asli tanpa crop"
           >

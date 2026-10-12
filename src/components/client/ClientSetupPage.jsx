@@ -9,6 +9,7 @@ import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import PhotoCropModal from '../ui/PhotoCropModal';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
+import { compressImage } from '../../utils/imageCompressor';
 
 const PREVIEW_FRAME_THEMES = [
   { id: 'burgundy', name: 'Royal Burgundy', hex: '#6B111F', textHex: '#F5D77F', borderHex: '#8A1828' },
@@ -96,9 +97,10 @@ export default function ClientSetupPage() {
     if (!file.type.startsWith('image/')) return;
 
     const reader = new FileReader();
-    reader.onload = (eventResult) => {
+    reader.onload = async (eventResult) => {
       const base64Url = eventResult.target.result;
-      setCurrentCropImage(base64Url);
+      const optimized = await compressImage(base64Url, 1600, 0.88);
+      setCurrentCropImage(optimized);
       setActiveCropIdx(null); // adding new photo
       setCropModalOpen(true);
     };
@@ -157,7 +159,14 @@ export default function ClientSetupPage() {
   };
 
   // Save all changes
-  const handleSaveAll = () => {
+  const handleSaveAll = async () => {
+    toast('Menyimpan pengaturan...', 'info');
+    // Ensure all hero photos are compressed to lightweight web JPEGs so they never exceed storage quotas
+    const compressedPhotos = await Promise.all(
+      heroPhotos.map(photo => compressImage(photo, 1280, 0.84))
+    );
+    setHeroPhotos(compressedPhotos);
+
     updateEventConfig(event.id, {
       eventType: event.eventType || 'wedding',
       eventName,
@@ -165,10 +174,10 @@ export default function ClientSetupPage() {
       brideName,
       venue,
       eventDate,
-      heroPhotos,
+      heroPhotos: compressedPhotos,
     });
     setIsSaved(true);
-    toast('Semua perubahan berhasil disimpan & langsung aktif di web utama!', 'success');
+    toast('Semua perubahan berhasil disimpan & langsung aktif di web tamu!', 'success');
   };
 
   const guestUrl = `${window.location.origin}/${event.slug}`;
