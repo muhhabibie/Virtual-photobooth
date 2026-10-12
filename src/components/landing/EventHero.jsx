@@ -90,19 +90,26 @@ export default function EventHero() {
       {/* ================= 🌟 1. FULL BLEED SLIDING HERO 🌟 ================= */}
       <div className="relative w-full h-[500px] xs:h-[540px] sm:h-[680px] md:h-[780px] overflow-hidden bg-gray-950">
         
-        {/* Sliding Images Track with Romantic Ken-Burns Zoom & Fade Reveal */}
+        {/* Intro Reveal Wrapper (Framer controls transform here only) */}
         <motion.div 
           initial={{ opacity: 0, scale: 1.08 }}
           animate={introReady ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.08 }}
           transition={{ duration: 1.6, ease: [0.25, 1, 0.5, 1] }}
-          className="flex h-full w-full transition-transform duration-1000 ease-in-out"
-          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+          className="absolute inset-0"
         >
+          {/* Crossfade Slides (stacked) */}
           {slideImages.map((imgUrl, idx) => (
-            <div key={idx} className="w-full h-full flex-shrink-0 relative">
+            <div
+              key={`${idx}-${imgUrl.slice(-24)}`}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                idx === currentSlide ? 'opacity-100 z-[1]' : 'opacity-0 z-0'
+              }`}
+            >
               <img
                 src={imgUrl}
                 alt={`${activeEvent.displayName} ${idx + 1}`}
+                loading="eager"
+                decoding="async"
                 className="w-full h-full object-cover object-center"
               />
             </div>
