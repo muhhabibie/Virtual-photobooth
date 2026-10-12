@@ -18,6 +18,8 @@ const PREVIEW_FRAME_THEMES = [
   { id: 'gold', name: 'Antique Gold', hex: '#C4A46C', textHex: '#FFFFFF', borderHex: '#D4AF37' },
 ];
 
+const MAX_HERO_PHOTOS = 5;
+
 function formatIndoDate(dateStr) {
   if (!dateStr) return '';
   try {
@@ -90,6 +92,12 @@ export default function ClientSetupPage() {
 
   // Handle uploading photos from device - opens Crop modal
   const handleFileUpload = (e) => {
+    if (heroPhotos.length >= MAX_HERO_PHOTOS) {
+      toast(`Maksimal ${MAX_HERO_PHOTOS} foto slide. Hapus salah satu foto terlebih dahulu jika ingin mengganti.`, 'warning');
+      e.target.value = '';
+      return;
+    }
+
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -121,7 +129,11 @@ export default function ClientSetupPage() {
       setHeroPhotos(prev => prev.map((p, i) => i === activeCropIdx ? croppedBase64 : p));
       toast('Foto berhasil disesuaikan', 'success');
     } else {
-      setHeroPhotos(prev => [...prev, croppedBase64]);
+      if (heroPhotos.length >= MAX_HERO_PHOTOS) {
+        toast(`Maksimal ${MAX_HERO_PHOTOS} foto slide`, 'warning');
+        return;
+      }
+      setHeroPhotos(prev => [...prev.slice(0, MAX_HERO_PHOTOS - 1), croppedBase64]);
       toast('Foto baru berhasil ditambahkan', 'success');
     }
     setCropModalOpen(false);
@@ -145,6 +157,10 @@ export default function ClientSetupPage() {
 
   const handleAddUrl = () => {
     if (!newPhotoUrl.trim()) return;
+    if (heroPhotos.length >= MAX_HERO_PHOTOS) {
+      toast(`Maksimal ${MAX_HERO_PHOTOS} foto slide. Hapus salah satu foto terlebih dahulu jika ingin mengganti.`, 'warning');
+      return;
+    }
     setCurrentCropImage(newPhotoUrl.trim());
     setActiveCropIdx(null);
     setCropModalOpen(true);
@@ -161,9 +177,10 @@ export default function ClientSetupPage() {
   // Save all changes
   const handleSaveAll = async () => {
     toast('Menyimpan pengaturan...', 'info');
-    // Ensure all hero photos are compressed to lightweight web JPEGs so they never exceed storage quotas
+    // Ensure all hero photos are capped at 5 and compressed to lightweight web JPEGs
+    const limitedPhotos = heroPhotos.slice(0, MAX_HERO_PHOTOS);
     const compressedPhotos = await Promise.all(
-      heroPhotos.map(photo => compressImage(photo, 1280, 0.84))
+      limitedPhotos.map(photo => compressImage(photo, 1280, 0.84))
     );
     setHeroPhotos(compressedPhotos);
 
@@ -642,10 +659,10 @@ export default function ClientSetupPage() {
         <div className="rounded-3xl bg-white border border-[#EADBCC]/80 p-5 sm:p-6 shadow-[0_8px_30px_rgba(107,17,31,0.04)] space-y-4">
           <div className="flex items-center justify-between border-b border-stone-100 pb-3">
             <h3 className="text-xs font-mono uppercase tracking-wider text-[#6B111F] font-bold">
-              {isWedding ? `02 • FOTO PREWEDDING (${heroPhotos.length})` : `02 • FOTO COVER & DISPLAY ACARA (${heroPhotos.length})`}
+              {isWedding ? `02 • FOTO PREWEDDING (${heroPhotos.length}/${MAX_HERO_PHOTOS})` : `02 • FOTO COVER & DISPLAY ACARA (${heroPhotos.length}/${MAX_HERO_PHOTOS})`}
             </h3>
             <span className="text-[10px] font-mono text-stone-400">
-              Slideshow Layar Tamu
+              Maks. {MAX_HERO_PHOTOS} Slide Tamu
             </span>
           </div>
 
@@ -681,7 +698,7 @@ export default function ClientSetupPage() {
             </div>
 
             <div className="text-[10.5px] font-mono text-stone-500 flex flex-wrap items-center justify-between gap-1 pt-1 border-t border-stone-200/60">
-              <span>Format: JPG, PNG, WEBP, atau kamera HP (Maks. 15 MB)</span>
+              <span>Format: JPG, PNG, WEBP (Maksimal 5 foto slide)</span>
               <span className="text-[#6B111F] font-semibold">Foto #1 otomatis jadi Cover Pembuka</span>
             </div>
           </div>
@@ -758,51 +775,71 @@ export default function ClientSetupPage() {
               </div>
             ))}
 
-            {/* Big "Upload Photo" Tap Card */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="aspect-[16/11] rounded-2xl border-2 border-dashed border-[#EADBCC] hover:border-[#6B111F] bg-[#FAF7F2] hover:bg-[#F5EFEB] flex flex-col items-center justify-center p-4 text-center transition active:scale-98 cursor-pointer shadow-xs group"
-            >
-              <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-[#6B111F] mb-2 border border-[#EADBCC] group-hover:scale-105 transition shadow-xs">
-                <Plus size={20} />
+            {/* Big "Upload Photo" Tap Card or Limit Reached Notice */}
+            {heroPhotos.length < MAX_HERO_PHOTOS ? (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="aspect-[16/11] rounded-2xl border-2 border-dashed border-[#EADBCC] hover:border-[#6B111F] bg-[#FAF7F2] hover:bg-[#F5EFEB] flex flex-col items-center justify-center p-4 text-center transition active:scale-98 cursor-pointer shadow-xs group"
+              >
+                <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-[#6B111F] mb-2 border border-[#EADBCC] group-hover:scale-105 transition shadow-xs">
+                  <Plus size={20} />
+                </div>
+                <span className="text-xs font-serif font-bold text-stone-900 block">
+                  {isWedding ? 'Unggah Foto Prewedding' : 'Unggah Foto / Poster Acara'}
+                </span>
+                <span className="text-[10.5px] text-stone-500 mt-0.5 block">
+                  Tersisa {MAX_HERO_PHOTOS - heroPhotos.length} dari {MAX_HERO_PHOTOS} slot foto
+                </span>
+              </button>
+            ) : (
+              <div className="aspect-[16/11] rounded-2xl border-2 border-dashed border-amber-300/80 bg-amber-50/40 flex flex-col items-center justify-center p-4 text-center shadow-xs">
+                <div className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center text-[#6B111F] mb-2 shadow-xs">
+                  <ImageIcon size={18} />
+                </div>
+                <span className="text-xs font-serif font-bold text-stone-800 block">
+                  Maksimal 5 Foto Tercapai
+                </span>
+                <span className="text-[10px] text-stone-500 mt-1 max-w-[210px] leading-tight block">
+                  Hapus salah satu foto jika ingin mengganti dengan foto slide baru.
+                </span>
               </div>
-              <span className="text-xs font-serif font-bold text-stone-900 block">
-                {isWedding ? 'Unggah Foto Prewedding' : 'Unggah Foto / Poster Acara'}
-              </span>
-              <span className="text-[10.5px] text-stone-500 mt-0.5 block">
-                {isWedding ? 'Bisa Foto Landscape maupun Portrait' : 'Format Poster, Stage, atau Dokumentasi'}
-              </span>
-            </button>
+            )}
           </div>
 
           {/* Optional: Add via Image URL Collapsible */}
           <div className="pt-1">
-            {!showUrlInput ? (
-              <button
-                type="button"
-                onClick={() => setShowUrlInput(true)}
-                className="text-[11px] text-stone-500 hover:text-[#6B111F] underline transition"
-              >
-                + Atau masukkan tautan gambar (URL)
-              </button>
-            ) : (
-              <div className="flex gap-2 items-center pt-1">
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/..."
-                  value={newPhotoUrl}
-                  onChange={(e) => setNewPhotoUrl(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#EADBCC] text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-[#6B111F] font-mono"
-                />
+            {heroPhotos.length < MAX_HERO_PHOTOS ? (
+              !showUrlInput ? (
                 <button
                   type="button"
-                  onClick={handleAddUrl}
-                  className="px-3.5 py-2 rounded-xl bg-[#6B111F] hover:bg-[#8A1828] text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold transition cursor-pointer shadow-xs"
+                  onClick={() => setShowUrlInput(true)}
+                  className="text-[11px] text-stone-500 hover:text-[#6B111F] underline transition cursor-pointer"
                 >
-                  Tambah
+                  + Atau masukkan tautan gambar (URL)
                 </button>
-              </div>
+              ) : (
+                <div className="flex gap-2 items-center pt-1">
+                  <input
+                    type="url"
+                    placeholder="https://images.unsplash.com/..."
+                    value={newPhotoUrl}
+                    onChange={(e) => setNewPhotoUrl(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#EADBCC] text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-[#6B111F] font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddUrl}
+                    className="px-3.5 py-2 rounded-xl bg-[#6B111F] hover:bg-[#8A1828] text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold transition cursor-pointer shadow-xs"
+                  >
+                    Tambah
+                  </button>
+                </div>
+              )
+            ) : (
+              <span className="text-[10.5px] text-stone-400 italic">
+                Batas maksimal 5 foto slide sudah tercapai.
+              </span>
             )}
           </div>
         </div>

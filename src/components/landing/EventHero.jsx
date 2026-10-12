@@ -23,9 +23,9 @@ export default function EventHero() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
 
-  const slideImages = activeEvent?.heroPhotos && activeEvent.heroPhotos.length > 0 
+  const slideImages = (activeEvent?.heroPhotos && activeEvent.heroPhotos.length > 0 
     ? activeEvent.heroPhotos 
-    : DEFAULT_HERO_PHOTOS;
+    : DEFAULT_HERO_PHOTOS).slice(0, 5);
 
   useEffect(() => {
     if (currentSlide >= slideImages.length) {
