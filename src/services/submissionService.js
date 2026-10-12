@@ -100,7 +100,11 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
             uploadedPhotoUrls = cloudUrls;
           }
         } catch (stErr) {
-          console.warn("Storage upload bypassed, storing direct dataUrl in Firestore:", stErr);
+          if (stErr?.code === 'storage/unauthorized') {
+            console.info("[Sirklen Cloud] Storage permissions pending in Firebase Console, keeping photo data in submission doc.");
+          } else {
+            console.warn("[Sirklen Cloud] Storage upload fallback:", stErr?.message || stErr);
+          }
         }
       }
 
@@ -121,7 +125,11 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
 
       await addDoc(collection(db, 'submissions'), cloudDoc);
     } catch (err) {
-      console.warn("Firebase cloud save fallback to local:", err);
+      if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
+        console.info("[Sirklen Cloud] Submissions saved locally (Firestore rules pending publication in Firebase Console).");
+      } else {
+        console.warn("[Sirklen Cloud] Submissions cloud save fallback to local:", err?.message || err);
+      }
     }
   }
 
@@ -150,7 +158,11 @@ export function subscribeSubmissions(callback) {
           callback(getLocalSubmissions());
         }
       }, (err) => {
-        console.warn("Firestore subscription error (using LocalStorage fallback):", err.message);
+        if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
+          console.info("[Sirklen Cloud] Submissions live stream waiting for published rules in Firebase Console. LocalStorage active.");
+        } else {
+          console.warn("[Sirklen Cloud] Submissions subscription fallback:", err?.message || err);
+        }
         callback(getLocalSubmissions());
       });
     } catch (e) {

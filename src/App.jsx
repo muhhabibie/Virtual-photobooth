@@ -1,27 +1,44 @@
+import React, { lazy, Suspense } from 'react';
 import SirklenHeader from './components/landing/SirklenHeader';
 import EventHero from './components/landing/EventHero';
 import EventGalleryFeed from './components/landing/EventGalleryFeed';
 import HowItWorks from './components/landing/HowItWorks';
 import PhotoboothModal from './components/photobooth/PhotoboothModal';
 import FullGalleryModal from './components/gallery/FullGalleryModal';
-import AdminDashboardPage from './components/admin/AdminDashboardPage';
-import ClientSetupPage from './components/client/ClientSetupPage';
 import InvalidCodePage from './components/ui/InvalidCodePage';
 import IntroSplashLoader from './components/ui/IntroSplashLoader';
 import { PhotoboothProvider, useBooth } from './context/PhotoboothContext';
 import { ToastProvider } from './components/ui/Toast';
+
+const AdminDashboardPage = lazy(() => import('./components/admin/AdminDashboardPage'));
+const ClientSetupPage = lazy(() => import('./components/client/ClientSetupPage'));
+
+const PageLoader = () => (
+  <div className="min-h-screen bg-[#12070D] flex flex-col items-center justify-center gap-3 text-amber-200 font-sans">
+    <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+    <span className="text-xs uppercase tracking-widest text-amber-200/60">Memuat Sistem Sirklen...</span>
+  </div>
+);
 
 function AppContent() {
   const { activeEvent, currentRoute } = useBooth();
 
   // 1. Client Setup Portal (/setup/:slug)
   if (currentRoute === 'setup') {
-    return <ClientSetupPage />;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <ClientSetupPage />
+      </Suspense>
+    );
   }
 
   // 2. Admin Portal (/admin)
   if (currentRoute === 'admin') {
-    return <AdminDashboardPage />;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AdminDashboardPage />
+      </Suspense>
+    );
   }
 
   // 3. Invalid Code / Scan QR Page (Root / without QR scan, or non-existent event slug)

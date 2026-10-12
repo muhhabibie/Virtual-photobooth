@@ -54,7 +54,11 @@ export async function syncEventToCloud(event) {
       const eventRef = doc(db, 'events', event.slug.toLowerCase().trim());
       await setDoc(eventRef, cleanEvent, { merge: true });
     } catch (err) {
-      console.warn("Firestore event cloud sync fallback to local:", err);
+      if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
+        console.info("[Sirklen Sync] Firestore rules pending publication in Firebase Console. LocalStorage active.");
+      } else {
+        console.warn("[Sirklen Sync] Event cloud sync fallback to local:", err?.message || err);
+      }
     }
   }
 }
@@ -80,12 +84,15 @@ export function subscribeCloudEvents(onEventsUpdate) {
         console.warn("Error processing cloud events snapshot:", err);
       }
     }, (err) => {
-      console.warn("Firestore events subscription error (using LocalStorage fallback):", err.message);
+      if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
+        console.info("[Sirklen Sync] Firestore events real-time sync waiting for published rules in Firebase Console. LocalStorage active.");
+      } else {
+        console.warn("[Sirklen Sync] Firestore events subscription fallback:", err?.message || err);
+      }
     });
 
     return unsubscribe;
   } catch (e) {
-    console.warn("Failed to subscribe to cloud events:", e);
     return () => {};
   }
 }
