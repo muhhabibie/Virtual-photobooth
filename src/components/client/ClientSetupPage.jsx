@@ -1,22 +1,58 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Camera, Image as ImageIcon, Save,
   Trash2, Plus, ExternalLink, Eye, Share2, Upload, Crop,
-  Info, Move, ChevronLeft, ChevronRight, Smartphone
+  Info, Move, ChevronLeft, ChevronRight, Smartphone,
+  Palette, Sparkles, Sliders, RotateCw, ZoomIn, ZoomOut, Check, Layers, X
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import PhotoCropModal from '../ui/PhotoCropModal';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
-import { compressImage } from '../../utils/imageCompressor';
+import { compressImage, compressOrnament } from '../../utils/imageCompressor';
+import { PRESET_ORNAMENTS, renderOrnamentToCanvas } from '../../config/frameOrnaments';
 
-const PREVIEW_FRAME_THEMES = [
-  { id: 'burgundy', name: 'Royal Burgundy', hex: '#6B111F', textHex: '#F5D77F', borderHex: '#8A1828' },
-  { id: 'slate', name: 'Noir Slate', hex: '#2D3748', textHex: '#E2E8F0', borderHex: '#4A5568' },
-  { id: 'ivory', name: 'Ivory Bliss', hex: '#FDFBF7', textHex: '#6B111F', borderHex: '#E2DDD5' },
-  { id: 'gold', name: 'Antique Gold', hex: '#C4A46C', textHex: '#FFFFFF', borderHex: '#D4AF37' },
+const BORDER_PRESET_COLORS = [
+  { name: 'Royal Burgundy', bg: '#6B111F', text: '#F5D77F', border: '#8A1828' },
+  { name: 'Noir Slate', bg: '#2D3748', text: '#E2E8F0', border: '#4A5568' },
+  { name: 'Ivory Bliss', bg: '#FDFBF7', text: '#6B111F', border: '#E2DDD5' },
+  { name: 'Antique Gold', bg: '#C4A46C', text: '#FFFFFF', border: '#D4AF37' },
+  { name: 'Blush Rose', bg: '#F3C5CB', text: '#6B111F', border: '#E8B4B8' },
+  { name: 'Sage Botanical', bg: '#26402E', text: '#E2F5D5', border: '#3B5943' },
+  { name: 'Midnight Dark', bg: '#120B18', text: '#F5D77F', border: '#2D1B36' },
+  { name: 'Deep Emerald', bg: '#0F382A', text: '#E5D5AA', border: '#1C5440' },
+  { name: 'Pure White', bg: '#FFFFFF', text: '#1E1E1E', border: '#E5E7EB' },
+  { name: 'Minimal Charcoal', bg: '#18181B', text: '#F5D77F', border: '#27272A' },
 ];
+
+const TEXT_PRESET_COLORS = [
+  { name: 'Gold Luxury', hex: '#F5D77F' },
+  { name: 'Ivory White', hex: '#FDFBF7' },
+  { name: 'Rose Gold', hex: '#E8B4B8' },
+  { name: 'Royal Wine', hex: '#6B111F' },
+  { name: 'Charcoal Black', hex: '#1E1E1E' },
+  { name: 'Soft Sage', hex: '#D1E7DD' },
+];
+
+function OrnamentBadge({ presetId, color, size = 32 }) {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    if (canvasRef.current) {
+      renderOrnamentToCanvas(canvasRef.current, presetId, color, size);
+    }
+  }, [presetId, color, size]);
+
+  return <canvas ref={canvasRef} width={size * 1.5} height={size * 1.5} className="pointer-events-none" />;
+}
+
+const PREVIEW_FRAME_THEMES = BORDER_PRESET_COLORS.map((c, i) => ({
+  id: `theme_${i}`,
+  name: c.name,
+  hex: c.bg,
+  textHex: c.text,
+  borderHex: c.border
+}));
 
 const MAX_HERO_PHOTOS = 5;
 
@@ -63,6 +99,14 @@ export default function ClientSetupPage() {
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
+  // Custom Frame & Ornament State (Desain Mandiri Pengantin)
+  const [frameBgColor, setFrameBgColor] = useState(event?.customFrame?.bgColor || '#6B111F');
+  const [frameTextColor, setFrameTextColor] = useState(event?.customFrame?.textColor || '#F5D77F');
+  const [frameBorderColor, setFrameBorderColor] = useState(event?.customFrame?.borderColor || '#8A1828');
+  const [frameOrnaments, setFrameOrnaments] = useState(event?.customFrame?.ornaments || []);
+  const [activeOrnId, setActiveOrnId] = useState(null);
+  const [studioTab, setStudioTab] = useState('presets'); // 'presets' | 'upload' | 'palette'
+
   // Live Preview State (Live Simulator)
   const [previewTab, setPreviewTab] = useState('hero'); // 'hero' | 'frame'
   const [previewPhotoIdx, setPreviewPhotoIdx] = useState(0);
@@ -74,6 +118,18 @@ export default function ClientSetupPage() {
   const [activeCropIdx, setActiveCropIdx] = useState(null); // null = add new, number = re-crop existing
 
   const fileInputRef = useRef(null);
+  const ornamentFileInputRef = useRef(null);
+  const stripPreviewRef = useRef(null);
+
+  // Keep state synchronized if active event changes
+  useEffect(() => {
+    if (event?.customFrame) {
+      if (event.customFrame.bgColor) setFrameBgColor(event.customFrame.bgColor);
+      if (event.customFrame.textColor) setFrameTextColor(event.customFrame.textColor);
+      if (event.customFrame.borderColor) setFrameBorderColor(event.customFrame.borderColor);
+      if (Array.isArray(event.customFrame.ornaments)) setFrameOrnaments(event.customFrame.ornaments);
+    }
+  }, [event?.id]);
 
   if (!event) {
     return (
@@ -174,6 +230,138 @@ export default function ClientSetupPage() {
     toast('Foto dihapus', 'info');
   };
 
+  // ================= 🎨 FRAME ORNAMENT & COLOR HANDLERS 🎨 =================
+  const handleStartDragOrnament = (e, ornId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveOrnId(ornId);
+
+    const stripEl = stripPreviewRef.current;
+    if (!stripEl) return;
+
+    const onPointerMove = (moveEv) => {
+      moveEv.preventDefault();
+      const rect = stripEl.getBoundingClientRect();
+      const rawX = (moveEv.clientX - rect.left) / rect.width;
+      const rawY = (moveEv.clientY - rect.top) / rect.height;
+
+      const clampedX = Math.max(0.04, Math.min(0.96, Number(rawX.toFixed(3))));
+      const clampedY = Math.max(0.04, Math.min(0.96, Number(rawY.toFixed(3))));
+
+      setFrameOrnaments(prev => prev.map(item => item.id === ornId ? { ...item, x: clampedX, y: clampedY } : item));
+      setIsSaved(false);
+    };
+
+    const onPointerUp = () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  };
+
+  const handleAddPresetOrnament = (presetId) => {
+    const preset = PRESET_ORNAMENTS.find(p => p.id === presetId);
+    const newOrn = {
+      id: 'orn_' + Date.now(),
+      type: 'preset',
+      presetId,
+      name: preset?.name || 'Ornamen',
+      x: 0.5,
+      y: frameOrnaments.length === 0 ? 0.08 : (frameOrnaments.length % 2 === 1 ? 0.92 : 0.5),
+      scale: preset?.defaultScale || 1.0,
+      rotation: 0,
+      color: frameTextColor
+    };
+    setFrameOrnaments(prev => [...prev, newOrn]);
+    setActiveOrnId(newOrn.id);
+    setIsSaved(false);
+    toast(`${preset?.name || 'Ornamen'} ditambahkan! Silakan geser langsung pada bingkai.`, 'success');
+  };
+
+  const handleUploadOrnament = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast('Format file harus berupa gambar (PNG direkomendasikan)', 'warning');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64 = ev.target.result;
+      const compressed = await compressOrnament(base64, 480);
+      const newOrn = {
+        id: 'orn_' + Date.now(),
+        type: 'image',
+        name: file.name,
+        src: compressed,
+        x: 0.5,
+        y: 0.5,
+        scale: 1.0,
+        rotation: 0
+      };
+      setFrameOrnaments(prev => [...prev, newOrn]);
+      setActiveOrnId(newOrn.id);
+      setIsSaved(false);
+      toast('Gambar ornamen / monogram berhasil diunggah! Geser posisi langsung pada strip.', 'success');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleDeleteOrnament = (id) => {
+    setFrameOrnaments(prev => prev.filter(o => o.id !== id));
+    if (activeOrnId === id) setActiveOrnId(null);
+    setIsSaved(false);
+    toast('Ornamen dihapus', 'info');
+  };
+
+  const handleScaleOrnament = (id, delta) => {
+    setFrameOrnaments(prev => prev.map(o => {
+      if (o.id !== id) return o;
+      const newScale = Math.max(0.4, Math.min(2.5, Number(((o.scale || 1.0) + delta).toFixed(2))));
+      return { ...o, scale: newScale };
+    }));
+    setIsSaved(false);
+  };
+
+  const handleRotateOrnament = (id, delta) => {
+    setFrameOrnaments(prev => prev.map(o => {
+      if (o.id !== id) return o;
+      const newRot = ((o.rotation || 0) + delta) % 360;
+      return { ...o, rotation: newRot };
+    }));
+    setIsSaved(false);
+  };
+
+  const handleSetPresetPosition = (id, posKey) => {
+    const POS = {
+      'top-left': { x: 0.12, y: 0.05 },
+      'top-center': { x: 0.50, y: 0.05 },
+      'top-right': { x: 0.88, y: 0.05 },
+      'center': { x: 0.50, y: 0.50 },
+      'bottom-left': { x: 0.12, y: 0.95 },
+      'bottom-center': { x: 0.50, y: 0.95 },
+      'bottom-right': { x: 0.88, y: 0.95 },
+    };
+    const target = POS[posKey] || { x: 0.5, y: 0.5 };
+    setFrameOrnaments(prev => prev.map(o => o.id === id ? { ...o, ...target } : o));
+    setIsSaved(false);
+  };
+
+  const handleApplyPalette = (palette) => {
+    setFrameBgColor(palette.bg);
+    setFrameTextColor(palette.text);
+    setFrameBorderColor(palette.border);
+    // Update vector ornaments color to match accent
+    setFrameOrnaments(prev => prev.map(o => o.type === 'preset' ? { ...o, color: palette.text } : o));
+    setIsSaved(false);
+    toast(`Warna diterapkan: ${palette.name}`, 'success');
+  };
+
   // Save all changes
   const handleSaveAll = async () => {
     toast('Menyimpan pengaturan...', 'info');
@@ -192,6 +380,12 @@ export default function ClientSetupPage() {
       venue,
       eventDate,
       heroPhotos: compressedPhotos,
+      customFrame: {
+        bgColor: frameBgColor,
+        textColor: frameTextColor,
+        borderColor: frameBorderColor,
+        ornaments: frameOrnaments,
+      }
     });
     setIsSaved(true);
     toast('Semua perubahan berhasil disimpan & langsung aktif di web tamu!', 'success');
@@ -461,30 +655,51 @@ export default function ClientSetupPage() {
                     </span>
                   </div>
 
-                  {/* Photobooth Strip Mockup */}
+                  {/* Photobooth Strip Mockup (Live Synchronized with Bride's Custom Studio) */}
                   <div 
                     className="relative z-10 mx-auto w-[160px] xs:w-[170px] rounded-xl shadow-2xl p-2 flex flex-col justify-between transition-colors duration-300"
                     style={{ 
-                      backgroundColor: activeStripTheme.hex,
-                      color: activeStripTheme.textHex,
-                      border: `1.5px solid ${activeStripTheme.borderHex}`
+                      backgroundColor: frameBgColor,
+                      color: frameTextColor,
+                      border: `1.5px solid ${frameBorderColor}`
                     }}
                   >
+                    {/* Live Ornaments Overlay */}
+                    {frameOrnaments.map(orn => (
+                      <div
+                        key={orn.id}
+                        style={{
+                          position: 'absolute',
+                          left: `${orn.x * 100}%`,
+                          top: `${orn.y * 100}%`,
+                          transform: `translate(-50%, -50%) rotate(${orn.rotation || 0}deg) scale(${(orn.scale || 1) * 0.72})`,
+                          pointerEvents: 'none',
+                          zIndex: 25
+                        }}
+                      >
+                        {orn.type === 'image' ? (
+                          <img src={orn.src} alt="" className="w-7 h-7 object-contain drop-shadow-xs" />
+                        ) : (
+                          <OrnamentBadge presetId={orn.presetId} color={orn.color || frameTextColor} size={22} />
+                        )}
+                      </div>
+                    ))}
+
                     {/* Header Strip */}
-                    <div className="text-center pb-1">
+                    <div className="text-center pb-1 relative z-10">
                       <span className="text-[6.5px] font-mono tracking-widest block uppercase opacity-80">
                         {isWedding ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH'}
                       </span>
                       <strong 
                         className="text-[9.5px] font-serif tracking-wide block truncate"
-                        style={{ color: activeStripTheme.textHex }}
+                        style={{ color: frameTextColor }}
                       >
                         {combinedDisplayName}
                       </strong>
                     </div>
 
                     {/* Photo Cuts (Simulated Guest Poses with Prewedding Photos) */}
-                    <div className="space-y-1.5 py-1">
+                    <div className="space-y-1.5 py-1 relative z-10">
                       <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/20 border border-black/10">
                         <img 
                           src={heroPhotos[0] || DEFAULT_HERO_PHOTOS[0]} 
@@ -502,34 +717,19 @@ export default function ClientSetupPage() {
                     </div>
 
                     {/* Footer Strip */}
-                    <div className="text-center pt-1 border-t border-black/10">
+                    <div className="text-center pt-1 border-t border-black/10 relative z-10">
                       <span className="text-[6.5px] font-mono opacity-80">
                         {formattedDisplayDate}
                       </span>
                     </div>
                   </div>
 
-                  {/* Theme Switcher Controls */}
-                  <div className="relative z-10 pt-2 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setActiveFrameThemeIdx((prev) => (prev - 1 + PREVIEW_FRAME_THEMES.length) % PREVIEW_FRAME_THEMES.length)}
-                      className="p-1 rounded-full bg-white text-stone-700 shadow-sm border border-stone-200 cursor-pointer"
-                      title="Tema Sebelumnya"
-                    >
-                      <ChevronLeft size={13} />
-                    </button>
-                    <span className="text-[10px] font-serif font-bold text-stone-800">
-                      {activeStripTheme.name}
+                  {/* Sync Status Badge */}
+                  <div className="relative z-10 pt-2 flex items-center justify-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                    <span className="text-[9.5px] font-mono uppercase tracking-wider text-stone-700 font-semibold">
+                      Desain Kustom Mempelai • Terhubung
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setActiveFrameThemeIdx((prev) => (prev + 1) % PREVIEW_FRAME_THEMES.length)}
-                      className="p-1 rounded-full bg-white text-stone-700 shadow-sm border border-stone-200 cursor-pointer"
-                      title="Tema Berikutnya"
-                    >
-                      <ChevronRight size={13} />
-                    </button>
                   </div>
                 </div>
               )}
@@ -842,6 +1042,589 @@ export default function ClientSetupPage() {
               </span>
             )}
           </div>
+        </div>
+
+        {/* ================= 🎨 GROUP 03: DESAIN MANDIRI BINGKAI & ORNAMEN PHOTOSTRIP 🎨 ================= */}
+        <div className="rounded-3xl bg-white border border-[#EADBCC]/90 p-5 sm:p-7 shadow-[0_12px_35px_rgba(107,17,31,0.06)] space-y-6">
+          
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-[#6B111F] text-[10px] font-mono uppercase tracking-wider font-bold border border-amber-200/80 mb-1">
+                <Palette size={12} className="text-[#6B111F]" />
+                <span>03 • STUDIO KUSTOMISASI BINGKAI & ORNAMEN</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-serif font-bold text-stone-900">
+                Desain Mandiri Bingkai & Ornamen Photostrip
+              </h3>
+              <p className="text-xs text-stone-500 max-w-xl mt-0.5 leading-relaxed">
+                Ubah warna tema bingkai, sesuaikan warna aksen teks, serta tambahkan ornamen hiasan (cincin, bunga, mahkota, pita) atau unggah monogram inisial Anda sendiri. 
+                <strong className="text-stone-700 ml-1">Ornamen dapat digeser bebas dengan sentuhan jari atau mouse!</strong>
+              </p>
+            </div>
+
+            {/* Quick Status Pill */}
+            <div className="flex items-center gap-2 self-start sm:self-auto flex-shrink-0">
+              <span className="text-[11px] font-mono text-stone-500 bg-[#FAF7F2] px-3 py-1.5 rounded-full border border-[#EADBCC]">
+                {frameOrnaments.length} ornamen aktif
+              </span>
+            </div>
+          </div>
+
+          {/* Studio Workspace Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            {/* ================= 📱 LEFT: KANVAS STRIP INTERAKTIF (DRAGGABLE STAGE) 📱 ================= */}
+            <div className="lg:col-span-5 flex flex-col items-center">
+              <div className="w-full text-center pb-2">
+                <span className="text-[11px] font-serif font-bold text-stone-800 block">
+                  Kanvas Photostrip Interaktif
+                </span>
+                <span className="text-[10px] text-stone-400 block">
+                  Sentuh & geser ornamen di bawah untuk mengubah posisi
+                </span>
+              </div>
+
+              {/* Strip Container (Draggable Surface) */}
+              <div 
+                ref={stripPreviewRef}
+                style={{ 
+                  backgroundColor: frameBgColor,
+                  color: frameTextColor,
+                  border: `2.5px solid ${frameBorderColor}`
+                }}
+                className="relative w-[230px] xs:w-[250px] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.25)] p-3 flex flex-col justify-between overflow-hidden select-none transition-colors duration-300 min-h-[480px]"
+              >
+                {/* Subtle Luxury Gradient Glow */}
+                <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/20 pointer-events-none" />
+
+                {/* Header Strip Text */}
+                <div className="text-center pb-1.5 relative z-10 pointer-events-none">
+                  <span className="text-[7.5px] font-mono tracking-widest block uppercase opacity-80">
+                    {isWedding ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH'}
+                  </span>
+                  <strong 
+                    className="text-[12px] font-serif tracking-wide block truncate drop-shadow-xs"
+                    style={{ color: frameTextColor }}
+                  >
+                    {combinedDisplayName}
+                  </strong>
+                </div>
+
+                {/* Simulated Poses Cutouts */}
+                <div className="space-y-2 py-1.5 relative z-10 pointer-events-none">
+                  <div className="aspect-[4/3] rounded-xl overflow-hidden bg-black/25 border border-white/20 shadow-inner">
+                    <img 
+                      src={heroPhotos[0] || DEFAULT_HERO_PHOTOS[0]} 
+                      alt="Pose 1" 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                  <div className="aspect-[4/3] rounded-xl overflow-hidden bg-black/25 border border-white/20 shadow-inner">
+                    <img 
+                      src={heroPhotos[1] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[1]} 
+                      alt="Pose 2" 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                </div>
+
+                {/* Footer Strip Signature */}
+                <div className="text-center pt-1.5 border-t border-black/15 relative z-10 pointer-events-none">
+                  <span className="text-[8px] font-mono opacity-85 block">
+                    {formattedDisplayDate}
+                  </span>
+                  <span className="text-[7px] font-serif opacity-70 block truncate">
+                    {venue || 'Grand Ballroom'}
+                  </span>
+                </div>
+
+                {/* ================= 🎯 DRAGGABLE ORNAMENTS ON STRIP 🎯 ================= */}
+                {frameOrnaments.map(orn => {
+                  const isActive = activeOrnId === orn.id;
+                  return (
+                    <div
+                      key={orn.id}
+                      onPointerDown={(e) => handleStartDragOrnament(e, orn.id)}
+                      onClick={(e) => { e.stopPropagation(); setActiveOrnId(orn.id); }}
+                      style={{
+                        position: 'absolute',
+                        left: `${(orn.x ?? 0.5) * 100}%`,
+                        top: `${(orn.y ?? 0.5) * 100}%`,
+                        transform: `translate(-50%, -50%) rotate(${orn.rotation || 0}deg) scale(${orn.scale || 1.0})`,
+                        touchAction: 'none',
+                        cursor: 'grab',
+                        zIndex: isActive ? 40 : 30
+                      }}
+                      className={`transition-[box-shadow] duration-150 select-none ${
+                        isActive 
+                          ? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-black/60 rounded-xl p-1 bg-amber-400/20 shadow-xl' 
+                          : 'hover:scale-105 active:cursor-grabbing'
+                      }`}
+                      title="Klik untuk memilih & geser posisi"
+                    >
+                      {orn.type === 'image' ? (
+                        <img 
+                          src={orn.src} 
+                          alt="Ornamen kustom" 
+                          className="w-11 h-11 object-contain pointer-events-none drop-shadow-md"
+                        />
+                      ) : (
+                        <OrnamentBadge 
+                          presetId={orn.presetId} 
+                          color={orn.color || frameTextColor} 
+                          size={32} 
+                        />
+                      )}
+
+                      {/* Active Indicator Pin */}
+                      {isActive && (
+                        <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-amber-400 border border-black flex items-center justify-center text-[7px] text-black font-bold">
+                          ✓
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+              </div>
+
+              {/* Inspector Controls for Active Ornament */}
+              {activeOrnId ? (
+                (() => {
+                  const currentOrn = frameOrnaments.find(o => o.id === activeOrnId);
+                  if (!currentOrn) return null;
+                  return (
+                    <div className="w-full max-w-[270px] mt-3.5 p-3 rounded-2xl bg-[#FAF7F2] border border-[#EADBCC] space-y-2.5 shadow-sm text-xs">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-stone-200">
+                        <span className="font-serif font-bold text-stone-900 flex items-center gap-1.5">
+                          <Move size={12} className="text-[#6B111F]" />
+                          <span>{currentOrn.name || 'Ornamen Terpilih'}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteOrnament(currentOrn.id)}
+                          className="p-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 cursor-pointer"
+                          title="Hapus ornamen ini"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+
+                      {/* Scale Controls */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-stone-600">Ukuran:</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleScaleOrnament(currentOrn.id, -0.15)}
+                            className="p-1 rounded-md bg-white border border-stone-200 hover:bg-stone-50 cursor-pointer"
+                            title="Perkecil"
+                          >
+                            <ZoomOut size={12} />
+                          </button>
+                          <span className="font-mono text-[10px] w-9 text-center font-bold text-stone-800">
+                            {Math.round((currentOrn.scale || 1.0) * 100)}%
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleScaleOrnament(currentOrn.id, 0.15)}
+                            className="p-1 rounded-md bg-white border border-stone-200 hover:bg-stone-50 cursor-pointer"
+                            title="Perbesar"
+                          >
+                            <ZoomIn size={12} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Rotate Controls */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-stone-600">Putaran:</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleRotateOrnament(currentOrn.id, -15)}
+                            className="px-1.5 py-0.5 rounded-md bg-white border border-stone-200 text-[10px] hover:bg-stone-50 cursor-pointer"
+                          >
+                            -15°
+                          </button>
+                          <span className="font-mono text-[10px] w-9 text-center font-bold text-stone-800">
+                            {currentOrn.rotation || 0}°
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRotateOrnament(currentOrn.id, 15)}
+                            className="px-1.5 py-0.5 rounded-md bg-white border border-stone-200 text-[10px] hover:bg-stone-50 cursor-pointer"
+                          >
+                            +15°
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Quick Position Preset Buttons */}
+                      <div className="pt-1 border-t border-stone-200/60">
+                        <span className="text-[10px] text-stone-500 font-medium block mb-1">
+                          Posisi Cepat:
+                        </span>
+                        <div className="grid grid-cols-3 gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleSetPresetPosition(currentOrn.id, 'top-left')}
+                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                          >
+                            Kiri Atas
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSetPresetPosition(currentOrn.id, 'top-center')}
+                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                          >
+                            Tengah Atas
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSetPresetPosition(currentOrn.id, 'top-right')}
+                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                          >
+                            Kanan Atas
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSetPresetPosition(currentOrn.id, 'bottom-left')}
+                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                          >
+                            Kiri Bawah
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSetPresetPosition(currentOrn.id, 'bottom-center')}
+                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                          >
+                            Tengah Bawah
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSetPresetPosition(currentOrn.id, 'bottom-right')}
+                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                          >
+                            Kanan Bawah
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="w-full max-w-[270px] mt-3.5 p-2.5 rounded-xl bg-[#FAF7F2] border border-dashed border-[#EADBCC] text-center">
+                  <span className="text-[10.5px] text-stone-500">
+                    💡 Sentuh ornamen pada strip untuk mengatur skala, putaran & posisi cepat.
+                  </span>
+                </div>
+              )}
+
+            </div>
+
+            {/* ================= 🎛️ RIGHT: STUDIO CONTROL TABS 🎛️ ================= */}
+            <div className="lg:col-span-7 space-y-4">
+              
+              {/* Studio Tabs Navigation */}
+              <div className="flex rounded-2xl bg-[#FAF7F2] p-1 border border-[#EADBCC]">
+                <button
+                  type="button"
+                  onClick={() => setStudioTab('palette')}
+                  className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-serif font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    studioTab === 'palette'
+                      ? 'bg-white text-[#6B111F] shadow-sm border border-[#EADBCC]'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  <Palette size={13} />
+                  <span>Warna Bingkai</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStudioTab('presets')}
+                  className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-serif font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    studioTab === 'presets'
+                      ? 'bg-white text-[#6B111F] shadow-sm border border-[#EADBCC]'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  <Sparkles size={13} />
+                  <span>Ornamen Preset</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStudioTab('upload')}
+                  className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-serif font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    studioTab === 'upload'
+                      ? 'bg-white text-[#6B111F] shadow-sm border border-[#EADBCC]'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  <Upload size={13} />
+                  <span>Unggah Gambar/Logo</span>
+                </button>
+              </div>
+
+              {/* ================= TAB 1: WARNA & PALET BINGKAI ================= */}
+              {studioTab === 'palette' && (
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-xs font-mono uppercase tracking-wider text-[#8C7A6B] font-bold mb-2">
+                      Koleksi Palet Mewah Rekomendasi
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-2 gap-2">
+                      {BORDER_PRESET_COLORS.map((palette, i) => {
+                        const isCurrent = frameBgColor === palette.bg;
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => handleApplyPalette(palette)}
+                            className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition cursor-pointer ${
+                              isCurrent
+                                ? 'bg-[#6B111F]/5 border-[#6B111F] shadow-xs'
+                                : 'bg-[#FAF7F2] border-[#EADBCC] hover:bg-stone-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {/* Swatch Trio */}
+                              <div className="flex -space-x-1.5">
+                                <span 
+                                  className="w-5 h-5 rounded-full border border-white shadow-xs inline-block" 
+                                  style={{ backgroundColor: palette.bg }} 
+                                />
+                                <span 
+                                  className="w-5 h-5 rounded-full border border-white shadow-xs inline-block" 
+                                  style={{ backgroundColor: palette.text }} 
+                                />
+                              </div>
+                              <div>
+                                <span className="text-xs font-serif font-bold text-stone-900 block leading-tight">
+                                  {palette.name}
+                                </span>
+                                <span className="text-[9.5px] font-mono text-stone-500">
+                                  {palette.bg}
+                                </span>
+                              </div>
+                            </div>
+                            {isCurrent && (
+                              <Check size={14} className="text-[#6B111F] flex-shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Custom Hex Color Pickers */}
+                  <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EADBCC] space-y-3">
+                    <h4 className="text-xs font-serif font-bold text-stone-900">
+                      Pilihan Warna Khusus (Kustom Bebas)
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* 1. Background Color */}
+                      <div className="p-2.5 rounded-xl bg-white border border-[#EADBCC]">
+                        <label className="text-[11px] text-stone-600 block mb-1 font-medium">
+                          Warna Bingkai
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="color" 
+                            value={frameBgColor}
+                            onChange={(e) => { setFrameBgColor(e.target.value); setIsSaved(false); }}
+                            className="w-8 h-8 rounded-lg border border-stone-200 cursor-pointer p-0.5 bg-white"
+                          />
+                          <input 
+                            type="text" 
+                            value={frameBgColor}
+                            onChange={(e) => { setFrameBgColor(e.target.value); setIsSaved(false); }}
+                            className="w-full text-xs font-mono px-2 py-1 rounded-md border border-stone-200 text-stone-800"
+                          />
+                        </div>
+                      </div>
+
+                      {/* 2. Text & Accent Color */}
+                      <div className="p-2.5 rounded-xl bg-white border border-[#EADBCC]">
+                        <label className="text-[11px] text-stone-600 block mb-1 font-medium">
+                          Warna Teks & Aksen
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="color" 
+                            value={frameTextColor}
+                            onChange={(e) => { setFrameTextColor(e.target.value); setIsSaved(false); }}
+                            className="w-8 h-8 rounded-lg border border-stone-200 cursor-pointer p-0.5 bg-white"
+                          />
+                          <input 
+                            type="text" 
+                            value={frameTextColor}
+                            onChange={(e) => { setFrameTextColor(e.target.value); setIsSaved(false); }}
+                            className="w-full text-xs font-mono px-2 py-1 rounded-md border border-stone-200 text-stone-800"
+                          />
+                        </div>
+                      </div>
+
+                      {/* 3. Border Line Color */}
+                      <div className="p-2.5 rounded-xl bg-white border border-[#EADBCC]">
+                        <label className="text-[11px] text-stone-600 block mb-1 font-medium">
+                          Warna Garis Tepi
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="color" 
+                            value={frameBorderColor}
+                            onChange={(e) => { setFrameBorderColor(e.target.value); setIsSaved(false); }}
+                            className="w-8 h-8 rounded-lg border border-stone-200 cursor-pointer p-0.5 bg-white"
+                          />
+                          <input 
+                            type="text" 
+                            value={frameBorderColor}
+                            onChange={(e) => { setFrameBorderColor(e.target.value); setIsSaved(false); }}
+                            className="w-full text-xs font-mono px-2 py-1 rounded-md border border-stone-200 text-stone-800"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= TAB 2: KOLEKSI ORNAMEN PRESET ================= */}
+              {studioTab === 'presets' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono uppercase tracking-wider text-[#8C7A6B] font-bold">
+                      Katalog Ornamen Vektor Elegan
+                    </span>
+                    <span className="text-[10.5px] text-stone-400">
+                      Klik ornamen untuk menambahkan ke strip
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {PRESET_ORNAMENTS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => handleAddPresetOrnament(preset.id)}
+                        className="p-3 rounded-2xl bg-[#FAF7F2] hover:bg-stone-50 border border-[#EADBCC] hover:border-[#6B111F] flex flex-col items-center justify-center text-center transition cursor-pointer shadow-xs active:scale-95 group"
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-stone-900/90 flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition">
+                          <OrnamentBadge 
+                            presetId={preset.id} 
+                            color={frameTextColor || '#F5D77F'} 
+                            size={28} 
+                          />
+                        </div>
+                        <span className="text-xs font-serif font-bold text-stone-900 block leading-tight">
+                          {preset.name}
+                        </span>
+                        <span className="text-[9.5px] text-[#6B111F] font-semibold mt-1 flex items-center gap-1">
+                          <Plus size={10} /> Tambah
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <p className="text-[11px] text-stone-500 italic pt-1">
+                    ✨ Ornamen vektor otomatis mengikuti warna teks/aksen yang Anda pilih dan tidak akan pecah saat diunduh tamu.
+                  </p>
+                </div>
+              )}
+
+              {/* ================= TAB 3: UNGGAH GAMBAR / LOGO SENDIRI ================= */}
+              {studioTab === 'upload' && (
+                <div className="space-y-4">
+                  {/* Hidden File Input */}
+                  <input
+                    ref={ornamentFileInputRef}
+                    type="file"
+                    accept="image/png,image/webp,image/svg+xml,image/jpeg"
+                    className="hidden"
+                    onChange={handleUploadOrnament}
+                  />
+
+                  {/* Upload Drop Zone Card */}
+                  <button
+                    type="button"
+                    onClick={() => ornamentFileInputRef.current?.click()}
+                    className="w-full p-6 rounded-2xl border-2 border-dashed border-[#EADBCC] hover:border-[#6B111F] bg-[#FAF7F2] hover:bg-stone-50 flex flex-col items-center justify-center text-center transition active:scale-98 cursor-pointer shadow-xs group"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#6B111F] mb-2.5 border border-[#EADBCC] group-hover:scale-110 transition shadow-xs">
+                      <Upload size={22} />
+                    </div>
+                    <span className="text-sm font-serif font-bold text-stone-900 block">
+                      Unggah Logo, Monogram, atau Stiker PNG
+                    </span>
+                    <span className="text-xs text-stone-500 mt-1 max-w-sm block">
+                      Format PNG dengan latar transparan sangat direkomendasikan agar menyatu anggun di atas bingkai.
+                    </span>
+                    <span className="mt-3 px-3.5 py-1 rounded-full bg-[#6B111F] text-[#F5D77F] text-xs font-serif font-bold border border-[#F5D77F]/30 shadow-xs">
+                      Pilih Gambar dari Perangkat
+                    </span>
+                  </button>
+
+                  {/* List of Custom Uploaded Ornaments */}
+                  {frameOrnaments.filter(o => o.type === 'image').length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <h5 className="text-xs font-mono uppercase tracking-wider text-[#8C7A6B] font-bold">
+                        Gambar / Logo yang Telah Diunggah
+                      </h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {frameOrnaments.filter(o => o.type === 'image').map(orn => (
+                          <div 
+                            key={orn.id}
+                            className={`p-2.5 rounded-xl border flex items-center justify-between ${
+                              activeOrnId === orn.id ? 'bg-amber-50 border-amber-300' : 'bg-white border-[#EADBCC]'
+                            }`}
+                          >
+                            <div 
+                              className="flex items-center gap-2.5 cursor-pointer flex-1"
+                              onClick={() => setActiveOrnId(orn.id)}
+                            >
+                              <img src={orn.src} alt="" className="w-9 h-9 object-contain rounded-md bg-stone-100 p-0.5" />
+                              <div className="truncate">
+                                <span className="text-xs font-medium text-stone-900 block truncate">
+                                  {orn.name || 'Gambar Kustom'}
+                                </span>
+                                <span className="text-[10px] text-stone-500 font-mono">
+                                  Skala: {Math.round((orn.scale || 1.0) * 100)}%
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteOrnament(orn.id)}
+                              className="p-1 rounded-lg text-rose-600 hover:bg-rose-50 cursor-pointer"
+                              title="Hapus"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-2 leading-relaxed">
+                    <Info size={15} className="text-[#6B111F] flex-shrink-0 mt-0.5" />
+                    <span>
+                      Logo atau inisial pengantin yang Anda pasang akan otomatis muncul di pratinjau kamera tamu serta tercetak pada hasil strip foto beresolusi tinggi yang diunduh.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+          </div>
+
         </div>
 
       </main>

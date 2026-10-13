@@ -47,6 +47,7 @@ export async function syncEventToCloud(event) {
         pin: event.pin || '',
         heroPhotos: event.heroPhotos || [],
         templateIds: event.templateIds || [],
+        customFrame: event.customFrame || null,
         expiresAt: event.expiresAt || (Date.now() + 14 * 86400 * 1000),
         updatedAt: Date.now(),
       };

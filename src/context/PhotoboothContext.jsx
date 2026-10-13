@@ -26,6 +26,7 @@ export function PhotoboothProvider({ children }) {
             displayName: evt.displayName || initMatch.displayName,
             eventName: evt.eventName || initMatch.eventName,
             heroPhotos: (evt.heroPhotos && evt.heroPhotos.length > 0) ? evt.heroPhotos : initMatch.heroPhotos,
+            customFrame: evt.customFrame || initMatch.customFrame || null,
           };
         }
         return evt;
@@ -417,9 +418,11 @@ export function PhotoboothProvider({ children }) {
 
   const openBooth = useCallback(() => {
     if (isEventExpired) return;
+    const defaultBg = activeEvent?.customFrame?.bgColor || '#6B111F';
+    setStripColor(defaultBg);
     setBoothOpen(true);
     setCurrentStep('frames');
-  }, [isEventExpired]);
+  }, [isEventExpired, activeEvent]);
 
   const closeBooth = useCallback(() => {
     setBoothOpen(false);
@@ -501,6 +504,7 @@ export function PhotoboothProvider({ children }) {
       boothOpen, setBoothOpen, openBooth, closeBooth,
       galleryModalOpen, openGalleryModal, closeGalleryModal,
       currentStep, setCurrentStep,
+      customFrame: activeEvent?.customFrame || null,
       reset,
     }}>
       {children}

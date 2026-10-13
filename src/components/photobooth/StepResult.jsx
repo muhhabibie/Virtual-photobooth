@@ -4,6 +4,7 @@ import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
+import { drawFrameOrnaments } from '../../config/frameOrnaments';
 
 const PHOTO_FILTERS = [
   { id: 'natural', name: 'NATURAL', css: 'none', desc: 'Asli', previewClass: 'from-amber-200 via-rose-300 to-amber-100' },
@@ -243,6 +244,25 @@ export default function StepResult() {
     ctx.fillStyle = guestColor;
     ctx.font = `bold ${13 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.fillText(guestTitle, totalW / 2, totalH - pad - 14 * scale);
+
+    // Frame Border
+    if (activeEvent?.customFrame?.borderColor) {
+      ctx.strokeStyle = activeEvent.customFrame.borderColor;
+      ctx.lineWidth = 5 * scale;
+      ctx.strokeRect(2.5 * scale, 2.5 * scale, totalW - 5 * scale, totalH - 5 * scale);
+    }
+
+    // Bride's Custom Ornaments (Rendered in 2X Retina resolution)
+    if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {
+      drawFrameOrnaments(
+        ctx, 
+        totalW, 
+        totalH, 
+        activeEvent.customFrame.ornaments, 
+        activeEvent.customFrame.textColor || (isLightBg ? '#3A2D28' : '#F5D77F'), 
+        scale
+      );
+    }
   }, [capturedPhotos, stripColor, guestName, selectedFilter, activeEvent]);
 
   useEffect(() => {

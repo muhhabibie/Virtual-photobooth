@@ -269,7 +269,13 @@ export default function StepCamera() {
   };
 
   // Active theme matched to the chosen stripColor
-  const currentTheme = COLOR_THEMES.find(c => c.hex.toLowerCase() === (stripColor || '').toLowerCase()) || COLOR_THEMES[0];
+  const currentTheme = (activeEvent?.customFrame && stripColor === activeEvent.customFrame.bgColor)
+    ? {
+        hex: activeEvent.customFrame.bgColor,
+        textHex: activeEvent.customFrame.textColor || '#F5D77F',
+        borderHex: activeEvent.customFrame.borderColor
+      }
+    : (COLOR_THEMES.find(c => c.hex.toLowerCase() === (stripColor || '').toLowerCase()) || COLOR_THEMES[0]);
   const isLight = currentTheme.hex === '#FDFBF7' || currentTheme.hex === '#F3C5CB';
 
   // Real-time 60 FPS FaceMesh Tracking

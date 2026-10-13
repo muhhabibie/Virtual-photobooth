@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
+import { drawFrameOrnaments } from '../../config/frameOrnaments';
 
 const STRIP_TYPES = [
   { id: 1, name: 'Polaroid', sub: '1 frame', badge: 'CLASSIC', badgeColor: 'bg-[#6B111F]', slots: 1 },
@@ -11,7 +12,7 @@ const STRIP_TYPES = [
   { id: 4, name: '4 Foto', sub: '4 frames', badge: 'POPULER', badgeColor: 'bg-[#C4A46C]', slots: 4 },
 ];
 
-const COLOR_THEMES = [
+const BASE_COLOR_THEMES = [
   { id: 'burgundy', name: 'Burgundy', hex: '#6B111F', textHex: '#F5D77F', styleName: 'POLOS', subName: 'Minimalis Royal' },
   { id: 'ivory', name: 'Ivory', hex: '#FDFBF7', borderHex: '#E2DDD5', textHex: '#6B111F', styleName: 'IVORY BLISS', subName: 'Clean & Pure' },
   { id: 'slate', name: 'Slate', hex: '#2D3748', textHex: '#E2E8F0', styleName: 'NOIR SLATE', subName: 'Modern Dark' },
@@ -37,14 +38,33 @@ export default function StepFrames() {
   const [nameError, setNameError] = useState(false);
   const nameInputRef = useRef(null);
 
+  // Compute color themes with Bride's custom frame dynamically featured
+  const colorThemes = useMemo(() => {
+    if (activeEvent?.customFrame) {
+      const customTheme = {
+        id: 'custom_bride',
+        name: 'Kustom',
+        hex: activeEvent.customFrame.bgColor || '#6B111F',
+        textHex: activeEvent.customFrame.textColor || '#F5D77F',
+        borderHex: activeEvent.customFrame.borderColor,
+        styleName: 'KUSTOM PENGANTIN',
+        subName: 'Desain Kustom Mempelai',
+        isCustom: true
+      };
+      const others = BASE_COLOR_THEMES.filter(c => c.hex !== customTheme.hex);
+      return [customTheme, ...others];
+    }
+    return BASE_COLOR_THEMES;
+  }, [activeEvent]);
+
   const [activeColorIdx, setActiveColorIdx] = useState(() => {
-    const found = COLOR_THEMES.findIndex(c => c.hex === stripColor);
+    const found = colorThemes.findIndex(c => c.hex === stripColor);
     return found >= 0 ? found : 0;
   });
 
   const canvasRef = useRef(null);
 
-  const activeTheme = COLOR_THEMES[activeColorIdx] || COLOR_THEMES[0];
+  const activeTheme = colorThemes[activeColorIdx] || colorThemes[0];
 
   const handleSelectType = (typeId) => {
     setTargetPhotoCount(typeId);
@@ -52,16 +72,16 @@ export default function StepFrames() {
 
   const handleSelectColor = (idx) => {
     setActiveColorIdx(idx);
-    setStripColor(COLOR_THEMES[idx].hex);
+    setStripColor(colorThemes[idx].hex);
   };
 
   const handlePrev = () => {
-    const nextIdx = (activeColorIdx - 1 + COLOR_THEMES.length) % COLOR_THEMES.length;
+    const nextIdx = (activeColorIdx - 1 + colorThemes.length) % colorThemes.length;
     handleSelectColor(nextIdx);
   };
 
   const handleNext = () => {
-    const nextIdx = (activeColorIdx + 1) % COLOR_THEMES.length;
+    const nextIdx = (activeColorIdx + 1) % colorThemes.length;
     handleSelectColor(nextIdx);
   };
 
@@ -150,6 +170,18 @@ export default function StepFrames() {
     ctx.fillStyle = guestColor;
     ctx.font = 'bold 9.5px system-ui, -apple-system, sans-serif';
     ctx.fillText(guestTitle, w / 2, totalH - pad - 7);
+
+    // Frame border
+    if (theme.borderHex) {
+      ctx.strokeStyle = theme.borderHex;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(1.5, 1.5, w - 3, totalH - 3);
+    }
+
+    // Draw Bride's Custom Ornaments
+    if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {
+      drawFrameOrnaments(ctx, w, totalH, activeEvent.customFrame.ornaments, theme.textHex, 1);
+    }
   }, [targetPhotoCount, activeTheme, guestName, activeEvent]);
 
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
@@ -423,9 +455,9 @@ export default function StepFrames() {
               </h2>
             </div>
 
-            {/* 5 Color Swatches */}
-            <div className="grid grid-cols-5 gap-1.5 sm:gap-2.5">
-              {COLOR_THEMES.map((c, idx) => {
+            {/* Color Swatches */}
+            <div className={`grid gap-1.5 sm:gap-2.5 ${colorThemes.length > 5 ? 'grid-cols-6' : 'grid-cols-5'}`}>
+              {colorThemes.map((c, idx) => {
                 const isSelected = activeColorIdx === idx;
                 return (
                   <button
@@ -434,14 +466,17 @@ export default function StepFrames() {
                     className="flex flex-col items-center cursor-pointer group"
                   >
                     <div
-                      style={{ backgroundColor: c.hex }}
+                      style={{ 
+                        backgroundColor: c.hex,
+                        border: c.borderHex ? `2px solid ${c.borderHex}` : undefined
+                      }}
                       className={`w-full aspect-[4/3] rounded-lg sm:rounded-xl transition-all shadow-xs flex items-center justify-center ${
                         isSelected
                           ? 'ring-2 ring-offset-1 sm:ring-offset-2 ring-[#6B111F] scale-105'
                           : 'border border-gray-200/80 group-hover:scale-102'
                       }`}
                     />
-                    <span className={`text-[9px] sm:text-[10px] mt-1 sm:mt-1.5 tracking-tight font-sans transition-colors ${
+                    <span className={`text-[9px] sm:text-[10px] mt-1 sm:mt-1.5 tracking-tight font-sans transition-colors truncate max-w-full ${
                       isSelected ? 'font-bold text-[#6B111F]' : 'text-gray-500'
                     }`}>
                       {c.name}
