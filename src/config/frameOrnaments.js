@@ -295,6 +295,227 @@ export const PRESET_ORNAMENTS = [
 
       ctx.restore();
     }
+  },
+  // ================= 📏 DECORATIVE DIVIDER LINES (GARIS PEMBATAS) 📏 =================
+  {
+    id: 'divider-luxury-gem',
+    name: 'Garis Permata',
+    category: 'divider',
+    defaultScale: 1.8,
+    render: (ctx, x, y, size, color) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = size * 0.04;
+      ctx.lineCap = 'round';
+
+      const w = size * 1.5;
+      const centerGap = size * 0.26;
+
+      // Left horizontal line
+      ctx.beginPath();
+      ctx.moveTo(-w, 0);
+      ctx.lineTo(-centerGap, 0);
+      ctx.stroke();
+
+      // Right horizontal line
+      ctx.beginPath();
+      ctx.moveTo(centerGap, 0);
+      ctx.lineTo(w, 0);
+      ctx.stroke();
+
+      // Flanking dots
+      ctx.beginPath();
+      ctx.arc(-centerGap * 0.65, 0, size * 0.045, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(centerGap * 0.65, 0, size * 0.045, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Center diamond gem
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.18);
+      ctx.lineTo(size * 0.15, 0);
+      ctx.lineTo(0, size * 0.18);
+      ctx.lineTo(-size * 0.15, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner jewel highlight
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.045, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+  },
+  {
+    id: 'divider-floral-vine',
+    name: 'Garis Ranting Daun',
+    category: 'divider',
+    defaultScale: 1.8,
+    render: (ctx, x, y, size, color) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = size * 0.038;
+      ctx.lineCap = 'round';
+
+      const w = size * 1.5;
+
+      // Central stem
+      ctx.beginPath();
+      ctx.moveTo(-w, 0);
+      ctx.lineTo(w, 0);
+      ctx.stroke();
+
+      // Leaves along the stem
+      const leafCount = 6;
+      for (let i = 1; i <= leafCount; i++) {
+        const factor = i / (leafCount + 1);
+        const lx = -w + factor * (w * 2);
+        if (Math.abs(lx) < size * 0.25) continue; // Keep center clear for bloom
+        const isUp = i % 2 === 0;
+        const ly = isUp ? -size * 0.04 : size * 0.04;
+        const angle = isUp ? -0.4 : 0.4;
+
+        ctx.save();
+        ctx.translate(lx, ly);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 0.1, size * 0.045, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Center flower bud / accent
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.09, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.035, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+  },
+  {
+    id: 'divider-calligraphy',
+    name: 'Garis Kaligrafi',
+    category: 'divider',
+    defaultScale: 1.8,
+    render: (ctx, x, y, size, color) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = size * 0.045;
+      ctx.lineCap = 'round';
+
+      const w = size * 1.45;
+
+      // Left flourish wave
+      ctx.beginPath();
+      ctx.moveTo(-w, 0);
+      ctx.bezierCurveTo(-w * 0.65, -size * 0.22, -w * 0.35, size * 0.22, -size * 0.12, 0);
+      ctx.stroke();
+
+      // Right flourish wave
+      ctx.beginPath();
+      ctx.moveTo(size * 0.12, 0);
+      ctx.bezierCurveTo(w * 0.35, -size * 0.22, w * 0.65, size * 0.22, w, 0);
+      ctx.stroke();
+
+      // Center romantic heart
+      ctx.beginPath();
+      const hs = size * 0.22;
+      ctx.moveTo(0, hs * 0.35);
+      ctx.bezierCurveTo(-hs * 0.7, -hs * 0.3, -hs * 0.7, -hs * 0.9, 0, -hs * 0.55);
+      ctx.bezierCurveTo(hs * 0.7, -hs * 0.9, hs * 0.7, -hs * 0.3, 0, hs * 0.35);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+  },
+  {
+    id: 'divider-double-line',
+    name: 'Garis Ganda Bintang',
+    category: 'divider',
+    defaultScale: 1.8,
+    render: (ctx, x, y, size, color) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = size * 0.035;
+      ctx.lineCap = 'round';
+
+      const w = size * 1.5;
+      const gapY = size * 0.06;
+      const centerGap = size * 0.22;
+
+      // Top line
+      ctx.beginPath();
+      ctx.moveTo(-w, -gapY);
+      ctx.lineTo(-centerGap, -gapY);
+      ctx.moveTo(centerGap, -gapY);
+      ctx.lineTo(w, -gapY);
+      ctx.stroke();
+
+      // Bottom line (slightly shorter for luxury stationery feel)
+      ctx.lineWidth = size * 0.022;
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.85, gapY);
+      ctx.lineTo(-centerGap, gapY);
+      ctx.moveTo(centerGap, gapY);
+      ctx.lineTo(w * 0.85, gapY);
+      ctx.stroke();
+
+      // Center luxury 4-point star
+      ctx.beginPath();
+      const sr = size * 0.15;
+      for (let i = 0; i < 4; i++) {
+        const a = (i * Math.PI) / 2;
+        ctx.lineTo(Math.cos(a) * sr, Math.sin(a) * sr);
+        const aInner = a + Math.PI / 4;
+        ctx.lineTo(Math.cos(aInner) * (sr * 0.28), Math.sin(aInner) * (sr * 0.28));
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+  },
+  {
+    id: 'divider-dotted-pearl',
+    name: 'Garis Mutiara',
+    category: 'divider',
+    defaultScale: 1.8,
+    render: (ctx, x, y, size, color) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.fillStyle = color;
+
+      const w = size * 1.45;
+      const count = 13;
+      const step = (w * 2) / (count - 1);
+
+      for (let i = 0; i < count; i++) {
+        const dx = -w + i * step;
+        const distRatio = Math.abs(dx) / w; // 0 (center) to 1 (edges)
+        const r = size * (0.085 - distRatio * 0.045);
+        ctx.beginPath();
+        ctx.arc(dx, 0, Math.max(size * 0.025, r), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
   }
 ];
 
@@ -360,13 +581,15 @@ export function drawFrameOrnaments(ctx, canvasW, canvasH, ornaments = [], fallba
   });
 }
 
-// Quick helper to render a single preset ornament onto a small preview canvas
+// Quick helper to render a single preset ornament onto a preview canvas
 export function renderOrnamentToCanvas(canvas, presetId, color = '#F5D77F', size = 32) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const preset = PRESET_ORNAMENTS.find(p => p.id === presetId);
   if (preset && typeof preset.render === 'function') {
-    preset.render(ctx, canvas.width / 2, canvas.height / 2, size, color);
+    const isDivider = preset.category === 'divider';
+    const renderSize = isDivider ? size * 0.72 : size;
+    preset.render(ctx, canvas.width / 2, canvas.height / 2, renderSize, color);
   }
 }

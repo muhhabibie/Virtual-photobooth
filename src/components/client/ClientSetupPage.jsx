@@ -37,13 +37,24 @@ const TEXT_PRESET_COLORS = [
 
 function OrnamentBadge({ presetId, color, size = 32 }) {
   const canvasRef = useRef(null);
+  const isDivider = presetId && presetId.startsWith('divider-');
+  const canvasW = isDivider ? size * 3.4 : size * 1.5;
+  const canvasH = size * 1.5;
+
   useEffect(() => {
     if (canvasRef.current) {
       renderOrnamentToCanvas(canvasRef.current, presetId, color, size);
     }
   }, [presetId, color, size]);
 
-  return <canvas ref={canvasRef} width={size * 1.5} height={size * 1.5} className="pointer-events-none" />;
+  return (
+    <canvas 
+      ref={canvasRef} 
+      width={canvasW} 
+      height={canvasH} 
+      className="pointer-events-none max-w-full max-h-full object-contain" 
+    />
+  );
 }
 
 const PREVIEW_FRAME_THEMES = BORDER_PRESET_COLORS.map((c, i) => ({
@@ -263,13 +274,16 @@ export default function ClientSetupPage() {
 
   const handleAddPresetOrnament = (presetId) => {
     const preset = PRESET_ORNAMENTS.find(p => p.id === presetId);
+    const isDivider = preset?.category === 'divider';
     const newOrn = {
       id: 'orn_' + Date.now(),
       type: 'preset',
       presetId,
       name: preset?.name || 'Ornamen',
       x: 0.5,
-      y: frameOrnaments.length === 0 ? 0.08 : (frameOrnaments.length % 2 === 1 ? 0.92 : 0.5),
+      y: isDivider 
+        ? (frameOrnaments.some(o => o.y < 0.25) ? 0.86 : 0.16) 
+        : (frameOrnaments.length === 0 ? 0.08 : (frameOrnaments.length % 2 === 1 ? 0.92 : 0.5)),
       scale: preset?.defaultScale || 1.0,
       rotation: 0,
       color: frameTextColor
@@ -341,8 +355,10 @@ export default function ClientSetupPage() {
     const POS = {
       'top-left': { x: 0.12, y: 0.05 },
       'top-center': { x: 0.50, y: 0.05 },
+      'top-divider': { x: 0.50, y: 0.16 },
       'top-right': { x: 0.88, y: 0.05 },
       'center': { x: 0.50, y: 0.50 },
+      'bottom-divider': { x: 0.50, y: 0.86 },
       'bottom-left': { x: 0.12, y: 0.95 },
       'bottom-center': { x: 0.50, y: 0.95 },
       'bottom-right': { x: 0.88, y: 0.95 },
@@ -1266,50 +1282,79 @@ export default function ClientSetupPage() {
                         <span className="text-[10px] text-stone-500 font-medium block mb-1">
                           Posisi Cepat:
                         </span>
-                        <div className="grid grid-cols-3 gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleSetPresetPosition(currentOrn.id, 'top-left')}
-                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
-                          >
-                            Kiri Atas
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleSetPresetPosition(currentOrn.id, 'top-center')}
-                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
-                          >
-                            Tengah Atas
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleSetPresetPosition(currentOrn.id, 'top-right')}
-                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
-                          >
-                            Kanan Atas
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleSetPresetPosition(currentOrn.id, 'bottom-left')}
-                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
-                          >
-                            Kiri Bawah
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleSetPresetPosition(currentOrn.id, 'bottom-center')}
-                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
-                          >
-                            Tengah Bawah
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleSetPresetPosition(currentOrn.id, 'bottom-right')}
-                            className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
-                          >
-                            Kanan Bawah
-                          </button>
-                        </div>
+                        {currentOrn.presetId?.startsWith('divider-') ? (
+                          <div className="grid grid-cols-3 gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSetPresetPosition(currentOrn.id, 'top-divider')}
+                              className="py-1.5 px-1 rounded-md bg-white border border-stone-200 text-[9.5px] hover:bg-amber-50 cursor-pointer text-center font-medium"
+                              title="Posisikan di bawah nama pengantin"
+                            >
+                              Bawah Nama
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSetPresetPosition(currentOrn.id, 'center')}
+                              className="py-1.5 px-1 rounded-md bg-white border border-stone-200 text-[9.5px] hover:bg-amber-50 cursor-pointer text-center font-medium"
+                              title="Posisikan di antara dua frame foto"
+                            >
+                              Antar Foto
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSetPresetPosition(currentOrn.id, 'bottom-divider')}
+                              className="py-1.5 px-1 rounded-md bg-white border border-stone-200 text-[9.5px] hover:bg-amber-50 cursor-pointer text-center font-medium"
+                              title="Posisikan di atas tanggal acara"
+                            >
+                              Atas Tanggal
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSetPresetPosition(currentOrn.id, 'top-left')}
+                              className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                            >
+                              Kiri Atas
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSetPresetPosition(currentOrn.id, 'top-center')}
+                              className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                            >
+                              Tengah Atas
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSetPresetPosition(currentOrn.id, 'top-right')}
+                              className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                            >
+                              Kanan Atas
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSetPresetPosition(currentOrn.id, 'bottom-left')}
+                              className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                            >
+                              Kiri Bawah
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSetPresetPosition(currentOrn.id, 'bottom-center')}
+                              className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                            >
+                              Tengah Bawah
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSetPresetPosition(currentOrn.id, 'bottom-right')}
+                              className="py-1 px-1 rounded-md bg-white border border-stone-200 text-[9px] hover:bg-amber-50 cursor-pointer"
+                            >
+                              Kanan Bawah
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                     </div>
@@ -1497,39 +1542,92 @@ export default function ClientSetupPage() {
 
               {/* ================= TAB 2: KOLEKSI ORNAMEN PRESET ================= */}
               {studioTab === 'presets' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono uppercase tracking-wider text-[#8C7A6B] font-bold">
-                      Katalog Ornamen Vektor Elegan
-                    </span>
-                    <span className="text-[10.5px] text-stone-400">
-                      Klik ornamen untuk menambahkan ke strip
-                    </span>
+                <div className="space-y-5">
+                  {/* Category 1: Garis Pembatas (Dividers) */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#6B111F]" />
+                        <h5 className="text-xs font-mono uppercase tracking-wider text-[#6B111F] font-bold">
+                          Garis Pembatas Photostrip (Dividers)
+                        </h5>
+                      </div>
+                      <span className="text-[10px] text-stone-400">
+                        Pemisah judul / sela antar foto
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {PRESET_ORNAMENTS.filter(p => p.category === 'divider').map((preset) => (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => handleAddPresetOrnament(preset.id)}
+                          className="p-3 rounded-2xl bg-[#FAF7F2] hover:bg-stone-50 border border-[#EADBCC] hover:border-[#6B111F] flex items-center justify-between transition cursor-pointer shadow-xs active:scale-98 group text-left"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-16 h-10 rounded-xl bg-stone-900/90 flex items-center justify-center p-1 shadow-xs group-hover:scale-105 transition flex-shrink-0">
+                              <OrnamentBadge 
+                                presetId={preset.id} 
+                                color={frameTextColor || '#F5D77F'} 
+                                size={20} 
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <span className="text-xs font-serif font-bold text-stone-900 block truncate leading-tight">
+                                {preset.name}
+                              </span>
+                              <span className="text-[9.5px] text-stone-500 block truncate">
+                                Garis pembatas horizontal
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-[#6B111F] font-bold px-2 py-1 rounded-lg bg-rose-50 border border-rose-200/60 flex items-center gap-1 flex-shrink-0 ml-2">
+                            <Plus size={10} /> Pasang
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    {PRESET_ORNAMENTS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => handleAddPresetOrnament(preset.id)}
-                        className="p-3 rounded-2xl bg-[#FAF7F2] hover:bg-stone-50 border border-[#EADBCC] hover:border-[#6B111F] flex flex-col items-center justify-center text-center transition cursor-pointer shadow-xs active:scale-95 group"
-                      >
-                        <div className="w-12 h-12 rounded-xl bg-stone-900/90 flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition">
-                          <OrnamentBadge 
-                            presetId={preset.id} 
-                            color={frameTextColor || '#F5D77F'} 
-                            size={28} 
-                          />
-                        </div>
-                        <span className="text-xs font-serif font-bold text-stone-900 block leading-tight">
-                          {preset.name}
-                        </span>
-                        <span className="text-[9.5px] text-[#6B111F] font-semibold mt-1 flex items-center gap-1">
-                          <Plus size={10} /> Tambah
-                        </span>
-                      </button>
-                    ))}
+                  {/* Category 2: Simbol & Hiasan Sudut */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-500" />
+                        <h5 className="text-xs font-mono uppercase tracking-wider text-stone-800 font-bold">
+                          Simbol & Ornamen Sudut
+                        </h5>
+                      </div>
+                      <span className="text-[10.5px] text-stone-400">
+                        Klik untuk memasang
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {PRESET_ORNAMENTS.filter(p => p.category !== 'divider').map((preset) => (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => handleAddPresetOrnament(preset.id)}
+                          className="p-3 rounded-2xl bg-[#FAF7F2] hover:bg-stone-50 border border-[#EADBCC] hover:border-[#6B111F] flex flex-col items-center justify-center text-center transition cursor-pointer shadow-xs active:scale-95 group"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-stone-900/90 flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition">
+                            <OrnamentBadge 
+                              presetId={preset.id} 
+                              color={frameTextColor || '#F5D77F'} 
+                              size={28} 
+                            />
+                          </div>
+                          <span className="text-xs font-serif font-bold text-stone-900 block leading-tight">
+                            {preset.name}
+                          </span>
+                          <span className="text-[9.5px] text-[#6B111F] font-semibold mt-1 flex items-center gap-1">
+                            <Plus size={10} /> Tambah
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <p className="text-[11px] text-stone-500 italic pt-1">
