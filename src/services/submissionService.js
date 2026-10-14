@@ -4,6 +4,9 @@
 import { db, storage } from '../config/firebase.js';
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { compressImage } from '../utils/imageCompressor.js';
+
+let isStorageDisabled = false;
 
 const LOCAL_STORAGE_KEY = 'wedding_photobooth_submissions';
 
@@ -85,8 +88,8 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
     try {
       let uploadedPhotoUrls = newSubmission.photos;
 
-      // Try uploading to Storage if enabled
-      if (storage) {
+      // Try uploading to Storage if enabled and not blocked by CORS
+      if (storage && !isStorageDisabled) {
         try {
           const cloudUrls = [];
           for (let i = 0; i < photos.length; i++) {
@@ -100,11 +103,23 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
             uploadedPhotoUrls = cloudUrls;
           }
         } catch (stErr) {
+          isStorageDisabled = true;
           if (stErr?.code === 'storage/unauthorized') {
-            console.info("[Sirklen Cloud] Storage permissions pending in Firebase Console, keeping photo data in submission doc.");
+            console.info("[Sirklen Cloud] Storage rules pending publication in Firebase Console. Retaining photo data in document.");
           } else {
-            console.warn("[Sirklen Cloud] Storage upload fallback:", stErr?.message || stErr);
+            console.info("[Sirklen Cloud] Storage CORS / network fallback: Retaining compressed photos in document.");
           }
+        }
+      }
+
+      // If photos are still base64 strings (Storage CORS or rules unconfigured), compress them so document stays well under Firestore's 1MB limit
+      if (uploadedPhotoUrls === newSubmission.photos) {
+        try {
+          uploadedPhotoUrls = await Promise.all(
+            newSubmission.photos.map(p => compressImage(p, 480, 0.72))
+          );
+        } catch (compErr) {
+          // fallback to original photos
         }
       }
 
