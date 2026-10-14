@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { RotateCcw, ArrowRight, X } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
-import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
+import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
 
 export default function StepReview() {
   const {
@@ -22,95 +22,16 @@ export default function StepReview() {
     const canvas = canvasRef.current;
     if (!canvas || capturedPhotos.length === 0) return;
 
-    const count = targetPhotoCount;
-    const scale = 2; // 2x Retina Resolution
-    const photoW = 400 * scale;
-    const pad = 30 * scale;
-    const gap = 18 * scale;
-    const headerH = 65 * scale;
-    const footerH = 100 * scale;
-
-    const photoLayouts = Array.from({ length: count }).map((_, idx) => {
-      const photo = capturedPhotos[idx];
-      const srcEl = photo?.canvas;
-      const aspect = (srcEl && srcEl.width && srcEl.height) ? (srcEl.height / srcEl.width) : 0.75;
-      const h = Math.round(photoW * aspect);
-      return { photo, h };
+    renderMasterPhotoStrip(canvas, {
+      photos: capturedPhotos,
+      targetCount: targetPhotoCount,
+      stripColor,
+      guestName,
+      guestMessage,
+      activeEvent,
+      scale: 2,
     });
-
-    const totalPhotosHeight = photoLayouts.reduce((sum, item) => sum + item.h, 0);
-    const totalW = photoW + pad * 2;
-    const totalH = pad + headerH + totalPhotosHeight + (gap * Math.max(0, count - 1)) + footerH + pad;
-
-    canvas.width = totalW;
-    canvas.height = totalH;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-
-    const frameBg = stripColor || '#6B111F';
-    ctx.fillStyle = frameBg;
-    ctx.fillRect(0, 0, totalW, totalH);
-
-    const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
-    const headerTitle = getEventHeaderTitle(activeEvent, activeEvent?.slug);
-    ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
-    ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(headerTitle, totalW / 2, pad + 38 * scale);
-
-    let drawY = pad + headerH;
-    photoLayouts.forEach(({ photo, h }, idx) => {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
-
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2 * scale;
-      ctx.strokeRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
-
-      if (photo && photo.canvas) {
-        ctx.drawImage(photo.canvas, 0, 0, photo.canvas.width, photo.canvas.height, pad, drawY, photoW, h);
-      } else if (photo && photo.dataUrl) {
-        const img = new Image();
-        img.src = photo.dataUrl;
-        ctx.drawImage(img, pad, drawY, photoW, h);
-      } else {
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        ctx.fillRect(pad, drawY, photoW, h);
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font = `bold ${16 * scale}px monospace`;
-        ctx.textAlign = 'center';
-        ctx.fillText(`Pose #${idx + 1}`, pad + photoW / 2, drawY + h / 2);
-      }
-
-      drawY += h + gap;
-    });
-
-    // Frame Footer Signature (100% Identical across all steps & events)
-    const coupleName = getEventDisplayName(activeEvent, activeEvent?.slug);
-    const dateText = getEventFormattedDate(activeEvent);
-    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
-
-    const coupleColor = isLightBg ? '#3A2D28' : '#F5D77F';
-    const dateColor = isLightBg ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)';
-    const guestColor = isLightBg ? '#5A4A3E' : '#FFFFFF';
-
-    // Line 1: Event/Couple Name ("Pestapora 2026" / "Sabrina & Raka")
-    ctx.fillStyle = coupleColor;
-    ctx.font = `${28 * scale}px 'Great Vibes', 'Alex Brush', 'Playfair Display', Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(coupleName, totalW / 2, totalH - pad - 60 * scale);
-
-    // Line 2: Event Date ("30 · 05 · 2026")
-    ctx.fillStyle = dateColor;
-    ctx.font = `bold ${10 * scale}px monospace, sans-serif`;
-    ctx.fillText(dateText, totalW / 2, totalH - pad - 36 * scale);
-
-    // Line 3: Guest Name
-    ctx.fillStyle = guestColor;
-    ctx.font = `bold ${13 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.fillText(guestTitle, totalW / 2, totalH - pad - 14 * scale);
-  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, activeEvent]);
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent]);
 
   useEffect(() => {
     renderStrip();

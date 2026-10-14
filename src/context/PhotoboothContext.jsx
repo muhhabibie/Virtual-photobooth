@@ -370,9 +370,9 @@ export function PhotoboothProvider({ children }) {
   });
 
   const [guestMessage, setGuestMessage] = useState('');
-  const [targetPhotoCount, setTargetPhotoCount] = useState(4);
-  const [stripColor, setStripColor] = useState('#6B111F');
-  const [stripColorName, setStripColorName] = useState('Burgundy');
+  const [targetPhotoCount, setTargetPhotoCount] = useState(3);
+  const [stripColor, setStripColor] = useState('#FFFFFF');
+  const [stripColorName, setStripColorName] = useState('Botanical');
 
   const [selectedFrameIndex, setSelectedFrameIndex] = useState(0);
   const [selectedTimer, setSelectedTimer] = useState(3);
@@ -405,8 +405,8 @@ export function PhotoboothProvider({ children }) {
       setGuestName('');
     }
     setGuestMessage('');
-    setStripColor('#6B111F');
-    setStripColorName('Burgundy');
+    setStripColor('#FFFFFF');
+    setStripColorName('Botanical');
     setSelectedFrameIndex(0);
     setSelectedTimer(3);
     setCapturedPhotos([]);
@@ -418,7 +418,7 @@ export function PhotoboothProvider({ children }) {
 
   const openBooth = useCallback(() => {
     if (isEventExpired) return;
-    const defaultBg = activeEvent?.customFrame?.bgColor || '#6B111F';
+    const defaultBg = activeEvent?.customFrame?.bgColor || '#FFFFFF';
     setStripColor(defaultBg);
     setBoothOpen(true);
     setCurrentStep('frames');

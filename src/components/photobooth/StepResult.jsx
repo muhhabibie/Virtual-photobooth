@@ -5,6 +5,7 @@ import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { drawFrameOrnaments, drawStripBotanicals } from '../../config/frameOrnaments';
+import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
 
 const PHOTO_FILTERS = [
   { id: 'natural', name: 'NATURAL', css: 'none', desc: 'Asli', previewClass: 'from-amber-200 via-rose-300 to-amber-100' },
@@ -149,171 +150,18 @@ export default function StepResult() {
     const canvas = canvasRef.current;
     if (!canvas || capturedPhotos.length === 0) return;
 
-    const count = capturedPhotos.length;
-    const scale = 2; // 2x Retina Resolution for crisp physical 2x6" printing
-
-    // Standard 2x6 inch physical photostrip dimensions (1:3 aspect ratio, 600 DPI)
-    const totalW = 600 * scale; // 1200 px
-    const totalH = 1800 * scale; // 3600 px
-    const padX = 48 * scale; // Uniform left and right margins (~14%)
-    const photoW = totalW - padX * 2; // 504 * scale
-
-    // Compute photo dimensions based on slot count
-    let photoH, gap, topPad;
-    if (count === 1) {
-      photoH = Math.round(photoW * 1.15);
-      gap = 0;
-      topPad = 50 * scale;
-    } else if (count === 2) {
-      photoH = Math.round(photoW * 0.90);
-      gap = 26 * scale;
-      topPad = 40 * scale;
-    } else if (count === 4) {
-      photoH = Math.round(photoW * 0.545);
-      gap = 16 * scale;
-      topPad = 28 * scale;
-    } else {
-      // Standard 3 photos (Exact Reference Wendy & Mark format)
-      photoH = Math.round(photoW * 0.725); // 365 * scale
-      gap = 22 * scale;
-      topPad = 36 * scale;
-    }
-
-    canvas.width = totalW;
-    canvas.height = totalH;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-
-    // Background Frame Color (Default to clean pure white as in reference)
-    const frameBg = stripColor || '#FFFFFF';
-    ctx.fillStyle = frameBg;
-    ctx.fillRect(0, 0, totalW, totalH);
-
-    const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#FFFFFF' || frameBg === '#F3C5CB';
-    const accentColor = isLightBg ? '#B89F88' : (activeEvent?.customFrame?.textColor || '#F5D77F');
-    const primaryTextColor = isLightBg ? '#22201E' : '#FFFFFF';
-
-    // Draw Reference Botanical Leaf Branch (Top-Left) & Blossom (Bottom-Right)
-    drawStripBotanicals(ctx, totalW, totalH, accentColor, scale);
-
-    // Active Filter
     const activeFilterObj = PHOTO_FILTERS.find(f => f.id === selectedFilter) || PHOTO_FILTERS[0];
 
-    // Helper: draw image with center-crop (object-fit: cover) so photos are never distorted
-    const drawCoverPhoto = (imgEl, dx, dy, dw, dh) => {
-      const srcW = imgEl.width || imgEl.naturalWidth;
-      const srcH = imgEl.height || imgEl.naturalHeight;
-      if (!srcW || !srcH) return;
-      const r = Math.max(dw / srcW, dh / srcH);
-      const nw = dw / r;
-      const nh = dh / r;
-      const sx = (srcW - nw) / 2;
-      const sy = (srcH - nh) / 2;
-      ctx.drawImage(imgEl, sx, sy, nw, nh, dx, dy, dw, dh);
-    };
-
-    // Render Photo Slots with Solid Taupe Frame Border (Exact Reference Style)
-    const borderBand = 6.5 * scale; // Solid taupe border band around each photo
-    let drawY = topPad;
-
-    capturedPhotos.forEach((photo) => {
-      // 1. Solid Taupe Frame Band (Reference Mat)
-      ctx.fillStyle = accentColor;
-      ctx.fillRect(padX - borderBand, drawY - borderBand, photoW + borderBand * 2, photoH + borderBand * 2);
-
-      // 2. Photo Content with Applied Filter
-      ctx.save();
-      if (activeFilterObj.css && activeFilterObj.css !== 'none') {
-        ctx.filter = activeFilterObj.css;
-      }
-
-      const srcEl = photo.canvas;
-      if (srcEl) {
-        drawCoverPhoto(srcEl, padX, drawY, photoW, photoH);
-      } else if (photo.dataUrl) {
-        const img = new Image();
-        img.src = photo.dataUrl;
-        drawCoverPhoto(img, padX, drawY, photoW, photoH);
-      }
-      ctx.restore();
-
-      drawY += photoH + gap;
+    renderMasterPhotoStrip(canvas, {
+      photos: capturedPhotos,
+      targetCount: capturedPhotos.length,
+      stripColor,
+      guestName,
+      guestMessage,
+      activeEvent,
+      filterCss: activeFilterObj.css,
+      scale: 2,
     });
-
-    // ================= 🌟 SPACIOUS FOOTER SECTION (Ref: Reference Photostrip) 🌟 =================
-    const footerTop = topPad + (photoH * count) + (gap * Math.max(0, count - 1));
-    const coupleName = (getEventDisplayName(activeEvent) || 'WENDY & MARK').toUpperCase();
-    const dateText = getEventFormattedDate(activeEvent) || '12.03.2023';
-    const venueText = (activeEvent?.venue || 'PASADENA, CA').toUpperCase();
-    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan';
-
-    // 1. Couple Title ("WENDY & MARK") - Bold Classic Serif
-    const nameY = footerTop + 95 * scale;
-    ctx.fillStyle = primaryTextColor;
-    ctx.font = `bold ${22 * scale}px 'Playfair Display', 'Cormorant Garamond', 'Cinzel', Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(coupleName, totalW / 2, nameY);
-
-    // 2. Horizontal Divider Strip Line ("pembatas stripnya itu")
-    const lineY = nameY + 34 * scale;
-    ctx.save();
-    ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 2.2 * scale;
-    ctx.lineCap = 'round';
-    const divWidth = 160 * scale;
-    ctx.beginPath();
-    ctx.moveTo(totalW / 2 - divWidth / 2, lineY);
-    ctx.lineTo(totalW / 2 + divWidth / 2, lineY);
-    ctx.stroke();
-    ctx.restore();
-
-    // 3. Date Text ("12.03.2023")
-    const dateY = lineY + 44 * scale;
-    ctx.fillStyle = primaryTextColor;
-    ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(dateText, totalW / 2, dateY);
-
-    // 4. Venue / City ("PASADENA, CA")
-    const venueY = dateY + 28 * scale;
-    ctx.font = `bold ${12.5 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.fillText(venueText, totalW / 2, venueY);
-
-    // 5. Dedicated Space for Sentence / Kalimat / Doa Restu
-    const msgY = venueY + 44 * scale;
-    if (guestMessage && guestMessage.trim()) {
-      ctx.fillStyle = isLightBg ? '#5A4A3E' : 'rgba(255,255,255,0.92)';
-      ctx.font = `italic ${12 * scale}px Georgia, serif`;
-      ctx.fillText(`“${guestMessage.trim().substring(0, 48)}”`, totalW / 2, msgY);
-
-      ctx.fillStyle = isLightBg ? '#8C7A6B' : 'rgba(255,255,255,0.75)';
-      ctx.font = `bold ${10 * scale}px system-ui, -apple-system, sans-serif`;
-      ctx.fillText(`— ${guestTitle}`, totalW / 2, msgY + 26 * scale);
-    } else {
-      ctx.fillStyle = isLightBg ? '#7A6A5E' : 'rgba(255,255,255,0.85)';
-      ctx.font = `italic ${11.5 * scale}px Georgia, serif`;
-      ctx.fillText(`With Love, ${guestTitle}`, totalW / 2, msgY);
-    }
-
-    // Outer Frame Border
-    if (activeEvent?.customFrame?.borderColor) {
-      ctx.strokeStyle = activeEvent.customFrame.borderColor;
-      ctx.lineWidth = 4 * scale;
-      ctx.strokeRect(2 * scale, 2 * scale, totalW - 4 * scale, totalH - 4 * scale);
-    }
-
-    // Bride's Custom Positioned Ornaments
-    if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {
-      drawFrameOrnaments(
-        ctx, 
-        totalW, 
-        totalH, 
-        activeEvent.customFrame.ornaments, 
-        activeEvent.customFrame.textColor || accentColor, 
-        scale
-      );
-    }
   }, [capturedPhotos, stripColor, guestName, guestMessage, selectedFilter, activeEvent]);
 
   useEffect(() => {

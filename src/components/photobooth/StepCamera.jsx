@@ -12,6 +12,7 @@ import { useToast } from '../ui/Toast';
 import { AR_ACCESSORIES, drawAccessoryOverlay } from '../../config/accessories';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { drawStripBotanicals } from '../../config/frameOrnaments';
+import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
 
 const ACCESSORY_ICONS = {
   'none': { icon: Wand2, color: 'text-amber-200' },
@@ -33,6 +34,7 @@ const CAMERA_FILTERS = [
 ];
 
 const COLOR_THEMES = [
+  { id: 'botanical', name: 'Botanical', hex: '#FFFFFF', borderHex: '#B89F88', textHex: '#22201E' },
   { id: 'burgundy', name: 'Burgundy', hex: '#6B111F', textHex: '#F5D77F' },
   { id: 'ivory', name: 'Ivory', hex: '#FDFBF7', borderHex: '#E2DDD5', textHex: '#6B111F' },
   { id: 'slate', name: 'Slate', hex: '#2D3748', textHex: '#E2E8F0' },
@@ -273,11 +275,17 @@ export default function StepCamera() {
   const currentTheme = (activeEvent?.customFrame && stripColor === activeEvent.customFrame.bgColor)
     ? {
         hex: activeEvent.customFrame.bgColor,
-        textHex: activeEvent.customFrame.textColor || '#F5D77F',
-        borderHex: activeEvent.customFrame.borderColor
+        textHex: activeEvent.customFrame.textColor || '#22201E',
+        borderHex: activeEvent.customFrame.borderColor || '#B89F88'
       }
-    : (COLOR_THEMES.find(c => c.hex.toLowerCase() === (stripColor || '').toLowerCase()) || COLOR_THEMES[0]);
-  const isLight = currentTheme.hex === '#FDFBF7' || currentTheme.hex === '#F3C5CB';
+    : (COLOR_THEMES.find(c => c.hex.toLowerCase() === (stripColor || '').toLowerCase()) || {
+        hex: stripColor || '#FFFFFF',
+        borderHex: '#B89F88',
+        textHex: '#22201E'
+      });
+  const isLight = currentTheme.hex?.toLowerCase() === '#ffffff' || currentTheme.hex === '#FDFBF7' || currentTheme.hex === '#F3C5CB';
+  const accentColor = isLight ? '#B89F88' : (activeEvent?.customFrame?.textColor || '#F5D77F');
+  const primaryTextColor = isLight ? '#22201E' : '#FFFFFF';
 
   // Real-time 60 FPS FaceMesh Tracking
   const { facesRef, isReady: isFaceMeshReady } = useFaceMesh(videoRef, selectedAccessory !== 'none');
@@ -286,149 +294,15 @@ export default function StepCamera() {
   const renderModalStrip = useCallback(() => {
     const canvas = modalCanvasRef.current;
     if (!canvas || !showPreviewModal) return;
-
-    const count = targetPhotoCount;
-    const scale = 2; // 2x Retina Resolution
-    const totalW = 600 * scale; // 1200 px
-    const totalH = 1800 * scale; // 3600 px
-    const padX = 48 * scale;
-    const photoW = totalW - padX * 2; // 504 * scale
-
-    let photoH, gap, topPad;
-    if (count === 1) {
-      photoH = Math.round(photoW * 1.15);
-      gap = 0;
-      topPad = 50 * scale;
-    } else if (count === 2) {
-      photoH = Math.round(photoW * 0.90);
-      gap = 26 * scale;
-      topPad = 40 * scale;
-    } else if (count === 4) {
-      photoH = Math.round(photoW * 0.545);
-      gap = 16 * scale;
-      topPad = 28 * scale;
-    } else {
-      photoH = Math.round(photoW * 0.725);
-      gap = 22 * scale;
-      topPad = 36 * scale;
-    }
-
-    canvas.width = totalW;
-    canvas.height = totalH;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-
-    const frameBg = stripColor || '#FFFFFF';
-    ctx.fillStyle = frameBg;
-    ctx.fillRect(0, 0, totalW, totalH);
-
-    const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#FFFFFF' || frameBg === '#F3C5CB';
-    const accentColor = isLightBg ? '#B89F88' : (activeEvent?.customFrame?.textColor || '#F5D77F');
-    const primaryTextColor = isLightBg ? '#22201E' : '#FFFFFF';
-
-    // Draw Reference Botanicals
-    drawStripBotanicals(ctx, totalW, totalH, accentColor, scale);
-
-    // Center-crop helper
-    const drawCover = (imgEl, dx, dy, dw, dh) => {
-      const srcW = imgEl.width || imgEl.naturalWidth;
-      const srcH = imgEl.height || imgEl.naturalHeight;
-      if (!srcW || !srcH) return;
-      const r = Math.max(dw / srcW, dh / srcH);
-      const nw = dw / r;
-      const nh = dh / r;
-      const sx = (srcW - nw) / 2;
-      const sy = (srcH - nh) / 2;
-      ctx.drawImage(imgEl, sx, sy, nw, nh, dx, dy, dw, dh);
-    };
-
-    // Draw photo slots with solid taupe frame band
-    const borderBand = 6.5 * scale;
-    let drawY = topPad;
-
-    for (let idx = 0; idx < count; idx++) {
-      const photo = capturedPhotos[idx];
-
-      // Solid Taupe Frame Band
-      ctx.fillStyle = accentColor;
-      ctx.fillRect(padX - borderBand, drawY - borderBand, photoW + borderBand * 2, photoH + borderBand * 2);
-
-      if (photo && photo.canvas) {
-        drawCover(photo.canvas, padX, drawY, photoW, photoH);
-      } else if (photo && photo.dataUrl) {
-        const img = new Image();
-        img.src = photo.dataUrl;
-        drawCover(img, padX, drawY, photoW, photoH);
-      } else {
-        ctx.fillStyle = isLightBg ? '#F4EFEA' : 'rgba(0,0,0,0.35)';
-        ctx.fillRect(padX, drawY, photoW, photoH);
-        ctx.fillStyle = accentColor;
-        ctx.font = `${28 * scale}px serif`;
-        ctx.textAlign = 'center';
-        ctx.fillText('📷', padX + photoW / 2, drawY + photoH / 2 - 8 * scale);
-        ctx.fillStyle = primaryTextColor;
-        ctx.font = `bold ${16 * scale}px sans-serif`;
-        ctx.fillText(`Pose #${idx + 1}`, padX + photoW / 2, drawY + photoH / 2 + 24 * scale);
-      }
-
-      drawY += photoH + gap;
-    }
-
-    // Footer section
-    const footerTop = topPad + (photoH * count) + (gap * Math.max(0, count - 1));
-    const coupleName = (getEventDisplayName(activeEvent) || 'WENDY & MARK').toUpperCase();
-    const dateText = getEventFormattedDate(activeEvent) || '12.03.2023';
-    const venueText = (activeEvent?.venue || 'PASADENA, CA').toUpperCase();
-    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan';
-
-    // 1. Couple Title
-    const nameY = footerTop + 95 * scale;
-    ctx.fillStyle = primaryTextColor;
-    ctx.font = `bold ${22 * scale}px 'Playfair Display', 'Cormorant Garamond', 'Cinzel', Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(coupleName, totalW / 2, nameY);
-
-    // 2. Horizontal Divider Line
-    const lineY = nameY + 34 * scale;
-    ctx.save();
-    ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 2.2 * scale;
-    ctx.lineCap = 'round';
-    const divWidth = 160 * scale;
-    ctx.beginPath();
-    ctx.moveTo(totalW / 2 - divWidth / 2, lineY);
-    ctx.lineTo(totalW / 2 + divWidth / 2, lineY);
-    ctx.stroke();
-    ctx.restore();
-
-    // 3. Date
-    const dateY = lineY + 44 * scale;
-    ctx.fillStyle = primaryTextColor;
-    ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(dateText, totalW / 2, dateY);
-
-    // 4. Venue
-    const venueY = dateY + 28 * scale;
-    ctx.font = `bold ${12.5 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.fillText(venueText, totalW / 2, venueY);
-
-    // 5. Guest Message / Attribution
-    const msgY = venueY + 44 * scale;
-    if (guestMessage && guestMessage.trim()) {
-      ctx.fillStyle = isLightBg ? '#5A4A3E' : 'rgba(255,255,255,0.92)';
-      ctx.font = `italic ${12 * scale}px Georgia, serif`;
-      ctx.fillText(`“${guestMessage.trim().substring(0, 48)}”`, totalW / 2, msgY);
-
-      ctx.fillStyle = isLightBg ? '#8C7A6B' : 'rgba(255,255,255,0.75)';
-      ctx.font = `bold ${10 * scale}px system-ui, -apple-system, sans-serif`;
-      ctx.fillText(`— ${guestTitle}`, totalW / 2, msgY + 26 * scale);
-    } else {
-      ctx.fillStyle = isLightBg ? '#7A6A5E' : 'rgba(255,255,255,0.85)';
-      ctx.font = `italic ${11.5 * scale}px Georgia, serif`;
-      ctx.fillText(`With Love, ${guestTitle}`, totalW / 2, msgY);
-    }
+    renderMasterPhotoStrip(canvas, {
+      photos: capturedPhotos,
+      targetCount: targetPhotoCount,
+      stripColor,
+      guestName,
+      guestMessage,
+      activeEvent,
+      scale: 2,
+    });
   }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, showPreviewModal, activeEvent]);
 
   useEffect(() => {
@@ -720,33 +594,36 @@ export default function StepCamera() {
       {/* ================= 🌟 2. INSTAGRAM STORY VIEWFINDER WITH ROMANTIC FRAME 🌟 ================= */}
       <div className="flex-1 min-h-0 w-full max-w-sm sm:max-w-md mx-auto relative flex flex-col justify-center items-center py-0.5 sm:py-1 overflow-hidden z-10">
         
-        {/* Responsive Flex Frame Viewport Container (Flex-1 Adaptive Height - Never Overflows) */}
+        {/* Responsive Flex Frame Viewport Container (Matching Wendy & Mark Photostrip Frame) */}
         <div 
           style={{ 
             backgroundColor: currentTheme.hex,
-            border: currentTheme.borderHex ? `2px solid ${currentTheme.borderHex}` : '1px solid rgba(255,255,255,0.15)'
+            border: `3px solid ${currentTheme.borderHex || accentColor}`
           }}
           className="relative w-full h-full max-h-[460px] xs:max-h-[480px] sm:max-h-[520px] rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 overflow-hidden"
         >
           
-          {/* Top Calligraphy Sub-Header */}
-          <div className="text-center pb-1 flex-shrink-0 z-10 w-full">
-            <p 
-              className="text-[8px] sm:text-[9px] font-mono font-bold uppercase tracking-widest"
-              style={{ color: isLight ? '#8C7A6B' : (currentTheme.textHex || '#F5D77F') }}
+          {/* Top Subtle Frame Accent Header */}
+          <div className="w-full flex items-center justify-between px-2 pt-0.5 pb-1 z-10 flex-shrink-0">
+            <span className="text-[11px] font-serif select-none" style={{ color: accentColor }}>🌿</span>
+            <span 
+              className="text-[8.5px] font-mono font-bold uppercase tracking-[0.2em]"
+              style={{ color: accentColor }}
             >
-              {getEventHeaderTitle(activeEvent, activeEvent?.slug)}
-            </p>
+              STUDIO STRIP • POSE {nextPhotoNum}/{targetPhotoCount}
+            </span>
+            <span className="text-[11px] font-serif select-none" style={{ color: accentColor }}>🌿</span>
           </div>
 
-          {/* Center Cutout Window (Full-width WYSIWYG Camera Stream with Touch Swipe) */}
+          {/* Center Cutout Window (Full-width WYSIWYG Camera Stream with Solid Frame Border) */}
           <div 
             ref={viewportRef}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
-            className="relative flex-1 min-h-0 w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center border border-black/40 touch-pan-y select-none cursor-grab active:cursor-grabbing group"
+            style={{ borderColor: accentColor }}
+            className="relative flex-1 min-h-0 w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center border-2 touch-pan-y select-none cursor-grab active:cursor-grabbing group"
           >
             {/* Camera Video Stream */}
             <video
@@ -791,29 +668,42 @@ export default function StepCamera() {
 
           </div>
 
-          {/* Bottom Frame Chin Preview */}
-          <div className="text-center pt-1.5 pb-0.5 flex-shrink-0 flex flex-col items-center w-full">
+          {/* Bottom Frame Chin Preview (Wendy & Mark Serif Title + Divider + Date & Venue) */}
+          <div className="text-center pt-2 pb-1 flex-shrink-0 flex flex-col items-center w-full">
+            {/* 1. Couple Title (Uppercase Serif) */}
             <h3 
               style={{ 
-                color: isLight ? '#3A2D28' : (currentTheme.textHex || '#F5D77F'),
-                fontFamily: "'Alex Brush', 'Great Vibes', 'Playfair Display', cursive" 
+                color: primaryTextColor,
+                fontFamily: "'Playfair Display', 'Cormorant Garamond', 'Cinzel', Georgia, serif" 
               }}
-              className="text-xs sm:text-sm font-serif italic leading-tight"
+              className="text-xs sm:text-sm font-bold tracking-[0.14em] uppercase leading-tight"
             >
-              {getEventDisplayName(activeEvent, activeEvent?.slug)}
+              {getEventDisplayName(activeEvent, activeEvent?.slug) || 'WENDY & MARK'}
             </h3>
+
+            {/* 2. Taupe Divider Line */}
+            <div 
+              className="w-24 sm:w-28 h-[1.5px] my-1 rounded-full"
+              style={{ backgroundColor: accentColor }}
+            />
+
+            {/* 3. Date & Venue */}
+            <div 
+              className="flex items-center gap-1.5 text-[7.5px] sm:text-[8px] font-sans font-bold tracking-wider"
+              style={{ color: primaryTextColor }}
+            >
+              <span>{getEventFormattedDate(activeEvent)}</span>
+              <span style={{ color: accentColor }}>•</span>
+              <span>{(activeEvent?.venue || 'PASADENA, CA').toUpperCase()}</span>
+            </div>
+
+            {/* 4. Guest / Quote Preview */}
             <p 
-              className="text-[7px] sm:text-[7.5px] font-mono tracking-widest mt-0.5"
-              style={{ color: isLight ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)' }}
+              className="text-[8px] sm:text-[9px] italic font-serif mt-0.5 truncate max-w-full px-2"
+              style={{ color: isLight ? '#6B5E55' : 'rgba(255,255,255,0.85)' }}
             >
-              30 · 05 · 2026
+              {guestMessage && guestMessage.trim() ? `“${guestMessage.trim()}”` : (guestName && guestName.trim() ? `With Love, ${guestName.trim()}` : `With Love, Tamu Undangan`)}
             </p>
-            <h4 
-              style={{ color: isLight ? '#5A4A3E' : '#FFFFFF' }}
-              className="text-[9.5px] sm:text-[11px] font-sans font-bold leading-tight mt-0.5 tracking-wide truncate max-w-full px-1"
-            >
-              {guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)'}
-            </h4>
           </div>
 
         </div>
