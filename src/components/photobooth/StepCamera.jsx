@@ -11,6 +11,7 @@ import { useFaceMesh } from '../../hooks/useFaceMesh';
 import { useToast } from '../ui/Toast';
 import { AR_ACCESSORIES, drawAccessoryOverlay } from '../../config/accessories';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
+import { drawStripBotanicals } from '../../config/frameOrnaments';
 
 const ACCESSORY_ICONS = {
   'none': { icon: Wand2, color: 'text-amber-200' },
@@ -288,23 +289,29 @@ export default function StepCamera() {
 
     const count = targetPhotoCount;
     const scale = 2; // 2x Retina Resolution
-    const photoW = 400 * scale;
-    const pad = 30 * scale;
-    const gap = 18 * scale;
-    const headerH = 65 * scale;
-    const footerH = 100 * scale;
+    const totalW = 600 * scale; // 1200 px
+    const totalH = 1800 * scale; // 3600 px
+    const padX = 48 * scale;
+    const photoW = totalW - padX * 2; // 504 * scale
 
-    const photoLayouts = Array.from({ length: count }).map((_, idx) => {
-      const photo = capturedPhotos[idx];
-      const srcEl = photo?.canvas;
-      const aspect = (srcEl && srcEl.width && srcEl.height) ? (srcEl.height / srcEl.width) : 0.75;
-      const h = Math.round(photoW * aspect);
-      return { photo, h };
-    });
-
-    const totalPhotosHeight = photoLayouts.reduce((sum, item) => sum + item.h, 0);
-    const totalW = photoW + pad * 2;
-    const totalH = pad + headerH + totalPhotosHeight + (gap * Math.max(0, count - 1)) + footerH + pad;
+    let photoH, gap, topPad;
+    if (count === 1) {
+      photoH = Math.round(photoW * 1.15);
+      gap = 0;
+      topPad = 50 * scale;
+    } else if (count === 2) {
+      photoH = Math.round(photoW * 0.90);
+      gap = 26 * scale;
+      topPad = 40 * scale;
+    } else if (count === 4) {
+      photoH = Math.round(photoW * 0.545);
+      gap = 16 * scale;
+      topPad = 28 * scale;
+    } else {
+      photoH = Math.round(photoW * 0.725);
+      gap = 22 * scale;
+      topPad = 36 * scale;
+    }
 
     canvas.width = totalW;
     canvas.height = totalH;
@@ -312,68 +319,117 @@ export default function StepCamera() {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    const frameBg = stripColor || '#6B111F';
+    const frameBg = stripColor || '#FFFFFF';
     ctx.fillStyle = frameBg;
     ctx.fillRect(0, 0, totalW, totalH);
 
-    const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
-    ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
-    ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(getEventHeaderTitle(activeEvent), totalW / 2, pad + 38 * scale);
+    const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#FFFFFF' || frameBg === '#F3C5CB';
+    const accentColor = isLightBg ? '#B89F88' : (activeEvent?.customFrame?.textColor || '#F5D77F');
+    const primaryTextColor = isLightBg ? '#22201E' : '#FFFFFF';
 
-    let drawY = pad + headerH;
-    photoLayouts.forEach(({ photo, h }, idx) => {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
+    // Draw Reference Botanicals
+    drawStripBotanicals(ctx, totalW, totalH, accentColor, scale);
 
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2 * scale;
-      ctx.strokeRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
+    // Center-crop helper
+    const drawCover = (imgEl, dx, dy, dw, dh) => {
+      const srcW = imgEl.width || imgEl.naturalWidth;
+      const srcH = imgEl.height || imgEl.naturalHeight;
+      if (!srcW || !srcH) return;
+      const r = Math.max(dw / srcW, dh / srcH);
+      const nw = dw / r;
+      const nh = dh / r;
+      const sx = (srcW - nw) / 2;
+      const sy = (srcH - nh) / 2;
+      ctx.drawImage(imgEl, sx, sy, nw, nh, dx, dy, dw, dh);
+    };
+
+    // Draw photo slots with solid taupe frame band
+    const borderBand = 6.5 * scale;
+    let drawY = topPad;
+
+    for (let idx = 0; idx < count; idx++) {
+      const photo = capturedPhotos[idx];
+
+      // Solid Taupe Frame Band
+      ctx.fillStyle = accentColor;
+      ctx.fillRect(padX - borderBand, drawY - borderBand, photoW + borderBand * 2, photoH + borderBand * 2);
 
       if (photo && photo.canvas) {
-        ctx.drawImage(photo.canvas, 0, 0, photo.canvas.width, photo.canvas.height, pad, drawY, photoW, h);
+        drawCover(photo.canvas, padX, drawY, photoW, photoH);
       } else if (photo && photo.dataUrl) {
         const img = new Image();
         img.src = photo.dataUrl;
-        ctx.drawImage(img, pad, drawY, photoW, h);
+        drawCover(img, padX, drawY, photoW, photoH);
       } else {
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        ctx.fillRect(pad, drawY, photoW, h);
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font = `bold ${16 * scale}px monospace`;
+        ctx.fillStyle = isLightBg ? '#F4EFEA' : 'rgba(0,0,0,0.35)';
+        ctx.fillRect(padX, drawY, photoW, photoH);
+        ctx.fillStyle = accentColor;
+        ctx.font = `${28 * scale}px serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(`Pose #${idx + 1}`, pad + photoW / 2, drawY + h / 2);
+        ctx.fillText('📷', padX + photoW / 2, drawY + photoH / 2 - 8 * scale);
+        ctx.fillStyle = primaryTextColor;
+        ctx.font = `bold ${16 * scale}px sans-serif`;
+        ctx.fillText(`Pose #${idx + 1}`, padX + photoW / 2, drawY + photoH / 2 + 24 * scale);
       }
 
-      drawY += h + gap;
-    });
+      drawY += photoH + gap;
+    }
 
-    // Frame Footer Signature (100% Identical to Gambar 2 Viewfinder & Physical Strip)
-    const coupleName = activeEvent?.displayName || 'Sabrina & Raka';
-    const dateText = activeEvent?.eventDate ? activeEvent.eventDate.replace(/-/g, ' · ') : '30 · 05 · 2026';
-    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
+    // Footer section
+    const footerTop = topPad + (photoH * count) + (gap * Math.max(0, count - 1));
+    const coupleName = (getEventDisplayName(activeEvent) || 'WENDY & MARK').toUpperCase();
+    const dateText = getEventFormattedDate(activeEvent) || '12.03.2023';
+    const venueText = (activeEvent?.venue || 'PASADENA, CA').toUpperCase();
+    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan';
 
-    const coupleColor = isLightBg ? '#3A2D28' : (currentTheme.textHex || '#F5D77F');
-    const dateColor = isLightBg ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)';
-    const guestColor = isLightBg ? '#5A4A3E' : '#FFFFFF';
-
-    // Line 1: Couple Calligraphy ("Sabrina & Raka")
-    ctx.fillStyle = coupleColor;
-    ctx.font = `${28 * scale}px 'Great Vibes', 'Alex Brush', 'Playfair Display', Georgia, serif`;
+    // 1. Couple Title
+    const nameY = footerTop + 95 * scale;
+    ctx.fillStyle = primaryTextColor;
+    ctx.font = `bold ${22 * scale}px 'Playfair Display', 'Cormorant Garamond', 'Cinzel', Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(coupleName, totalW / 2, totalH - pad - 60 * scale);
+    ctx.fillText(coupleName, totalW / 2, nameY);
 
-    // Line 2: Event Date ("30 · 05 · 2026")
-    ctx.fillStyle = dateColor;
-    ctx.font = `bold ${10 * scale}px monospace, sans-serif`;
-    ctx.fillText(dateText, totalW / 2, totalH - pad - 36 * scale);
+    // 2. Horizontal Divider Line
+    const lineY = nameY + 34 * scale;
+    ctx.save();
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 2.2 * scale;
+    ctx.lineCap = 'round';
+    const divWidth = 160 * scale;
+    ctx.beginPath();
+    ctx.moveTo(totalW / 2 - divWidth / 2, lineY);
+    ctx.lineTo(totalW / 2 + divWidth / 2, lineY);
+    ctx.stroke();
+    ctx.restore();
 
-    // Line 3: Guest Name ("sf")
-    ctx.fillStyle = guestColor;
-    ctx.font = `bold ${13 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.fillText(guestTitle, totalW / 2, totalH - pad - 14 * scale);
-  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, showPreviewModal, activeEvent, currentTheme]);
+    // 3. Date
+    const dateY = lineY + 44 * scale;
+    ctx.fillStyle = primaryTextColor;
+    ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(dateText, totalW / 2, dateY);
+
+    // 4. Venue
+    const venueY = dateY + 28 * scale;
+    ctx.font = `bold ${12.5 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(venueText, totalW / 2, venueY);
+
+    // 5. Guest Message / Attribution
+    const msgY = venueY + 44 * scale;
+    if (guestMessage && guestMessage.trim()) {
+      ctx.fillStyle = isLightBg ? '#5A4A3E' : 'rgba(255,255,255,0.92)';
+      ctx.font = `italic ${12 * scale}px Georgia, serif`;
+      ctx.fillText(`“${guestMessage.trim().substring(0, 48)}”`, totalW / 2, msgY);
+
+      ctx.fillStyle = isLightBg ? '#8C7A6B' : 'rgba(255,255,255,0.75)';
+      ctx.font = `bold ${10 * scale}px system-ui, -apple-system, sans-serif`;
+      ctx.fillText(`— ${guestTitle}`, totalW / 2, msgY + 26 * scale);
+    } else {
+      ctx.fillStyle = isLightBg ? '#7A6A5E' : 'rgba(255,255,255,0.85)';
+      ctx.font = `italic ${11.5 * scale}px Georgia, serif`;
+      ctx.fillText(`With Love, ${guestTitle}`, totalW / 2, msgY);
+    }
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, showPreviewModal, activeEvent]);
 
   useEffect(() => {
     renderModalStrip();

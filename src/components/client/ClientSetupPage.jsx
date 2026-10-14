@@ -701,9 +701,9 @@ export default function ClientSetupPage() {
                       </div>
                     ))}
 
-                      {/* Photo Cuts with White Mat & Accent Border (Reference Style) */}
-                      <div className="space-y-1.5 pt-0.5 pb-1 relative z-10">
-                        <div className="p-0.5 bg-white rounded-lg shadow-xs" style={{ border: `1px solid ${frameBorderColor || '#C4A482'}` }}>
+                      {/* Photo Cuts with Solid Taupe Border Band (Reference Wendy & Mark Style) */}
+                      <div className="space-y-1 pt-0.5 pb-1 relative z-10">
+                        <div className="p-0.5 rounded-lg shadow-xs" style={{ backgroundColor: frameBorderColor || '#B89F88' }}>
                           <div className="aspect-[4/3] rounded-md overflow-hidden bg-black/10">
                             <img 
                               src={heroPhotos[0] || DEFAULT_HERO_PHOTOS[0]} 
@@ -712,11 +712,20 @@ export default function ClientSetupPage() {
                             />
                           </div>
                         </div>
-                        <div className="p-0.5 bg-white rounded-lg shadow-xs" style={{ border: `1px solid ${frameBorderColor || '#C4A482'}` }}>
+                        <div className="p-0.5 rounded-lg shadow-xs" style={{ backgroundColor: frameBorderColor || '#B89F88' }}>
                           <div className="aspect-[4/3] rounded-md overflow-hidden bg-black/10">
                             <img 
                               src={heroPhotos[1] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[1]} 
                               alt="Pose 2" 
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                        </div>
+                        <div className="p-0.5 rounded-lg shadow-xs" style={{ backgroundColor: frameBorderColor || '#B89F88' }}>
+                          <div className="aspect-[4/3] rounded-md overflow-hidden bg-black/10">
+                            <img 
+                              src={heroPhotos[2] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[2] || DEFAULT_HERO_PHOTOS[0]} 
+                              alt="Pose 3" 
                               className="w-full h-full object-cover" 
                             />
                           </div>
@@ -1118,14 +1127,14 @@ export default function ClientSetupPage() {
                   color: frameTextColor,
                   border: `2.5px solid ${frameBorderColor}`
                 }}
-                className="relative w-[230px] xs:w-[250px] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.25)] p-3 flex flex-col justify-between overflow-hidden select-none transition-colors duration-300 min-h-[480px]"
+                className="relative w-[230px] xs:w-[250px] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.25)] p-3 flex flex-col justify-between overflow-hidden select-none transition-colors duration-300 min-h-[690px] aspect-[1/3]"
               >
                 {/* Subtle Luxury Gradient Glow */}
                 <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/20 pointer-events-none" />
 
-                {/* Simulated Poses Cutouts with White Mat & Accent Border (Reference Style) */}
-                <div className="space-y-2.5 pt-1 pb-1 relative z-10 pointer-events-none">
-                  <div className="p-1 bg-white rounded-xl shadow-xs" style={{ border: `1.5px solid ${frameBorderColor || '#C4A482'}` }}>
+                {/* Simulated Poses Cutouts with Solid Taupe Frame Border Band (Exact Reference Style) */}
+                <div className="space-y-2 pt-1 pb-1 relative z-10 pointer-events-none">
+                  <div className="p-1 rounded-xl shadow-xs" style={{ backgroundColor: frameBorderColor || '#B89F88' }}>
                     <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/10">
                       <img 
                         src={heroPhotos[0] || DEFAULT_HERO_PHOTOS[0]} 
@@ -1134,11 +1143,20 @@ export default function ClientSetupPage() {
                       />
                     </div>
                   </div>
-                  <div className="p-1 bg-white rounded-xl shadow-xs" style={{ border: `1.5px solid ${frameBorderColor || '#C4A482'}` }}>
+                  <div className="p-1 rounded-xl shadow-xs" style={{ backgroundColor: frameBorderColor || '#B89F88' }}>
                     <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/10">
                       <img 
                         src={heroPhotos[1] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[1]} 
                         alt="Pose 2" 
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                  </div>
+                  <div className="p-1 rounded-xl shadow-xs" style={{ backgroundColor: frameBorderColor || '#B89F88' }}>
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/10">
+                      <img 
+                        src={heroPhotos[2] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[2] || DEFAULT_HERO_PHOTOS[0]} 
+                        alt="Pose 3" 
                         className="w-full h-full object-cover" 
                       />
                     </div>

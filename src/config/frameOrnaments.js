@@ -595,95 +595,164 @@ export function renderOrnamentToCanvas(canvas, presetId, color = '#F5D77F', size
 }
 
 // Dedicated Reference Botanical Corner Line Art (Top-Left Vine Branch & Bottom-Right Blossom)
-export function drawStripBotanicals(ctx, w, h, color = '#C4A482', scale = 1) {
+// Sized and scaled 100% proportionally to match the Wendy & Mark reference photostrip
+export function drawStripBotanicals(ctx, w, h, color = '#B89F88', scale = 1) {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
-  ctx.lineWidth = 1.35 * scale;
+  ctx.lineWidth = 1.7 * scale;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  // --- Top-Left Botanical Vine Branch ---
+  const s = scale; // base unit scale (where 1 unit = 1px on 600x1800 canvas)
+
+  // Helper to draw an organic pointed botanical leaf with center vein
+  const drawLeaf = (x, y, angle, length, width) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(length * 0.35, -width * 0.72, length * 0.75, -width * 0.58, length, 0);
+    ctx.bezierCurveTo(length * 0.75, width * 0.58, length * 0.35, width * 0.72, 0, 0);
+    ctx.stroke();
+    // Center vein
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(length * 0.88, 0);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  // ================= 🌿 1. TOP-LEFT BOTANICAL VINE BRANCH (Ref: Wendy & Mark) 🌿 =================
+  // Main trailing branch curving from top edge down along Photo 1 (spanning ~400px at scale 1)
   ctx.beginPath();
-  ctx.moveTo(6 * scale, 6 * scale);
-  ctx.bezierCurveTo(24 * scale, 16 * scale, 32 * scale, 38 * scale, 16 * scale, 75 * scale);
-  ctx.bezierCurveTo(8 * scale, 100 * scale, 18 * scale, 130 * scale, 12 * scale, 165 * scale);
+  ctx.moveTo(20 * s, 0);
+  ctx.bezierCurveTo(42 * s, 40 * s, 52 * s, 95 * s, 32 * s, 155 * s);
+  ctx.bezierCurveTo(14 * s, 210 * s, 25 * s, 275 * s, 16 * s, 340 * s);
+  ctx.bezierCurveTo(10 * s, 380 * s, 18 * s, 415 * s, 12 * s, 450 * s);
   ctx.stroke();
 
-  // Top-left Leaves along branch
+  // Secondary delicate offshoot stem
+  ctx.beginPath();
+  ctx.moveTo(40 * s, 70 * s);
+  ctx.bezierCurveTo(68 * s, 100 * s, 78 * s, 140 * s, 70 * s, 180 * s);
+  ctx.stroke();
+
+  // Top-left leaves along the branch (exact placement as reference)
   const topLeaves = [
-    { x: 16 * scale, y: 20 * scale, angle: 0.35, len: 14 * scale, w: 6 * scale },
-    { x: 28 * scale, y: 35 * scale, angle: -0.55, len: 16 * scale, w: 7 * scale },
-    { x: 24 * scale, y: 55 * scale, angle: 0.85, len: 15 * scale, w: 6.5 * scale },
-    { x: 14 * scale, y: 88 * scale, angle: -0.65, len: 16 * scale, w: 7 * scale },
-    { x: 16 * scale, y: 115 * scale, angle: 0.75, len: 14 * scale, w: 6 * scale },
-    { x: 13 * scale, y: 145 * scale, angle: -0.45, len: 13 * scale, w: 5.5 * scale },
+    { x: 25 * s, y: 22 * s, angle: 0.35, len: 28 * s, w: 11 * s },
+    { x: 38 * s, y: 50 * s, angle: -0.65, len: 32 * s, w: 12.5 * s },
+    { x: 46 * s, y: 85 * s, angle: 0.85, len: 30 * s, w: 12 * s },
+    { x: 68 * s, y: 120 * s, angle: 0.45, len: 28 * s, w: 11 * s },
+    { x: 72 * s, y: 165 * s, angle: 1.15, len: 26 * s, w: 10 * s },
+    { x: 32 * s, y: 140 * s, angle: -0.80, len: 30 * s, w: 12 * s },
+    { x: 18 * s, y: 195 * s, angle: 0.70, len: 28 * s, w: 11 * s },
+    { x: 23 * s, y: 250 * s, angle: -0.55, len: 27 * s, w: 10.5 * s },
+    { x: 18 * s, y: 310 * s, angle: 0.60, len: 25 * s, w: 10 * s },
+    { x: 14 * s, y: 370 * s, angle: -0.45, len: 22 * s, w: 9 * s },
+    { x: 13 * s, y: 430 * s, angle: 0.40, len: 20 * s, w: 8 * s },
   ];
-  topLeaves.forEach(lf => {
+  topLeaves.forEach(lf => drawLeaf(lf.x, lf.y, lf.angle, lf.len, lf.w));
+
+  // ================= 🌸 2. BOTTOM-RIGHT FLORAL & BOTANICAL BLOOM (Ref: Wendy & Mark) 🌸 =================
+  // Main flower center position (situated in the lower right footer area beside Pasadena, CA)
+  const fx = w - 135 * s;
+  const fy = h - 315 * s;
+
+  // Stems trailing UPWARDS into the names & divider area
+  ctx.beginPath();
+  ctx.moveTo(fx + 22 * s, fy - 28 * s);
+  ctx.bezierCurveTo(w - 78 * s, fy - 115 * s, w - 52 * s, fy - 220 * s, w - 88 * s, fy - 325 * s);
+  ctx.stroke();
+
+  // Secondary upward stem branch
+  ctx.beginPath();
+  ctx.moveTo(w - 72 * s, fy - 170 * s);
+  ctx.bezierCurveTo(w - 42 * s, fy - 230 * s, w - 46 * s, fy - 285 * s, w - 78 * s, fy - 350 * s);
+  ctx.stroke();
+
+  // Stems trailing DOWNWARDS to bottom-right corner
+  ctx.beginPath();
+  ctx.moveTo(fx + 12 * s, fy + 38 * s);
+  ctx.bezierCurveTo(w - 92 * s, h - 230 * s, w - 68 * s, h - 145 * s, w - 35 * s, h - 35 * s);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(w - 82 * s, h - 190 * s);
+  ctx.bezierCurveTo(w - 115 * s, h - 135 * s, w - 105 * s, h - 75 * s, w - 72 * s, h - 18 * s);
+  ctx.stroke();
+
+  // Leaves along the upward stem (reaching beside Date, Divider, and "WENDY & MARK")
+  const upLeaves = [
+    { x: w - 90 * s, y: fy - 65 * s, angle: -0.65, len: 34 * s, w: 13 * s },
+    { x: w - 65 * s, y: fy - 130 * s, angle: 0.45, len: 32 * s, w: 12 * s },
+    { x: w - 58 * s, y: fy - 190 * s, angle: -0.85, len: 36 * s, w: 14 * s },  // Beside Date
+    { x: w - 44 * s, y: fy - 250 * s, angle: 0.35, len: 32 * s, w: 12.5 * s }, // Beside Divider
+    { x: w - 62 * s, y: fy - 295 * s, angle: -0.75, len: 30 * s, w: 11.5 * s }, // Beside Names
+    { x: w - 78 * s, y: fy - 345 * s, angle: -0.40, len: 26 * s, w: 10 * s },   // Top tip beside names
+  ];
+  upLeaves.forEach(lf => drawLeaf(lf.x, lf.y, lf.angle, lf.len, lf.w));
+
+  // Leaves along the downward stem towards bottom corner
+  const downLeaves = [
+    { x: w - 100 * s, y: h - 250 * s, angle: 2.1, len: 32 * s, w: 13 * s },
+    { x: w - 75 * s, y: h - 190 * s, angle: 0.85, len: 36 * s, w: 14 * s },
+    { x: w - 110 * s, y: h - 145 * s, angle: 2.3, len: 30 * s, w: 12 * s },
+    { x: w - 62 * s, y: h - 105 * s, angle: 0.95, len: 32 * s, w: 13 * s },
+    { x: w - 85 * s, y: h - 60 * s, angle: 2.1, len: 28 * s, w: 11 * s },
+    { x: w - 46 * s, y: h - 42 * s, angle: 0.70, len: 24 * s, w: 9.5 * s },
+  ];
+  downLeaves.forEach(lf => drawLeaf(lf.x, lf.y, lf.angle, lf.len, lf.w));
+
+  // The Detailed Open Botanical Flower Blossom (Magnolia / Wild Rose style in reference)
+  // Outer layer of 5 rounded petals with delicate folds
+  const petalCount = 5;
+  for (let i = 0; i < petalCount; i++) {
+    const angle = (i * Math.PI * 2) / petalCount - 0.25;
+    const px = fx + Math.cos(angle) * (28 * s);
+    const py = fy + Math.sin(angle) * (28 * s);
     ctx.save();
-    ctx.translate(lf.x, lf.y);
-    ctx.rotate(lf.angle);
+    ctx.translate(px, py);
+    ctx.rotate(angle);
     ctx.beginPath();
-    ctx.ellipse(lf.len / 2, 0, lf.len / 2, lf.w / 2, 0, 0, Math.PI * 2);
+    ctx.moveTo(-18 * s, -15 * s);
+    ctx.bezierCurveTo(-7 * s, -30 * s, 7 * s, -30 * s, 18 * s, -15 * s);
+    ctx.bezierCurveTo(26 * s, 9 * s, -26 * s, 9 * s, -18 * s, -15 * s);
     ctx.stroke();
+    // Inner petal texture lines
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(lf.len * 0.8, 0);
+    ctx.moveTo(0, -24 * s);
+    ctx.lineTo(0, -7 * s);
     ctx.stroke();
     ctx.restore();
-  });
-
-  // --- Bottom-Right Botanical Floral Bloom ---
-  const bx = w - 8 * scale;
-  const by = h - 8 * scale;
-
-  // Stems reaching up into footer area
-  ctx.beginPath();
-  ctx.moveTo(bx, by);
-  ctx.bezierCurveTo(bx - 28 * scale, by - 35 * scale, bx - 55 * scale, by - 75 * scale, bx - 45 * scale, by - 110 * scale);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(bx - 18 * scale, by - 28 * scale);
-  ctx.bezierCurveTo(bx - 42 * scale, by - 40 * scale, bx - 75 * scale, by - 50 * scale, bx - 98 * scale, by - 58 * scale);
-  ctx.stroke();
-
-  // Flower blossom center at (bx - 45 * scale, by - 110 * scale)
-  const fx = bx - 45 * scale;
-  const fy = by - 110 * scale;
-  for (let i = 0; i < 5; i++) {
-    const angle = (i * Math.PI * 2) / 5 - 0.3;
-    const px = fx + Math.cos(angle) * (13 * scale);
-    const py = fy + Math.sin(angle) * (13 * scale);
-    ctx.beginPath();
-    ctx.ellipse(px, py, 11 * scale, 6.5 * scale, angle, 0, Math.PI * 2);
-    ctx.stroke();
   }
-  ctx.beginPath();
-  ctx.arc(fx, fy, 3.5 * scale, 0, Math.PI * 2);
-  ctx.stroke();
 
-  // Bottom-right Leaves
-  const botLeaves = [
-    { x: bx - 14 * scale, y: by - 16 * scale, angle: -1.2, len: 17 * scale, w: 7.5 * scale },
-    { x: bx - 35 * scale, y: by - 38 * scale, angle: -2.1, len: 19 * scale, w: 8 * scale },
-    { x: bx - 65 * scale, y: by - 48 * scale, angle: -2.6, len: 17 * scale, w: 7 * scale },
-    { x: bx - 42 * scale, y: by - 70 * scale, angle: -0.9, len: 15 * scale, w: 6.5 * scale },
-    { x: bx - 50 * scale, y: by - 90 * scale, angle: -1.8, len: 14 * scale, w: 6 * scale },
-  ];
-  botLeaves.forEach(lf => {
+  // Inner layer of 4 overlapping petals
+  for (let i = 0; i < 4; i++) {
+    const angle = (i * Math.PI * 2) / 4 + 0.35;
+    const px = fx + Math.cos(angle) * (15 * s);
+    const py = fy + Math.sin(angle) * (15 * s);
     ctx.save();
-    ctx.translate(lf.x, lf.y);
-    ctx.rotate(lf.angle);
+    ctx.translate(px, py);
+    ctx.rotate(angle);
     ctx.beginPath();
-    ctx.ellipse(lf.len / 2, 0, lf.len / 2, lf.w / 2, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(lf.len * 0.8, 0);
+    ctx.moveTo(-11 * s, -11 * s);
+    ctx.bezierCurveTo(-3 * s, -20 * s, 3 * s, -20 * s, 11 * s, -11 * s);
+    ctx.bezierCurveTo(14 * s, 5 * s, -14 * s, 5 * s, -11 * s, -11 * s);
     ctx.stroke();
     ctx.restore();
-  });
+  }
+
+  // Flower Pistil / Stamen center
+  ctx.beginPath();
+  ctx.arc(fx, fy, 7 * s, 0, Math.PI * 2);
+  ctx.stroke();
+  for (let a = 0; a < Math.PI * 2; a += 0.8) {
+    ctx.beginPath();
+    ctx.arc(fx + Math.cos(a) * (10 * s), fy + Math.sin(a) * (10 * s), 1.3 * s, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.restore();
 }

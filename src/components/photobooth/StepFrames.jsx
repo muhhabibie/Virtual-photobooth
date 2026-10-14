@@ -108,14 +108,30 @@ export default function StepFrames() {
     const count = targetPhotoCount;
     const theme = activeTheme;
 
-    const w = 320;
-    const pad = 18;
-    const gap = 10;
-    const photoW = w - pad * 2;
-    const photoH = count === 1 ? Math.round(photoW * 1.15) : Math.round(photoW * 0.72);
-    const headH = 10;
-    const footH = 125;
-    const totalH = pad + headH + (photoH * count) + (gap * (count - 1)) + footH + pad;
+    const w = 300;
+    const totalH = 900; // Exact 1:3 ratio (2"x6" photostrip replica)
+    const padX = 24;
+    const photoW = w - padX * 2; // 252px
+
+    let photoH, gap, topPad;
+    if (count === 1) {
+      photoH = Math.round(photoW * 1.15);
+      gap = 0;
+      topPad = 25;
+    } else if (count === 2) {
+      photoH = Math.round(photoW * 0.90);
+      gap = 13;
+      topPad = 20;
+    } else if (count === 4) {
+      photoH = Math.round(photoW * 0.545);
+      gap = 8;
+      topPad = 14;
+    } else {
+      // Standard 3 photos (Exact Reference Wendy & Mark format)
+      photoH = Math.round(photoW * 0.725);
+      gap = 11;
+      topPad = 18;
+    }
 
     canvas.width = w * 2;
     canvas.height = totalH * 2;
@@ -126,97 +142,102 @@ export default function StepFrames() {
     ctx.fillRect(0, 0, w, totalH);
 
     const isLightBg = theme.hex === '#FDFBF7' || theme.hex === '#FAF6F0' || theme.hex === '#ffffff' || theme.hex === '#FFFFFF' || theme.hex === '#F3C5CB';
-    const accentColor = isLightBg ? '#C4A482' : (theme.textHex || '#F5D77F');
-    const primaryTextColor = isLightBg ? '#2B2826' : (theme.textHex || '#FFFFFF');
+    const accentColor = isLightBg ? '#B89F88' : (theme.textHex || '#F5D77F');
+    const primaryTextColor = isLightBg ? '#22201E' : (theme.textHex || '#FFFFFF');
 
     // Draw Reference Botanicals (Branch top-left & blossom bottom-right)
-    drawStripBotanicals(ctx, w, totalH, accentColor, 0.75);
+    drawStripBotanicals(ctx, w, totalH, accentColor, 0.5);
 
-    // Photo slots with Mat & Border
+    // Photo slots with Solid Taupe Border Band (Exact Reference Style)
+    const borderBand = 3.25;
+    let drawY = topPad;
+
     for (let i = 0; i < count; i++) {
-      const y = pad + headH + i * (photoH + gap);
+      // 1. Solid Taupe Frame Band (Reference Mat)
+      ctx.fillStyle = accentColor;
+      ctx.fillRect(padX - borderBand, drawY - borderBand, photoW + borderBand * 2, photoH + borderBand * 2);
 
-      // Photo mat & accent border (exact reference style)
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(pad - 2, y - 2, photoW + 4, photoH + 4);
-      ctx.strokeStyle = accentColor;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(pad - 2, y - 2, photoW + 4, photoH + 4);
-
-      // Inner placeholder box
-      ctx.fillStyle = isLightBg ? '#F4EFEA' : 'rgba(0,0,0,0.32)';
-      ctx.fillRect(pad, y, photoW, photoH);
+      // 2. Inner placeholder box
+      ctx.fillStyle = isLightBg ? '#F4EFEA' : 'rgba(0,0,0,0.35)';
+      ctx.fillRect(padX, drawY, photoW, photoH);
 
       // Icon & Pose Label
       ctx.fillStyle = accentColor;
-      ctx.font = '14px serif';
+      ctx.font = '13px serif';
       ctx.textAlign = 'center';
-      ctx.fillText('📷', w / 2, y + photoH / 2 - 4);
-      ctx.font = 'bold 10px sans-serif';
+      ctx.fillText('📷', w / 2, drawY + photoH / 2 - 4);
+      ctx.font = 'bold 9px sans-serif';
       ctx.fillStyle = primaryTextColor;
-      ctx.fillText(`Pose #${i + 1}`, w / 2, y + photoH / 2 + 13);
+      ctx.fillText(`Pose #${i + 1}`, w / 2, drawY + photoH / 2 + 12);
+
+      drawY += photoH + gap;
     }
 
     // ================= 🌟 SPACIOUS FOOTER SECTION (Ref: Reference Photostrip) 🌟 =================
-    const footerTop = pad + headH + (photoH * count) + (gap * Math.max(0, count - 1));
+    const footerTop = topPad + (photoH * count) + (gap * Math.max(0, count - 1));
     const coupleName = (getEventDisplayName(activeEvent) || 'WENDY & MARK').toUpperCase();
     const dateText = getEventFormattedDate(activeEvent) || '12.03.2023';
     const venueText = (activeEvent?.venue || 'PASADENA, CA').toUpperCase();
     const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
 
     // 1. Couple Title ("WENDY & MARK")
+    const nameY = footerTop + 48;
     ctx.fillStyle = primaryTextColor;
-    ctx.font = "bold 15px 'Playfair Display', 'Cinzel', Georgia, serif";
+    ctx.font = "bold 11px 'Playfair Display', 'Cormorant Garamond', 'Cinzel', Georgia, serif";
     ctx.textAlign = 'center';
-    ctx.fillText(coupleName, w / 2, footerTop + 28);
+    ctx.fillText(coupleName, w / 2, nameY);
 
     // 2. Horizontal Divider Strip Line ("pembatas stripnya itu")
+    const lineY = nameY + 17;
     ctx.save();
     ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.1;
     ctx.lineCap = 'round';
-    const divWidth = 100;
+    const divWidth = 80;
     ctx.beginPath();
-    ctx.moveTo(w / 2 - divWidth / 2, footerTop + 40);
-    ctx.lineTo(w / 2 + divWidth / 2, footerTop + 40);
+    ctx.moveTo(w / 2 - divWidth / 2, lineY);
+    ctx.lineTo(w / 2 + divWidth / 2, lineY);
     ctx.stroke();
     ctx.restore();
 
     // 3. Date ("12.03.2023")
+    const dateY = lineY + 22;
     ctx.fillStyle = primaryTextColor;
-    ctx.font = 'bold 8.5px system-ui, -apple-system, sans-serif';
+    ctx.font = 'bold 7px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(dateText, w / 2, footerTop + 56);
+    ctx.fillText(dateText, w / 2, dateY);
 
     // 4. Venue ("PASADENA, CA")
-    ctx.font = 'bold 7.5px system-ui, -apple-system, sans-serif';
-    ctx.fillText(venueText, w / 2, footerTop + 68);
+    const venueY = dateY + 14;
+    ctx.font = 'bold 6.5px system-ui, -apple-system, sans-serif';
+    ctx.fillText(venueText, w / 2, venueY);
 
     // 5. Space for Kalimat / Wishes / Guest attribution
+    const msgY = venueY + 21;
     if (guestMessage && guestMessage.trim()) {
       ctx.fillStyle = isLightBg ? '#5A4A3E' : 'rgba(255,255,255,0.9)';
-      ctx.font = "italic 8.5px Georgia, serif";
-      ctx.fillText(`“${guestMessage.trim().substring(0, 36)}”`, w / 2, footerTop + 88);
-      ctx.font = 'bold 8px system-ui, -apple-system, sans-serif';
-      ctx.fillText(`— ${guestTitle}`, w / 2, footerTop + 102);
+      ctx.font = "italic 6px Georgia, serif";
+      ctx.fillText(`“${guestMessage.trim().substring(0, 36)}”`, w / 2, msgY);
+      ctx.font = 'bold 5px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`— ${guestTitle}`, w / 2, msgY + 13);
     } else {
-      ctx.fillStyle = isLightBg ? '#8C7A6B' : 'rgba(255,255,255,0.7)';
-      ctx.font = "italic 8px Georgia, serif";
-      ctx.fillText('Ruang Pesan & Doa Tamu...', w / 2, footerTop + 88);
-      ctx.font = 'bold 8px system-ui, -apple-system, sans-serif';
-      ctx.fillText(`With Love, ${guestTitle}`, w / 2, footerTop + 102);
+      ctx.fillStyle = isLightBg ? '#7A6A5E' : 'rgba(255,255,255,0.7)';
+      ctx.font = "italic 5.5px Georgia, serif";
+      ctx.fillText('Ruang Pesan & Doa Tamu...', w / 2, msgY);
+      ctx.font = 'bold 5px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`With Love, ${guestTitle}`, w / 2, msgY + 13);
     }
 
-    // Frame border
+    // Outer border if configured
     if (theme.borderHex) {
       ctx.strokeStyle = theme.borderHex;
-      ctx.lineWidth = 3;
-      ctx.strokeRect(1.5, 1.5, w - 3, totalH - 3);
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(1.25, 1.25, w - 2.5, totalH - 2.5);
     }
 
-    // Draw Bride's Custom Ornaments
+    // Bride's custom ornaments if present
     if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {
-      drawFrameOrnaments(ctx, w, totalH, activeEvent.customFrame.ornaments, theme.textHex, 1);
+      drawFrameOrnaments(ctx, w, totalH, activeEvent.customFrame.ornaments, theme.textHex, 0.5);
     }
   }, [targetPhotoCount, activeTheme, guestName, guestMessage, activeEvent]);
 

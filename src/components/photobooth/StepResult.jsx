@@ -150,24 +150,34 @@ export default function StepResult() {
     if (!canvas || capturedPhotos.length === 0) return;
 
     const count = capturedPhotos.length;
-    const scale = 2; // 2x Retina Resolution
-    const photoW = 400 * scale;
-    const pad = 26 * scale;
-    const gap = 16 * scale;
-    const headerH = 12 * scale; // Minimal top pad as seen in reference
-    const footerH = 180 * scale; // Generous space for names, divider line, date, venue & sentences
+    const scale = 2; // 2x Retina Resolution for crisp physical 2x6" printing
 
-    // Calculate exact height for each captured photo based on its real aspect ratio
-    const photoLayouts = capturedPhotos.map((photo) => {
-      const srcEl = photo.canvas;
-      const aspect = (srcEl && srcEl.width && srcEl.height) ? (srcEl.height / srcEl.width) : (count === 1 ? 1.15 : 0.75);
-      const h = Math.round(photoW * aspect);
-      return { photo, h };
-    });
+    // Standard 2x6 inch physical photostrip dimensions (1:3 aspect ratio, 600 DPI)
+    const totalW = 600 * scale; // 1200 px
+    const totalH = 1800 * scale; // 3600 px
+    const padX = 48 * scale; // Uniform left and right margins (~14%)
+    const photoW = totalW - padX * 2; // 504 * scale
 
-    const totalPhotosHeight = photoLayouts.reduce((sum, item) => sum + item.h, 0);
-    const totalW = photoW + pad * 2;
-    const totalH = pad + headerH + totalPhotosHeight + (gap * Math.max(0, count - 1)) + footerH + pad;
+    // Compute photo dimensions based on slot count
+    let photoH, gap, topPad;
+    if (count === 1) {
+      photoH = Math.round(photoW * 1.15);
+      gap = 0;
+      topPad = 50 * scale;
+    } else if (count === 2) {
+      photoH = Math.round(photoW * 0.90);
+      gap = 26 * scale;
+      topPad = 40 * scale;
+    } else if (count === 4) {
+      photoH = Math.round(photoW * 0.545);
+      gap = 16 * scale;
+      topPad = 28 * scale;
+    } else {
+      // Standard 3 photos (Exact Reference Wendy & Mark format)
+      photoH = Math.round(photoW * 0.725); // 365 * scale
+      gap = 22 * scale;
+      topPad = 36 * scale;
+    }
 
     canvas.width = totalW;
     canvas.height = totalH;
@@ -175,31 +185,44 @@ export default function StepResult() {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // Background Frame Color (Default to clean white if not set)
+    // Background Frame Color (Default to clean pure white as in reference)
     const frameBg = stripColor || '#FFFFFF';
     ctx.fillStyle = frameBg;
     ctx.fillRect(0, 0, totalW, totalH);
 
     const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#FFFFFF' || frameBg === '#F3C5CB';
-    const accentColor = isLightBg ? '#C4A482' : (activeEvent?.customFrame?.textColor || '#F5D77F');
-    const primaryTextColor = isLightBg ? '#2B2826' : '#FFFFFF';
+    const accentColor = isLightBg ? '#B89F88' : (activeEvent?.customFrame?.textColor || '#F5D77F');
+    const primaryTextColor = isLightBg ? '#22201E' : '#FFFFFF';
 
     // Draw Reference Botanical Leaf Branch (Top-Left) & Blossom (Bottom-Right)
     drawStripBotanicals(ctx, totalW, totalH, accentColor, scale);
 
-    // Render Photos with Applied Filter (With Mat & Accent Border as in Reference)
+    // Active Filter
     const activeFilterObj = PHOTO_FILTERS.find(f => f.id === selectedFilter) || PHOTO_FILTERS[0];
 
-    let drawY = pad + headerH;
-    photoLayouts.forEach(({ photo, h }) => {
-      // Photo Mat & Accent Border (Reference Wedding Photostrip Mat)
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(pad - 3.5 * scale, drawY - 3.5 * scale, photoW + 7 * scale, h + 7 * scale);
+    // Helper: draw image with center-crop (object-fit: cover) so photos are never distorted
+    const drawCoverPhoto = (imgEl, dx, dy, dw, dh) => {
+      const srcW = imgEl.width || imgEl.naturalWidth;
+      const srcH = imgEl.height || imgEl.naturalHeight;
+      if (!srcW || !srcH) return;
+      const r = Math.max(dw / srcW, dh / srcH);
+      const nw = dw / r;
+      const nh = dh / r;
+      const sx = (srcW - nw) / 2;
+      const sy = (srcH - nh) / 2;
+      ctx.drawImage(imgEl, sx, sy, nw, nh, dx, dy, dw, dh);
+    };
 
-      ctx.strokeStyle = accentColor;
-      ctx.lineWidth = 2 * scale;
-      ctx.strokeRect(pad - 3.5 * scale, drawY - 3.5 * scale, photoW + 7 * scale, h + 7 * scale);
+    // Render Photo Slots with Solid Taupe Frame Border (Exact Reference Style)
+    const borderBand = 6.5 * scale; // Solid taupe border band around each photo
+    let drawY = topPad;
 
+    capturedPhotos.forEach((photo) => {
+      // 1. Solid Taupe Frame Band (Reference Mat)
+      ctx.fillStyle = accentColor;
+      ctx.fillRect(padX - borderBand, drawY - borderBand, photoW + borderBand * 2, photoH + borderBand * 2);
+
+      // 2. Photo Content with Applied Filter
       ctx.save();
       if (activeFilterObj.css && activeFilterObj.css !== 'none') {
         ctx.filter = activeFilterObj.css;
@@ -207,65 +230,70 @@ export default function StepResult() {
 
       const srcEl = photo.canvas;
       if (srcEl) {
-        ctx.drawImage(srcEl, 0, 0, srcEl.width, srcEl.height, pad, drawY, photoW, h);
+        drawCoverPhoto(srcEl, padX, drawY, photoW, photoH);
       } else if (photo.dataUrl) {
         const img = new Image();
         img.src = photo.dataUrl;
-        ctx.drawImage(img, pad, drawY, photoW, h);
+        drawCoverPhoto(img, padX, drawY, photoW, photoH);
       }
       ctx.restore();
 
-      drawY += h + gap;
+      drawY += photoH + gap;
     });
 
     // ================= 🌟 SPACIOUS FOOTER SECTION (Ref: Reference Photostrip) 🌟 =================
-    const footerTop = pad + headerH + totalPhotosHeight + (gap * Math.max(0, count - 1));
+    const footerTop = topPad + (photoH * count) + (gap * Math.max(0, count - 1));
     const coupleName = (getEventDisplayName(activeEvent) || 'WENDY & MARK').toUpperCase();
     const dateText = getEventFormattedDate(activeEvent) || '12.03.2023';
     const venueText = (activeEvent?.venue || 'PASADENA, CA').toUpperCase();
     const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan';
 
-    // 1. Couple Title ("WENDY & MARK") - Clean Elegant All-Caps Serif with Letter-Spacing
+    // 1. Couple Title ("WENDY & MARK") - Bold Classic Serif
+    const nameY = footerTop + 95 * scale;
     ctx.fillStyle = primaryTextColor;
-    ctx.font = `bold ${20 * scale}px 'Playfair Display', 'Cinzel', Georgia, serif`;
+    ctx.font = `bold ${22 * scale}px 'Playfair Display', 'Cormorant Garamond', 'Cinzel', Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(coupleName, totalW / 2, footerTop + 42 * scale);
+    ctx.fillText(coupleName, totalW / 2, nameY);
 
     // 2. Horizontal Divider Strip Line ("pembatas stripnya itu")
+    const lineY = nameY + 34 * scale;
     ctx.save();
     ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 1.8 * scale;
+    ctx.lineWidth = 2.2 * scale;
     ctx.lineCap = 'round';
-    const divWidth = 140 * scale;
+    const divWidth = 160 * scale;
     ctx.beginPath();
-    ctx.moveTo(totalW / 2 - divWidth / 2, footerTop + 58 * scale);
-    ctx.lineTo(totalW / 2 + divWidth / 2, footerTop + 58 * scale);
+    ctx.moveTo(totalW / 2 - divWidth / 2, lineY);
+    ctx.lineTo(totalW / 2 + divWidth / 2, lineY);
     ctx.stroke();
     ctx.restore();
 
     // 3. Date Text ("12.03.2023")
+    const dateY = lineY + 44 * scale;
     ctx.fillStyle = primaryTextColor;
-    ctx.font = `bold ${10.5 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(dateText, totalW / 2, footerTop + 82 * scale);
+    ctx.fillText(dateText, totalW / 2, dateY);
 
     // 4. Venue / City ("PASADENA, CA")
-    ctx.font = `bold ${9.5 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.fillText(venueText, totalW / 2, footerTop + 100 * scale);
+    const venueY = dateY + 28 * scale;
+    ctx.font = `bold ${12.5 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(venueText, totalW / 2, venueY);
 
     // 5. Dedicated Space for Sentence / Kalimat / Doa Restu
+    const msgY = venueY + 44 * scale;
     if (guestMessage && guestMessage.trim()) {
       ctx.fillStyle = isLightBg ? '#5A4A3E' : 'rgba(255,255,255,0.92)';
-      ctx.font = `italic ${10 * scale}px Georgia, serif`;
-      ctx.fillText(`“${guestMessage.trim()}”`, totalW / 2, footerTop + 128 * scale);
+      ctx.font = `italic ${12 * scale}px Georgia, serif`;
+      ctx.fillText(`“${guestMessage.trim().substring(0, 48)}”`, totalW / 2, msgY);
 
       ctx.fillStyle = isLightBg ? '#8C7A6B' : 'rgba(255,255,255,0.75)';
-      ctx.font = `bold ${8.5 * scale}px system-ui, -apple-system, sans-serif`;
-      ctx.fillText(`— ${guestTitle}`, totalW / 2, footerTop + 148 * scale);
+      ctx.font = `bold ${10 * scale}px system-ui, -apple-system, sans-serif`;
+      ctx.fillText(`— ${guestTitle}`, totalW / 2, msgY + 26 * scale);
     } else {
-      ctx.fillStyle = isLightBg ? '#6E5D53' : 'rgba(255,255,255,0.85)';
-      ctx.font = `italic ${10 * scale}px Georgia, serif`;
-      ctx.fillText(`With Love, ${guestTitle}`, totalW / 2, footerTop + 128 * scale);
+      ctx.fillStyle = isLightBg ? '#7A6A5E' : 'rgba(255,255,255,0.85)';
+      ctx.font = `italic ${11.5 * scale}px Georgia, serif`;
+      ctx.fillText(`With Love, ${guestTitle}`, totalW / 2, msgY);
     }
 
     // Outer Frame Border
