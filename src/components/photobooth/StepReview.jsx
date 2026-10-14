@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { RotateCcw, ArrowRight, X } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
+import { getEventDisplayName } from '../../utils/eventHeader';
 
 export default function StepReview() {
   const {
