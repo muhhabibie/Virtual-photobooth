@@ -4,7 +4,7 @@ import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
-import { drawFrameOrnaments } from '../../config/frameOrnaments';
+import { drawFrameOrnaments, drawStripBotanicals } from '../../config/frameOrnaments';
 
 const PHOTO_FILTERS = [
   { id: 'natural', name: 'NATURAL', css: 'none', desc: 'Asli', previewClass: 'from-amber-200 via-rose-300 to-amber-100' },
@@ -152,10 +152,10 @@ export default function StepResult() {
     const count = capturedPhotos.length;
     const scale = 2; // 2x Retina Resolution
     const photoW = 400 * scale;
-    const pad = 30 * scale;
-    const gap = 18 * scale;
-    const headerH = 65 * scale;
-    const footerH = 100 * scale;
+    const pad = 26 * scale;
+    const gap = 16 * scale;
+    const headerH = 12 * scale; // Minimal top pad as seen in reference
+    const footerH = 180 * scale; // Generous space for names, divider line, date, venue & sentences
 
     // Calculate exact height for each captured photo based on its real aspect ratio
     const photoLayouts = capturedPhotos.map((photo) => {
@@ -175,31 +175,30 @@ export default function StepResult() {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // Background Frame Color
-    const frameBg = stripColor || '#6B111F';
+    // Background Frame Color (Default to clean white if not set)
+    const frameBg = stripColor || '#FFFFFF';
     ctx.fillStyle = frameBg;
     ctx.fillRect(0, 0, totalW, totalH);
 
-    // Frame Header Branding
-    const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#F3C5CB';
-    const headerTitle = getEventHeaderTitle(activeEvent);
-    ctx.fillStyle = isLightBg ? '#8C7A6B' : '#F5D77F';
-    ctx.font = `bold ${14 * scale}px monospace, Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(headerTitle, totalW / 2, pad + 38 * scale);
+    const isLightBg = frameBg === '#FAF6F0' || frameBg === '#FDFBF7' || frameBg === '#ffffff' || frameBg === '#FFFFFF' || frameBg === '#F3C5CB';
+    const accentColor = isLightBg ? '#C4A482' : (activeEvent?.customFrame?.textColor || '#F5D77F');
+    const primaryTextColor = isLightBg ? '#2B2826' : '#FFFFFF';
 
-    // Render Photos with Applied Filter (100% UNCROPPED - EXACT WYSIWYG MATCH)
+    // Draw Reference Botanical Leaf Branch (Top-Left) & Blossom (Bottom-Right)
+    drawStripBotanicals(ctx, totalW, totalH, accentColor, scale);
+
+    // Render Photos with Applied Filter (With Mat & Accent Border as in Reference)
     const activeFilterObj = PHOTO_FILTERS.find(f => f.id === selectedFilter) || PHOTO_FILTERS[0];
 
     let drawY = pad + headerH;
     photoLayouts.forEach(({ photo, h }) => {
-      // Photo Mat & Black Frame Line (Matching reference image photobooth strip border)
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
+      // Photo Mat & Accent Border (Reference Wedding Photostrip Mat)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(pad - 3.5 * scale, drawY - 3.5 * scale, photoW + 7 * scale, h + 7 * scale);
 
-      ctx.strokeStyle = '#000000';
+      ctx.strokeStyle = accentColor;
       ctx.lineWidth = 2 * scale;
-      ctx.strokeRect(pad - 4 * scale, drawY - 4 * scale, photoW + 8 * scale, h + 8 * scale);
+      ctx.strokeRect(pad - 3.5 * scale, drawY - 3.5 * scale, photoW + 7 * scale, h + 7 * scale);
 
       ctx.save();
       if (activeFilterObj.css && activeFilterObj.css !== 'none') {
@@ -208,7 +207,6 @@ export default function StepResult() {
 
       const srcEl = photo.canvas;
       if (srcEl) {
-        // Draw 100% of the captured canvas without any secondary cropping
         ctx.drawImage(srcEl, 0, 0, srcEl.width, srcEl.height, pad, drawY, photoW, h);
       } else if (photo.dataUrl) {
         const img = new Image();
@@ -220,50 +218,75 @@ export default function StepResult() {
       drawY += h + gap;
     });
 
-    // Frame Footer Signature (100% Identical to Gambar 2 Viewfinder & Physical Strip)
-    const coupleName = getEventDisplayName(activeEvent);
-    const dateText = getEventFormattedDate(activeEvent);
-    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
+    // ================= 🌟 SPACIOUS FOOTER SECTION (Ref: Reference Photostrip) 🌟 =================
+    const footerTop = pad + headerH + totalPhotosHeight + (gap * Math.max(0, count - 1));
+    const coupleName = (getEventDisplayName(activeEvent) || 'WENDY & MARK').toUpperCase();
+    const dateText = getEventFormattedDate(activeEvent) || '12.03.2023';
+    const venueText = (activeEvent?.venue || 'PASADENA, CA').toUpperCase();
+    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan';
 
-    const coupleColor = isLightBg ? '#3A2D28' : '#F5D77F';
-    const dateColor = isLightBg ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)';
-    const guestColor = isLightBg ? '#5A4A3E' : '#FFFFFF';
-
-    // Line 1: Couple Calligraphy ("Sabrina & Raka")
-    ctx.fillStyle = coupleColor;
-    ctx.font = `${28 * scale}px 'Great Vibes', 'Alex Brush', 'Playfair Display', Georgia, serif`;
+    // 1. Couple Title ("WENDY & MARK") - Clean Elegant All-Caps Serif with Letter-Spacing
+    ctx.fillStyle = primaryTextColor;
+    ctx.font = `bold ${20 * scale}px 'Playfair Display', 'Cinzel', Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(coupleName, totalW / 2, totalH - pad - 60 * scale);
+    ctx.fillText(coupleName, totalW / 2, footerTop + 42 * scale);
 
-    // Line 2: Event Date ("30 · 05 · 2026")
-    ctx.fillStyle = dateColor;
-    ctx.font = `bold ${10 * scale}px monospace, sans-serif`;
-    ctx.fillText(dateText, totalW / 2, totalH - pad - 36 * scale);
+    // 2. Horizontal Divider Strip Line ("pembatas stripnya itu")
+    ctx.save();
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 1.8 * scale;
+    ctx.lineCap = 'round';
+    const divWidth = 140 * scale;
+    ctx.beginPath();
+    ctx.moveTo(totalW / 2 - divWidth / 2, footerTop + 58 * scale);
+    ctx.lineTo(totalW / 2 + divWidth / 2, footerTop + 58 * scale);
+    ctx.stroke();
+    ctx.restore();
 
-    // Line 3: Guest Name ("sf")
-    ctx.fillStyle = guestColor;
-    ctx.font = `bold ${13 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.fillText(guestTitle, totalW / 2, totalH - pad - 14 * scale);
+    // 3. Date Text ("12.03.2023")
+    ctx.fillStyle = primaryTextColor;
+    ctx.font = `bold ${10.5 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(dateText, totalW / 2, footerTop + 82 * scale);
 
-    // Frame Border
-    if (activeEvent?.customFrame?.borderColor) {
-      ctx.strokeStyle = activeEvent.customFrame.borderColor;
-      ctx.lineWidth = 5 * scale;
-      ctx.strokeRect(2.5 * scale, 2.5 * scale, totalW - 5 * scale, totalH - 5 * scale);
+    // 4. Venue / City ("PASADENA, CA")
+    ctx.font = `bold ${9.5 * scale}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(venueText, totalW / 2, footerTop + 100 * scale);
+
+    // 5. Dedicated Space for Sentence / Kalimat / Doa Restu
+    if (guestMessage && guestMessage.trim()) {
+      ctx.fillStyle = isLightBg ? '#5A4A3E' : 'rgba(255,255,255,0.92)';
+      ctx.font = `italic ${10 * scale}px Georgia, serif`;
+      ctx.fillText(`“${guestMessage.trim()}”`, totalW / 2, footerTop + 128 * scale);
+
+      ctx.fillStyle = isLightBg ? '#8C7A6B' : 'rgba(255,255,255,0.75)';
+      ctx.font = `bold ${8.5 * scale}px system-ui, -apple-system, sans-serif`;
+      ctx.fillText(`— ${guestTitle}`, totalW / 2, footerTop + 148 * scale);
+    } else {
+      ctx.fillStyle = isLightBg ? '#6E5D53' : 'rgba(255,255,255,0.85)';
+      ctx.font = `italic ${10 * scale}px Georgia, serif`;
+      ctx.fillText(`With Love, ${guestTitle}`, totalW / 2, footerTop + 128 * scale);
     }
 
-    // Bride's Custom Ornaments (Rendered in 2X Retina resolution)
+    // Outer Frame Border
+    if (activeEvent?.customFrame?.borderColor) {
+      ctx.strokeStyle = activeEvent.customFrame.borderColor;
+      ctx.lineWidth = 4 * scale;
+      ctx.strokeRect(2 * scale, 2 * scale, totalW - 4 * scale, totalH - 4 * scale);
+    }
+
+    // Bride's Custom Positioned Ornaments
     if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {
       drawFrameOrnaments(
         ctx, 
         totalW, 
         totalH, 
         activeEvent.customFrame.ornaments, 
-        activeEvent.customFrame.textColor || (isLightBg ? '#3A2D28' : '#F5D77F'), 
+        activeEvent.customFrame.textColor || accentColor, 
         scale
       );
     }
-  }, [capturedPhotos, stripColor, guestName, selectedFilter, activeEvent]);
+  }, [capturedPhotos, stripColor, guestName, guestMessage, selectedFilter, activeEvent]);
 
   useEffect(() => {
     renderStrip();

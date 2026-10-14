@@ -14,16 +14,16 @@ import { compressImage, compressOrnament } from '../../utils/imageCompressor';
 import { PRESET_ORNAMENTS, renderOrnamentToCanvas } from '../../config/frameOrnaments';
 
 const BORDER_PRESET_COLORS = [
+  { name: 'Pasadena Botanical', bg: '#FFFFFF', text: '#2B2826', border: '#C4A482' },
   { name: 'Royal Burgundy', bg: '#6B111F', text: '#F5D77F', border: '#8A1828' },
-  { name: 'Noir Slate', bg: '#2D3748', text: '#E2E8F0', border: '#4A5568' },
   { name: 'Ivory Bliss', bg: '#FDFBF7', text: '#6B111F', border: '#E2DDD5' },
   { name: 'Antique Gold', bg: '#C4A46C', text: '#FFFFFF', border: '#D4AF37' },
+  { name: 'Noir Slate', bg: '#2D3748', text: '#E2E8F0', border: '#4A5568' },
   { name: 'Blush Rose', bg: '#F3C5CB', text: '#6B111F', border: '#E8B4B8' },
   { name: 'Sage Botanical', bg: '#26402E', text: '#E2F5D5', border: '#3B5943' },
   { name: 'Midnight Dark', bg: '#120B18', text: '#F5D77F', border: '#2D1B36' },
   { name: 'Deep Emerald', bg: '#0F382A', text: '#E5D5AA', border: '#1C5440' },
   { name: 'Pure White', bg: '#FFFFFF', text: '#1E1E1E', border: '#E5E7EB' },
-  { name: 'Minimal Charcoal', bg: '#18181B', text: '#F5D77F', border: '#27272A' },
 ];
 
 const TEXT_PRESET_COLORS = [
@@ -701,44 +701,53 @@ export default function ClientSetupPage() {
                       </div>
                     ))}
 
-                    {/* Header Strip */}
-                    <div className="text-center pb-1 relative z-10">
-                      <span className="text-[6.5px] font-mono tracking-widest block uppercase opacity-80">
-                        {isWedding ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH'}
-                      </span>
-                      <strong 
-                        className="text-[9.5px] font-serif tracking-wide block truncate"
-                        style={{ color: frameTextColor }}
-                      >
-                        {combinedDisplayName}
-                      </strong>
-                    </div>
-
-                    {/* Photo Cuts (Simulated Guest Poses with Prewedding Photos) */}
-                    <div className="space-y-1.5 py-1 relative z-10">
-                      <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/20 border border-black/10">
-                        <img 
-                          src={heroPhotos[0] || DEFAULT_HERO_PHOTOS[0]} 
-                          alt="Pose 1" 
-                          className="w-full h-full object-cover" 
-                        />
+                      {/* Photo Cuts with White Mat & Accent Border (Reference Style) */}
+                      <div className="space-y-1.5 pt-0.5 pb-1 relative z-10">
+                        <div className="p-0.5 bg-white rounded-lg shadow-xs" style={{ border: `1px solid ${frameBorderColor || '#C4A482'}` }}>
+                          <div className="aspect-[4/3] rounded-md overflow-hidden bg-black/10">
+                            <img 
+                              src={heroPhotos[0] || DEFAULT_HERO_PHOTOS[0]} 
+                              alt="Pose 1" 
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                        </div>
+                        <div className="p-0.5 bg-white rounded-lg shadow-xs" style={{ border: `1px solid ${frameBorderColor || '#C4A482'}` }}>
+                          <div className="aspect-[4/3] rounded-md overflow-hidden bg-black/10">
+                            <img 
+                              src={heroPhotos[1] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[1]} 
+                              alt="Pose 2" 
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/20 border border-black/10">
-                        <img 
-                          src={heroPhotos[1] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[1]} 
-                          alt="Pose 2" 
-                          className="w-full h-full object-cover" 
+
+                      {/* Spacious Footer (Reference Layout: Names, Divider Line, Date & Kalimat Space) */}
+                      <div className="text-center pt-2 pb-1 relative z-10 flex flex-col items-center">
+                        <strong 
+                          className="text-[10px] font-serif font-black tracking-widest block uppercase truncate max-w-full"
+                          style={{ color: frameTextColor }}
+                        >
+                          {combinedDisplayName.toUpperCase()}
+                        </strong>
+                        {/* Horizontal Divider Line */}
+                        <div 
+                          className="w-12 h-[1.2px] my-1 rounded-full"
+                          style={{ backgroundColor: frameBorderColor || '#C4A482' }}
                         />
+                        <span className="text-[6.5px] font-mono font-bold block" style={{ color: frameTextColor }}>
+                          {formattedDisplayDate}
+                        </span>
+                        <span className="text-[6px] font-sans uppercase tracking-wider block opacity-75 truncate max-w-full" style={{ color: frameTextColor }}>
+                          {venue || 'PASADENA, CA'}
+                        </span>
+                        {/* Dedicated Sentence / Kalimat Space */}
+                        <span className="text-[5.5px] font-serif italic mt-1 text-[#8C7A6B] block">
+                          “With Love, Tamu Undangan”
+                        </span>
                       </div>
                     </div>
-
-                    {/* Footer Strip */}
-                    <div className="text-center pt-1 border-t border-black/10 relative z-10">
-                      <span className="text-[6.5px] font-mono opacity-80">
-                        {formattedDisplayDate}
-                      </span>
-                    </div>
-                  </div>
 
                   {/* Sync Status Badge */}
                   <div className="relative z-10 pt-2 flex items-center justify-center gap-1.5">
@@ -1114,44 +1123,50 @@ export default function ClientSetupPage() {
                 {/* Subtle Luxury Gradient Glow */}
                 <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/20 pointer-events-none" />
 
-                {/* Header Strip Text */}
-                <div className="text-center pb-1.5 relative z-10 pointer-events-none">
-                  <span className="text-[7.5px] font-mono tracking-widest block uppercase opacity-80">
-                    {isWedding ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH'}
-                  </span>
+                {/* Simulated Poses Cutouts with White Mat & Accent Border (Reference Style) */}
+                <div className="space-y-2.5 pt-1 pb-1 relative z-10 pointer-events-none">
+                  <div className="p-1 bg-white rounded-xl shadow-xs" style={{ border: `1.5px solid ${frameBorderColor || '#C4A482'}` }}>
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/10">
+                      <img 
+                        src={heroPhotos[0] || DEFAULT_HERO_PHOTOS[0]} 
+                        alt="Pose 1" 
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                  </div>
+                  <div className="p-1 bg-white rounded-xl shadow-xs" style={{ border: `1.5px solid ${frameBorderColor || '#C4A482'}` }}>
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden bg-black/10">
+                      <img 
+                        src={heroPhotos[1] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[1]} 
+                        alt="Pose 2" 
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Spacious Footer (Reference Layout: Names, Divider Line, Date, Venue, Kalimat Space) */}
+                <div className="text-center pt-2.5 pb-2 relative z-10 pointer-events-none flex flex-col items-center">
                   <strong 
-                    className="text-[12px] font-serif tracking-wide block truncate drop-shadow-xs"
+                    className="text-[13px] font-serif font-black tracking-widest block uppercase truncate max-w-full drop-shadow-xs"
                     style={{ color: frameTextColor }}
                   >
-                    {combinedDisplayName}
+                    {combinedDisplayName.toUpperCase()}
                   </strong>
-                </div>
-
-                {/* Simulated Poses Cutouts */}
-                <div className="space-y-2 py-1.5 relative z-10 pointer-events-none">
-                  <div className="aspect-[4/3] rounded-xl overflow-hidden bg-black/25 border border-white/20 shadow-inner">
-                    <img 
-                      src={heroPhotos[0] || DEFAULT_HERO_PHOTOS[0]} 
-                      alt="Pose 1" 
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                  <div className="aspect-[4/3] rounded-xl overflow-hidden bg-black/25 border border-white/20 shadow-inner">
-                    <img 
-                      src={heroPhotos[1] || heroPhotos[0] || DEFAULT_HERO_PHOTOS[1]} 
-                      alt="Pose 2" 
-                      className="w-full h-full object-cover" 
-                    />
-                  </div>
-                </div>
-
-                {/* Footer Strip Signature */}
-                <div className="text-center pt-1.5 border-t border-black/15 relative z-10 pointer-events-none">
-                  <span className="text-[8px] font-mono opacity-85 block">
+                  {/* Horizontal Divider Line */}
+                  <div 
+                    className="w-16 h-[1.5px] my-1.5 rounded-full"
+                    style={{ backgroundColor: frameBorderColor || '#C4A482' }}
+                  />
+                  <span className="text-[9px] font-mono font-bold block" style={{ color: frameTextColor }}>
                     {formattedDisplayDate}
                   </span>
-                  <span className="text-[7px] font-serif opacity-70 block truncate">
-                    {venue || 'Grand Ballroom'}
+                  <span className="text-[8px] font-sans uppercase tracking-wider block opacity-75 truncate max-w-full" style={{ color: frameTextColor }}>
+                    {venue || 'PASADENA, CA'}
+                  </span>
+                  {/* Dedicated Space for Sentences / Doa Restu */}
+                  <span className="text-[7.5px] font-serif italic mt-1.5 text-[#8C7A6B] block">
+                    “Ruang Doa & Ucapan Tamu Undangan...”
                   </span>
                 </div>
 

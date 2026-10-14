@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle } from 'luc
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
-import { drawFrameOrnaments } from '../../config/frameOrnaments';
+import { drawFrameOrnaments, drawStripBotanicals } from '../../config/frameOrnaments';
 
 const STRIP_TYPES = [
   { id: 1, name: 'Polaroid', sub: '1 frame', badge: 'CLASSIC', badgeColor: 'bg-[#6B111F]', slots: 1 },
@@ -13,7 +13,8 @@ const STRIP_TYPES = [
 ];
 
 const BASE_COLOR_THEMES = [
-  { id: 'burgundy', name: 'Burgundy', hex: '#6B111F', textHex: '#F5D77F', styleName: 'POLOS', subName: 'Minimalis Royal' },
+  { id: 'botanical', name: 'Botanical', hex: '#FFFFFF', borderHex: '#C4A482', textHex: '#2B2826', styleName: 'PASADENA BOTANICAL', subName: 'Elegan Putih & Emas' },
+  { id: 'burgundy', name: 'Burgundy', hex: '#6B111F', textHex: '#F5D77F', styleName: 'ROYAL BURGUNDY', subName: 'Minimalis Royal' },
   { id: 'ivory', name: 'Ivory', hex: '#FDFBF7', borderHex: '#E2DDD5', textHex: '#6B111F', styleName: 'IVORY BLISS', subName: 'Clean & Pure' },
   { id: 'slate', name: 'Slate', hex: '#2D3748', textHex: '#E2E8F0', styleName: 'NOIR SLATE', subName: 'Modern Dark' },
   { id: 'blush', name: 'Blush', hex: '#F3C5CB', textHex: '#6B111F', styleName: 'BLUSH ROMANCE', subName: 'Sweet Pastel' },
@@ -108,12 +109,12 @@ export default function StepFrames() {
     const theme = activeTheme;
 
     const w = 320;
-    const pad = 16;
-    const gap = 12;
+    const pad = 18;
+    const gap = 10;
     const photoW = w - pad * 2;
-    const photoH = count === 1 ? Math.round(photoW * 1.15) : Math.round(photoW * (4 / 3));
-    const headH = 50;
-    const footH = 58;
+    const photoH = count === 1 ? Math.round(photoW * 1.15) : Math.round(photoW * 0.72);
+    const headH = 10;
+    const footH = 125;
     const totalH = pad + headH + (photoH * count) + (gap * (count - 1)) + footH + pad;
 
     canvas.width = w * 2;
@@ -124,53 +125,87 @@ export default function StepFrames() {
     ctx.fillStyle = theme.hex;
     ctx.fillRect(0, 0, w, totalH);
 
-    // Header branding
-    const headerTitle = getEventHeaderTitle(activeEvent);
-    ctx.fillStyle = theme.textHex;
-    ctx.font = 'bold 11px Georgia, serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(headerTitle, w / 2, pad + 25);
+    const isLightBg = theme.hex === '#FDFBF7' || theme.hex === '#FAF6F0' || theme.hex === '#ffffff' || theme.hex === '#FFFFFF' || theme.hex === '#F3C5CB';
+    const accentColor = isLightBg ? '#C4A482' : (theme.textHex || '#F5D77F');
+    const primaryTextColor = isLightBg ? '#2B2826' : (theme.textHex || '#FFFFFF');
 
-    // Photo slots
+    // Draw Reference Botanicals (Branch top-left & blossom bottom-right)
+    drawStripBotanicals(ctx, w, totalH, accentColor, 0.75);
+
+    // Photo slots with Mat & Border
     for (let i = 0; i < count; i++) {
       const y = pad + headH + i * (photoH + gap);
 
-      // Inner box
-      ctx.fillStyle = theme.hex === '#FDFBF7' ? '#EAE5DC' : 'rgba(0,0,0,0.32)';
+      // Photo mat & accent border (exact reference style)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(pad - 2, y - 2, photoW + 4, photoH + 4);
+      ctx.strokeStyle = accentColor;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(pad - 2, y - 2, photoW + 4, photoH + 4);
+
+      // Inner placeholder box
+      ctx.fillStyle = isLightBg ? '#F4EFEA' : 'rgba(0,0,0,0.32)';
       ctx.fillRect(pad, y, photoW, photoH);
 
       // Icon & Pose Label
-      ctx.fillStyle = theme.textHex;
+      ctx.fillStyle = accentColor;
       ctx.font = '14px serif';
+      ctx.textAlign = 'center';
       ctx.fillText('📷', w / 2, y + photoH / 2 - 4);
-      ctx.font = 'bold 11px sans-serif';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillStyle = primaryTextColor;
       ctx.fillText(`Pose #${i + 1}`, w / 2, y + photoH / 2 + 13);
     }
 
-    // Footer signature (100% Identical to Gambar 2 Viewfinder & Physical Strip)
-    const coupleName = getEventDisplayName(activeEvent);
-    const dateText = getEventFormattedDate(activeEvent);
-    const guestTitle = guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
+    // ================= 🌟 SPACIOUS FOOTER SECTION (Ref: Reference Photostrip) 🌟 =================
+    const footerTop = pad + headH + (photoH * count) + (gap * Math.max(0, count - 1));
+    const coupleName = (getEventDisplayName(activeEvent) || 'WENDY & MARK').toUpperCase();
+    const dateText = getEventFormattedDate(activeEvent) || '12.03.2023';
+    const venueText = (activeEvent?.venue || 'PASADENA, CA').toUpperCase();
+    const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan (Kamu)';
 
-    const isLightBg = theme.hex === '#FDFBF7' || theme.hex === '#FAF6F0' || theme.hex === '#ffffff' || theme.hex === '#F3C5CB';
-    const coupleColor = isLightBg ? '#3A2D28' : theme.textHex;
-    const dateColor = isLightBg ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)';
-    const guestColor = isLightBg ? '#5A4A3E' : '#FFFFFF';
+    // 1. Couple Title ("WENDY & MARK")
+    ctx.fillStyle = primaryTextColor;
+    ctx.font = "bold 15px 'Playfair Display', 'Cinzel', Georgia, serif";
+    ctx.textAlign = 'center';
+    ctx.fillText(coupleName, w / 2, footerTop + 28);
 
-    // Line 1: Couple Calligraphy ("Sabrina & Raka")
-    ctx.fillStyle = coupleColor;
-    ctx.font = "italic 16px 'Great Vibes', 'Alex Brush', 'Playfair Display', Georgia, serif";
-    ctx.fillText(coupleName, w / 2, totalH - pad - 34);
+    // 2. Horizontal Divider Strip Line ("pembatas stripnya itu")
+    ctx.save();
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    const divWidth = 100;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 - divWidth / 2, footerTop + 40);
+    ctx.lineTo(w / 2 + divWidth / 2, footerTop + 40);
+    ctx.stroke();
+    ctx.restore();
 
-    // Line 2: Event Date ("30 · 05 · 2026")
-    ctx.fillStyle = dateColor;
-    ctx.font = 'bold 7.5px monospace, sans-serif';
-    ctx.fillText(dateText, w / 2, totalH - pad - 20);
+    // 3. Date ("12.03.2023")
+    ctx.fillStyle = primaryTextColor;
+    ctx.font = 'bold 8.5px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(dateText, w / 2, footerTop + 56);
 
-    // Line 3: Guest Name ("sf")
-    ctx.fillStyle = guestColor;
-    ctx.font = 'bold 9.5px system-ui, -apple-system, sans-serif';
-    ctx.fillText(guestTitle, w / 2, totalH - pad - 7);
+    // 4. Venue ("PASADENA, CA")
+    ctx.font = 'bold 7.5px system-ui, -apple-system, sans-serif';
+    ctx.fillText(venueText, w / 2, footerTop + 68);
+
+    // 5. Space for Kalimat / Wishes / Guest attribution
+    if (guestMessage && guestMessage.trim()) {
+      ctx.fillStyle = isLightBg ? '#5A4A3E' : 'rgba(255,255,255,0.9)';
+      ctx.font = "italic 8.5px Georgia, serif";
+      ctx.fillText(`“${guestMessage.trim().substring(0, 36)}”`, w / 2, footerTop + 88);
+      ctx.font = 'bold 8px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`— ${guestTitle}`, w / 2, footerTop + 102);
+    } else {
+      ctx.fillStyle = isLightBg ? '#8C7A6B' : 'rgba(255,255,255,0.7)';
+      ctx.font = "italic 8px Georgia, serif";
+      ctx.fillText('Ruang Pesan & Doa Tamu...', w / 2, footerTop + 88);
+      ctx.font = 'bold 8px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`With Love, ${guestTitle}`, w / 2, footerTop + 102);
+    }
 
     // Frame border
     if (theme.borderHex) {
@@ -183,7 +218,7 @@ export default function StepFrames() {
     if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {
       drawFrameOrnaments(ctx, w, totalH, activeEvent.customFrame.ornaments, theme.textHex, 1);
     }
-  }, [targetPhotoCount, activeTheme, guestName, activeEvent]);
+  }, [targetPhotoCount, activeTheme, guestName, guestMessage, activeEvent]);
 
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
 

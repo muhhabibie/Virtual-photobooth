@@ -593,3 +593,98 @@ export function renderOrnamentToCanvas(canvas, presetId, color = '#F5D77F', size
     preset.render(ctx, canvas.width / 2, canvas.height / 2, renderSize, color);
   }
 }
+
+// Dedicated Reference Botanical Corner Line Art (Top-Left Vine Branch & Bottom-Right Blossom)
+export function drawStripBotanicals(ctx, w, h, color = '#C4A482', scale = 1) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.35 * scale;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // --- Top-Left Botanical Vine Branch ---
+  ctx.beginPath();
+  ctx.moveTo(6 * scale, 6 * scale);
+  ctx.bezierCurveTo(24 * scale, 16 * scale, 32 * scale, 38 * scale, 16 * scale, 75 * scale);
+  ctx.bezierCurveTo(8 * scale, 100 * scale, 18 * scale, 130 * scale, 12 * scale, 165 * scale);
+  ctx.stroke();
+
+  // Top-left Leaves along branch
+  const topLeaves = [
+    { x: 16 * scale, y: 20 * scale, angle: 0.35, len: 14 * scale, w: 6 * scale },
+    { x: 28 * scale, y: 35 * scale, angle: -0.55, len: 16 * scale, w: 7 * scale },
+    { x: 24 * scale, y: 55 * scale, angle: 0.85, len: 15 * scale, w: 6.5 * scale },
+    { x: 14 * scale, y: 88 * scale, angle: -0.65, len: 16 * scale, w: 7 * scale },
+    { x: 16 * scale, y: 115 * scale, angle: 0.75, len: 14 * scale, w: 6 * scale },
+    { x: 13 * scale, y: 145 * scale, angle: -0.45, len: 13 * scale, w: 5.5 * scale },
+  ];
+  topLeaves.forEach(lf => {
+    ctx.save();
+    ctx.translate(lf.x, lf.y);
+    ctx.rotate(lf.angle);
+    ctx.beginPath();
+    ctx.ellipse(lf.len / 2, 0, lf.len / 2, lf.w / 2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(lf.len * 0.8, 0);
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // --- Bottom-Right Botanical Floral Bloom ---
+  const bx = w - 8 * scale;
+  const by = h - 8 * scale;
+
+  // Stems reaching up into footer area
+  ctx.beginPath();
+  ctx.moveTo(bx, by);
+  ctx.bezierCurveTo(bx - 28 * scale, by - 35 * scale, bx - 55 * scale, by - 75 * scale, bx - 45 * scale, by - 110 * scale);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(bx - 18 * scale, by - 28 * scale);
+  ctx.bezierCurveTo(bx - 42 * scale, by - 40 * scale, bx - 75 * scale, by - 50 * scale, bx - 98 * scale, by - 58 * scale);
+  ctx.stroke();
+
+  // Flower blossom center at (bx - 45 * scale, by - 110 * scale)
+  const fx = bx - 45 * scale;
+  const fy = by - 110 * scale;
+  for (let i = 0; i < 5; i++) {
+    const angle = (i * Math.PI * 2) / 5 - 0.3;
+    const px = fx + Math.cos(angle) * (13 * scale);
+    const py = fy + Math.sin(angle) * (13 * scale);
+    ctx.beginPath();
+    ctx.ellipse(px, py, 11 * scale, 6.5 * scale, angle, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.arc(fx, fy, 3.5 * scale, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Bottom-right Leaves
+  const botLeaves = [
+    { x: bx - 14 * scale, y: by - 16 * scale, angle: -1.2, len: 17 * scale, w: 7.5 * scale },
+    { x: bx - 35 * scale, y: by - 38 * scale, angle: -2.1, len: 19 * scale, w: 8 * scale },
+    { x: bx - 65 * scale, y: by - 48 * scale, angle: -2.6, len: 17 * scale, w: 7 * scale },
+    { x: bx - 42 * scale, y: by - 70 * scale, angle: -0.9, len: 15 * scale, w: 6.5 * scale },
+    { x: bx - 50 * scale, y: by - 90 * scale, angle: -1.8, len: 14 * scale, w: 6 * scale },
+  ];
+  botLeaves.forEach(lf => {
+    ctx.save();
+    ctx.translate(lf.x, lf.y);
+    ctx.rotate(lf.angle);
+    ctx.beginPath();
+    ctx.ellipse(lf.len / 2, 0, lf.len / 2, lf.w / 2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(lf.len * 0.8, 0);
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  ctx.restore();
+}
+
