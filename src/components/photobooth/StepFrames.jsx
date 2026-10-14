@@ -19,6 +19,7 @@ const BASE_COLOR_THEMES = [
   { id: 'blush', name: 'Blush', hex: '#F3C5CB', textHex: '#6B111F', styleName: 'BLUSH ROMANCE', subName: 'Sweet Pastel' },
   { id: 'antique', name: 'Antique', hex: '#C4A46C', textHex: '#FFFFFF', styleName: 'ANTIQUE GOLD', subName: 'Vintage Luxury' },
 ];
+const COLOR_THEMES = BASE_COLOR_THEMES;
 
 export default function StepFrames() {
   const { 
@@ -266,7 +267,7 @@ export default function StepFrames() {
 
             {/* Pagination Dots */}
             <div className="flex items-center justify-center gap-1.5 my-2">
-              {COLOR_THEMES.map((c, i) => (
+              {colorThemes.map((c, i) => (
                 <button
                   key={c.id}
                   onClick={() => handleSelectColor(i)}
