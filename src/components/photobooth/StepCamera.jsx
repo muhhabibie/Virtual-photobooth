@@ -11,7 +11,7 @@ import { useFaceMesh } from '../../hooks/useFaceMesh';
 import { useToast } from '../ui/Toast';
 import { AR_ACCESSORIES, drawAccessoryOverlay } from '../../config/accessories';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
-import { drawStripBotanicals } from '../../config/frameOrnaments';
+import { drawStripBotanicals, drawFrameOrnaments } from '../../config/frameOrnaments';
 import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
 
 const ACCESSORY_ICONS = {
@@ -64,6 +64,8 @@ export default function StepCamera() {
   const viewportRef = useRef(null);
   const arCanvasRef = useRef(null);
   const animFrameRef = useRef(null);
+  const frameCanvasRef = useRef(null);
+  const frameContainerRef = useRef(null);
 
   const [capturing, setCapturing] = useState(false);
   const [cameraError, setCameraError] = useState(false);
@@ -379,6 +381,46 @@ export default function StepCamera() {
     return () => resizeObserver.disconnect();
   }, []);
 
+  // Synchronize Live Botanical & Custom Frame Ornaments on the Viewfinder Frame
+  useEffect(() => {
+    const canvas = frameCanvasRef.current;
+    const container = frameContainerRef.current;
+    if (!canvas || !container) return;
+
+    const renderFrameDecorations = () => {
+      const rect = container.getBoundingClientRect();
+      const w = Math.round(rect.width);
+      const h = Math.round(rect.height);
+      if (w === 0 || h === 0) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+
+      // Proportionally scale botanical line art relative to base 600px reference
+      const scale = Math.max(0.55, w / 600);
+      drawStripBotanicals(ctx, w, h, accentColor, scale);
+
+      // Custom bride/event ornaments if configured
+      if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {
+        drawFrameOrnaments(ctx, w, h, activeEvent.customFrame.ornaments, accentColor, scale);
+      }
+
+      ctx.restore();
+    };
+
+    renderFrameDecorations();
+    const ro = new ResizeObserver(renderFrameDecorations);
+    ro.observe(container);
+
+    return () => ro.disconnect();
+  }, [accentColor, activeEvent, currentTheme]);
+
   // Silky Smooth 60 FPS AR Face Tracking Render Loop
   useEffect(() => {
     const canvas = arCanvasRef.current;
@@ -605,15 +647,21 @@ export default function StepCamera() {
         
         {/* Responsive Flex Frame Viewport Container (Matching Wendy & Mark Photostrip Frame) */}
         <div 
+          ref={frameContainerRef}
           style={{ 
             backgroundColor: currentTheme.hex,
             border: `3px solid ${currentTheme.borderHex || accentColor}`
           }}
-          className="relative w-full h-full max-h-[460px] xs:max-h-[480px] sm:max-h-[520px] rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 overflow-hidden"
+          className="relative w-full h-full max-h-[460px] xs:max-h-[480px] sm:max-h-[520px] rounded-2xl sm:rounded-3xl px-4 sm:px-5 pt-1.5 pb-2 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 overflow-hidden"
         >
-          
+          {/* Live Master Botanical & Custom Frame Ornaments Canvas */}
+          <canvas
+            ref={frameCanvasRef}
+            className="absolute inset-0 w-full h-full pointer-events-none z-0"
+          />
+
           {/* Top Frame Header Title (Matching stripRenderer.js) */}
-          <div className="w-full flex items-center justify-center px-2 pt-1 pb-1 z-10 flex-shrink-0">
+          <div className="relative z-20 w-full flex items-center justify-center px-2 pt-0.5 pb-1 flex-shrink-0">
             <h2 
               className="text-[9px] sm:text-[10.5px] font-bold tracking-[0.16em] uppercase text-center leading-none"
               style={{ 
@@ -633,7 +681,7 @@ export default function StepCamera() {
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
             style={{ borderColor: accentColor }}
-            className="relative flex-1 min-h-0 w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center border-2 touch-pan-y select-none cursor-grab active:cursor-grabbing group"
+            className="relative flex-1 min-h-0 w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center border-2 touch-pan-y select-none cursor-grab active:cursor-grabbing group z-10"
           >
             {/* Camera Video Stream */}
             <video
@@ -679,7 +727,7 @@ export default function StepCamera() {
           </div>
 
           {/* Bottom Frame Chin Preview: Guest Name, Line 1, Date, Line 2, Short Message (No Location) */}
-          <div className="text-center pt-2 pb-1.5 flex-shrink-0 flex flex-col items-center w-full">
+          <div className="relative z-20 text-center pt-2 pb-1.5 flex-shrink-0 flex flex-col items-center w-full">
             {/* 1. Guest Name (Bold Uppercase Serif) */}
             <h3 
               style={{ 
