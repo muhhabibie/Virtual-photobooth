@@ -36,20 +36,20 @@ export function renderMasterPhotoStrip(canvas, {
   if (isPolaroid) {
     photoH = Math.round(photoW * 0.98); // 494 * scale
     gap = 0;
-    topPad = 45 * scale;
+    topPad = 52 * scale;
   } else if (count === 2) {
     photoH = Math.round(photoW * 0.90);
     gap = 26 * scale;
-    topPad = 40 * scale;
+    topPad = 48 * scale;
   } else if (count === 4) {
     photoH = Math.round(photoW * 0.545);
     gap = 16 * scale;
-    topPad = 28 * scale;
+    topPad = 42 * scale;
   } else {
     // Standard 3 Photos (Exact Wendy & Mark Reference Format)
     photoH = Math.round(photoW * 0.725); // 365 * scale
     gap = 22 * scale;
-    topPad = 36 * scale;
+    topPad = 48 * scale;
   }
 
   canvas.width = totalW;
@@ -69,6 +69,27 @@ export function renderMasterPhotoStrip(canvas, {
 
   // 2. Draw Reference Botanicals (Branch top-left & flower blossom bottom-right)
   drawStripBotanicals(ctx, totalW, totalH, accentColor, scale);
+
+  // 2b. Header Event Title at the TOP of the strip (e.g. THE WEDDING OF SABRINA & RAKA or other events)
+  const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
+  let topHeaderTitle = '';
+  if (isWedding) {
+    const bride = activeEvent?.brideName;
+    const groom = activeEvent?.groomName;
+    const couple = (bride && groom) ? `${bride} & ${groom}` : (getEventDisplayName(activeEvent, activeEvent?.slug) || 'Sabrina & Raka');
+    topHeaderTitle = `THE WEDDING OF ${couple}`.toUpperCase();
+  } else {
+    topHeaderTitle = (activeEvent?.eventName || activeEvent?.displayName || getEventDisplayName(activeEvent, activeEvent?.slug) || 'OFFICIAL EVENT PHOTOBOOTH').toUpperCase();
+  }
+
+  ctx.save();
+  ctx.fillStyle = primaryTextColor;
+  ctx.font = `bold ${isPolaroid ? 13 * scale : 14 * scale}px 'Playfair Display', 'Cinzel', 'Cormorant Garamond', Georgia, serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const topTextY = (topPad / 2) + 1.5 * scale;
+  ctx.fillText(topHeaderTitle, totalW / 2, topTextY);
+  ctx.restore();
 
   // Center-crop helper to prevent any photo distortion
   const drawCover = (imgEl, dx, dy, dw, dh) => {
@@ -124,23 +145,23 @@ export function renderMasterPhotoStrip(canvas, {
     drawY += photoH + gap;
   }
 
-  // 4. Spacious Footer Section (Names, Divider Line, Date, Venue, Wishes)
+  // 4. Spacious Footer Section (Guest Name, Divider Line, Date, Venue, Wishes)
   const footerTop = topPad + (photoH * count) + (gap * Math.max(0, count - 1));
-  const rawDisplayName = getEventDisplayName(activeEvent, activeEvent?.slug);
-  const coupleName = (rawDisplayName || 'WENDY & MARK').toUpperCase();
   const dateText = getEventFormattedDate(activeEvent) || '12.03.2023';
   const venueText = (activeEvent?.venue || 'PASADENA, CA').toUpperCase();
-  const guestTitle = guestName && guestName.trim() ? guestName.trim() : 'Tamu Undangan';
+  const rawGuestName = guestName && guestName.trim() ? guestName.trim() : '';
+  const guestTitle = (rawGuestName || (isWedding ? 'Tamu Undangan' : 'Pengunjung Event')).toUpperCase();
 
-  // 4a. Couple / Event Name (Bold All-Caps Serif)
-  const nameY = footerTop + (isPolaroid ? 54 * scale : 95 * scale);
+  // 4a. Guest Name (Bold Serif, placed at the bottom, above the divider line)
+  const nameY = footerTop + (isPolaroid ? 48 * scale : 85 * scale);
   ctx.fillStyle = primaryTextColor;
-  ctx.font = `bold ${isPolaroid ? 20 * scale : 22 * scale}px 'Playfair Display', 'Cormorant Garamond', 'Cinzel', Georgia, serif`;
+  ctx.font = `bold ${isPolaroid ? 19 * scale : 21 * scale}px 'Playfair Display', 'Cormorant Garamond', 'Cinzel', Georgia, serif`;
   ctx.textAlign = 'center';
-  ctx.fillText(coupleName, totalW / 2, nameY);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(guestTitle, totalW / 2, nameY);
 
   // 4b. Horizontal Divider Strip Line
-  const lineY = nameY + (isPolaroid ? 26 * scale : 34 * scale);
+  const lineY = nameY + (isPolaroid ? 24 * scale : 32 * scale);
   ctx.save();
   ctx.strokeStyle = accentColor;
   ctx.lineWidth = 2.2 * scale;
@@ -153,7 +174,7 @@ export function renderMasterPhotoStrip(canvas, {
   ctx.restore();
 
   // 4c. Date Text
-  const dateY = lineY + (isPolaroid ? 34 * scale : 44 * scale);
+  const dateY = lineY + (isPolaroid ? 32 * scale : 42 * scale);
   ctx.fillStyle = primaryTextColor;
   ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
   ctx.textAlign = 'center';
@@ -164,20 +185,12 @@ export function renderMasterPhotoStrip(canvas, {
   ctx.font = `bold ${12.5 * scale}px system-ui, -apple-system, sans-serif`;
   ctx.fillText(venueText, totalW / 2, venueY);
 
-  // 4e. Dedicated Space for Sentence / Kalimat / Doa Restu
-  const msgY = venueY + (isPolaroid ? 34 * scale : 44 * scale);
+  // 4e. Dedicated Space for Sentence / Kalimat / Doa Restu (if provided)
+  const msgY = venueY + (isPolaroid ? 32 * scale : 40 * scale);
   if (guestMessage && guestMessage.trim()) {
     ctx.fillStyle = isLightBg ? '#5A4A3E' : 'rgba(255,255,255,0.92)';
     ctx.font = `italic ${12 * scale}px Georgia, serif`;
     ctx.fillText(`“${guestMessage.trim().substring(0, 48)}”`, totalW / 2, msgY);
-
-    ctx.fillStyle = isLightBg ? '#8C7A6B' : 'rgba(255,255,255,0.75)';
-    ctx.font = `bold ${10 * scale}px system-ui, -apple-system, sans-serif`;
-    ctx.fillText(`— ${guestTitle}`, totalW / 2, msgY + 26 * scale);
-  } else {
-    ctx.fillStyle = isLightBg ? '#7A6A5E' : 'rgba(255,255,255,0.85)';
-    ctx.font = `italic ${11.5 * scale}px Georgia, serif`;
-    ctx.fillText(`With Love, ${guestTitle}`, totalW / 2, msgY);
   }
 
   // 5. Outer Frame Border (if customized)
