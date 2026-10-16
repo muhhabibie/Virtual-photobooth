@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode, MessageCircle, ShoppingBag, Sparkles } from 'lucide-react';
+import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode, MessageCircle, ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
@@ -246,7 +246,7 @@ export default function EventHero() {
             {/* Demo Indicator Pill */}
             {isDemo && (
               <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 text-[11px] font-sans font-semibold shadow-xs">
-                <Sparkles size={13} className="text-amber-600 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
                 <span>Mode Demo Sirklen Photo — Coba Gratis Fitur Kami</span>
               </div>
             )}

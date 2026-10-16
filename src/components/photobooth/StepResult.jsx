@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Download, Share2, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Printer, Lock, MessageCircle, ShoppingBag, Sparkles } from 'lucide-react';
+import { Download, Share2, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Printer, Lock, MessageCircle, ShoppingBag, Camera } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
@@ -614,7 +614,7 @@ export default function StepResult() {
 
             {/* Icon */}
             <div className="w-14 h-14 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 mx-auto mb-4 shadow-lg shadow-amber-400/20">
-              <Sparkles size={28} />
+              <Camera size={26} />
             </div>
 
             <h3 className="text-xl font-serif font-bold text-amber-200">
