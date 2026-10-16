@@ -243,11 +243,15 @@ export default function EventHero() {
             transition={{ duration: 0.9, delay: 0.95, ease: [0.25, 1, 0.5, 1] }}
             className="mb-6 sm:mb-8 flex flex-col items-center justify-center gap-3 relative z-20 max-w-lg mx-auto"
           >
-            {/* Demo Indicator Pill */}
+            {/* Demo Indicator Badge: Clean, Professional Tag (No AI Pulsing Dot, No Dash) */}
             {isDemo && (
-              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 text-[11px] font-sans font-semibold shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
-                <span>Mode Demo Sirklen Photo — Coba Gratis Fitur Kami</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 border border-stone-200/90 shadow-2xs">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#540D18]/10 text-[#540D18]">
+                  Mode Demo
+                </span>
+                <span className="text-stone-600 font-medium text-[11px] sm:text-xs">
+                  Coba Gratis Fitur Sirklen Photo
+                </span>
               </div>
             )}
 
