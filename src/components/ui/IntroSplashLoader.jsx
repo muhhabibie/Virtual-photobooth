@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 
-const BRAND_NAME = "SIRKLEN PHOTO";
+const BRAND_NAME = "VIRTUAL PHOTOBOOTH";
 const BRAND_LETTERS = BRAND_NAME.split("");
 const TOTAL_LETTERS = BRAND_LETTERS.length;
 
@@ -121,7 +121,7 @@ export default function IntroSplashLoader({ onComplete }) {
               <svg
                 viewBox="98 10 359 535"
                 className="h-[62px] sm:h-[78px] w-auto overflow-visible"
-                aria-label="Sirklen Photo"
+                aria-label="Virtual Photobooth"
                 role="img"
               >
                 <defs>
@@ -162,7 +162,7 @@ export default function IntroSplashLoader({ onComplete }) {
             {/* ================= 2. HURUF BERTAHAP: MASUK KIRI->KANAN, KELUAR KANAN->KIRI ================= */}
             <h1
               style={{ fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif" }}
-              className="text-base sm:text-lg font-bold tracking-[0.38em] text-[#6B111F] uppercase flex items-center justify-center select-none"
+              className="text-xs xs:text-sm sm:text-base md:text-lg font-bold tracking-[0.22em] sm:tracking-[0.32em] text-[#6B111F] uppercase flex items-center justify-center select-none whitespace-nowrap"
             >
               {BRAND_LETTERS.map((char, idx) => {
                 const reverseIdx = TOTAL_LETTERS - 1 - idx;
@@ -172,11 +172,11 @@ export default function IntroSplashLoader({ onComplete }) {
                     initial={{ opacity: 0, y: 6 }}
                     animate={isOut ? { opacity: 0, y: -5 } : { opacity: 1, y: 0 }}
                     transition={{
-                      duration: isOut ? 0.5 : 0.7,
-                      delay: isOut ? reverseIdx * 0.05 : 1.0 + idx * 0.06,
+                      duration: isOut ? 0.45 : 0.65,
+                      delay: isOut ? reverseIdx * 0.035 : 0.95 + idx * 0.045,
                       ease: EASE_SOFT
                     }}
-                    className={char === " " ? "inline-block w-2 sm:w-2.5" : "inline-block"}
+                    className={char === " " ? "inline-block w-1.5 sm:w-2.5" : "inline-block"}
                     style={{ willChange: 'transform, opacity' }}
                   >
                     {char}
@@ -188,11 +188,11 @@ export default function IntroSplashLoader({ onComplete }) {
             {/* Tagline */}
             <motion.p
               initial={{ opacity: 0 }}
-              animate={phase === 'holding' ? { opacity: 0.85, y: 0 } : { opacity: 0, y: phase === 'entering' ? 4 : -4 }}
+              animate={phase === 'holding' ? { opacity: 0.9, y: 0 } : { opacity: 0, y: phase === 'entering' ? 4 : -4 }}
               transition={{ duration: 0.8, delay: phase === 'holding' ? 0.15 : 0 }}
-              className="text-[10px] font-serif italic text-[#C4A46C] mt-2 tracking-wider"
+              className="text-[11px] sm:text-xs font-serif italic text-[#C4A46C] mt-2.5 tracking-wider"
             >
-              Memories in Every Frame
+              makes memories with sirklenice
             </motion.p>
 
           </div>
