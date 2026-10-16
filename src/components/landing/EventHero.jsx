@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode, MessageCircle, ShoppingBag } from 'lucide-react';
+import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode, MessageCircle, ShoppingBag, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
@@ -270,26 +270,38 @@ export default function EventHero() {
               </button>
             </div>
 
+            {/* Contextual Divider: Bridges Guest Experience to Commercial Booking */}
+            <div className="flex items-center gap-2.5 w-full pt-1.5 pb-0.5">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-stone-300 to-stone-200" />
+              <span className="text-[10px] sm:text-[11px] font-sans font-medium uppercase tracking-[0.14em] text-stone-500 select-none">
+                Tertarik untuk acaramu?
+              </span>
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent via-stone-300 to-stone-200" />
+            </div>
+
             {/* Row 2: WhatsApp Consultation & Lynk.id Order Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
+              {/* WhatsApp Consultation: Clean, Low-Friction Advisory */}
               <a
                 href={CONTACT_LINKS.whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:flex-1 py-3 px-4 rounded-full bg-[#128C7E]/10 hover:bg-[#128C7E]/20 text-[#0c594f] border border-[#128C7E]/30 font-sans font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
+                className="group w-full sm:flex-1 py-3 px-4 rounded-full bg-white hover:bg-stone-50 text-stone-700 hover:text-stone-900 border border-stone-200 hover:border-emerald-500/50 font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 transition duration-200 cursor-pointer"
               >
-                <MessageCircle size={16} className="text-[#128C7E]" />
+                <MessageCircle size={16} className="text-[#25D366] transition-transform duration-200 group-hover:scale-110" />
                 <span>Konsultasi WA</span>
               </a>
 
+              {/* Lynk.id Order: Warm Luxury Bronze, High-Intent Primary Commercial CTA */}
               <a
                 href={CONTACT_LINKS.lynkId}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:flex-1 py-3 px-4 rounded-full bg-gradient-to-r from-[#C4A46C] via-[#F5D77F] to-[#C4A46C] hover:brightness-105 text-[#1C0A15] border border-amber-400 font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
+                className="group w-full sm:flex-1 py-3 px-4 rounded-full bg-gradient-to-r from-[#8C6534] via-[#A3783F] to-[#8C6534] hover:from-[#7A562B] hover:to-[#7A562B] text-white border border-[#BFA069]/40 font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-xl shadow-amber-950/15 transform hover:-translate-y-0.5 active:scale-95 transition duration-200 cursor-pointer"
               >
-                <ShoppingBag size={16} />
-                <span>Pesan Sekarang</span>
+                <ShoppingBag size={15} className="text-amber-200 transition-transform duration-200 group-hover:scale-110" />
+                <span className="tracking-wide">Pesan Sekarang</span>
+                <ArrowRight size={14} className="text-amber-200 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200" />
               </a>
             </div>
           </motion.div>

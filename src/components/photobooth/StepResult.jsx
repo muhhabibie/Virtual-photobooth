@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Download, Share2, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Printer, Lock, MessageCircle, ShoppingBag, Camera } from 'lucide-react';
+import { Download, Share2, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Printer, Lock, MessageCircle, ShoppingBag, Camera, ArrowRight } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
@@ -635,9 +635,9 @@ export default function StepResult() {
                 href={CONTACT_LINKS.whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3 px-4 rounded-full bg-[#128C7E] hover:bg-[#075E54] text-white font-sans font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer text-center"
+                className="group w-full py-3 px-4 rounded-full bg-white hover:bg-stone-50 text-stone-800 font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-stone-200 hover:border-emerald-500/50 shadow-md transition active:scale-95 cursor-pointer text-center"
               >
-                <MessageCircle size={16} />
+                <MessageCircle size={16} className="text-[#25D366] transition-transform duration-200 group-hover:scale-110" />
                 <span>Konsultasi WhatsApp</span>
               </a>
 
@@ -646,10 +646,11 @@ export default function StepResult() {
                 href={CONTACT_LINKS.lynkId}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3 px-4 rounded-full bg-gradient-to-r from-[#C4A46C] via-[#F5D77F] to-[#C4A46C] hover:brightness-110 text-[#1C0A15] font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer text-center"
+                className="group w-full py-3 px-4 rounded-full bg-gradient-to-r from-[#8C6534] via-[#A3783F] to-[#8C6534] hover:from-[#7A562B] hover:to-[#7A562B] text-white border border-[#BFA069]/40 font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-950/20 transition active:scale-95 cursor-pointer text-center"
               >
-                <ShoppingBag size={16} />
-                <span>Pesan Sekarang di Lynk.id</span>
+                <ShoppingBag size={15} className="text-amber-200 transition-transform duration-200 group-hover:scale-110" />
+                <span className="tracking-wide">Pesan Sekarang di Lynk.id</span>
+                <ArrowRight size={14} className="text-amber-200 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200" />
               </a>
 
               <button
