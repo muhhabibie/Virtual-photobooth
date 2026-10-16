@@ -95,7 +95,7 @@ export default function AdminDashboardModal() {
   };
 
   const handleCopyLink = (slug) => {
-    const fullUrl = `${window.location.origin}/?event=${slug}`;
+    const fullUrl = slug === 'demo' ? `${window.location.origin}/` : `${window.location.origin}/${slug}?qr=1`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedSlug(slug);
     setTimeout(() => setCopiedSlug(null), 2000);
@@ -399,7 +399,7 @@ export default function AdminDashboardModal() {
                   {selectedQrEvent ? (
                     <div className="flex flex-col items-center gap-3">
                       <QRCodeCanvas
-                        url={`${window.location.origin}/?event=${selectedQrEvent.slug}`}
+                        url={selectedQrEvent.slug === 'demo' ? `${window.location.origin}/` : `${window.location.origin}/${selectedQrEvent.slug}?qr=1`}
                         displayName={selectedQrEvent.displayName}
                         size={260}
                         showDownload={true}

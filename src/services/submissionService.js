@@ -54,7 +54,7 @@ export function blobToBase64(blob) {
 }
 
 // Save submission (Cloud Firebase + LocalStorage fallback)
-export async function saveSubmission({ eventId, eventSlug, guestName, guestMessage, photos, stripColor, voiceBlob, voiceUrl }) {
+export async function saveSubmission({ eventId, eventSlug, guestName, guestMessage, photos, stripColor, voiceBlob, voiceUrl, isDemo = false }) {
   let finalVoiceUrl = voiceUrl || null;
   if (voiceBlob) {
     try {
@@ -66,8 +66,8 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
 
   const newSubmission = {
     id: `sub_${Date.now()}`,
-    eventId: eventId || 'master',
-    eventSlug: eventSlug || 'master',
+    eventId: eventId || 'demo_event',
+    eventSlug: eventSlug || 'demo',
     guestName: guestName || 'Tamu Undangan',
     message: guestMessage || '',
     photos: photos.map(p => typeof p === 'string' ? p : p.dataUrl),
@@ -77,11 +77,17 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
     textHex: stripColor === '#FDFBF7' || stripColor === '#F3C5CB' ? '#6B111F' : '#F5D77F',
     hasVoice: !!finalVoiceUrl,
     voiceUrl: finalVoiceUrl,
+    isDemo: !!isDemo,
     createdAt: Date.now(),
   };
 
   // Always save to LocalStorage first
   saveLocalSubmission(newSubmission);
+
+  // If in Demo Mode, skip all Firebase network sync (Firestore & Cloud Storage)
+  if (isDemo) {
+    return newSubmission;
+  }
 
   // If Firebase Database (Firestore) is initialized, sync to Cloud
   if (db) {

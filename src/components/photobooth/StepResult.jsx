@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Download, Share2, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen } from 'lucide-react';
+import { Download, Share2, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Printer, Lock, MessageCircle, ShoppingBag, Sparkles } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { drawFrameOrnaments, drawStripBotanicals } from '../../config/frameOrnaments';
 import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
+import { CONTACT_LINKS } from '../../data/mockEvents';
 
 const PHOTO_FILTERS = [
   { id: 'natural', name: 'NATURAL', css: 'none', desc: 'Asli', previewClass: 'from-amber-200 via-rose-300 to-amber-100' },
@@ -26,6 +27,7 @@ export default function StepResult() {
     stripColor,
     voiceUrl,
     activeEvent,
+    isDemo,
     submitSession,
     setCurrentStep,
     reset,
@@ -41,6 +43,7 @@ export default function StepResult() {
   const [selectedStickers, setSelectedStickers] = useState([]);
   const [activeStickerId, setActiveStickerId] = useState(null);
   const [activeTab, setActiveTab] = useState('filters'); // 'filters' | 'stickers'
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   const filterCarouselRef = useRef(null);
   const filterRefs = useRef({});
@@ -239,6 +242,11 @@ export default function StepResult() {
   };
 
   const handleDownload = () => {
+    if (isDemo) {
+      setShowDemoModal(true);
+      return;
+    }
+
     const canvas = getExportCanvas();
     if (!canvas) return;
 
@@ -263,6 +271,11 @@ export default function StepResult() {
   };
 
   const handleShare = async () => {
+    if (isDemo) {
+      setShowDemoModal(true);
+      return;
+    }
+
     const canvas = getExportCanvas();
     if (!canvas) return;
 
@@ -290,6 +303,72 @@ export default function StepResult() {
         handleDownload();
       }
     }, 'image/jpeg', 0.96);
+  };
+
+  const handlePrint = () => {
+    if (isDemo) {
+      setShowDemoModal(true);
+      return;
+    }
+
+    const canvas = getExportCanvas();
+    if (!canvas) return;
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.96);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast('Izinkan pop-up browser untuk membuka jendela cetak', 'warning');
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Cetak Photo Strip</title>
+          <style>
+            @page {
+              size: 2in 6in;
+              margin: 0;
+            }
+            @media print {
+              html, body {
+                margin: 0;
+                padding: 0;
+                background: #ffffff;
+                width: 100%;
+                height: 100%;
+              }
+              img {
+                width: 100%;
+                height: auto;
+                display: block;
+                page-break-inside: avoid;
+              }
+            }
+            body {
+              margin: 0;
+              padding: 20px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              background: #111;
+            }
+            img {
+              max-height: 94vh;
+              width: auto;
+              box-shadow: 0 4px 25px rgba(0,0,0,0.5);
+              border-radius: 4px;
+            }
+          </style>
+        </head>
+        <body>
+          <img src="${dataUrl}" onload="setTimeout(() => { window.focus(); window.print(); }, 250);" />
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   return (
@@ -472,15 +551,35 @@ export default function StepResult() {
           onClick={handleDownload}
           className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] font-serif font-bold text-xs sm:text-sm border border-amber-400/50 shadow-2xl shadow-rose-950/60 flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer"
         >
-          <Download size={17} />
-          <span>Download Photo Strip HD</span>
+          {isDemo ? (
+            <>
+              <Lock size={16} className="text-amber-300" />
+              <span>Download Photo Strip HD</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/40 font-mono font-semibold">Demo Mode</span>
+            </>
+          ) : (
+            <>
+              <Download size={17} />
+              <span>Download Photo Strip HD</span>
+            </>
+          )}
         </button>
 
         {/* Secondary Actions */}
         <div className="flex items-center gap-2 w-full">
           <button
+            onClick={handlePrint}
+            className="flex-1 py-2.5 rounded-full bg-[#1C1C1E] hover:bg-[#2C2C2E] border border-amber-300/30 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
+            title="Cetak langsung photo strip"
+          >
+            <Printer size={14} className="text-amber-300" />
+            <span>Cetak</span>
+            {isDemo && <Lock size={10} className="text-amber-400/80" />}
+          </button>
+
+          <button
             onClick={handleShare}
-            className="flex-1 py-2.5 rounded-full bg-[#1C1C1E] border border-white/20 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
+            className="flex-1 py-2.5 rounded-full bg-[#1C1C1E] hover:bg-[#2C2C2E] border border-white/20 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
           >
             <Share2 size={14} />
             <span>Bagikan</span>
@@ -491,7 +590,7 @@ export default function StepResult() {
               closeBooth();
               document.getElementById('gallery-feed')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="flex-1 py-2.5 rounded-full bg-[#24101D] border border-amber-400/40 text-amber-200 text-xs font-serif font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
+            className="flex-1 py-2.5 rounded-full bg-[#24101D] hover:bg-[#321728] border border-amber-400/40 text-amber-200 text-xs font-serif font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
           >
             <BookOpen size={14} />
             <span>Buku Tamu</span>
@@ -500,6 +599,72 @@ export default function StepResult() {
 
       </div>
 
+      {/* ================= 🌟 DEMO MODE RESTRICTION MODAL 🌟 ================= */}
+      {showDemoModal && (
+        <div className="fixed inset-0 z-[250] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-gradient-to-b from-[#1C0A15] via-[#240D1C] to-[#14060E] border border-amber-400/50 rounded-3xl p-6 sm:p-7 text-white text-center shadow-2xl relative">
+            
+            {/* Close button */}
+            <button
+              onClick={() => setShowDemoModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Icon */}
+            <div className="w-14 h-14 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 mx-auto mb-4 shadow-lg shadow-amber-400/20">
+              <Sparkles size={28} />
+            </div>
+
+            <h3 className="text-xl font-serif font-bold text-amber-200">
+              Mode Demo Sirklen Photo
+            </h3>
+
+            <p className="text-xs text-gray-300 mt-2 leading-relaxed">
+              Fitur unduh & cetak photo strip dinonaktifkan pada <strong>Mode Demo</strong>. Anda dapat mencoba seluruh fitur photobooth, filter tone sinematik, stiker, dan rekaman suara secara bebas.
+            </p>
+
+            <div className="mt-4 pt-4 border-t border-white/10 space-y-2.5 text-left">
+              <p className="text-[11px] text-amber-100 font-medium text-center">
+                Tertarik menggunakan photobooth ini di pernikahan atau event spesial Anda?
+              </p>
+
+              {/* WhatsApp Consultation */}
+              <a
+                href={CONTACT_LINKS.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-4 rounded-full bg-[#128C7E] hover:bg-[#075E54] text-white font-sans font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer text-center"
+              >
+                <MessageCircle size={16} />
+                <span>Konsultasi WhatsApp</span>
+              </a>
+
+              {/* Lynk.id Order */}
+              <a
+                href={CONTACT_LINKS.lynkId}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-4 rounded-full bg-gradient-to-r from-[#C4A46C] via-[#F5D77F] to-[#C4A46C] hover:brightness-110 text-[#1C0A15] font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer text-center"
+              >
+                <ShoppingBag size={16} />
+                <span>Pesan Sekarang di Lynk.id</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setShowDemoModal(false)}
+                className="w-full py-2.5 rounded-full bg-white/10 hover:bg-white/15 text-gray-300 text-xs font-medium transition cursor-pointer mt-1"
+              >
+                Kembali & Lanjut Mencoba
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
-}
+}

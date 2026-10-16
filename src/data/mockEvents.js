@@ -171,3 +171,30 @@ export const INITIAL_EVENTS = [
     createdAt: NOW - 5 * DAY_MS,
   }
 ];
+
+// Demo Event configuration used for sirklenice.com root URL
+export const DEMO_EVENT = {
+  id: 'event_demo',
+  slug: 'demo',
+  isDemo: true,
+  eventType: 'wedding',
+  eventName: 'The Wedding of Raka & Sabrina',
+  groomName: 'Raka',
+  brideName: 'Sabrina',
+  displayName: 'Raka & Sabrina',
+  eventDate: '2026-05-30',
+  formattedDate: '30 Mei 2026',
+  venue: 'Grand Ballroom Jakarta',
+  package: 'all_in',
+  pin: '',
+  templateIds: ['wedding-classic', 'floral-romantic', 'gold-luxury'],
+  heroPhotos: DEFAULT_HERO_PHOTOS,
+  expiresAt: NOW + 365 * DAY_MS,
+  createdAt: NOW - 4 * DAY_MS,
+};
+
+// Official Contact & Lynk.id Order URLs
+export const CONTACT_LINKS = {
+  lynkId: 'https://lynk.id/sirklenice',
+  whatsapp: 'https://wa.me/?text=' + encodeURIComponent('Halo Sirklen Photo, saya ingin konsultasi mengenai layanan virtual photobooth untuk acara saya.'),
+};

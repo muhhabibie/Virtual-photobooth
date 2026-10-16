@@ -170,7 +170,7 @@ export default function AdminDashboardPage() {
 
   // Copy Guest Link
   const handleCopyGuestLink = (slug) => {
-    const fullUrl = `${window.location.origin}/${slug}`;
+    const fullUrl = slug === 'demo' ? `${window.location.origin}/` : `${window.location.origin}/${slug}?qr=1`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedSlug(`guest_${slug}`);
     toast('Tautan web pengunjung berhasil disalin!', 'success');
@@ -775,7 +775,7 @@ export default function AdminDashboardPage() {
               <div className="flex flex-col items-center">
                 <QRCodeCanvas 
                   event={selectedQrEvent}
-                  url={`${window.location.origin}/${selectedQrEvent.slug}`} 
+                  url={selectedQrEvent.slug === 'demo' ? `${window.location.origin}/` : `${window.location.origin}/${selectedQrEvent.slug}?qr=1`} 
                   displayName={selectedQrEvent.displayName} 
                   showDownload={true} 
                   showOptions={true}

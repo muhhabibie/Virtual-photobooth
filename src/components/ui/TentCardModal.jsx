@@ -33,7 +33,7 @@ export default function TentCardModal({ isOpen, onClose, event }) {
             : 'OFFICIAL EVENT PHOTOBOOTH'));
   const eventDate = event.formattedDate || event.eventDate || (isWedding ? 'Hari Bahagia' : 'Tanggal Acara');
   const eventVenue = event.venue || (isWedding ? 'Wedding Venue' : 'Event Venue');
-  const eventUrl = `${window.location.origin}/${event.slug}`;
+  const eventUrl = event.slug === 'demo' || event.isDemo ? `${window.location.origin}/` : `${window.location.origin}/${event.slug}?qr=1`;
   const coverPhoto = event?.heroPhotos?.[0] || DEFAULT_HERO_PHOTOS[0];
   
   // Clean QR Code URL

@@ -407,7 +407,7 @@ export default function ClientSetupPage() {
     toast('Semua perubahan berhasil disimpan & langsung aktif di web tamu!', 'success');
   };
 
-  const guestUrl = `${window.location.origin}/${event.slug}`;
+  const guestUrl = event.slug === 'demo' ? `${window.location.origin}/` : `${window.location.origin}/${event.slug}?qr=1`;
 
   const handleCopyGuestLink = () => {
     navigator.clipboard.writeText(guestUrl);

@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode } from 'lucide-react';
+import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode, MessageCircle, ShoppingBag, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
-import { DEFAULT_HERO_PHOTOS, PACKAGES } from '../../data/mockEvents';
+import { DEFAULT_HERO_PHOTOS, PACKAGES, CONTACT_LINKS } from '../../data/mockEvents';
 import GuestQrModal from '../ui/GuestQrModal';
 
 export default function EventHero() {
   const { 
     activeEvent, 
+    isDemo,
     isEventExpired, 
     openBooth, 
     openGalleryModal, 
@@ -235,28 +236,62 @@ export default function EventHero() {
             </div>
           </div>
         ) : (
-          /* Item 7: Main Action Buttons (Luxurious Floating Entrance) */
+          /* Item 7: Main Action Buttons (Photobooth, Gallery, WA Consultation, Lynk.id Order) */
           <motion.div 
             initial={{ opacity: 0, y: 22 }}
             animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
             transition={{ duration: 0.9, delay: 0.95, ease: [0.25, 1, 0.5, 1] }}
-            className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-center justify-center gap-2.5 relative z-20 max-w-md mx-auto"
+            className="mb-6 sm:mb-8 flex flex-col items-center justify-center gap-3 relative z-20 max-w-lg mx-auto"
           >
-            <button
-              onClick={handleStartBooth}
-              className="w-full sm:flex-1 py-3.5 px-5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] font-serif font-bold text-xs sm:text-sm border border-amber-300/40 shadow-2xl shadow-rose-950/35 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
-            >
-              <Camera size={18} />
-              <span>Mulai Photobooth</span>
-            </button>
+            {/* Demo Indicator Pill */}
+            {isDemo && (
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 text-[11px] font-sans font-semibold shadow-xs">
+                <Sparkles size={13} className="text-amber-600 animate-pulse" />
+                <span>Mode Demo Sirklen Photo — Coba Gratis Fitur Kami</span>
+              </div>
+            )}
 
-            <button
-              onClick={handleStartGallery}
-              className="w-full sm:flex-1 py-3.5 px-5 rounded-full bg-white hover:bg-amber-50/80 text-[#6B111F] font-serif font-bold text-xs sm:text-sm border border-[#6B111F]/30 shadow-xl flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
-            >
-              <BookOpen size={18} />
-              <span>Lihat Galeri</span>
-            </button>
+            {/* Row 1: Primary Photobooth & Gallery Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
+              <button
+                onClick={handleStartBooth}
+                className="w-full sm:flex-1 py-3.5 px-5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] font-serif font-bold text-xs sm:text-sm border border-amber-300/40 shadow-2xl shadow-rose-950/35 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
+              >
+                <Camera size={18} />
+                <span>Mulai Photobooth</span>
+              </button>
+
+              <button
+                onClick={handleStartGallery}
+                className="w-full sm:flex-1 py-3.5 px-5 rounded-full bg-white hover:bg-amber-50/80 text-[#6B111F] font-serif font-bold text-xs sm:text-sm border border-[#6B111F]/30 shadow-xl flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
+              >
+                <BookOpen size={18} />
+                <span>Lihat Galeri</span>
+              </button>
+            </div>
+
+            {/* Row 2: WhatsApp Consultation & Lynk.id Order Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
+              <a
+                href={CONTACT_LINKS.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:flex-1 py-3 px-4 rounded-full bg-[#128C7E]/10 hover:bg-[#128C7E]/20 text-[#0c594f] border border-[#128C7E]/30 font-sans font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
+              >
+                <MessageCircle size={16} className="text-[#128C7E]" />
+                <span>Konsultasi WA</span>
+              </a>
+
+              <a
+                href={CONTACT_LINKS.lynkId}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:flex-1 py-3 px-4 rounded-full bg-gradient-to-r from-[#C4A46C] via-[#F5D77F] to-[#C4A46C] hover:brightness-105 text-[#1C0A15] border border-amber-400 font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 transition cursor-pointer"
+              >
+                <ShoppingBag size={16} />
+                <span>Pesan Sekarang</span>
+              </a>
+            </div>
           </motion.div>
         )}
 

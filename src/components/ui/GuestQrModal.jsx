@@ -11,7 +11,7 @@ export default function GuestQrModal({ isOpen, onClose }) {
 
   if (!isOpen || !activeEvent) return null;
 
-  const eventUrl = `${window.location.origin}/${activeEvent.slug}`;
+  const eventUrl = activeEvent.slug === 'demo' || activeEvent.isDemo ? `${window.location.origin}/` : `${window.location.origin}/${activeEvent.slug}?qr=1`;
 
   return (
     <>

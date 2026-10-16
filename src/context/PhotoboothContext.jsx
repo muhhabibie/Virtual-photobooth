@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { subscribeSubmissions, saveSubmission, getLocalSubmissions } from '../services/submissionService';
 import { syncEventToCloud, subscribeCloudEvents, saveLocalEvents } from '../services/eventService';
-import { INITIAL_EVENTS, PACKAGES, DEFAULT_HERO_PHOTOS } from '../data/mockEvents';
+import { INITIAL_EVENTS, PACKAGES, DEFAULT_HERO_PHOTOS, DEMO_EVENT } from '../data/mockEvents';
 
 const PhotoboothContext = createContext(null);
 
@@ -101,38 +101,70 @@ export function PhotoboothProvider({ children }) {
     setIntroKey(prev => prev + 1);
   }, []);
 
-  // 2. Multi-Route Architecture Resolver ('admin' | 'setup' | 'event')
+  // 2. Multi-Route Architecture Resolver ('admin' | 'setup' | 'event' | 'invalid')
   const resolveRouteFromUrl = useCallback(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get('admin') === 'true' || params.get('admin') === '1') {
-        return { route: 'admin', slug: '' };
+        return { route: 'admin', slug: '', isDemo: false };
       }
       const setupQuery = params.get('setup');
       if (setupQuery) {
-        return { route: 'setup', slug: setupQuery.toLowerCase().trim() };
+        return { route: 'setup', slug: setupQuery.toLowerCase().trim(), isDemo: false };
       }
-      const eventQuery = params.get('event') || params.get('slug') || params.get('e') || params.get('code');
+      const eventQuery = params.get('event') || params.get('slug') || params.get('e');
       if (eventQuery) {
-        return { route: 'event', slug: eventQuery.toLowerCase().trim() };
+        const cleanSlug = eventQuery.toLowerCase().trim();
+        if (cleanSlug === 'demo') {
+          return { route: 'event', slug: 'demo', isDemo: true };
+        }
+        return { route: 'event', slug: cleanSlug, isDemo: false };
       }
 
       const rawPath = window.location.pathname.replace(/^\/|\/$/g, '').toLowerCase().trim();
       if (rawPath === 'admin') {
-        return { route: 'admin', slug: '' };
-      }
-      if (!rawPath) {
-        // Root / tanpa QR code -> tampilkan halaman "Invalid Code / Scan QR Code"
-        return { route: 'invalid', slug: '' };
+        return { route: 'admin', slug: '', isDemo: false };
       }
       if (rawPath.startsWith('setup/')) {
         const setupSlug = rawPath.replace(/^setup\//, '').trim();
-        return { route: 'setup', slug: setupSlug };
+        return { route: 'setup', slug: setupSlug, isDemo: false };
       }
-      // Path lainnya adalah event pengantin (e.g. /sabrina-raka)
-      return { route: 'event', slug: rawPath };
+
+      // Root path '/' (sirklenice.com) or '/demo' is the DEMO MODE!
+      // In Demo Mode: no database connection, running completely on local storage
+      if (!rawPath || rawPath === 'demo') {
+        return { route: 'event', slug: 'demo', isDemo: true };
+      }
+
+      // Real event route (e.g. /sabrina-raka, /pestapora)
+      // Check if accessed with valid QR code scan:
+      const hasQrParam = params.get('qr') === '1' || 
+                         params.get('qr') === 'true' || 
+                         params.get('source') === 'qr' || 
+                         params.get('scan') === '1' || 
+                         params.get('scan') === 'true' || 
+                         params.has('code');
+
+      let isSessionScanned = false;
+      try {
+        isSessionScanned = sessionStorage.getItem(`qr_scanned_${rawPath}`) === '1';
+      } catch (e) {}
+
+      if (hasQrParam) {
+        try {
+          sessionStorage.setItem(`qr_scanned_${rawPath}`, '1');
+        } catch (e) {}
+        return { route: 'event', slug: rawPath, isDemo: false };
+      }
+
+      if (isSessionScanned) {
+        return { route: 'event', slug: rawPath, isDemo: false };
+      }
+
+      // If accessed directly without QR scan -> show InvalidCodePage ("Please Scan the QR Code")
+      return { route: 'invalid', slug: rawPath, isDemo: false };
     } catch (e) {
-      return { route: 'invalid', slug: '' };
+      return { route: 'invalid', slug: '', isDemo: false };
     }
   }, []);
 
@@ -147,41 +179,47 @@ export function PhotoboothProvider({ children }) {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [resolveRouteFromUrl]);
 
-  const currentRoute = routeState.route; // 'admin' | 'setup' | 'event'
+  const currentRoute = routeState.route; // 'admin' | 'setup' | 'event' | 'invalid'
   const currentSlug = routeState.slug;
+  const isDemo = routeState.isDemo || currentSlug === 'demo';
 
   // Active Event Object
   const activeEvent = useMemo(() => {
+    if (isDemo || currentSlug === 'demo') {
+      return DEMO_EVENT;
+    }
     if (!currentSlug) return null;
     return events.find(evt => evt.slug.toLowerCase() === currentSlug) || null;
-  }, [events, currentSlug]);
+  }, [events, currentSlug, isDemo]);
 
   // Expiry Check
   const isEventExpired = useMemo(() => {
+    if (isDemo) return false;
     if (!activeEvent) return false;
     return Date.now() > activeEvent.expiresAt;
-  }, [activeEvent]);
+  }, [activeEvent, isDemo]);
 
   // PIN Authentication State for Private Events
   const [authenticatedPins, setAuthenticatedPins] = useState({});
 
   const isPinAuthenticated = useMemo(() => {
+    if (isDemo) return true;
     if (!activeEvent || !activeEvent.pin) return true;
     return !!authenticatedPins[activeEvent.id];
-  }, [activeEvent, authenticatedPins]);
+  }, [activeEvent, authenticatedPins, isDemo]);
 
   const verifyEventPin = useCallback((pinInput) => {
-    if (!activeEvent) return true;
+    if (isDemo || !activeEvent) return true;
     if (!activeEvent.pin || activeEvent.pin === pinInput) {
       setAuthenticatedPins(prev => ({ ...prev, [activeEvent.id]: true }));
       return true;
     }
     return false;
-  }, [activeEvent]);
+  }, [activeEvent, isDemo]);
 
   // Navigation Helpers (PushState with clean URL)
   const navigateToAdmin = useCallback(() => {
-    setRouteState({ route: 'admin', slug: '' });
+    setRouteState({ route: 'admin', slug: '', isDemo: false });
     try {
       window.history.pushState({}, '', '/admin');
     } catch (e) {}
@@ -189,19 +227,35 @@ export function PhotoboothProvider({ children }) {
 
   const navigateToSetup = useCallback((slug) => {
     const clean = (slug || '').toLowerCase().trim();
-    setRouteState({ route: 'setup', slug: clean });
+    setRouteState({ route: 'setup', slug: clean, isDemo: false });
     try {
       window.history.pushState({}, '', `/setup/${clean}`);
     } catch (e) {}
   }, []);
 
-  const navigateToEvent = useCallback((slug) => {
-    const clean = (slug || '').toLowerCase().trim();
-    setRouteState({ route: 'event', slug: clean });
+  const navigateToDemo = useCallback(() => {
+    setRouteState({ route: 'event', slug: 'demo', isDemo: true });
     try {
-      window.history.pushState({}, '', `/${clean}`);
+      window.history.pushState({}, '', '/');
     } catch (e) {}
   }, []);
+
+  const navigateToEvent = useCallback((slug, asQr = true) => {
+    const clean = (slug || '').toLowerCase().trim();
+    if (!clean || clean === 'demo') {
+      navigateToDemo();
+      return;
+    }
+    if (asQr) {
+      try {
+        sessionStorage.setItem(`qr_scanned_${clean}`, '1');
+      } catch (e) {}
+    }
+    setRouteState({ route: 'event', slug: clean, isDemo: false });
+    try {
+      window.history.pushState({}, '', `/${clean}${asQr ? '?qr=1' : ''}`);
+    } catch (e) {}
+  }, [navigateToDemo]);
 
   const navigateToSlug = navigateToEvent;
   const resetToMasterHome = navigateToAdmin;
@@ -440,33 +494,47 @@ export function PhotoboothProvider({ children }) {
   const [savedSubmissions, setSavedSubmissions] = useState([]);
 
   useEffect(() => {
+    if (isDemo) {
+      // In Demo Mode: read exclusively from LocalStorage without connecting to Firestore
+      const local = getLocalSubmissions().filter(s => s.eventSlug === 'demo' || s.isDemo);
+      setSavedSubmissions(local);
+      return;
+    }
+
     const unsubscribe = subscribeSubmissions((items) => {
       setSavedSubmissions(items);
     });
     return () => unsubscribe();
-  }, []);
+  }, [isDemo]);
 
   const submitSession = useCallback(async () => {
     if (capturedPhotos.length === 0 || isEventExpired) return null;
     const result = await saveSubmission({
-      eventId: activeEvent?.id || 'master',
-      eventSlug: activeEvent?.slug || currentSlug || 'master',
+      eventId: activeEvent?.id || (isDemo ? 'event_demo' : 'master'),
+      eventSlug: activeEvent?.slug || currentSlug || (isDemo ? 'demo' : 'master'),
       guestName: guestName || activeEvent?.displayName || 'Tamu Undangan',
       guestMessage,
       photos: capturedPhotos,
       stripColor,
       voiceBlob,
-      voiceUrl
+      voiceUrl,
+      isDemo: isDemo,
     });
-    setSavedSubmissions(getLocalSubmissions());
+    const updatedLocal = getLocalSubmissions();
+    if (isDemo) {
+      setSavedSubmissions(updatedLocal.filter(s => s.eventSlug === 'demo' || s.isDemo));
+    } else {
+      setSavedSubmissions(updatedLocal);
+    }
     return result;
-  }, [capturedPhotos, isEventExpired, activeEvent, currentSlug, guestName, guestMessage, stripColor, voiceBlob, voiceUrl]);
+  }, [capturedPhotos, isEventExpired, activeEvent, currentSlug, guestName, guestMessage, stripColor, voiceBlob, voiceUrl, isDemo]);
 
   return (
     <PhotoboothContext.Provider value={{
       events,
       currentRoute,
       currentSlug,
+      isDemo,
       activeEvent,
       isEventExpired,
       isPinAuthenticated,
@@ -476,6 +544,7 @@ export function PhotoboothProvider({ children }) {
       closeAdminModal,
       navigateToAdmin,
       navigateToSetup,
+      navigateToDemo,
       navigateToEvent,
       navigateToSlug,
       resetToMasterHome,

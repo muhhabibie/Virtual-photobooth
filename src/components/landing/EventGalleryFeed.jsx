@@ -55,7 +55,7 @@ export default function EventGalleryFeed() {
   // Base cards list per event
   const baseCards = useMemo(() => {
     let list = eventSubmissions;
-    if (list.length === 0 && (!activeEvent || activeEvent.slug === 'sabrina-raka' || activeEvent.slug === 'raka-sabrina')) {
+    if (list.length === 0 && (!activeEvent || activeEvent.slug === 'sabrina-raka' || activeEvent.slug === 'raka-sabrina' || activeEvent.slug === 'demo' || activeEvent.isDemo)) {
       list = MOCK_GALLERY_PHOTOS;
     }
     return userCard ? [userCard, ...list.filter(s => s.id !== userCard.id)] : list;

@@ -36,6 +36,7 @@ export default function FullGalleryModal() {
     stripColor,
     voiceUrl,
     activeEvent,
+    isDemo,
     savedSubmissions
   } = useBooth();
   const { toast } = useToast();
@@ -79,11 +80,11 @@ export default function FullGalleryModal() {
     if (eventSubmissions.length > 0) {
       return eventSubmissions;
     }
-    if (!activeEvent || activeEvent.slug === 'sabrina-raka' || activeEvent.slug === 'raka-sabrina') {
+    if (!activeEvent || activeEvent.slug === 'sabrina-raka' || activeEvent.slug === 'raka-sabrina' || activeEvent.slug === 'demo' || activeEvent.isDemo || isDemo) {
       return MOCK_GALLERY_PHOTOS;
     }
     return [];
-  }, [eventSubmissions, activeEvent]);
+  }, [eventSubmissions, activeEvent, isDemo]);
 
   const fullList = useMemo(() => {
     if (!userSubmission) return baseList;
@@ -92,6 +93,10 @@ export default function FullGalleryModal() {
 
   // Handle Bulk ZIP Download from Full Gallery
   const handleDownloadZip = async () => {
+    if (isDemo) {
+      toast('Unduh file ZIP dinonaktifkan pada Mode Demo.', 'warning');
+      return;
+    }
     setIsZipping(true);
     try {
       const eventToUse = activeEvent || { displayName: 'Raka & Sabrina', slug: 'sabrina-raka' };
@@ -578,6 +583,10 @@ export default function FullGalleryModal() {
                 </button>
                 <button
                   onClick={() => {
+                    if (isDemo) {
+                      toast('Unduh foto dinonaktifkan pada Mode Demo.', 'warning');
+                      return;
+                    }
                     const sanitize = (name) => (name || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
                     const guest = sanitize(fullFrameModal.guestName) || 'Tamu';
                     const couple = sanitize(activeEvent?.displayName) || 'Raka & Sabrina';

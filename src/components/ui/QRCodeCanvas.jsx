@@ -22,7 +22,7 @@ export default function QRCodeCanvas({
   const containerRef = useRef(null);
 
   const activeTheme = resolveEventQrTheme(event, selectedThemeKey);
-  const targetUrl = url || (event ? `${window.location.origin}/${event.slug}` : window.location.href);
+  const targetUrl = url || (event ? (event.slug === 'demo' || event.isDemo ? `${window.location.origin}/` : `${window.location.origin}/${event.slug}?qr=1`) : window.location.href);
   const title = displayName || event?.displayName || 'Sirklen Photo Event';
   const coverPhoto = event?.heroPhotos?.[0] || DEFAULT_HERO_PHOTOS[0];
 
