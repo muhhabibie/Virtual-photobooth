@@ -159,41 +159,56 @@ export default function IntroSplashLoader({ onComplete }) {
               </svg>
             </motion.div>
 
-            {/* ================= 2. HURUF BERTAHAP: MASUK KIRI->KANAN, KELUAR KANAN->KIRI ================= */}
-            <h1
-              style={{ fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif" }}
-              className="text-xs xs:text-sm sm:text-base md:text-lg font-bold tracking-[0.22em] sm:tracking-[0.32em] text-[#6B111F] uppercase flex items-center justify-center select-none whitespace-nowrap"
-            >
-              {BRAND_LETTERS.map((char, idx) => {
-                const reverseIdx = TOTAL_LETTERS - 1 - idx;
-                return (
-                  <motion.span
-                    key={idx}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={isOut ? { opacity: 0, y: -5 } : { opacity: 1, y: 0 }}
-                    transition={{
-                      duration: isOut ? 0.45 : 0.65,
-                      delay: isOut ? reverseIdx * 0.035 : 0.95 + idx * 0.045,
-                      ease: EASE_SOFT
-                    }}
-                    className={char === " " ? "inline-block w-1.5 sm:w-2.5" : "inline-block"}
-                    style={{ willChange: 'transform, opacity' }}
-                  >
-                    {char}
-                  </motion.span>
-                );
-              })}
-            </h1>
+            {/* ================= 2. BRAND TYPOGRAPHY LOCKUP ================= */}
+            <div className="flex flex-col items-center justify-center mt-0.5">
+              {/* Title: VIRTUAL PHOTOBOOTH */}
+              <h1
+                style={{ fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif" }}
+                className="text-xs xs:text-sm sm:text-base md:text-lg font-bold tracking-[0.24em] sm:tracking-[0.32em] text-[#540D18] uppercase flex items-center justify-center select-none whitespace-nowrap pl-[0.24em] sm:pl-[0.32em]"
+              >
+                {BRAND_LETTERS.map((char, idx) => {
+                  const reverseIdx = TOTAL_LETTERS - 1 - idx;
+                  return (
+                    <motion.span
+                      key={idx}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={isOut ? { opacity: 0, y: -5 } : { opacity: 1, y: 0 }}
+                      transition={{
+                        duration: isOut ? 0.45 : 0.65,
+                        delay: isOut ? reverseIdx * 0.035 : 0.95 + idx * 0.045,
+                        ease: EASE_SOFT
+                      }}
+                      className={char === " " ? "inline-block w-1.5 sm:w-2.5" : "inline-block"}
+                      style={{ willChange: 'transform, opacity' }}
+                    >
+                      {char}
+                    </motion.span>
+                  );
+                })}
+              </h1>
 
-            {/* Tagline */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={phase === 'holding' ? { opacity: 0.9, y: 0 } : { opacity: 0, y: phase === 'entering' ? 4 : -4 }}
-              transition={{ duration: 0.8, delay: phase === 'holding' ? 0.15 : 0 }}
-              className="text-[11px] sm:text-xs font-serif italic text-[#C4A46C] mt-2.5 tracking-wider"
-            >
-              makes memories with sirklenice
-            </motion.p>
+              {/* Tagline: makes memories with sirklenice (Luxury Editorial with Delicate Hairlines) */}
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={isOut ? { opacity: 0, y: -4 } : { opacity: 1, y: 0 }}
+                transition={{
+                  duration: isOut ? 0.4 : 0.85,
+                  delay: isOut ? 0.05 : 1.6,
+                  ease: EASE_SOFT
+                }}
+                className="flex items-center justify-center gap-2.5 sm:gap-3.5 mt-3 sm:mt-3.5"
+                style={{ willChange: 'transform, opacity' }}
+              >
+                <span className="w-5 sm:w-8 h-[1px] bg-gradient-to-r from-transparent via-[#8C6D46]/45 to-[#8C6D46]/70" />
+                <p
+                  style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif" }}
+                  className="text-xs sm:text-[13px] font-normal italic tracking-[0.18em] sm:tracking-[0.22em] text-[#785C38] select-none whitespace-nowrap leading-none"
+                >
+                  makes memories with sirklenice
+                </p>
+                <span className="w-5 sm:w-8 h-[1px] bg-gradient-to-l from-transparent via-[#8C6D46]/45 to-[#8C6D46]/70" />
+              </motion.div>
+            </div>
 
           </div>
         </motion.div>
