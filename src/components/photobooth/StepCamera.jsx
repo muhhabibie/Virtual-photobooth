@@ -287,6 +287,15 @@ export default function StepCamera() {
   const accentColor = isLight ? '#B89F88' : (activeEvent?.customFrame?.textColor || '#F5D77F');
   const primaryTextColor = isLight ? '#22201E' : '#FFFFFF';
 
+  const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
+  const bride = activeEvent?.brideName;
+  const groom = activeEvent?.groomName;
+  const couple = (bride && groom) ? `${bride} & ${groom}` : (getEventDisplayName(activeEvent, activeEvent?.slug) || 'Sabrina & Raka');
+  const topHeaderTitle = isWedding ? `THE WEDDING OF ${couple}`.toUpperCase() : (activeEvent?.eventName || activeEvent?.displayName || 'OFFICIAL EVENT PHOTOBOOTH').toUpperCase();
+  const rawGuestName = guestName && guestName.trim() ? guestName.trim() : '';
+  const guestTitle = (rawGuestName || (isWedding ? 'Tamu Undangan' : 'Pengunjung Event')).toUpperCase();
+  const shortMessageText = guestMessage && guestMessage.trim() ? `“${guestMessage.trim()}”` : 'With Love';
+
   // Real-time 60 FPS FaceMesh Tracking
   const { facesRef, isReady: isFaceMeshReady } = useFaceMesh(videoRef, selectedAccessory !== 'none');
 
@@ -603,16 +612,17 @@ export default function StepCamera() {
           className="relative w-full h-full max-h-[460px] xs:max-h-[480px] sm:max-h-[520px] rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 overflow-hidden"
         >
           
-          {/* Top Subtle Frame Accent Header */}
-          <div className="w-full flex items-center justify-between px-2 pt-0.5 pb-1 z-10 flex-shrink-0">
-            <span className="text-[11px] font-serif select-none" style={{ color: accentColor }}>🌿</span>
-            <span 
-              className="text-[8.5px] font-mono font-bold uppercase tracking-[0.2em]"
-              style={{ color: accentColor }}
+          {/* Top Frame Header Title (Matching stripRenderer.js) */}
+          <div className="w-full flex items-center justify-center px-2 pt-1 pb-1 z-10 flex-shrink-0">
+            <h2 
+              className="text-[9px] sm:text-[10.5px] font-bold tracking-[0.16em] uppercase text-center leading-none"
+              style={{ 
+                color: primaryTextColor,
+                fontFamily: "'Playfair Display', 'Cinzel', 'Cormorant Garamond', Georgia, serif" 
+              }}
             >
-              STUDIO STRIP • POSE {nextPhotoNum}/{targetPhotoCount}
-            </span>
-            <span className="text-[11px] font-serif select-none" style={{ color: accentColor }}>🌿</span>
+              {topHeaderTitle}
+            </h2>
           </div>
 
           {/* Center Cutout Window (Full-width WYSIWYG Camera Stream with Solid Frame Border) */}
@@ -668,9 +678,9 @@ export default function StepCamera() {
 
           </div>
 
-          {/* Bottom Frame Chin Preview (Wendy & Mark Serif Title + Divider + Date & Venue) */}
-          <div className="text-center pt-2 pb-1 flex-shrink-0 flex flex-col items-center w-full">
-            {/* 1. Couple Title (Uppercase Serif) */}
+          {/* Bottom Frame Chin Preview: Guest Name, Line 1, Date, Line 2, Short Message (No Location) */}
+          <div className="text-center pt-2 pb-1.5 flex-shrink-0 flex flex-col items-center w-full">
+            {/* 1. Guest Name (Bold Uppercase Serif) */}
             <h3 
               style={{ 
                 color: primaryTextColor,
@@ -678,31 +688,35 @@ export default function StepCamera() {
               }}
               className="text-xs sm:text-sm font-bold tracking-[0.14em] uppercase leading-tight"
             >
-              {getEventDisplayName(activeEvent, activeEvent?.slug) || 'WENDY & MARK'}
+              {guestTitle}
             </h3>
 
-            {/* 2. Taupe Divider Line */}
+            {/* 2. Primary Divider Line */}
             <div 
               className="w-24 sm:w-28 h-[1.5px] my-1 rounded-full"
               style={{ backgroundColor: accentColor }}
             />
 
-            {/* 3. Date & Venue */}
+            {/* 3. Date (No Location) */}
             <div 
-              className="flex items-center gap-1.5 text-[7.5px] sm:text-[8px] font-sans font-bold tracking-wider"
+              className="text-[8px] sm:text-[8.5px] font-sans font-bold tracking-wider"
               style={{ color: primaryTextColor }}
             >
               <span>{getEventFormattedDate(activeEvent)}</span>
-              <span style={{ color: accentColor }}>•</span>
-              <span>{(activeEvent?.venue || 'PASADENA, CA').toUpperCase()}</span>
             </div>
 
-            {/* 4. Guest / Quote Preview */}
+            {/* 4. Aesthetic Secondary Divider Line between Date and Short Message */}
+            <div 
+              className="w-12 sm:w-14 h-[1px] my-1 opacity-55 rounded-full"
+              style={{ backgroundColor: accentColor }}
+            />
+
+            {/* 5. Short Message / Pesan Singkat */}
             <p 
-              className="text-[8px] sm:text-[9px] italic font-serif mt-0.5 truncate max-w-full px-2"
-              style={{ color: isLight ? '#6B5E55' : 'rgba(255,255,255,0.85)' }}
+              className="text-[8px] sm:text-[9px] italic font-serif truncate max-w-full px-2"
+              style={{ color: isLight ? '#5A4A3E' : 'rgba(255,255,255,0.92)' }}
             >
-              {guestMessage && guestMessage.trim() ? `“${guestMessage.trim()}”` : (guestName && guestName.trim() ? `With Love, ${guestName.trim()}` : `With Love, Tamu Undangan`)}
+              {shortMessageText}
             </p>
           </div>
 

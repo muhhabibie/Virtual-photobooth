@@ -145,53 +145,60 @@ export function renderMasterPhotoStrip(canvas, {
     drawY += photoH + gap;
   }
 
-  // 4. Spacious Footer Section (Guest Name, Divider Line, Date, Venue, Wishes)
+  // 4. Spacious Footer Section (Guest Name, Divider Line 1, Date, Divider Line 2, Short Message - No Venue)
   const footerTop = topPad + (photoH * count) + (gap * Math.max(0, count - 1));
-  const dateText = getEventFormattedDate(activeEvent) || '12.03.2023';
-  const venueText = (activeEvent?.venue || 'PASADENA, CA').toUpperCase();
+  const dateText = getEventFormattedDate(activeEvent) || '30 · 05 · 2026';
   const rawGuestName = guestName && guestName.trim() ? guestName.trim() : '';
   const guestTitle = (rawGuestName || (isWedding ? 'Tamu Undangan' : 'Pengunjung Event')).toUpperCase();
+  const shortMessageText = guestMessage && guestMessage.trim() ? `“${guestMessage.trim().substring(0, 48)}”` : 'With Love';
 
-  // 4a. Guest Name (Bold Serif, placed at the bottom, above the divider line)
-  const nameY = footerTop + (isPolaroid ? 48 * scale : 85 * scale);
+  // 4a. Guest Name (Bold Serif, placed at the bottom, above the primary divider line)
+  const nameY = footerTop + (isPolaroid ? 46 * scale : 78 * scale);
   ctx.fillStyle = primaryTextColor;
   ctx.font = `bold ${isPolaroid ? 19 * scale : 21 * scale}px 'Playfair Display', 'Cormorant Garamond', 'Cinzel', Georgia, serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(guestTitle, totalW / 2, nameY);
 
-  // 4b. Horizontal Divider Strip Line
-  const lineY = nameY + (isPolaroid ? 24 * scale : 32 * scale);
+  // 4b. Primary Horizontal Divider Strip Line
+  const line1Y = nameY + (isPolaroid ? 22 * scale : 28 * scale);
   ctx.save();
   ctx.strokeStyle = accentColor;
   ctx.lineWidth = 2.2 * scale;
   ctx.lineCap = 'round';
-  const divWidth = 160 * scale;
+  const div1Width = 150 * scale;
   ctx.beginPath();
-  ctx.moveTo(totalW / 2 - divWidth / 2, lineY);
-  ctx.lineTo(totalW / 2 + divWidth / 2, lineY);
+  ctx.moveTo(totalW / 2 - div1Width / 2, line1Y);
+  ctx.lineTo(totalW / 2 + div1Width / 2, line1Y);
   ctx.stroke();
   ctx.restore();
 
-  // 4c. Date Text
-  const dateY = lineY + (isPolaroid ? 32 * scale : 42 * scale);
+  // 4c. Date Text (Under primary divider line, NO VENUE/LOCATION)
+  const dateY = line1Y + (isPolaroid ? 28 * scale : 36 * scale);
   ctx.fillStyle = primaryTextColor;
   ctx.font = `bold ${14 * scale}px system-ui, -apple-system, sans-serif`;
   ctx.textAlign = 'center';
   ctx.fillText(dateText, totalW / 2, dateY);
 
-  // 4d. Venue / City Text
-  const venueY = dateY + 28 * scale;
-  ctx.font = `bold ${12.5 * scale}px system-ui, -apple-system, sans-serif`;
-  ctx.fillText(venueText, totalW / 2, venueY);
+  // 4d. Aesthetic Secondary Divider Line (Between Date and Short Message)
+  const line2Y = dateY + (isPolaroid ? 20 * scale : 26 * scale);
+  ctx.save();
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 1.3 * scale;
+  ctx.lineCap = 'round';
+  const div2Width = 85 * scale;
+  ctx.beginPath();
+  ctx.moveTo(totalW / 2 - div2Width / 2, line2Y);
+  ctx.lineTo(totalW / 2 + div2Width / 2, line2Y);
+  ctx.stroke();
+  ctx.restore();
 
-  // 4e. Dedicated Space for Sentence / Kalimat / Doa Restu (if provided)
-  const msgY = venueY + (isPolaroid ? 32 * scale : 40 * scale);
-  if (guestMessage && guestMessage.trim()) {
-    ctx.fillStyle = isLightBg ? '#5A4A3E' : 'rgba(255,255,255,0.92)';
-    ctx.font = `italic ${12 * scale}px Georgia, serif`;
-    ctx.fillText(`“${guestMessage.trim().substring(0, 48)}”`, totalW / 2, msgY);
-  }
+  // 4e. Short Message / Pesan Singkat (Under secondary divider line)
+  const msgY = line2Y + (isPolaroid ? 24 * scale : 30 * scale);
+  ctx.fillStyle = isLightBg ? '#5A4A3E' : 'rgba(255,255,255,0.92)';
+  ctx.font = `italic ${isPolaroid ? 12 * scale : 13 * scale}px 'Playfair Display', Georgia, serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(shortMessageText, totalW / 2, msgY);
 
   // 5. Outer Frame Border (if customized)
   if (activeEvent?.customFrame?.borderColor) {
