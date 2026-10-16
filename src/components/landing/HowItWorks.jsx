@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, Download, Volume2, Check, Share2 } from 'lucide-react';
+import { Layers, Download, Volume2, Check } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import MonochromeFloralOrnament from '../ui/MonochromeFloralOrnament';
@@ -520,33 +520,14 @@ export default function HowItWorks() {
                       toast('Photo strip siap diunduh dalam kualitas HD', 'success');
                       setTimeout(() => setDemoDownloaded(false), 2500);
                     }}
-                    className={`flex-1 py-2 sm:py-2.5 px-3 rounded-full text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-lg ${
+                    className={`w-full py-2.5 px-4 rounded-full text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-lg ${
                       demoDownloaded 
                         ? 'bg-emerald-600 text-white' 
                         : 'bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] text-[#F5D77F] border border-amber-300/40 hover:brightness-110'
                     }`}
                   >
-                    {demoDownloaded ? <Check size={12} /> : <Download size={12} />}
-                    <span>{demoDownloaded ? 'Tersimpan HD' : 'Unduh HD'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: 'Kenangan Photobooth Sabrina & Raka',
-                          text: 'Lihat photo strip pernikahan Sabrina & Raka!',
-                          url: window.location.href
-                        }).catch(() => {});
-                      } else {
-                        navigator.clipboard?.writeText(window.location.href);
-                        toast('Tautan berhasil disalin', 'success');
-                      }
-                    }}
-                    className="flex-1 py-2 sm:py-2.5 px-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-[10.5px] sm:text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-lg"
-                  >
-                    <Share2 size={12} />
-                    <span>Bagikan</span>
+                    {demoDownloaded ? <Check size={14} /> : <Download size={14} />}
+                    <span>{demoDownloaded ? 'Tersimpan HD' : 'Unduh Photo Strip HD'}</span>
                   </button>
                 </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Download, Share2, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Printer, Lock, MessageCircle, ShoppingBag, Camera, ArrowRight } from 'lucide-react';
+import { Download, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Printer, Lock, MessageCircle, ShoppingBag, Camera, ArrowRight } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
@@ -268,41 +268,6 @@ export default function StepResult() {
       setTimeout(() => URL.revokeObjectURL(url), 2000);
       toast(`Photo strip berhasil diunduh (${filename})!`, 'success');
     }, 'image/jpeg', 0.92);
-  };
-
-  const handleShare = async () => {
-    if (isDemo) {
-      setShowDemoModal(true);
-      return;
-    }
-
-    const canvas = getExportCanvas();
-    if (!canvas) return;
-
-    const sanitize = (str) => (str || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
-    const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
-    const guest = sanitize(guestName) || (isWedding ? 'Tamu' : 'Pengunjung');
-    const couple = sanitize(activeEvent?.displayName) || (isWedding ? 'Pengantin' : 'Event');
-    const filename = `${guest}_${couple}.jpg`;
-
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      const file = new File([blob], filename, { type: 'image/jpeg' });
-      if (navigator.share && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            title: isWedding ? `The Wedding of ${couple}` : `${couple} Photobooth`,
-            text: isWedding ? `Kenangan foto pernikahan dari ${guest}` : `Kenangan photobooth dari ${guest} di ${couple}`,
-            files: [file],
-          });
-          toast('Berhasil dibagikan', 'success');
-        } catch (e) {
-          // User cancelled
-        }
-      } else {
-        handleDownload();
-      }
-    }, 'image/jpeg', 0.96);
   };
 
   const handlePrint = () => {
@@ -575,14 +540,6 @@ export default function StepResult() {
             <Printer size={14} className="text-amber-300" />
             <span>Cetak</span>
             {isDemo && <Lock size={10} className="text-amber-400/80" />}
-          </button>
-
-          <button
-            onClick={handleShare}
-            className="flex-1 py-2.5 rounded-full bg-[#1C1C1E] hover:bg-[#2C2C2E] border border-white/20 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
-          >
-            <Share2 size={14} />
-            <span>Bagikan</span>
           </button>
 
           <button

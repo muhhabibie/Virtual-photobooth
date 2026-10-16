@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Plus, Share2, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive } from 'lucide-react';
+import { ArrowLeft, Plus, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
@@ -138,22 +138,6 @@ export default function FullGalleryModal() {
       if (isLiked) toast('❤️ Kamu menyukai foto ini!', 'info');
       return { ...prev, [id]: isLiked };
     });
-  };
-
-  const handleShare = async (item, e) => {
-    if (e) e.stopPropagation();
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Photo Strip ${item.guestName} • The Wedding of Sabrina & Raka`,
-          text: `Lihat photo strip pernikahan dari ${item.guestName} (${item.takenDate})`,
-          url: window.location.href,
-        });
-      } catch (err) {}
-    } else {
-      navigator.clipboard?.writeText(window.location.href);
-      toast('Tautan berhasil disalin', 'success');
-    }
   };
 
   return (
@@ -573,14 +557,7 @@ export default function FullGalleryModal() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-2 w-full mt-0.5">
-                <button
-                  onClick={() => handleShare(fullFrameModal)}
-                  className="flex-1 py-2.5 sm:py-3 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-lg"
-                >
-                  <Share2 size={14} />
-                  <span>Share</span>
-                </button>
+              <div className="w-full mt-0.5">
                 <button
                   onClick={() => {
                     if (isDemo) {
@@ -598,10 +575,10 @@ export default function FullGalleryModal() {
                     a.click();
                     toast(`Photo strip berhasil diunduh (${filename})! 💍`, 'success');
                   }}
-                  className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] border border-[#E5C158]/50 text-xs font-bold flex items-center justify-center gap-1.5 shadow-xl transition active:scale-95 cursor-pointer"
+                  className="w-full py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] border border-[#E5C158]/50 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xl transition active:scale-95 cursor-pointer"
                 >
-                  <Download size={14} />
-                  <span>Download HD</span>
+                  <Download size={15} />
+                  <span>Download Photo Strip HD</span>
                 </button>
               </div>
 
