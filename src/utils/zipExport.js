@@ -129,17 +129,14 @@ async function renderSubmissionStrip(item, event) {
 
 /**
  * Export all wedding photo submissions into a structured ZIP file
- * Format Penamaan: [Nama Pengunjung]_[Nama Pengantin]
- * Berisi: Foto Strip Jadi (_STRIP.jpg) + Seluruh Foto Asli Pose (_Foto_X.jpg)
+ * Format Penamaan: [Nama Pengunjung]_[Nama Pengantin].jpg
+ * Berisi seluruh hasil strip photobooth berbingkai HD siap cetak
  */
 export async function exportEventSubmissionsZip({ event, submissions = [], onProgress = () => {} }) {
   const zip = new JSZip();
 
   const coupleName = sanitizeFilename(event?.displayName) || 'Pengantin';
-  const eventFolder = zip.folder(`Foto_${coupleName}`);
-  const stripFolder = eventFolder.folder('Strip_Photobooth');
-  const individualFolder = eventFolder.folder('Foto_Individual');
-  const audioFolder = eventFolder.folder('Rekaman_Suara');
+  const eventFolder = zip.folder(`Foto_Strip_${coupleName}`);
 
   // Collect all valid photo entries
   const itemsToProcess = submissions.length > 0 ? submissions : [];
@@ -148,11 +145,10 @@ export async function exportEventSubmissionsZip({ event, submissions = [], onPro
     throw new Error('Belum ada foto yang tersimpan untuk diunduh.');
   }
 
-  onProgress({ current: 0, total: itemsToProcess.length, message: 'Menyiapkan file foto...' });
+  onProgress({ current: 0, total: itemsToProcess.length, message: 'Menyiapkan file foto strip...' });
 
   const nameOccurrences = new Map();
   const guestWishes = [];
-  let photoCount = 0;
   let stripCount = 0;
 
   for (let idx = 0; idx < itemsToProcess.length; idx++) {
@@ -171,10 +167,10 @@ export async function exportEventSubmissionsZip({ event, submissions = [], onPro
     onProgress({
       current: idx + 1,
       total: itemsToProcess.length,
-      message: `Mengompres foto & strip dari ${cleanGuest}...`
+      message: `Mengompres strip dari ${cleanGuest}...`
     });
 
-    // 1. Process Finished Photostrip (Hasil Strip Photobooth)
+    // 1. Process Finished Photostrip
     let stripBinary = null;
     if (item.stripUrl || item.stripPhoto) {
       stripBinary = await getAssetBinary(item.stripUrl || item.stripPhoto);
@@ -185,39 +181,16 @@ export async function exportEventSubmissionsZip({ event, submissions = [], onPro
 
     if (stripBinary) {
       stripCount++;
-      const stripFilename = `${baseFilename}_STRIP.jpg`;
-      stripFolder.file(stripFilename, stripBinary);
+      const stripFilename = `${baseFilename}.jpg`;
       eventFolder.file(stripFilename, stripBinary);
     }
 
-    // 2. Process Individual Cut Photos (Foto-foto Pose Asli)
-    const photosList = Array.isArray(item.photos) && item.photos.length > 0
-      ? item.photos
-      : (item.photo ? [item.photo] : []);
-
-    for (let pIdx = 0; pIdx < photosList.length; pIdx++) {
-      const photoItem = photosList[pIdx];
-      const photoUrl = typeof photoItem === 'string' ? photoItem : (photoItem.dataUrl || photoItem.url || '');
-      const binary = await getAssetBinary(photoUrl);
-
-      if (binary) {
-        photoCount++;
-        const photoFilename = photosList.length === 1
-          ? `${baseFilename}_Foto.jpg`
-          : `${baseFilename}_Foto_${pIdx + 1}.jpg`;
-
-        individualFolder.file(photoFilename, binary);
-        eventFolder.file(photoFilename, binary);
-      }
-    }
-
-    // 3. Process Voice Note (if any)
+    // 2. Process Voice Note (if any)
     if (item.voiceUrl || item.voiceBlob) {
       try {
         const voiceBinary = await getAssetBinary(item.voiceUrl);
         if (voiceBinary) {
           const voiceFilename = `${baseFilename}_voice.webm`;
-          audioFolder.file(voiceFilename, voiceBinary);
           eventFolder.file(voiceFilename, voiceBinary);
         }
       } catch (err) {
@@ -225,7 +198,7 @@ export async function exportEventSubmissionsZip({ event, submissions = [], onPro
       }
     }
 
-    // 4. Collect wishes for digital guestbook log
+    // 3. Collect wishes for digital guestbook log
     if (item.message && item.message.trim()) {
       guestWishes.push({
         name: cleanGuest,
@@ -245,7 +218,7 @@ export async function exportEventSubmissionsZip({ event, submissions = [], onPro
     `Tanggal Acara: ${event?.formattedDate || event?.eventDate || '-' }`,
     `Venue        : ${event?.venue || '-'}`,
     `Total Sesi   : ${itemsToProcess.length} Tamu`,
-    `Total Foto   : ${photoCount} Foto`,
+    `Total Strip  : ${stripCount} Strip Foto Siap Cetak`,
     `Website Acara: https://sirklenice.com/${event?.slug || ''}`,
     '========================================================================\n',
   ];
@@ -272,7 +245,7 @@ export async function exportEventSubmissionsZip({ event, submissions = [], onPro
   const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
 
   // 6. Trigger Browser Download
-  const zipFilename = `Foto_Kenangan_${coupleName}.zip`;
+  const zipFilename = `Foto_Strip_${coupleName}.zip`;
   const blobUrl = URL.createObjectURL(zipBlob);
   const a = document.createElement('a');
   a.href = blobUrl;
@@ -284,7 +257,8 @@ export async function exportEventSubmissionsZip({ event, submissions = [], onPro
 
   return {
     success: true,
-    totalPhotos: photoCount,
+    totalPhotos: stripCount,
+    totalStrips: stripCount,
     totalSubmissions: itemsToProcess.length,
     filename: zipFilename,
   };

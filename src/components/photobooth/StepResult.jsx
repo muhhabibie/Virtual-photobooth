@@ -539,7 +539,6 @@ export default function StepResult() {
         isOpen={showDownloadModal}
         onClose={() => setShowDownloadModal(false)}
         photoCanvas={getExportCanvas}
-        photos={capturedPhotos}
         voiceUrl={voiceUrl}
         guestName={guestName || 'Tamu Undangan'}
         coupleName={getEventDisplayName(activeEvent) || 'Sabrina & Raka'}

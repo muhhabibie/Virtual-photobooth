@@ -592,14 +592,14 @@ export default function ClientSetupPage() {
                   <span>ARSIP HASIL PHOTOBOOTH</span>
                 </span>
                 <span className="text-[10px] font-mono text-stone-500">
-                  {totalSubmissionsCount > 0 ? `${totalSubmissionsCount} sesi foto tamu` : 'Siap unduh'}
+                  {totalSubmissionsCount > 0 ? `${totalSubmissionsCount} strip foto tamu` : 'Siap unduh'}
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-serif font-bold text-stone-900 tracking-tight">
-                Unduh Seluruh Foto Tamu (.ZIP)
+                Unduh Seluruh Strip Foto Tamu (.ZIP)
               </h2>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Unduh paket lengkap berisi seluruh strip foto tamu (HD Print Ready 300 DPI) dan rekaman suara doa ucapan dalam satu file .ZIP terorganisir.
+                Unduh seluruh strip foto kenangan tamu berbingkai (HD Print Ready 300 DPI) dan rekaman suara doa ucapan dalam satu file .ZIP terorganisir.
               </p>
             </div>
 
@@ -618,7 +618,7 @@ export default function ClientSetupPage() {
                 ) : (
                   <>
                     <Package size={15} className="text-amber-300" />
-                    <span>Unduh Semua Foto (.ZIP)</span>
+                    <span>Unduh Semua Strip Foto (.ZIP)</span>
                   </>
                 )}
               </button>
