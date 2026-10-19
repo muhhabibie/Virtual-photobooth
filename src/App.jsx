@@ -3,6 +3,7 @@ import SirklenHeader from './components/landing/SirklenHeader';
 import EventHero from './components/landing/EventHero';
 import EventGalleryFeed from './components/landing/EventGalleryFeed';
 import HowItWorks from './components/landing/HowItWorks';
+import SirklenPricing from './components/landing/SirklenPricing';
 import PhotoboothModal from './components/photobooth/PhotoboothModal';
 import FullGalleryModal from './components/gallery/FullGalleryModal';
 import InvalidCodePage from './components/ui/InvalidCodePage';
@@ -21,7 +22,7 @@ const PageLoader = () => (
 );
 
 function AppContent() {
-  const { activeEvent, currentRoute } = useBooth();
+  const { activeEvent, currentRoute, isDemo } = useBooth();
 
   // 1. Client Setup Portal (/setup/:slug)
   if (currentRoute === 'setup') {
@@ -46,7 +47,9 @@ function AppContent() {
     return <InvalidCodePage />;
   }
 
-  // 3. Wedding Guest Photobooth Landing (/:slug)
+  const isDemoMode = isDemo || Boolean(activeEvent?.isDemo) || activeEvent?.slug === 'demo' || activeEvent?.slug === 'sabrina-raka';
+
+  // 4. Wedding Guest Photobooth Landing (/:slug)
   return (
     <div className="min-h-screen bg-[#12070D] text-gray-100 font-sans selection:bg-rose-900 selection:text-amber-200">
       <SirklenHeader />
@@ -54,6 +57,7 @@ function AppContent() {
       <main>
         <EventHero />
         <EventGalleryFeed />
+        {isDemoMode && <SirklenPricing />}
         <HowItWorks />
       </main>
 
