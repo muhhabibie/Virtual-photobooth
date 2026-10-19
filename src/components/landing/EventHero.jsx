@@ -5,7 +5,7 @@ import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
 import { DEFAULT_HERO_PHOTOS, PACKAGES, CONTACT_LINKS } from '../../data/mockEvents';
 import GuestQrModal from '../ui/GuestQrModal';
-import PriceListPosterModal from '../ui/PriceListPosterModal';
+import PriceListModal from '../ui/PriceListModal';
 
 export default function EventHero() {
   const { 
@@ -24,7 +24,7 @@ export default function EventHero() {
   const [pinError, setPinError] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
-  const [showPricePoster, setShowPricePoster] = useState(false);
+  const [showPriceModal, setShowPriceModal] = useState(false);
 
   const slideImages = (activeEvent?.heroPhotos && activeEvent.heroPhotos.length > 0 
     ? activeEvent.heroPhotos 
@@ -259,7 +259,7 @@ export default function EventHero() {
 
                 <button
                   type="button"
-                  onClick={() => setShowPricePoster(true)}
+                  onClick={() => setShowPriceModal(true)}
                   className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/95 hover:bg-stone-50 border border-stone-200/90 shadow-2xs text-[#6B111F] text-[11px] sm:text-xs font-semibold transition active:scale-95 cursor-pointer"
                 >
                   <Tag size={12} className="text-[#6B111F]" />
@@ -287,55 +287,6 @@ export default function EventHero() {
               </button>
             </div>
 
-            {/* ================= 🌟 DEMO PRICE LIST POSTER CARD PREVIEW 🌟 ================= */}
-            {isDemo && (
-              <div 
-                onClick={() => setShowPricePoster(true)}
-                className="w-full p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-[#1C0A15]/95 via-[#2E1224]/95 to-[#1C0A15]/95 border border-[#C4A46C]/60 shadow-xl hover:shadow-2xl hover:border-amber-300 transition-all duration-300 cursor-pointer group text-left relative overflow-hidden"
-              >
-                {/* Subtle golden shimmer decor */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
-
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                    <span className="text-[10px] sm:text-[11px] font-mono font-bold tracking-widest uppercase text-amber-300">
-                      Sirklenice • Price List Photobooth Virtual
-                    </span>
-                  </div>
-
-                  <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-amber-200 group-hover:text-white transition">
-                    <span>Buka Poster</span>
-                    <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </div>
-
-                {/* 3 Quick Package Pills */}
-                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-white/5 border border-white/10 group-hover:bg-white/10 transition text-center">
-                    <p className="text-[11px] sm:text-xs font-serif font-bold text-amber-200">Basic</p>
-                    <p className="text-xs sm:text-sm font-bold text-white mt-0.5">300ribu</p>
-                    <p className="text-[9px] text-gray-400 font-mono mt-0.5">7 Hari • 100 QR</p>
-                  </div>
-
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-b from-amber-500/20 to-amber-900/30 border border-amber-400/70 transition text-center relative shadow-sm">
-                    <span className="absolute -top-1.5 inset-x-0 flex justify-center">
-                      <span className="text-[7px] font-mono font-black uppercase px-1.5 py-0.2 rounded-full bg-amber-400 text-black">Populer</span>
-                    </span>
-                    <p className="text-[11px] sm:text-xs font-serif font-bold text-amber-200 mt-1 sm:mt-0">Standar</p>
-                    <p className="text-xs sm:text-sm font-bold text-white mt-0.5">400ribu</p>
-                    <p className="text-[9px] text-amber-200/80 font-mono mt-0.5">10 Hari • 100 QR</p>
-                  </div>
-
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-white/5 border border-white/10 group-hover:bg-white/10 transition text-center">
-                    <p className="text-[11px] sm:text-xs font-serif font-bold text-amber-200">Spesial</p>
-                    <p className="text-xs sm:text-sm font-bold text-white mt-0.5">500ribu</p>
-                    <p className="text-[9px] text-gray-400 font-mono mt-0.5">14 Hari • 200 QR</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Contextual Divider: Bridges Guest Experience to Commercial Booking */}
             <div className="flex items-center gap-2.5 w-full pt-1.5 pb-0.5">
               <span className="h-px flex-1 bg-gradient-to-r from-transparent via-stone-300 to-stone-200" />
@@ -345,7 +296,7 @@ export default function EventHero() {
               <span className="h-px flex-1 bg-gradient-to-l from-transparent via-stone-300 to-stone-200" />
             </div>
 
-            {/* Row 2: WhatsApp Consultation & Lynk.id Order Buttons */}
+            {/* Row 2: WhatsApp Consultation & Pesan Sekarang (Opens Floating Price List Modal) */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
               {/* WhatsApp Consultation: Clean, Low-Friction Advisory */}
               <a
@@ -358,17 +309,16 @@ export default function EventHero() {
                 <span>Konsultasi WA</span>
               </a>
 
-              {/* Lynk.id Order: Warm Luxury Bronze, High-Intent Primary Commercial CTA */}
-              <a
-                href={CONTACT_LINKS.lynkId}
-                target="_blank"
-                rel="noopener noreferrer"
+              {/* Pesan Sekarang: Opens Floating Price List Modal */}
+              <button
+                type="button"
+                onClick={() => setShowPriceModal(true)}
                 className="group w-full sm:flex-1 py-3 px-4 rounded-full bg-gradient-to-r from-[#8C6534] via-[#A3783F] to-[#8C6534] hover:from-[#7A562B] hover:to-[#7A562B] text-white border border-[#BFA069]/40 font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-xl shadow-amber-950/15 transform hover:-translate-y-0.5 active:scale-95 transition duration-200 cursor-pointer"
               >
                 <ShoppingBag size={15} className="text-amber-200 transition-transform duration-200 group-hover:scale-110" />
                 <span className="tracking-wide">Pesan Sekarang</span>
                 <ArrowRight size={14} className="text-amber-200 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200" />
-              </a>
+              </button>
             </div>
           </motion.div>
         )}
@@ -443,8 +393,8 @@ export default function EventHero() {
       {/* Guest QR Code Modal */}
       <GuestQrModal isOpen={showQrModal} onClose={() => setShowQrModal(false)} />
 
-      {/* Official Price List Poster Modal */}
-      <PriceListPosterModal isOpen={showPricePoster} onClose={() => setShowPricePoster(false)} />
+      {/* Official Floating Price List Modal */}
+      <PriceListModal isOpen={showPriceModal} onClose={() => setShowPriceModal(false)} />
 
     </section>
   );

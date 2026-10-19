@@ -6,7 +6,7 @@ import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
 import { CONTACT_LINKS, PACKAGES } from '../../data/mockEvents';
-import PriceListPosterModal from '../ui/PriceListPosterModal';
+import PriceListModal from '../ui/PriceListModal';
 
 const PHOTO_FILTERS = [
   { id: 'natural', name: 'NATURAL', css: 'none', desc: 'Asli', previewClass: 'from-amber-200 via-rose-300 to-amber-100' },
@@ -567,8 +567,8 @@ export default function StepResult() {
 
       </div>
 
-      {/* ================= 🌟 DEMO MODE PRICE LIST POSTER MODAL 🌟 ================= */}
-      <PriceListPosterModal isOpen={showDemoModal} onClose={() => setShowDemoModal(false)} />
+      {/* ================= 🌟 DEMO MODE PRICE LIST MODAL 🌟 ================= */}
+      <PriceListModal isOpen={showDemoModal} onClose={() => setShowDemoModal(false)} />
 
     </div>
   );

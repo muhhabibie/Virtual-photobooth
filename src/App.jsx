@@ -3,7 +3,6 @@ import SirklenHeader from './components/landing/SirklenHeader';
 import EventHero from './components/landing/EventHero';
 import EventGalleryFeed from './components/landing/EventGalleryFeed';
 import HowItWorks from './components/landing/HowItWorks';
-import SirklenPricing from './components/landing/SirklenPricing';
 import PhotoboothModal from './components/photobooth/PhotoboothModal';
 import FullGalleryModal from './components/gallery/FullGalleryModal';
 import InvalidCodePage from './components/ui/InvalidCodePage';
@@ -22,7 +21,7 @@ const PageLoader = () => (
 );
 
 function AppContent() {
-  const { activeEvent, currentRoute, isDemo } = useBooth();
+  const { activeEvent, currentRoute } = useBooth();
 
   // 1. Client Setup Portal (/setup/:slug)
   if (currentRoute === 'setup') {
@@ -55,7 +54,6 @@ function AppContent() {
       <main>
         <EventHero />
         <EventGalleryFeed />
-        {isDemo && <SirklenPricing />}
         <HowItWorks />
       </main>
 
