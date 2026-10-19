@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, ShoppingBag, MessageCircle, ArrowRight } from 'lucide-react';
+import { Check, X, ArrowRight, MessageCircle } from 'lucide-react';
 import { PACKAGES, CONTACT_LINKS } from '../../data/mockEvents';
 
 export default function PriceListModal({ isOpen, onClose }) {
@@ -50,7 +50,7 @@ export default function PriceListModal({ isOpen, onClose }) {
     <AnimatePresence>
       <div className="fixed inset-0 z-[260] flex items-center justify-center p-2.5 sm:p-4 selection:bg-rose-900 selection:text-amber-200">
         
-        {/* Backdrop with Soft Blur */}
+        {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -60,41 +60,48 @@ export default function PriceListModal({ isOpen, onClose }) {
           className="absolute inset-0 bg-black/75 backdrop-blur-md cursor-pointer"
         />
 
-        {/* Floating Modal Window - Full Responsive & Scrollable */}
+        {/* Modal Container */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 14 }}
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 14 }}
-          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, scale: 0.96, y: 12 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-5xl bg-[#F8F9FA] border border-slate-200/90 rounded-3xl p-4 sm:p-6 md:p-8 text-slate-900 shadow-2xl max-h-[94vh] flex flex-col overflow-y-auto my-auto z-10"
+          className="relative w-full max-w-5xl bg-[#FBF9F5] border border-stone-200/90 rounded-3xl p-4 sm:p-6 md:p-8 text-stone-900 shadow-2xl max-h-[94vh] flex flex-col overflow-y-auto my-auto z-10"
         >
           {/* Top Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-700 hover:text-slate-900 flex items-center justify-center transition active:scale-90 cursor-pointer z-20"
+            className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-stone-200/70 hover:bg-stone-300 text-stone-700 hover:text-stone-900 flex items-center justify-center transition active:scale-90 cursor-pointer z-20"
             title="Tutup"
             aria-label="Tutup modal"
           >
             <X size={16} />
           </button>
 
-          {/* Compact Header (No Vertical Clutter) */}
+          {/* Aesthetic Luxury Brand Header (Clean, On-Point, No Verbose Fluff) */}
           <div className="text-center pb-3 sm:pb-5 flex-shrink-0">
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#6B111F]/10 border border-[#6B111F]/20 text-[#6B111F] text-[10px] sm:text-[11px] font-mono font-bold tracking-widest uppercase mb-1.5">
-              <ShoppingBag size={11} className="text-[#6B111F]" />
-              <span>Sirklenice Photobooth</span>
+            {/* Aesthetic Typographic Brand Mark */}
+            <div className="flex items-center justify-center gap-3 mb-1.5 select-none">
+              <span className="w-8 sm:w-12 h-px bg-[#6B111F]/30" />
+              <span 
+                className="text-[10px] sm:text-[11.5px] font-semibold uppercase tracking-[0.24em] text-[#6B111F]"
+                style={{ fontFamily: "'Cinzel', 'Playfair Display', serif" }}
+              >
+                Sirklenice Photobooth
+              </span>
+              <span className="w-8 sm:w-12 h-px bg-[#6B111F]/30" />
             </div>
 
-            <h2 className="text-xl sm:text-3xl md:text-4xl font-serif font-bold text-slate-900 tracking-tight leading-tight">
-              Pilihan Paket Photobooth Virtual
+            <h2 className="text-xl sm:text-3xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
+              Paket Photobooth Virtual
             </h2>
 
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto font-sans leading-relaxed">
-              Harga transparan resmi untuk pernikahan & event spesial. Bebas foto & pesan suara sepuasnya.
+            <p className="text-xs sm:text-sm text-stone-500 mt-1 max-w-sm mx-auto font-sans">
+              Transparan & serba otomatis tanpa install aplikasi.
             </p>
 
-            {/* Mobile Navigation Chips (Indicator to compare all 3) */}
+            {/* Mobile Package Selector Chips */}
             <div className="flex md:hidden items-center justify-center gap-1.5 mt-2.5">
               {packageList.map((pkg, idx) => {
                 const isActive = activeIdx === idx;
@@ -104,23 +111,23 @@ export default function PriceListModal({ isOpen, onClose }) {
                     key={pkg.id}
                     type="button"
                     onClick={() => scrollToCard(idx)}
-                    className={`text-[11px] font-sans px-3 py-0.5 rounded-full transition flex items-center gap-1 cursor-pointer ${
+                    className={`text-[11px] font-sans px-3 py-1 rounded-full transition flex items-center gap-1 cursor-pointer ${
                       isActive
                         ? isPopular
                           ? 'bg-[#6B111F] text-[#F5D77F] font-bold shadow-xs'
-                          : 'bg-slate-900 text-white font-bold shadow-xs'
-                        : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900'
+                          : 'bg-stone-900 text-white font-bold shadow-xs'
+                        : 'bg-white border border-stone-200 text-stone-600 hover:text-stone-900'
                     }`}
                   >
                     <span>{pkg.name}</span>
-                    <span className="opacity-80">({pkg.displayPrice})</span>
+                    <span className="opacity-80">· {pkg.displayPrice}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Cards Container: 3 Side-by-Side (Desktop Grid / Mobile Horizontal Snap Carousel) */}
+          {/* Cards Row: 3 Side-by-Side (Desktop Grid / Mobile Horizontal Snap) */}
           <div
             ref={carouselRef}
             onScroll={handleScroll}
@@ -144,7 +151,7 @@ export default function PriceListModal({ isOpen, onClose }) {
                   className={`w-[85vw] max-w-[320px] md:w-auto flex-shrink-0 snap-center rounded-3xl bg-white flex flex-col justify-between overflow-hidden transition-all duration-200 relative ${
                     isPopular
                       ? 'border-2 border-[#C4A46C] shadow-xl md:shadow-2xl md:-translate-y-2 ring-1 ring-[#C4A46C]/50'
-                      : 'border border-slate-200/90 shadow-md hover:shadow-lg'
+                      : 'border border-stone-200/90 shadow-md hover:shadow-lg'
                   }`}
                 >
                   <div>
@@ -171,7 +178,7 @@ export default function PriceListModal({ isOpen, onClose }) {
                       </div>
 
                       {/* Large Bold Price */}
-                      <div className="flex items-baseline gap-1">
+                      <div className="flex items-baseline gap-1 mt-1">
                         <span className="text-3xl sm:text-4xl font-extrabold tracking-tight font-sans">
                           {pkg.displayPrice}
                         </span>
@@ -180,11 +187,7 @@ export default function PriceListModal({ isOpen, onClose }) {
                         </span>
                       </div>
 
-                      <p className="text-[11px] opacity-80 font-mono mt-1">
-                        Akses foto {pkg.activeDays} hari • {pkg.formattedPrice}
-                      </p>
-
-                      {/* Smooth SVG Wave Divider into White Card Body (Reference Image 3) */}
+                      {/* Smooth SVG Wave Divider */}
                       <div className="absolute -bottom-px inset-x-0 leading-none overflow-hidden pointer-events-none">
                         <svg
                           viewBox="0 0 500 50"
@@ -197,10 +200,10 @@ export default function PriceListModal({ isOpen, onClose }) {
                     </div>
 
                     {/* Features Checklist on Pure White Body */}
-                    <div className="px-5 pt-2 pb-4">
+                    <div className="px-5 pt-3 pb-4">
                       <ul className="space-y-2.5">
                         {pkg.features.map((feat, i) => (
-                          <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700">
+                          <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-stone-700">
                             <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                               isPopular ? 'text-[#6B111F] bg-rose-50' : 'text-emerald-600 bg-emerald-50'
                             }`}>
@@ -213,8 +216,8 @@ export default function PriceListModal({ isOpen, onClose }) {
                     </div>
                   </div>
 
-                  {/* Single Clean Pill CTA Button + WhatsApp Consultation (Matching Reference Image 3) */}
-                  <div className="px-5 pb-5 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+                  {/* Clean Pill CTA Button + WhatsApp Consultation */}
+                  <div className="px-5 pb-5 pt-2 border-t border-stone-100 flex flex-col gap-1.5">
                     <a
                       href={CONTACT_LINKS.lynkId}
                       target="_blank"
@@ -224,11 +227,10 @@ export default function PriceListModal({ isOpen, onClose }) {
                           ? 'bg-gradient-to-r from-[#6B111F] via-[#851627] to-[#6B111F] text-[#F5D77F] border border-amber-300/40 hover:brightness-105 shadow-rose-950/20'
                           : isSpecial
                           ? 'bg-[#6B111F] hover:bg-[#520C18] text-[#F5D77F]'
-                          : 'bg-slate-900 hover:bg-slate-800 text-white'
+                          : 'bg-stone-900 hover:bg-stone-800 text-white'
                       }`}
                     >
-                      <ShoppingBag size={14} />
-                      <span>Pesan Paket {pkg.name}</span>
+                      <span>Pesan Sekarang</span>
                       <ArrowRight size={13} />
                     </a>
 
@@ -236,7 +238,7 @@ export default function PriceListModal({ isOpen, onClose }) {
                       href={`https://wa.me/?text=${encodeURIComponent(`Halo Sirklen Photo, saya ingin konsultasi mengenai Paket ${pkg.name} (${pkg.displayPrice}) untuk acara saya.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-1 text-center text-xs font-sans font-medium text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1.5 transition"
+                      className="w-full py-1 text-center text-xs font-sans font-medium text-stone-500 hover:text-stone-800 flex items-center justify-center gap-1.5 transition"
                     >
                       <MessageCircle size={13} className="text-[#25D366]" />
                       <span>Tanya via WhatsApp</span>
@@ -248,27 +250,24 @@ export default function PriceListModal({ isOpen, onClose }) {
             })}
           </div>
 
-          {/* Clean Modal Footer (Compact & Non-Clipped) */}
-          <div className="pt-3 pb-1 border-t border-slate-200 mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 font-sans flex-shrink-0">
-            <div className="flex items-center gap-1.5">
-              <span>💡 Butuh kustomisasi tema khusus?</span>
-              <a
-                href={CONTACT_LINKS.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#6B111F] font-bold hover:underline inline-flex items-center gap-1"
-              >
-                <MessageCircle size={13} className="text-[#25D366]" />
-                <span>Chat WhatsApp Kami</span>
-              </a>
-            </div>
+          {/* Simple, On-Point Footer */}
+          <div className="pt-3 pb-1 border-t border-stone-200 mt-2 flex items-center justify-between text-xs text-stone-500 font-sans flex-shrink-0">
+            <a
+              href={CONTACT_LINKS.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#6B111F] font-semibold hover:underline inline-flex items-center gap-1"
+            >
+              <MessageCircle size={13} className="text-[#25D366]" />
+              <span>Konsultasi WhatsApp</span>
+            </a>
 
             <button
               type="button"
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-700 py-0.5 px-2 transition cursor-pointer font-medium"
+              className="text-stone-400 hover:text-stone-700 py-0.5 px-2 transition cursor-pointer font-medium"
             >
-              Tutup & Lanjut Mencoba Photobooth
+              Tutup
             </button>
           </div>
 
