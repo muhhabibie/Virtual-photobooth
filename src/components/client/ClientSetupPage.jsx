@@ -1188,7 +1188,8 @@ export default function ClientSetupPage() {
           </div>
         </div>
 
-        {/* ================= 🎨 GROUP 03: DESAIN MANDIRI BINGKAI & ORNAMEN PHOTOSTRIP 🎨 ================= */}
+        {/* ================= 🎨 GROUP 03: DESAIN MANDIRI BINGKAI & ORNAMEN PHOTOSTRIP (DINONAKTIFKAN SEMENTARA) 🎨 ================= */}
+        {false && (
         <div className="rounded-3xl bg-white border border-[#EADBCC]/90 p-5 sm:p-7 shadow-[0_12px_35px_rgba(107,17,31,0.06)] space-y-6">
           
           {/* Header */}
@@ -1867,6 +1868,7 @@ export default function ClientSetupPage() {
           </div>
 
         </div>
+        )}
 
       </main>
 
