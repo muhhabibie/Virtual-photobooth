@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Mic, Square, X } from 'lucide-react';
+import { ArrowLeft, Mic, Square, Pause, Play, RotateCcw, X } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useRecorder } from '../../hooks/useRecorder';
 import { useToast } from '../ui/Toast';
@@ -20,7 +20,20 @@ export default function StepVoice() {
     closeBooth
   } = useBooth();
 
-  const { isRecording, seconds, audioUrl, audioBlob, recorderError, toggle, reset, formatTime } = useRecorder();
+  const {
+    isRecording,
+    isPaused,
+    seconds,
+    audioUrl,
+    audioBlob,
+    recorderError,
+    toggle,
+    start,
+    stop,
+    togglePause,
+    reset,
+    formatTime
+  } = useRecorder();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -55,7 +68,30 @@ export default function StepVoice() {
     return () => reset();
   }, []);
 
+  const handleRetake = () => {
+    reset();
+    setVoiceBlob(null);
+    setVoiceUrl(null);
+    toast('Silakan rekam ulang pesan suara', 'info');
+  };
+
+  const handleMainButtonClick = () => {
+    if (isRecording) {
+      stop();
+    } else {
+      if (audioUrl) {
+        reset();
+        setVoiceBlob(null);
+        setVoiceUrl(null);
+      }
+      start();
+    }
+  };
+
   const handleFinish = () => {
+    if (isRecording) {
+      stop();
+    }
     if (audioBlob) {
       setVoiceBlob(audioBlob);
       setVoiceUrl(audioUrl);
@@ -124,7 +160,9 @@ export default function StepVoice() {
                 key={idx}
                 className={`w-1 h-1 rounded-full transition-all duration-300 ${
                   isRecording 
-                    ? 'bg-amber-300 scale-125 animate-pulse' 
+                    ? isPaused
+                      ? 'bg-amber-400/50 scale-95'
+                      : 'bg-amber-300 scale-125 animate-pulse' 
                     : audioUrl 
                       ? 'bg-emerald-400' 
                       : 'bg-white/20'
@@ -133,43 +171,108 @@ export default function StepVoice() {
             ))}
           </div>
 
-          {/* Circular Timer & Mic Shutter */}
-          <div className="flex items-center justify-center gap-4 my-1">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-white/20 bg-black/50 flex flex-col items-center justify-center shadow-inner">
-              <span className="text-sm sm:text-base font-mono font-black text-amber-200 tracking-wider">
+          {/* Interactive Voice Controls: Ambil Ulang | Timer | Shutter Utama | Pause */}
+          <div className="flex items-center justify-center gap-2.5 sm:gap-3.5 my-1.5">
+            {/* Tombol Ambil Ulang */}
+            <button
+              type="button"
+              onClick={handleRetake}
+              disabled={!isRecording && !audioUrl && seconds === 0}
+              className={`w-11 h-11 sm:w-13 sm:h-13 rounded-full flex flex-col items-center justify-center transition-all ${
+                (isRecording || audioUrl || seconds > 0)
+                  ? 'bg-white/10 hover:bg-white/20 border border-white/25 text-amber-200 hover:text-white active:scale-95 cursor-pointer shadow-lg hover:border-amber-400/50'
+                  : 'bg-white/5 border border-white/10 text-white/30 cursor-not-allowed opacity-40'
+              }`}
+              title="Ambil Ulang (Mulai dari awal)"
+            >
+              <RotateCcw size={16} />
+              <span className="text-[7.5px] sm:text-[8px] font-sans font-semibold mt-0.5 leading-none">Ulang</span>
+            </button>
+
+            {/* Circular Timer Display */}
+            <div className={`w-13 h-13 sm:w-15 sm:h-15 rounded-full border bg-black/60 flex flex-col items-center justify-center shadow-inner transition-colors ${
+              isRecording 
+                ? isPaused 
+                  ? 'border-amber-400/60 ring-2 ring-amber-400/20' 
+                  : 'border-red-500/60 ring-2 ring-red-500/20 animate-pulse'
+                : 'border-white/20'
+            }`}>
+              <span className={`text-xs sm:text-sm font-mono font-black tracking-wider ${
+                isPaused 
+                  ? 'text-amber-300' 
+                  : isRecording 
+                    ? 'text-red-300' 
+                    : 'text-amber-200'
+              }`}>
                 {formatTime(seconds)}
               </span>
-              <span className="text-[7.5px] text-gray-400 font-mono">
+              <span className="text-[7px] sm:text-[7.5px] text-gray-400 font-mono leading-none">
                 / 0:15
               </span>
             </div>
 
+            {/* Tombol Utama (Mic / Stop Selesai) */}
             <button
-              onClick={toggle}
-              className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white text-xl shadow-2xl active:scale-95 transition-all cursor-pointer ${
+              type="button"
+              onClick={handleMainButtonClick}
+              className={`w-13 h-13 sm:w-15 sm:h-15 rounded-full flex items-center justify-center text-white text-xl shadow-2xl active:scale-95 transition-all cursor-pointer ${
                 isRecording
                   ? 'bg-red-600 ring-4 ring-red-500/40 animate-pulse'
                   : audioUrl
                     ? 'bg-emerald-600 ring-4 ring-emerald-500/40 hover:scale-105'
                     : 'bg-[#6B111F] ring-4 ring-amber-400/30 hover:bg-[#8A1828] hover:scale-105'
               }`}
-              title={isRecording ? 'Berhenti Merekam' : audioUrl ? 'Rekam Ulang' : 'Mulai Rekam Doa'}
+              title={
+                isRecording
+                  ? 'Selesai & Simpan Rekaman'
+                  : audioUrl
+                    ? 'Rekam Ulang'
+                    : 'Mulai Rekam Doa'
+              }
             >
               {isRecording ? (
-                <Square size={20} className="fill-white" />
+                <Square size={18} className="fill-white" />
               ) : (
-                <Mic size={24} />
+                <Mic size={22} />
               )}
+            </button>
+
+            {/* Tombol Pause / Jeda */}
+            <button
+              type="button"
+              onClick={togglePause}
+              disabled={!isRecording}
+              className={`w-11 h-11 sm:w-13 sm:h-13 rounded-full flex flex-col items-center justify-center transition-all ${
+                isRecording
+                  ? isPaused
+                    ? 'bg-amber-500/30 border border-amber-400 text-amber-200 active:scale-95 cursor-pointer shadow-lg animate-pulse'
+                    : 'bg-white/10 hover:bg-white/20 border border-white/25 text-amber-200 active:scale-95 cursor-pointer shadow-lg hover:border-amber-400/50'
+                  : 'bg-white/5 border border-white/10 text-white/30 cursor-not-allowed opacity-40'
+              }`}
+              title={
+                !isRecording
+                  ? 'Pause (Aktif saat merekam)'
+                  : isPaused
+                    ? 'Lanjutkan Rekaman (Resume)'
+                    : 'Jeda Rekaman (Pause)'
+              }
+            >
+              {isPaused ? <Play size={16} className="fill-current ml-0.5" /> : <Pause size={16} />}
+              <span className="text-[7.5px] sm:text-[8px] font-sans font-semibold mt-0.5 leading-none">
+                {isPaused ? 'Lanjut' : 'Pause'}
+              </span>
             </button>
           </div>
 
           {/* Status Text */}
-          <p className="text-[10px] text-gray-300 mt-1 font-medium">
+          <p className="text-[10px] sm:text-[11px] text-gray-300 mt-1 font-medium leading-relaxed px-1">
             {isRecording
-              ? 'Sedang merekam doa... (Ketuk untuk stop)'
+              ? isPaused
+                ? '⏸️ Rekaman dijeda. Ketuk "Lanjut" untuk meneruskan, atau tombol merah kotak untuk selesai.'
+                : '🎙️ Sedang merekam doa... (Ketuk tombol kotak untuk selesai, atau pause untuk jeda)'
               : audioUrl
-                ? 'Doa suara tersimpan! (Ketuk mic untuk rekam ulang)'
-                : 'Ketuk tombol mic untuk mulai rekam'}
+                ? '✅ Doa suara tersimpan! Ketuk tombol "Ulang" jika ingin merekam kembali.'
+                : 'Ketuk tombol mic untuk mulai rekam ucapan doa'}
           </p>
 
           {/* Audio Playback Player */}
