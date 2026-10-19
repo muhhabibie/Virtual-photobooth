@@ -709,32 +709,32 @@ export function drawStripBotanicals(ctx, w, h, color = '#B89F88', scale = 1) {
     }
   };
 
-  const isPolaroid = h < 1000 * s;
+  const isPolaroid = h < 800 * s;
 
   if (isPolaroid) {
     // Polaroid Mode: Fit beautifully in the bottom-right footer chin
     const fx = w - 74 * s;
-    const fy = h - 85 * s;
+    const fy = h - 65 * s;
 
     // Upward delicate stem towards guest message
     ctx.beginPath();
     ctx.moveTo(fx, fy - 18 * s);
-    ctx.bezierCurveTo(w - 55 * s, fy - 55 * s, w - 38 * s, fy - 95 * s, w - 46 * s, fy - 140 * s);
+    ctx.bezierCurveTo(w - 55 * s, fy - 45 * s, w - 38 * s, fy - 80 * s, w - 46 * s, fy - 115 * s);
     ctx.stroke();
 
     // Downward stem towards bottom edge
     ctx.beginPath();
     ctx.moveTo(fx + 8 * s, fy + 18 * s);
-    ctx.bezierCurveTo(w - 52 * s, h - 50 * s, w - 42 * s, h - 28 * s, w - 22 * s, h - 12 * s);
+    ctx.bezierCurveTo(w - 52 * s, h - 40 * s, w - 42 * s, h - 22 * s, w - 22 * s, h - 8 * s);
     ctx.stroke();
 
     // Leaves for Polaroid
     const polLeaves = [
-      { x: w - 54 * s, y: fy - 45 * s, angle: -0.65, len: 20 * s, w: 8 * s },
-      { x: w - 40 * s, y: fy - 85 * s, angle: 0.45, len: 18 * s, w: 7 * s },
-      { x: w - 46 * s, y: fy - 130 * s, angle: -0.5, len: 16 * s, w: 6.5 * s },
-      { x: w - 48 * s, y: h - 45 * s, angle: 0.85, len: 18 * s, w: 7.5 * s },
-      { x: w - 28 * s, y: h - 20 * s, angle: 0.60, len: 16 * s, w: 6.5 * s },
+      { x: w - 54 * s, y: fy - 35 * s, angle: -0.65, len: 20 * s, w: 8 * s },
+      { x: w - 40 * s, y: fy - 70 * s, angle: 0.45, len: 18 * s, w: 7 * s },
+      { x: w - 46 * s, y: fy - 105 * s, angle: -0.5, len: 16 * s, w: 6.5 * s },
+      { x: w - 48 * s, y: h - 35 * s, angle: 0.85, len: 18 * s, w: 7.5 * s },
+      { x: w - 28 * s, y: h - 16 * s, angle: 0.60, len: 16 * s, w: 6.5 * s },
     ];
     polLeaves.forEach(lf => drawLeaf(lf.x, lf.y, lf.angle, lf.len, lf.w));
 
@@ -743,57 +743,55 @@ export function drawStripBotanicals(ctx, w, h, color = '#B89F88', scale = 1) {
     return;
   }
 
-  // Standard Strip Mode: Exact Wendy & Mark reference placement
-  // Main flower center position (situated in the lower right footer area beside Pasadena, CA)
-  const fx = w - 135 * s;
-  const fy = h - 315 * s;
+  // Standard Strip Mode: Exact Wendy & Mark reference placement (Image 1)
+  // Main flower center position (situated in the lower right footer area beside Date & Pasadena, CA)
+  const fx = w - 78 * s;
+  const fy = h - 62 * s;
 
   // Stems trailing UPWARDS into the names & divider area
   ctx.beginPath();
-  ctx.moveTo(fx + 22 * s, fy - 28 * s);
-  ctx.bezierCurveTo(w - 78 * s, fy - 115 * s, w - 52 * s, fy - 220 * s, w - 88 * s, fy - 325 * s);
+  ctx.moveTo(fx + 14 * s, fy - 18 * s);
+  ctx.bezierCurveTo(w - 55 * s, fy - 45 * s, w - 38 * s, fy - 75 * s, w - 55 * s, h - 135 * s);
   ctx.stroke();
 
   // Secondary upward stem branch
   ctx.beginPath();
-  ctx.moveTo(w - 72 * s, fy - 170 * s);
-  ctx.bezierCurveTo(w - 42 * s, fy - 230 * s, w - 46 * s, fy - 285 * s, w - 78 * s, fy - 350 * s);
+  ctx.moveTo(w - 50 * s, fy - 55 * s);
+  ctx.bezierCurveTo(w - 34 * s, fy - 85 * s, w - 38 * s, fy - 110 * s, w - 52 * s, h - 145 * s);
   ctx.stroke();
 
   // Stems trailing DOWNWARDS to bottom-right corner
   ctx.beginPath();
-  ctx.moveTo(fx + 12 * s, fy + 38 * s);
-  ctx.bezierCurveTo(w - 92 * s, h - 230 * s, w - 68 * s, h - 145 * s, w - 35 * s, h - 35 * s);
+  ctx.moveTo(fx + 8 * s, fy + 18 * s);
+  ctx.bezierCurveTo(w - 60 * s, h - 42 * s, w - 45 * s, h - 26 * s, w - 20 * s, h - 8 * s);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(w - 82 * s, h - 190 * s);
-  ctx.bezierCurveTo(w - 115 * s, h - 135 * s, w - 105 * s, h - 75 * s, w - 72 * s, h - 18 * s);
+  ctx.moveTo(w - 52 * s, h - 35 * s);
+  ctx.bezierCurveTo(w - 70 * s, h - 24 * s, w - 60 * s, h - 12 * s, w - 40 * s, h - 5 * s);
   ctx.stroke();
 
-  // Leaves along the upward stem (reaching beside Date, Divider, and "WENDY & MARK")
+  // Leaves along the upward stem (reaching beside Date, Divider, and Names)
   const upLeaves = [
-    { x: w - 90 * s, y: fy - 65 * s, angle: -0.65, len: 34 * s, w: 13 * s },
-    { x: w - 65 * s, y: fy - 130 * s, angle: 0.45, len: 32 * s, w: 12 * s },
-    { x: w - 58 * s, y: fy - 190 * s, angle: -0.85, len: 36 * s, w: 14 * s },  // Beside Date
-    { x: w - 44 * s, y: fy - 250 * s, angle: 0.35, len: 32 * s, w: 12.5 * s }, // Beside Divider
-    { x: w - 62 * s, y: fy - 295 * s, angle: -0.75, len: 30 * s, w: 11.5 * s }, // Beside Names
-    { x: w - 78 * s, y: fy - 345 * s, angle: -0.40, len: 26 * s, w: 10 * s },   // Top tip beside names
+    { x: w - 58 * s, y: fy - 26 * s, angle: -0.65, len: 22 * s, w: 8.5 * s },
+    { x: w - 44 * s, y: fy - 52 * s, angle: 0.45, len: 20 * s, w: 8 * s },
+    { x: w - 40 * s, y: fy - 78 * s, angle: -0.85, len: 22 * s, w: 8.5 * s }, // Beside Date
+    { x: w - 34 * s, y: fy - 104 * s, angle: 0.35, len: 20 * s, w: 8 * s },  // Beside Divider
+    { x: w - 44 * s, y: h - 135 * s, angle: -0.75, len: 18 * s, w: 7 * s },  // Beside Names
   ];
   upLeaves.forEach(lf => drawLeaf(lf.x, lf.y, lf.angle, lf.len, lf.w));
 
   // Leaves along the downward stem towards bottom corner
   const downLeaves = [
-    { x: w - 100 * s, y: h - 250 * s, angle: 2.1, len: 32 * s, w: 13 * s },
-    { x: w - 75 * s, y: h - 190 * s, angle: 0.85, len: 36 * s, w: 14 * s },
-    { x: w - 110 * s, y: h - 145 * s, angle: 2.3, len: 30 * s, w: 12 * s },
-    { x: w - 62 * s, y: h - 105 * s, angle: 0.95, len: 32 * s, w: 13 * s },
-    { x: w - 85 * s, y: h - 60 * s, angle: 2.1, len: 28 * s, w: 11 * s },
-    { x: w - 46 * s, y: h - 42 * s, angle: 0.70, len: 24 * s, w: 9.5 * s },
+    { x: w - 62 * s, y: h - 48 * s, angle: 2.1, len: 20 * s, w: 8.5 * s },
+    { x: w - 46 * s, y: h - 32 * s, angle: 0.85, len: 22 * s, w: 9 * s },
+    { x: w - 65 * s, y: h - 22 * s, angle: 2.2, len: 18 * s, w: 7.5 * s },
+    { x: w - 36 * s, y: h - 16 * s, angle: 0.95, len: 18 * s, w: 7.5 * s },
+    { x: w - 24 * s, y: h - 7 * s, angle: 0.70, len: 15 * s, w: 6.5 * s },
   ];
   downLeaves.forEach(lf => drawLeaf(lf.x, lf.y, lf.angle, lf.len, lf.w));
 
-  drawFlowerBlossom(fx, fy, 1.0);
+  drawFlowerBlossom(fx, fy, 0.72);
 
   ctx.restore();
 }
