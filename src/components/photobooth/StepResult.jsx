@@ -4,9 +4,8 @@ import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
-import { drawFrameOrnaments, drawStripBotanicals } from '../../config/frameOrnaments';
 import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
-import { CONTACT_LINKS } from '../../data/mockEvents';
+import { CONTACT_LINKS, PACKAGES } from '../../data/mockEvents';
 
 const PHOTO_FILTERS = [
   { id: 'natural', name: 'NATURAL', css: 'none', desc: 'Asli', previewClass: 'from-amber-200 via-rose-300 to-amber-100' },
@@ -511,6 +510,17 @@ export default function StepResult() {
       {/* ================= 🌟 4. INSTAGRAM ACTION DOCK (DOWNLOAD & SHARE) 🌟 ================= */}
       <div className="relative z-30 w-full max-w-md mx-auto pt-1 pb-1 px-2 flex flex-col gap-2 flex-shrink-0">
         
+        {/* In Demo Mode: Quick Price List Button */}
+        {isDemo && (
+          <button
+            onClick={() => setShowDemoModal(true)}
+            className="w-full py-2.5 px-4 rounded-full bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/40 text-amber-200 text-xs font-serif font-bold flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer shadow-sm"
+          >
+            <ShoppingBag size={14} className="text-amber-300" />
+            <span>Lihat Paket & Harga Photobooth Virtual</span>
+          </button>
+        )}
+
         {/* Primary Download Button */}
         <button
           onClick={handleDownload}
@@ -556,64 +566,126 @@ export default function StepResult() {
 
       </div>
 
-      {/* ================= 🌟 DEMO MODE RESTRICTION MODAL 🌟 ================= */}
+      {/* ================= 🌟 DEMO MODE PRICE LIST MODAL 🌟 ================= */}
       {showDemoModal && (
-        <div className="fixed inset-0 z-[250] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-gradient-to-b from-[#1C0A15] via-[#240D1C] to-[#14060E] border border-amber-400/50 rounded-3xl p-6 sm:p-7 text-white text-center shadow-2xl relative">
+        <div className="fixed inset-0 z-[250] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-lg bg-gradient-to-b from-[#1C0A15] via-[#240D1C] to-[#14060E] border border-amber-400/50 rounded-3xl p-5 sm:p-6 text-white shadow-2xl relative max-h-[92vh] flex flex-col my-auto">
             
             {/* Close button */}
             <button
               onClick={() => setShowDemoModal(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition cursor-pointer"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition cursor-pointer z-10"
+              title="Tutup"
             >
               <X size={16} />
             </button>
 
-            {/* Icon */}
-            <div className="w-14 h-14 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 mx-auto mb-4 shadow-lg shadow-amber-400/20">
-              <Camera size={26} />
+            {/* Modal Header */}
+            <div className="text-center pb-3 border-b border-white/10">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-[10px] font-mono font-bold tracking-widest uppercase mb-1.5">
+                <ShoppingBag size={11} />
+                <span>Sirklenice</span>
+              </div>
+
+              <h3 className="text-xl sm:text-2xl font-serif font-bold text-amber-200 leading-tight">
+                Paket Photobooth Virtual
+              </h3>
+
+              <p className="text-xs text-gray-300 mt-1 max-w-md mx-auto leading-relaxed">
+                Fitur unduh HD & cetak diaktifkan pada paket resmi. Pilih paket photobooth virtual untuk pernikahan & acara spesial Anda:
+              </p>
             </div>
 
-            <h3 className="text-xl font-serif font-bold text-amber-200">
-              Mode Demo Sirklen Photo
-            </h3>
+            {/* Scrollable Package Cards List */}
+            <div className="my-3 space-y-3 overflow-y-auto max-h-[48vh] sm:max-h-[52vh] pr-1 no-scrollbar text-left">
+              {Object.values(PACKAGES).map((pkg) => {
+                const isPopular = pkg.id === 'standard';
+                return (
+                  <div 
+                    key={pkg.id}
+                    className={`rounded-2xl p-4 sm:p-4.5 transition-all relative ${
+                      isPopular 
+                        ? 'bg-gradient-to-b from-[#2E1224] to-[#1D0A16] border-2 border-[#C4A46C] shadow-lg shadow-rose-950/40' 
+                        : 'bg-white/5 border border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    {/* Header: Name, Price, and Badge */}
+                    <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-2.5">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className={`text-base sm:text-lg font-serif font-bold ${isPopular ? 'text-amber-200' : 'text-white'}`}>
+                            {pkg.name}, {pkg.displayPrice}
+                          </h4>
+                          {pkg.badge && (
+                            <span className="text-[9px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                              {pkg.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className={`text-[11px] font-mono mt-0.5 ${isPopular ? 'text-amber-200/80' : 'text-gray-400'}`}>
+                          Akses foto {pkg.activeDays} hari
+                        </p>
+                      </div>
 
-            <p className="text-xs text-gray-300 mt-2 leading-relaxed">
-              Fitur unduh & cetak photo strip dinonaktifkan pada <strong>Mode Demo</strong>. Anda dapat mencoba seluruh fitur photobooth, filter tone sinematik, stiker, dan rekaman suara secara bebas.
-            </p>
+                      <div className="text-right flex-shrink-0">
+                        <span className="text-base sm:text-lg font-serif font-bold text-white tracking-tight">
+                          {pkg.formattedPrice}
+                        </span>
+                        <span className="text-[10px] text-gray-400 block font-sans">
+                          / acara
+                        </span>
+                      </div>
+                    </div>
 
-            <div className="mt-4 pt-4 border-t border-white/10 space-y-2.5 text-left">
-              <p className="text-[11px] text-amber-100 font-medium text-center">
-                Tertarik menggunakan photobooth ini di pernikahan atau event spesial Anda?
-              </p>
+                    {/* Features list */}
+                    <ul className="mt-2.5 space-y-1.5">
+                      {pkg.features.map((feat, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-gray-200 font-sans">
+                          <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                            isPopular ? 'bg-amber-400/25 text-amber-300' : 'bg-white/10 text-amber-200'
+                          }`}>
+                            <Check size={10} className="stroke-[3]" />
+                          </div>
+                          <span className="leading-tight">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
 
-              {/* WhatsApp Consultation */}
-              <a
-                href={CONTACT_LINKS.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group w-full py-3 px-4 rounded-full bg-white hover:bg-stone-50 text-stone-800 font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-stone-200 hover:border-emerald-500/50 shadow-md transition active:scale-95 cursor-pointer text-center"
-              >
-                <MessageCircle size={16} className="text-[#25D366] transition-transform duration-200 group-hover:scale-110" />
-                <span>Konsultasi WhatsApp</span>
-              </a>
+            {/* Bottom Actions: WhatsApp Consultation & Lynk.id Order */}
+            <div className="pt-2 border-t border-white/10 flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+                {/* WhatsApp Consultation */}
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent('Halo Sirklen Photo, saya ingin konsultasi mengenai Paket Photobooth Virtual untuk acara saya.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:flex-1 py-3 px-4 rounded-full bg-white hover:bg-stone-50 text-stone-800 font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-stone-200 shadow-md transition active:scale-95 cursor-pointer text-center"
+                >
+                  <MessageCircle size={16} className="text-[#25D366]" />
+                  <span>Konsultasi WhatsApp</span>
+                </a>
 
-              {/* Lynk.id Order */}
-              <a
-                href={CONTACT_LINKS.lynkId}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group w-full py-3 px-4 rounded-full bg-gradient-to-r from-[#8C6534] via-[#A3783F] to-[#8C6534] hover:from-[#7A562B] hover:to-[#7A562B] text-white border border-[#BFA069]/40 font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-950/20 transition active:scale-95 cursor-pointer text-center"
-              >
-                <ShoppingBag size={15} className="text-amber-200 transition-transform duration-200 group-hover:scale-110" />
-                <span className="tracking-wide">Pesan Sekarang di Lynk.id</span>
-                <ArrowRight size={14} className="text-amber-200 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200" />
-              </a>
+                {/* Lynk.id Order */}
+                <a
+                  href={CONTACT_LINKS.lynkId}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:flex-1 py-3 px-4 rounded-full bg-gradient-to-r from-[#8C6534] via-[#A3783F] to-[#8C6534] hover:from-[#7A562B] hover:to-[#7A562B] text-white border border-[#BFA069]/40 font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-950/20 transition active:scale-95 cursor-pointer text-center"
+                >
+                  <ShoppingBag size={15} className="text-amber-200" />
+                  <span>Pesan di Lynk.id</span>
+                  <ArrowRight size={14} className="text-amber-200 opacity-80" />
+                </a>
+              </div>
 
               <button
                 type="button"
                 onClick={() => setShowDemoModal(false)}
-                className="w-full py-2.5 rounded-full bg-white/10 hover:bg-white/15 text-gray-300 text-xs font-medium transition cursor-pointer mt-1"
+                className="w-full py-2 rounded-full bg-white/10 hover:bg-white/15 text-gray-300 text-xs font-medium transition cursor-pointer"
               >
                 Kembali & Lanjut Mencoba
               </button>

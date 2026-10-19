@@ -1,5 +1,5 @@
-import { Check, ShoppingBag, ArrowRight } from 'lucide-react';
-import { PACKAGES } from '../../data/mockEvents';
+import { Check, ShoppingBag, ArrowRight, MessageCircle } from 'lucide-react';
+import { PACKAGES, CONTACT_LINKS } from '../../data/mockEvents';
 
 export default function SirklenPricing({ onOrderClick }) {
   const packageList = Object.values(PACKAGES);
@@ -17,11 +17,11 @@ export default function SirklenPricing({ onOrderClick }) {
         <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#6B111F]/10 border border-[#6B111F]/20 text-[#6B111F] text-[11px] font-mono font-bold tracking-widest uppercase mb-3">
             <ShoppingBag size={12} />
-            <span>PAKET LAYANAN DIGITAL</span>
+            <span>Sirklenice</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-gray-900 leading-tight">
-            Pilihan Paket Sirklen Photo
+            Paket Photobooth Virtual
           </h2>
 
           <p className="text-gray-600 text-sm sm:text-base font-sans mt-3">
@@ -55,10 +55,10 @@ export default function SirklenPricing({ onOrderClick }) {
                   {/* Card Header */}
                   <div className="border-b pb-6 border-current/10">
                     <h3 className={`text-xl font-serif font-bold ${isPopular ? 'text-amber-200' : 'text-[#6B111F]'}`}>
-                      Paket {pkg.name}
+                      {pkg.name}, {pkg.displayPrice}
                     </h3>
 
-                    <div className="mt-4 flex items-baseline gap-1">
+                    <div className="mt-3 flex items-baseline gap-1">
                       <span className="text-3xl sm:text-4xl font-serif font-bold tracking-tight">
                         {pkg.formattedPrice}
                       </span>
@@ -68,7 +68,7 @@ export default function SirklenPricing({ onOrderClick }) {
                     </div>
 
                     <p className={`text-xs font-mono mt-2 ${isPopular ? 'text-amber-200/80' : 'text-rose-800'}`}>
-                      Galeri aktif selama {pkg.activeDays} Hari
+                      Akses foto {pkg.activeDays} hari
                     </p>
                   </div>
 
@@ -89,10 +89,18 @@ export default function SirklenPricing({ onOrderClick }) {
                   </ul>
                 </div>
 
-                {/* CTA Order Button */}
-                <div className="pt-4 border-t border-current/10">
-                  <button
-                    onClick={() => onOrderClick(pkg)}
+                {/* CTA Order & WhatsApp Buttons */}
+                <div className="pt-4 border-t border-current/10 flex flex-col gap-2">
+                  <a
+                    href={CONTACT_LINKS.lynkId}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      if (onOrderClick) {
+                        e.preventDefault();
+                        onOrderClick(pkg);
+                      }
+                    }}
                     className={`w-full py-3.5 rounded-2xl font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer ${
                       isPopular
                         ? 'bg-gradient-to-r from-[#C4A46C] via-[#F5D77F] to-[#C4A46C] text-[#1C0A15] hover:brightness-110 shadow-amber-900/40'
@@ -102,7 +110,21 @@ export default function SirklenPricing({ onOrderClick }) {
                     <ShoppingBag size={16} />
                     <span>Pesan via Lynk.id</span>
                     <ArrowRight size={14} />
-                  </button>
+                  </a>
+
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`Halo Sirklen Photo, saya ingin memesan Paket ${pkg.name} (${pkg.displayPrice}) untuk acara saya.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`w-full py-2.5 rounded-2xl font-sans font-semibold text-xs flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer ${
+                      isPopular
+                        ? 'bg-white/10 hover:bg-white/15 text-stone-200'
+                        : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                    }`}
+                  >
+                    <MessageCircle size={14} className="text-[#25D366]" />
+                    <span>Konsultasi WhatsApp</span>
+                  </a>
                 </div>
 
               </div>

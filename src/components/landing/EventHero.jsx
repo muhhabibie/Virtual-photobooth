@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode, MessageCircle, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode, MessageCircle, ShoppingBag, ArrowRight, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
@@ -243,15 +243,29 @@ export default function EventHero() {
             transition={{ duration: 0.9, delay: 0.95, ease: [0.25, 1, 0.5, 1] }}
             className="mb-6 sm:mb-8 flex flex-col items-center justify-center gap-3 relative z-20 max-w-lg mx-auto"
           >
-            {/* Demo Indicator Badge: Clean, Professional Tag (No AI Pulsing Dot, No Dash) */}
+            {/* Demo Indicator Badge & Price List Anchor Button */}
             {isDemo && (
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 border border-stone-200/90 shadow-2xs">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#540D18]/10 text-[#540D18]">
-                  Mode Demo
-                </span>
-                <span className="text-stone-600 font-medium text-[11px] sm:text-xs">
-                  Coba Gratis Fitur Sirklen Photo
-                </span>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 border border-stone-200/90 shadow-2xs">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#540D18]/10 text-[#540D18]">
+                    Mode Demo
+                  </span>
+                  <span className="text-stone-600 font-medium text-[11px] sm:text-xs">
+                    Coba Gratis Fitur Sirklen Photo
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById('paket');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/95 hover:bg-stone-50 border border-stone-200/90 shadow-2xs text-[#6B111F] text-[11px] sm:text-xs font-semibold transition active:scale-95 cursor-pointer"
+                >
+                  <Tag size={12} className="text-[#6B111F]" />
+                  <span>Daftar Harga Paket</span>
+                </button>
               </div>
             )}
 

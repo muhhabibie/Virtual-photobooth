@@ -7,52 +7,52 @@ export const PACKAGES = {
     name: 'Basic',
     price: 300000,
     formattedPrice: 'Rp 300.000',
+    displayPrice: '300ribu',
     templatesCount: 1,
     qrCardsCount: 100,
     activeDays: 7,
     features: [
-      'Virtual Photobooth (Photo + Voice)',
-      '1 Custom Template Desain',
-      '100 Kartu Cetak QR Code',
-      'Unlimited Upload & Download',
-      'Galeri Aktif 7 Hari'
+      'Photobooth virtual (photo & voice)',
+      'Template polaroid dan 1 custom',
+      'Cetak 100pcs kartu qr',
+      'Unlimited Foto',
+      'Akses foto 7 hari',
     ]
   },
   standard: {
     id: 'standard',
-    name: 'Standard',
+    name: 'Standar',
     price: 400000,
     formattedPrice: 'Rp 400.000',
+    displayPrice: '400ribu',
     templatesCount: 2,
     qrCardsCount: 100,
     activeDays: 10,
     badge: 'PALING POPULER',
     features: [
-      'Virtual Photobooth (Photo + Voice)',
-      '2 Custom Template Desain',
-      '100 Kartu Cetak QR Code',
-      'Unlimited Upload & Download',
-      'Galeri Aktif 10 Hari',
-      'Pin Akses Private Galeri'
+      'Photobooth virtual (photo & voice)',
+      'Template polaroid dan 2 custom',
+      'Cetak 100pcs kartu qr',
+      'Unlimited Foto',
+      'Akses foto 10 hari',
     ]
   },
   all_in: {
     id: 'all_in',
-    name: 'Paket Spesial',
+    name: 'Spesial',
     price: 500000,
     formattedPrice: 'Rp 500.000',
+    displayPrice: '500ribu',
     templatesCount: 3,
     qrCardsCount: 200,
     activeDays: 14,
     badge: 'PAKET TERLENGKAP',
     features: [
-      'Virtual Photobooth (Photo + Voice)',
-      '3 Custom Template Desain',
-      '200 Kartu Cetak QR Code',
-      'Unlimited Upload & Download',
-      'Galeri Aktif 14 Hari',
-      'Pin Akses Private Galeri',
-      'Priority Customer Support 24/7'
+      'Photobooth virtual (photo & voice)',
+      'Template polaroid dan 3 custom',
+      'Cetak 200pcs kartu qr',
+      'Unlimited Foto',
+      'Akses foto 14 hari',
     ]
   }
 };
