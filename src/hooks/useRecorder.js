@@ -35,39 +35,43 @@ export function useRecorder() {
   }, []);
 
   const pause = useCallback(() => {
-    if (mrRef.current && mrRef.current.state === 'recording') {
+    if (mrRef.current) {
       try {
-        mrRef.current.pause();
-        setIsPaused(true);
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
+        if (mrRef.current.state === 'recording' && typeof mrRef.current.pause === 'function') {
+          mrRef.current.pause();
         }
       } catch (e) {
         console.warn("MediaRecorder pause error:", e);
       }
     }
+    setIsPaused(true);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }, []);
 
   const resume = useCallback(() => {
-    if (mrRef.current && mrRef.current.state === 'paused') {
+    if (mrRef.current) {
       try {
-        mrRef.current.resume();
-        setIsPaused(false);
-        if (!intervalRef.current) {
-          intervalRef.current = setInterval(() => {
-            setSeconds(s => {
-              if (s >= 14) { 
-                stop(); 
-                return 15; 
-              }
-              return s + 1;
-            });
-          }, 1000);
+        if (mrRef.current.state === 'paused' && typeof mrRef.current.resume === 'function') {
+          mrRef.current.resume();
         }
       } catch (e) {
         console.warn("MediaRecorder resume error:", e);
       }
+    }
+    setIsPaused(false);
+    if (!intervalRef.current) {
+      intervalRef.current = setInterval(() => {
+        setSeconds(s => {
+          if (s >= 14) { 
+            stop(); 
+            return 15; 
+          }
+          return s + 1;
+        });
+      }, 1000);
     }
   }, [stop]);
 
