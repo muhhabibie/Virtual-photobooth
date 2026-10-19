@@ -296,7 +296,10 @@ export default function StepCamera() {
   const topHeaderTitle = isWedding ? `THE WEDDING OF ${couple}`.toUpperCase() : (activeEvent?.eventName || activeEvent?.displayName || 'OFFICIAL EVENT PHOTOBOOTH').toUpperCase();
   const rawGuestName = guestName && guestName.trim() ? guestName.trim() : '';
   const guestTitle = (rawGuestName || (isWedding ? 'Tamu Undangan' : 'Pengunjung Event')).toUpperCase();
-  const shortMessageText = guestMessage && guestMessage.trim() ? `“${guestMessage.trim()}”` : 'With Love';
+  const venueText = (activeEvent?.venue || activeEvent?.location || activeEvent?.city || (isWedding ? 'PASADENA, CA' : 'SPECIAL EVENT PHOTOBOOTH')).toUpperCase();
+  const rawMsg = guestMessage && guestMessage.trim() ? guestMessage.trim() : '';
+  const hasCustomMsg = Boolean(rawMsg && rawMsg !== 'With Love' && rawMsg !== '“With Love”');
+  const customMessage = hasCustomMsg ? `“${rawMsg.substring(0, 52)}”` : '';
 
   // Real-time 60 FPS FaceMesh Tracking
   const { facesRef, isReady: isFaceMeshReady } = useFaceMesh(videoRef, selectedAccessory !== 'none');
@@ -726,8 +729,8 @@ export default function StepCamera() {
 
           </div>
 
-          {/* Bottom Frame Chin Preview: Guest Name, Line 1, Date, Line 2, Short Message (No Location) */}
-          <div className="relative z-20 text-center pt-2 pb-1.5 flex-shrink-0 flex flex-col items-center w-full">
+          {/* Bottom Frame Chin Preview: Guest Name, Divider with diamond, Date, Venue / Location, and optional message (Matching stripRenderer.js) */}
+          <div className="relative z-20 text-center pt-1.5 pb-1 flex-shrink-0 flex flex-col items-center w-full">
             {/* 1. Guest Name (Bold Uppercase Serif) */}
             <h3 
               style={{ 
@@ -739,33 +742,41 @@ export default function StepCamera() {
               {guestTitle}
             </h3>
 
-            {/* 2. Primary Divider Line */}
-            <div 
-              className="w-24 sm:w-28 h-[1.5px] my-1 rounded-full"
-              style={{ backgroundColor: accentColor }}
-            />
+            {/* 2. Primary Divider Line with Center Diamond Accent */}
+            <div className="flex items-center justify-center gap-1.5 w-full my-1">
+              <span className="w-12 sm:w-16 h-[1.5px] rounded-full" style={{ backgroundColor: accentColor }} />
+              <span className="w-1.5 h-1.5 rotate-45 flex-shrink-0" style={{ backgroundColor: accentColor }} />
+              <span className="w-12 sm:w-16 h-[1.5px] rounded-full" style={{ backgroundColor: accentColor }} />
+            </div>
 
-            {/* 3. Date (No Location) */}
+            {/* 3. Date */}
             <div 
-              className="text-[8px] sm:text-[8.5px] font-sans font-bold tracking-wider"
+              className="text-[8px] sm:text-[9px] font-sans font-bold tracking-wider"
               style={{ color: primaryTextColor }}
             >
               <span>{getEventFormattedDate(activeEvent)}</span>
             </div>
 
-            {/* 4. Aesthetic Secondary Divider Line between Date and Short Message */}
+            {/* 4. Venue / Location Text (Matching stripRenderer.js) */}
             <div 
-              className="w-12 sm:w-14 h-[1px] my-1 opacity-55 rounded-full"
-              style={{ backgroundColor: accentColor }}
-            />
-
-            {/* 5. Short Message / Pesan Singkat */}
-            <p 
-              className="text-[8px] sm:text-[9px] italic font-serif truncate max-w-full px-2"
-              style={{ color: isLight ? '#5A4A3E' : 'rgba(255,255,255,0.92)' }}
+              className="text-[7.5px] sm:text-[8.5px] font-bold tracking-wider uppercase mt-0.5 truncate max-w-[90%]"
+              style={{ 
+                color: primaryTextColor,
+                fontFamily: "'Playfair Display', 'Cinzel', sans-serif"
+              }}
             >
-              {shortMessageText}
-            </p>
+              <span>{venueText}</span>
+            </div>
+
+            {/* 5. Custom Message / Pesan Singkat (if entered) */}
+            {customMessage && (
+              <p 
+                className="text-[7.5px] sm:text-[8px] italic font-serif truncate max-w-full px-2 mt-0.5"
+                style={{ color: isLight ? '#5A4A3E' : 'rgba(255,255,255,0.92)' }}
+              >
+                {customMessage}
+              </p>
+            )}
           </div>
 
         </div>
