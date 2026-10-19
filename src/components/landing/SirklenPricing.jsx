@@ -259,16 +259,6 @@ export default function SirklenPricing({ onOrderClick }) {
           })}
         </div>
 
-        {/* Note / Domain Info Footer */}
-        <div className="mt-12 text-center text-xs font-sans text-stone-500 max-w-xl mx-auto bg-white border border-stone-200/80 p-4 rounded-2xl shadow-xs">
-          <p className="font-semibold text-stone-800 mb-1">
-            📍 Domain Resmi: <code className="bg-stone-100 px-2 py-0.5 rounded text-[#6B111F] font-mono">sirklenice.com/:slug</code>
-          </p>
-          <p>
-            Satu aplikasi untuk seluruh event. URL dan QR Code dibuat otomatis oleh tim PT Sirklen Kreasi Usaha begitu pemesanan dikonfirmasi.
-          </p>
-        </div>
-
       </div>
     </section>
   );
