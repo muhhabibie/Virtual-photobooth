@@ -57,6 +57,8 @@ export default function EventHero() {
                 ? 'OFFICIAL EXPO PHOTOBOOTH'
                 : 'OFFICIAL EVENT PHOTOBOOTH')));
 
+  const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
+
   const pkgInfo = PACKAGES[activeEvent.package] || PACKAGES.standard;
   const isPrivate = !!activeEvent.pin && !isPinAuthenticated;
 
@@ -238,15 +240,15 @@ export default function EventHero() {
             </div>
           </div>
         ) : (
-          /* Item 7: Main Action Buttons (Photobooth, Gallery, WA Consultation, Lynk.id Order) */
+          /* Item 7: Main Action Buttons (Photobooth & Gallery; WA Consultation & Lynk.id Order strictly in Demo Mode) */
           <motion.div 
             initial={{ opacity: 0, y: 22 }}
             animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
             transition={{ duration: 0.9, delay: 0.95, ease: [0.25, 1, 0.5, 1] }}
             className="mb-6 sm:mb-8 flex flex-col items-center justify-center gap-3 relative z-20 max-w-lg mx-auto"
           >
-            {/* Demo Indicator Badge & Price List Anchor Button */}
-            {isDemo && (
+            {/* Demo Indicator Badge & Price List Anchor Button (Only in Demo Mode) */}
+            {isDemoMode && (
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 border border-stone-200/90 shadow-2xs">
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#540D18]/10 text-[#540D18]">
@@ -268,7 +270,7 @@ export default function EventHero() {
               </div>
             )}
 
-            {/* Row 1: Primary Photobooth & Gallery Buttons */}
+            {/* Row 1: Primary Photobooth & Gallery Buttons (Always Visible for All Guests) */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
               <button
                 onClick={handleStartBooth}
@@ -287,39 +289,44 @@ export default function EventHero() {
               </button>
             </div>
 
-            {/* Contextual Divider: Bridges Guest Experience to Commercial Booking */}
-            <div className="flex items-center gap-2.5 w-full pt-1.5 pb-0.5">
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-stone-300 to-stone-200" />
-              <span className="text-[10px] sm:text-[11px] font-sans font-medium uppercase tracking-[0.14em] text-stone-500 select-none">
-                Tertarik untuk acaramu?
-              </span>
-              <span className="h-px flex-1 bg-gradient-to-l from-transparent via-stone-300 to-stone-200" />
-            </div>
+            {/* Commercial Booking CTAs (WhatsApp Consultation & Pesan Sekarang) - Strictly in Demo Mode */}
+            {isDemoMode && (
+              <>
+                {/* Contextual Divider: Bridges Guest Experience to Commercial Booking */}
+                <div className="flex items-center gap-2.5 w-full pt-1.5 pb-0.5">
+                  <span className="h-px flex-1 bg-gradient-to-r from-transparent via-stone-300 to-stone-200" />
+                  <span className="text-[10px] sm:text-[11px] font-sans font-medium uppercase tracking-[0.14em] text-stone-500 select-none">
+                    Tertarik untuk acaramu?
+                  </span>
+                  <span className="h-px flex-1 bg-gradient-to-l from-transparent via-stone-300 to-stone-200" />
+                </div>
 
-            {/* Row 2: WhatsApp Consultation & Pesan Sekarang (Opens Floating Price List Modal) */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
-              {/* WhatsApp Consultation: Clean, Low-Friction Advisory */}
-              <a
-                href={CONTACT_LINKS.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group w-full sm:flex-1 py-3 px-4 rounded-full bg-white hover:bg-stone-50 text-stone-700 hover:text-stone-900 border border-stone-200 hover:border-emerald-500/50 font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 transition duration-200 cursor-pointer"
-              >
-                <MessageCircle size={16} className="text-[#25D366] transition-transform duration-200 group-hover:scale-110" />
-                <span>Konsultasi WA</span>
-              </a>
+                {/* Row 2: WhatsApp Consultation & Pesan Sekarang (Opens Floating Price List Modal) */}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
+                  {/* WhatsApp Consultation: Clean, Low-Friction Advisory */}
+                  <a
+                    href={CONTACT_LINKS.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group w-full sm:flex-1 py-3 px-4 rounded-full bg-white hover:bg-stone-50 text-stone-700 hover:text-stone-900 border border-stone-200 hover:border-emerald-500/50 font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs hover:shadow-md transform hover:-translate-y-0.5 active:scale-95 transition duration-200 cursor-pointer"
+                  >
+                    <MessageCircle size={16} className="text-[#25D366] transition-transform duration-200 group-hover:scale-110" />
+                    <span>Konsultasi WA</span>
+                  </a>
 
-              {/* Pesan Sekarang: Opens Floating Price List Modal */}
-              <button
-                type="button"
-                onClick={() => setShowPriceModal(true)}
-                className="group w-full sm:flex-1 py-3 px-4 rounded-full bg-gradient-to-r from-[#8C6534] via-[#A3783F] to-[#8C6534] hover:from-[#7A562B] hover:to-[#7A562B] text-white border border-[#BFA069]/40 font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-xl shadow-amber-950/15 transform hover:-translate-y-0.5 active:scale-95 transition duration-200 cursor-pointer"
-              >
-                <ShoppingBag size={15} className="text-amber-200 transition-transform duration-200 group-hover:scale-110" />
-                <span className="tracking-wide">Pesan Sekarang</span>
-                <ArrowRight size={14} className="text-amber-200 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200" />
-              </button>
-            </div>
+                  {/* Pesan Sekarang: Opens Floating Price List Modal */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPriceModal(true)}
+                    className="group w-full sm:flex-1 py-3 px-4 rounded-full bg-gradient-to-r from-[#8C6534] via-[#A3783F] to-[#8C6534] hover:from-[#7A562B] hover:to-[#7A562B] text-white border border-[#BFA069]/40 font-serif font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-xl shadow-amber-950/15 transform hover:-translate-y-0.5 active:scale-95 transition duration-200 cursor-pointer"
+                  >
+                    <ShoppingBag size={15} className="text-amber-200 transition-transform duration-200 group-hover:scale-110" />
+                    <span className="tracking-wide">Pesan Sekarang</span>
+                    <ArrowRight size={14} className="text-amber-200 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200" />
+                  </button>
+                </div>
+              </>
+            )}
           </motion.div>
         )}
 

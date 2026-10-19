@@ -47,7 +47,7 @@ function AppContent() {
     return <InvalidCodePage />;
   }
 
-  const isDemoMode = isDemo || Boolean(activeEvent?.isDemo) || activeEvent?.slug === 'demo' || activeEvent?.slug === 'sabrina-raka';
+  const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
 
   // 4. Wedding Guest Photobooth Landing (/:slug)
   return (
