@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-// Verified fresh build export for StepVoice canvas renderer
-import { ArrowLeft, ArrowRight, Mic, Square, Check, X, Volume2 } from 'lucide-react';
+import { ArrowLeft, Mic, Square, X } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useRecorder } from '../../hooks/useRecorder';
 import { useToast } from '../ui/Toast';
@@ -154,12 +153,10 @@ export default function StepVoice() {
                     ? 'bg-emerald-600 ring-4 ring-emerald-500/40 hover:scale-105'
                     : 'bg-[#6B111F] ring-4 ring-amber-400/30 hover:bg-[#8A1828] hover:scale-105'
               }`}
-              title={isRecording ? 'Berhenti Merekam' : 'Mulai Rekam Doa'}
+              title={isRecording ? 'Berhenti Merekam' : audioUrl ? 'Rekam Ulang' : 'Mulai Rekam Doa'}
             >
               {isRecording ? (
                 <Square size={20} className="fill-white" />
-              ) : audioUrl ? (
-                <Check size={24} />
               ) : (
                 <Mic size={24} />
               )}
