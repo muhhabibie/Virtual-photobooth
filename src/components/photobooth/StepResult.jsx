@@ -7,6 +7,7 @@ import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from 
 import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
 import { CONTACT_LINKS, PACKAGES } from '../../data/mockEvents';
 import PriceListModal from '../ui/PriceListModal';
+import DownloadFormatModal from './DownloadFormatModal';
 
 const PHOTO_FILTERS = [
   { id: 'natural', name: 'NATURAL', css: 'none', desc: 'Asli', previewClass: 'from-amber-200 via-rose-300 to-amber-100' },
@@ -44,6 +45,7 @@ export default function StepResult() {
   const [activeStickerId, setActiveStickerId] = useState(null);
   const [activeTab, setActiveTab] = useState('filters'); // 'filters' | 'stickers'
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   const filterCarouselRef = useRef(null);
   const filterRefs = useRef({});
@@ -242,32 +244,7 @@ export default function StepResult() {
   };
 
   const handleDownload = () => {
-    if (isDemo) {
-      setShowDemoModal(true);
-      return;
-    }
-
-    const canvas = getExportCanvas();
-    if (!canvas) return;
-
-    const sanitize = (str) => (str || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
-    const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
-    const guest = sanitize(guestName) || (isWedding ? 'Tamu' : 'Pengunjung');
-    const couple = sanitize(activeEvent?.displayName) || (isWedding ? 'Pengantin' : 'Event');
-    const filename = `${guest}_${couple}.jpg`;
-
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.download = filename;
-      a.href = url;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-      toast(`Photo strip berhasil diunduh (${filename})!`, 'success');
-    }, 'image/jpeg', 0.92);
+    setShowDownloadModal(true);
   };
 
   const handlePrint = () => {
@@ -522,23 +499,13 @@ export default function StepResult() {
           </button>
         )}
 
-        {/* Primary Download Button */}
+        {/* Primary Download Button (Opens DownloadFormatModal for Photo HD / Video MP4) */}
         <button
           onClick={handleDownload}
           className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] font-serif font-bold text-xs sm:text-sm border border-amber-400/50 shadow-2xl shadow-rose-950/60 flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer"
         >
-          {isDemo ? (
-            <>
-              <Lock size={16} className="text-amber-300" />
-              <span>Download Photo Strip HD</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/40 font-mono font-semibold">Demo Mode</span>
-            </>
-          ) : (
-            <>
-              <Download size={17} />
-              <span>Download Photo Strip HD</span>
-            </>
-          )}
+          <Download size={17} />
+          <span>{voiceUrl ? 'Download Foto & Audio (Video / JPG)' : 'Download Photo Strip HD (JPG)'}</span>
         </button>
 
         {/* Secondary Actions */}
@@ -566,6 +533,18 @@ export default function StepResult() {
         </div>
 
       </div>
+
+      {/* ================= 🌟 DOWNLOAD FORMAT MODAL (PHOTO HD / VIDEO MP4 / AUDIO) 🌟 ================= */}
+      <DownloadFormatModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        photoCanvas={getExportCanvas}
+        voiceUrl={voiceUrl}
+        guestName={guestName || 'Tamu Undangan'}
+        coupleName={getEventDisplayName(activeEvent) || 'Sabrina & Raka'}
+        eventName={getEventHeaderTitle(activeEvent) || 'The Wedding'}
+        filenamePrefix={`${(guestName || 'Tamu').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, '_')}_${(activeEvent?.displayName || 'Event').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, '_')}`}
+      />
 
       {/* ================= 🌟 DEMO MODE PRICE LIST MODAL 🌟 ================= */}
       <PriceListModal isOpen={showDemoModal} onClose={() => setShowDemoModal(false)} />
