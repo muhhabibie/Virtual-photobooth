@@ -5,6 +5,7 @@ import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
 import { getEventHeaderTitle } from '../../utils/eventHeader';
+import PhotostripThumbnail from '../gallery/PhotostripThumbnail';
 
 const romanticTransition = {
   duration: 1.1,
@@ -12,7 +13,17 @@ const romanticTransition = {
 };
 
 export default function EventGalleryFeed() {
-  const { openBooth, openGalleryModal, capturedPhotos, guestName, activeEvent, savedSubmissions } = useBooth();
+  const { 
+    openBooth, 
+    openGalleryModal, 
+    capturedPhotos, 
+    guestName, 
+    stripColor, 
+    guestMessage, 
+    voiceUrl, 
+    activeEvent, 
+    savedSubmissions 
+  } = useBooth();
   const { toast } = useToast();
 
   const coupleName = activeEvent?.displayName || 'Raka & Sabrina';
@@ -38,9 +49,12 @@ export default function EventGalleryFeed() {
     guestName: guestName || 'Tamu Undangan (Kamu)',
     date: activeEvent?.formattedDate || '30 Mei 2026',
     photos: capturedPhotos.map(p => p.dataUrl),
-    colorHex: '#6B111F',
-    textHex: '#F5D77F',
-    hasVoice: true,
+    stripColor: stripColor || '#6B111F',
+    colorHex: stripColor || '#6B111F',
+    textHex: stripColor === '#FAF6F0' || stripColor === '#FDFBF7' || stripColor === '#F3C5CB' ? '#6B111F' : '#F5D77F',
+    hasVoice: !!voiceUrl,
+    voiceUrl: voiceUrl,
+    message: guestMessage || '',
   } : null;
 
   // Filter real-time savedSubmissions strictly by active event
@@ -183,104 +197,20 @@ export default function EventGalleryFeed() {
 
         {/* Infinite Sliding Track (Right to Left) */}
         <div className="marquee-track-h flex items-center gap-3.5 sm:gap-5 hover:[animation-play-state:paused] cursor-pointer">
-          {doubledCards.map((card, idx) => {
-            const isLight = card.colorHex === '#FAF6F0' || card.colorHex === '#FDFBF7' || card.colorHex === '#ffffff' || card.colorHex === '#F3C5CB';
-            const textColor = isLight ? '#3A2D28' : (card.textHex || '#F5D77F');
-            const subTextColor = isLight ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)';
-            const guestNameColor = isLight ? '#5A4A3E' : '#FFFFFF';
-            const borderColor = isLight ? 'border-[#D4C5B0]' : 'border-white/25';
-            const dividerColor = isLight ? 'border-[#D9CFC4]' : 'border-white/20';
-
-            const photosList = (card.photos && card.photos.length > 0) ? card.photos : [card.photo];
-
-            const rawMsg = card.message ? card.message.trim() : '';
-            const truncatedMsg = rawMsg.length > 55 ? `${rawMsg.slice(0, 55).trim()}...` : rawMsg;
-
-            return (
-              <div
-                key={`${card.id}-${idx}`}
-                onClick={openGalleryModal}
-                style={{ backgroundColor: card.colorHex || '#6B111F' }}
-                className={`relative overflow-hidden w-48 xs:w-54 sm:w-60 h-fit rounded-2xl sm:rounded-3xl p-3 sm:p-3.5 shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_20px_rgba(245,215,127,0.12)] border ${borderColor} flex flex-col justify-start gap-1 transition-all duration-300 transform hover:scale-105 flex-shrink-0 group before:absolute before:inset-0 before:bg-gradient-to-tr before:from-transparent before:via-white/15 before:to-transparent before:pointer-events-none before:z-20`}
-              >
-                {/* 1. Top Header */}
-                <div className="text-center pt-0.5 pb-1 flex-shrink-0 z-10">
-                  <p 
-                    style={{ color: subTextColor }}
-                    className="text-[7px] sm:text-[8px] font-mono font-bold uppercase tracking-widest"
-                  >
-                    {getEventHeaderTitle(activeEvent, activeEvent?.slug)}
-                  </p>
-                </div>
-
-                {/* 2. Photo Cuts Stack */}
-                <div className="relative w-full flex flex-col justify-start gap-1 flex-shrink-0 overflow-hidden z-10">
-                  {photosList.map((src, i) => (
-                    <div 
-                      key={i} 
-                      className={`w-full rounded-lg sm:rounded-xl overflow-hidden bg-black/20 border border-black/90 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] flex-shrink-0 ${
-                        photosList.length === 1 ? 'aspect-[4/5]' : 'aspect-[3/4]'
-                      }`}
-                    >
-                      <img
-                        src={src}
-                        alt={`${card.guestName} pose ${i + 1}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                  ))}
-
-                  {/* Voice Note Badge (Frosted Glass Pill) */}
-                  {card.hasVoice && (
-                    <span className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[#F5D77F] border border-[#F5D77F]/40 text-[7.5px] sm:text-[8px] font-mono flex items-center gap-1 shadow-lg z-20">
-                      <Volume2 size={9} className="animate-pulse" />
-                      <span>Doa</span>
-                    </span>
-                  )}
-                </div>
-
-                {/* 3. Middle Signature: Couple Calligraphy, Date & Guest Name */}
-                <div className="text-center pt-1.5 pb-1 flex-shrink-0 flex flex-col items-center z-10">
-                  <h3 
-                    style={{ 
-                      color: textColor,
-                      fontFamily: "'Alex Brush', 'Great Vibes', 'Playfair Display', cursive" 
-                    }}
-                    className="text-lg sm:text-2xl font-serif italic leading-tight drop-shadow-xs"
-                  >
-                    {coupleName}
-                  </h3>
-                  <p className="text-[7px] sm:text-[8px] font-mono tracking-widest mt-0.5" style={{ color: subTextColor }}>
-                    {card.date || activeEvent?.formattedDate || '30 Mei 2026'}
-                  </p>
-                  <h4 
-                    style={{ color: guestNameColor }}
-                    className="text-xs sm:text-sm font-sans font-bold leading-tight mt-0.5 tracking-wide truncate max-w-full px-1" 
-                  >
-                    {card.guestName}
-                  </h4>
-                </div>
-
-                {/* 4. Bottom Quoted Message & Divider (Only rendered if message exists) */}
-                {rawMsg ? (
-                  <>
-                    <div className={`w-full border-t ${dividerColor} my-1 flex-shrink-0`} />
-                    <div className="pt-0.5 pb-0.5 text-center flex-shrink-0 flex items-center justify-center px-1 overflow-hidden">
-                      <p 
-                        style={{ color: isLight ? '#7A6A5D' : 'rgba(255, 255, 255, 0.88)' }}
-                        className="text-[9.5px] sm:text-[10.5px] font-serif italic leading-snug line-clamp-2 overflow-hidden text-ellipsis"
-                      >
-                        "{truncatedMsg}"
-                      </p>
-                    </div>
-                  </>
-                ) : null}
-
-              </div>
-            );
-          })}
+          {doubledCards.map((card, idx) => (
+            <div
+              key={`${card.id}-${idx}`}
+              onClick={openGalleryModal}
+              className="w-44 xs:w-50 sm:w-56 flex-shrink-0 cursor-pointer transition-all duration-300 transform hover:scale-105"
+            >
+              <PhotostripThumbnail
+                item={card}
+                activeEvent={activeEvent}
+                className="w-full shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_20px_rgba(245,215,127,0.12)] border border-white/20 hover:border-amber-400/50"
+              />
+            </div>
+          ))}
         </div>
-
       </div>
 
       {/* ================= 🌟 4. "LIHAT SEMUA GALERI FOTO TAMU" BUTTON 🌟 ================= */}

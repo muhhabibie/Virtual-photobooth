@@ -7,6 +7,8 @@ import { exportEventSubmissionsZip } from '../../utils/zipExport';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
 import { getEventHeaderTitle, getEventDisplayName } from '../../utils/eventHeader';
+import PhotostripThumbnail from './PhotostripThumbnail';
+import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
 
 function getNowIndonesianDate() {
   const now = new Date();
@@ -333,102 +335,19 @@ export default function FullGalleryModal() {
             </div>
           ) : (
             <div className="columns-2 sm:columns-3 md:columns-4 gap-3.5 sm:gap-5 space-y-3.5 sm:space-y-5">
-              {filteredList.map((item) => {
-                const isLight = item.colorHex === '#FAF6F0' || item.colorHex === '#FDFBF7' || item.colorHex === '#ffffff' || item.colorHex === '#F3C5CB';
-                const textColor = isLight ? '#3A2D28' : (item.textHex || '#F5D77F');
-                const subTextColor = isLight ? '#8C7A6B' : 'rgba(245, 215, 127, 0.85)';
-                const guestNameColor = isLight ? '#5A4A3E' : '#FFFFFF';
-                const borderColor = isLight ? 'border-[#D4C5B0]' : 'border-white/25';
-                const dividerColor = isLight ? 'border-[#D9CFC4]' : 'border-white/20';
-
-                const photosList = (item.photos && item.photos.length > 0) ? item.photos : [item.photo];
-
-                const rawMsg = item.message ? item.message.trim() : '';
-                const truncatedMsg = rawMsg.length > 55 ? `${rawMsg.slice(0, 55).trim()}...` : rawMsg;
-
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => setFullFrameModal(item)}
-                    style={{ backgroundColor: item.colorHex || '#6B111F' }}
-                    className="break-inside-avoid inline-block w-full relative overflow-hidden h-fit rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_20px_rgba(245,215,127,0.12)] border border-white/25 flex flex-col justify-start gap-1 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-amber-500/25 cursor-pointer group"
-                  >
-                    {/* 1. Top Header */}
-                    <div className="text-center pt-0.5 pb-1 flex-shrink-0 z-10">
-                      <p 
-                        style={{ color: subTextColor }}
-                        className="text-[6.5px] sm:text-[7.5px] font-mono font-bold uppercase tracking-widest"
-                      >
-                        {getEventHeaderTitle(activeEvent)}
-                      </p>
-                    </div>
-
-                    {/* 2. Photo Cuts Stack */}
-                    <div className="relative w-full flex flex-col justify-start gap-1 flex-shrink-0 overflow-hidden z-10">
-                      {photosList.map((src, i) => (
-                        <div 
-                          key={i} 
-                          className={`w-full rounded-lg sm:rounded-xl overflow-hidden bg-black/20 border border-black/90 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] flex-shrink-0 ${
-                            photosList.length === 1 ? 'aspect-[4/5]' : 'aspect-[3/4]'
-                          }`}
-                        >
-                          <img
-                            src={src}
-                            alt={`${item.guestName} pose ${i + 1}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-                      ))}
-
-                      {/* Voice Note Badge (Frosted Glass Pill) */}
-                      {item.hasVoice && (
-                        <span className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[#F5D77F] border border-[#F5D77F]/40 text-[7.5px] sm:text-[8px] font-mono flex items-center gap-1 shadow-lg z-20">
-                          <Volume2 size={9} className="animate-pulse" />
-                          <span>Doa</span>
-                        </span>
-                      )}
-                    </div>
-
-                    {/* 3. Middle Signature: Couple Calligraphy, Date & Guest Name */}
-                    <div className="text-center pt-1 pb-1 flex-shrink-0 flex flex-col items-center z-10">
-                      <h3 
-                        style={{ 
-                          color: textColor,
-                          fontFamily: "'Alex Brush', 'Great Vibes', 'Playfair Display', cursive" 
-                        }}
-                        className="text-base sm:text-xl font-serif italic leading-tight drop-shadow-xs"
-                      >
-                        {item.eventDisplayName || getEventDisplayName(activeEvent)}
-                      </h3>
-                      <p className="text-[6.5px] sm:text-[7.5px] font-mono tracking-widest mt-0.5" style={{ color: subTextColor }}>
-                        {item.shortDate || '30 · 05 · 2026'}
-                      </p>
-                      <h4 
-                        style={{ color: guestNameColor }}
-                        className="text-xs sm:text-sm font-sans font-bold leading-tight mt-0.5 tracking-wide truncate max-w-full px-1" 
-                      >
-                        {item.guestName}
-                      </h4>
-                    </div>
-
-                    {/* 4. Bottom Quoted Message & Divider (Only rendered if message exists) */}
-                    {rawMsg ? (
-                      <>
-                        <div className={`w-full border-t ${dividerColor} my-1 flex-shrink-0 z-10`} />
-                        <div className="pt-0.5 pb-0.5 text-center flex-shrink-0 flex items-center justify-center px-1 overflow-hidden z-10">
-                          <p 
-                            style={{ color: isLight ? '#7A6A5D' : 'rgba(255, 255, 255, 0.92)' }}
-                            className="text-[9px] sm:text-[10px] font-serif italic leading-snug line-clamp-2 overflow-hidden text-ellipsis"
-                          >
-                            "{truncatedMsg}"
-                          </p>
-                        </div>
-                      </>
-                    ) : null}
-
-                  </div>
-                );
-              })}
+              {filteredList.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => setFullFrameModal(item)}
+                  className="break-inside-avoid inline-block w-full mb-3.5 sm:mb-5 cursor-pointer transform hover:-translate-y-1 transition-all duration-300"
+                >
+                  <PhotostripThumbnail
+                    item={item}
+                    activeEvent={activeEvent}
+                    className="w-full shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_20px_rgba(245,215,127,0.12)] border border-white/20 hover:border-amber-400/60"
+                  />
+                </div>
+              ))}
             </div>
           )}
 
@@ -471,116 +390,91 @@ export default function FullGalleryModal() {
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Exact Physical Photostrip with Full Frame Header, All Photo Cuts & Footer */}
-                <div 
-                  style={{ backgroundColor: fullFrameModal.colorHex || '#6B111F' }}
-                  className={`w-full h-fit rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-2xl border ${modalBorderColor} flex flex-col justify-start`}
-                >
-                  {/* Frame Header Calligraphy */}
-                  <div className="text-center pb-1">
-                    <p 
-                      style={{ color: modalSubTextColor }}
-                      className="text-[7.5px] sm:text-[8.5px] font-mono font-bold uppercase tracking-widest"
-                    >
-                      {getEventHeaderTitle(activeEvent)}
-                    </p>
-                  </div>
-
-                  {/* All Photo Cuts in the Strip */}
-                  <div className="flex flex-col gap-1.5 sm:gap-2 py-1.5">
-                    {fullFrameModal.photos.map((src, i) => (
-                      <div 
-                        key={i} 
-                        className={`relative w-full rounded-xl overflow-hidden bg-black/20 border border-black/10 shadow-inner ${
-                          fullFrameModal.photos.length === 1 ? 'aspect-[4/5]' : 'aspect-[3/4]'
-                        }`}
-                      >
-                        <img src={src} alt={`Cut ${i + 1}`} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Middle Section: Couple Calligraphy, Date & Guest Name */}
-                  <div className="text-center pt-2 pb-1.5 flex flex-col items-center">
-                    <h3 
-                      style={{ 
-                        color: modalTextColor,
-                        fontFamily: "'Alex Brush', 'Great Vibes', 'Playfair Display', cursive" 
-                      }}
-                      className="text-xl sm:text-2xl font-serif italic leading-tight"
-                    >
-                      {fullFrameModal.eventDisplayName || getEventDisplayName(activeEvent)}
-                    </h3>
-                    <p className="text-[7.5px] sm:text-[8.5px] font-mono tracking-widest mt-0.5" style={{ color: modalSubTextColor }}>
-                      {fullFrameModal.shortDate || '30 · 05 · 2026'}
-                    </p>
-                    <h4 
-                      style={{ color: modalGuestColor }}
-                      className="text-sm sm:text-base font-sans font-bold leading-tight mt-0.5 tracking-wide"
-                    >
-                      {fullFrameModal.guestName}
-                    </h4>
-                  </div>
-
-                  {/* Bottom Message & Divider (Only rendered if message exists) */}
-                  {modalRawMsg ? (
-                    <>
-                      <div className={`w-full border-t ${modalDividerColor} my-1.5`} />
-                      <div className="py-1 text-center flex items-center justify-center px-1">
-                        <p 
-                          style={{ color: modalIsLight ? '#7A6A5D' : 'rgba(255, 255, 255, 0.9)' }}
-                          className="text-[10px] sm:text-[11px] font-serif italic leading-snug line-clamp-3"
-                        >
-                          "{modalTruncatedMsg}"
-                        </p>
-                      </div>
-                    </>
-                  ) : null}
-
-                </div>
-
-              {/* Guest Message Card (Clean floating pill) */}
-              {fullFrameModal.message && (
-                <div className="w-full px-4 py-2 bg-black/60 backdrop-blur-md rounded-xl border border-white/15 text-xs text-rose-100 italic text-center shadow-lg">
-                  "{fullFrameModal.message}"
-                </div>
-              )}
-
-              {/* Attached Spotify-style Voice Note Audio Player */}
-              {fullFrameModal.hasVoice && (
-                <div className="w-full">
-                  <SpotifyVoicePlayer
-                    voiceUrl={fullFrameModal.voiceUrl}
-                    guestName={fullFrameModal.guestName}
-                    totalDuration={24}
+                <div className="w-full shadow-2xl rounded-2xl overflow-hidden border border-white/20">
+                  <PhotostripThumbnail
+                    item={fullFrameModal}
+                    activeEvent={activeEvent}
+                    showVoiceBadge={false}
+                    className="w-full"
                   />
                 </div>
-              )}
 
-              {/* Action Buttons */}
-              <div className="w-full mt-0.5">
-                <button
-                  onClick={() => {
-                    if (isDemo) {
-                      toast('Unduh foto dinonaktifkan pada Mode Demo.', 'warning');
-                      return;
-                    }
-                    const sanitize = (name) => (name || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
-                    const guest = sanitize(fullFrameModal.guestName) || 'Tamu';
-                    const couple = sanitize(activeEvent?.displayName) || 'Raka & Sabrina';
-                    const filename = `${guest}_${couple}.jpg`;
+                {/* Guest Message Card (Clean floating pill) */}
+                {fullFrameModal.message && (
+                  <div className="w-full px-4 py-2 bg-black/60 backdrop-blur-md rounded-xl border border-white/15 text-xs text-rose-100 italic text-center shadow-lg">
+                    "{fullFrameModal.message}"
+                  </div>
+                )}
 
-                    const a = document.createElement('a');
-                    a.href = fullFrameModal.photos[0];
-                    a.download = filename;
-                    a.click();
-                    toast(`Photo strip berhasil diunduh (${filename})! 💍`, 'success');
-                  }}
-                  className="w-full py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] border border-[#E5C158]/50 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xl transition active:scale-95 cursor-pointer"
-                >
-                  <Download size={15} />
-                  <span>Download Photo Strip HD</span>
-                </button>
-              </div>
+                {/* Attached Spotify-style Voice Note Audio Player */}
+                {(fullFrameModal.hasVoice || fullFrameModal.voiceUrl) && (
+                  <div className="w-full">
+                    <SpotifyVoicePlayer
+                      voiceUrl={fullFrameModal.voiceUrl}
+                      guestName={fullFrameModal.guestName}
+                      totalDuration={24}
+                    />
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="w-full mt-0.5">
+                  <button
+                    onClick={async () => {
+                      if (isDemo) {
+                        toast('Unduh foto dinonaktifkan pada Mode Demo.', 'warning');
+                        return;
+                      }
+                      const sanitize = (name) => (name || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
+                      const guest = sanitize(fullFrameModal.guestName) || 'Tamu';
+                      const couple = sanitize(activeEvent?.displayName) || 'Raka & Sabrina';
+                      const filename = `${guest}_${couple}.jpg`;
+
+                      let downloadUrl = fullFrameModal.stripImage;
+                      if (!downloadUrl) {
+                        try {
+                          const offCanvas = document.createElement('canvas');
+                          const photosList = Array.isArray(fullFrameModal.photos) && fullFrameModal.photos.length > 0
+                            ? fullFrameModal.photos
+                            : (fullFrameModal.photo ? [fullFrameModal.photo] : []);
+                          
+                          const loadedImgs = await Promise.all(
+                            photosList.map(src => new Promise(res => {
+                              const img = new Image();
+                              img.crossOrigin = 'anonymous';
+                              img.onload = () => res(img);
+                              img.onerror = () => res(null);
+                              img.src = typeof src === 'string' ? src : (src?.dataUrl || '');
+                            }))
+                          );
+                          const valid = loadedImgs.filter(Boolean).map(img => ({ canvas: img, dataUrl: img.src }));
+                          renderMasterPhotoStrip(offCanvas, {
+                            photos: valid,
+                            targetCount: valid.length,
+                            stripColor: fullFrameModal.colorHex || fullFrameModal.stripColor || '#6B111F',
+                            guestName: fullFrameModal.guestName,
+                            guestMessage: fullFrameModal.message || fullFrameModal.guestMessage,
+                            activeEvent,
+                            scale: 2,
+                          });
+                          downloadUrl = offCanvas.toDataURL('image/jpeg', 0.95);
+                        } catch (e) {
+                          downloadUrl = fullFrameModal.photos?.[0];
+                        }
+                      }
+
+                      const a = document.createElement('a');
+                      a.href = downloadUrl;
+                      a.download = filename;
+                      a.click();
+                      toast(`Photo strip berhasil diunduh (${filename})! 💍`, 'success');
+                    }}
+                    className="w-full py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] border border-[#E5C158]/50 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xl transition active:scale-95 cursor-pointer"
+                  >
+                    <Download size={15} />
+                    <span>Download Photo Strip HD</span>
+                  </button>
+                </div>
 
             </div>
           </div>

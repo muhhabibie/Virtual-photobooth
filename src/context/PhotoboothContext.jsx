@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo } 
 import { subscribeSubmissions, saveSubmission, getLocalSubmissions } from '../services/submissionService';
 import { syncEventToCloud, subscribeCloudEvents, saveLocalEvents } from '../services/eventService';
 import { INITIAL_EVENTS, PACKAGES, DEFAULT_HERO_PHOTOS, DEMO_EVENT } from '../data/mockEvents';
+import { renderMasterPhotoStrip } from '../utils/stripRenderer';
 
 const PhotoboothContext = createContext(null);
 
@@ -507,8 +508,28 @@ export function PhotoboothProvider({ children }) {
     return () => unsubscribe();
   }, [isDemo]);
 
-  const submitSession = useCallback(async () => {
+  const submitSession = useCallback(async (extraData = {}) => {
     if (capturedPhotos.length === 0 || isEventExpired) return null;
+
+    let stripImage = extraData?.stripImage || null;
+    if (!stripImage) {
+      try {
+        const offCanvas = document.createElement('canvas');
+        renderMasterPhotoStrip(offCanvas, {
+          photos: capturedPhotos,
+          targetCount: capturedPhotos.length,
+          stripColor,
+          guestName,
+          guestMessage,
+          activeEvent,
+          scale: 2,
+        });
+        stripImage = offCanvas.toDataURL('image/jpeg', 0.92);
+      } catch (e) {
+        console.warn('Failed to pre-render stripImage in submitSession:', e);
+      }
+    }
+
     const result = await saveSubmission({
       eventId: activeEvent?.id || (isDemo ? 'event_demo' : 'master'),
       eventSlug: activeEvent?.slug || currentSlug || (isDemo ? 'demo' : 'master'),
@@ -516,6 +537,7 @@ export function PhotoboothProvider({ children }) {
       guestMessage,
       photos: capturedPhotos,
       stripColor,
+      stripImage,
       voiceBlob,
       voiceUrl,
       isDemo: isDemo,
