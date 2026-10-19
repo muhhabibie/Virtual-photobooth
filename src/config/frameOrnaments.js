@@ -656,6 +656,94 @@ export function drawStripBotanicals(ctx, w, h, color = '#B89F88', scale = 1) {
   topLeaves.forEach(lf => drawLeaf(lf.x, lf.y, lf.angle, lf.len, lf.w));
 
   // ================= 🌸 2. BOTTOM-RIGHT FLORAL & BOTANICAL BLOOM (Ref: Wendy & Mark) 🌸 =================
+  // Reusable helper to draw the detailed open botanical flower blossom (Magnolia / Wild Rose)
+  const drawFlowerBlossom = (cx, cy, scaleMult = 1) => {
+    // Outer layer of 5 rounded petals with delicate folds
+    const petalCount = 5;
+    for (let i = 0; i < petalCount; i++) {
+      const angle = (i * Math.PI * 2) / petalCount - 0.25;
+      const px = cx + Math.cos(angle) * (28 * s * scaleMult);
+      const py = cy + Math.sin(angle) * (28 * s * scaleMult);
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(angle);
+      ctx.scale(scaleMult, scaleMult);
+      ctx.beginPath();
+      ctx.moveTo(-18 * s, -15 * s);
+      ctx.bezierCurveTo(-7 * s, -30 * s, 7 * s, -30 * s, 18 * s, -15 * s);
+      ctx.bezierCurveTo(26 * s, 9 * s, -26 * s, 9 * s, -18 * s, -15 * s);
+      ctx.stroke();
+      // Inner petal texture lines
+      ctx.beginPath();
+      ctx.moveTo(0, -24 * s);
+      ctx.lineTo(0, -7 * s);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Inner layer of 4 overlapping petals
+    for (let i = 0; i < 4; i++) {
+      const angle = (i * Math.PI * 2) / 4 + 0.35;
+      const px = cx + Math.cos(angle) * (15 * s * scaleMult);
+      const py = cy + Math.sin(angle) * (15 * s * scaleMult);
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(angle);
+      ctx.scale(scaleMult, scaleMult);
+      ctx.beginPath();
+      ctx.moveTo(-11 * s, -11 * s);
+      ctx.bezierCurveTo(-3 * s, -20 * s, 3 * s, -20 * s, 11 * s, -11 * s);
+      ctx.bezierCurveTo(14 * s, 5 * s, -14 * s, 5 * s, -11 * s, -11 * s);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Flower Pistil / Stamen center
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7 * s * scaleMult, 0, Math.PI * 2);
+    ctx.stroke();
+    for (let a = 0; a < Math.PI * 2; a += 0.8) {
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * (10 * s * scaleMult), cy + Math.sin(a) * (10 * s * scaleMult), 1.3 * s * scaleMult, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  };
+
+  const isPolaroid = h < 1000 * s;
+
+  if (isPolaroid) {
+    // Polaroid Mode: Fit beautifully in the bottom-right footer chin
+    const fx = w - 74 * s;
+    const fy = h - 85 * s;
+
+    // Upward delicate stem towards guest message
+    ctx.beginPath();
+    ctx.moveTo(fx, fy - 18 * s);
+    ctx.bezierCurveTo(w - 55 * s, fy - 55 * s, w - 38 * s, fy - 95 * s, w - 46 * s, fy - 140 * s);
+    ctx.stroke();
+
+    // Downward stem towards bottom edge
+    ctx.beginPath();
+    ctx.moveTo(fx + 8 * s, fy + 18 * s);
+    ctx.bezierCurveTo(w - 52 * s, h - 50 * s, w - 42 * s, h - 28 * s, w - 22 * s, h - 12 * s);
+    ctx.stroke();
+
+    // Leaves for Polaroid
+    const polLeaves = [
+      { x: w - 54 * s, y: fy - 45 * s, angle: -0.65, len: 20 * s, w: 8 * s },
+      { x: w - 40 * s, y: fy - 85 * s, angle: 0.45, len: 18 * s, w: 7 * s },
+      { x: w - 46 * s, y: fy - 130 * s, angle: -0.5, len: 16 * s, w: 6.5 * s },
+      { x: w - 48 * s, y: h - 45 * s, angle: 0.85, len: 18 * s, w: 7.5 * s },
+      { x: w - 28 * s, y: h - 20 * s, angle: 0.60, len: 16 * s, w: 6.5 * s },
+    ];
+    polLeaves.forEach(lf => drawLeaf(lf.x, lf.y, lf.angle, lf.len, lf.w));
+
+    drawFlowerBlossom(fx, fy, 0.68);
+    ctx.restore();
+    return;
+  }
+
+  // Standard Strip Mode: Exact Wendy & Mark reference placement
   // Main flower center position (situated in the lower right footer area beside Pasadena, CA)
   const fx = w - 135 * s;
   const fy = h - 315 * s;
@@ -705,54 +793,7 @@ export function drawStripBotanicals(ctx, w, h, color = '#B89F88', scale = 1) {
   ];
   downLeaves.forEach(lf => drawLeaf(lf.x, lf.y, lf.angle, lf.len, lf.w));
 
-  // The Detailed Open Botanical Flower Blossom (Magnolia / Wild Rose style in reference)
-  // Outer layer of 5 rounded petals with delicate folds
-  const petalCount = 5;
-  for (let i = 0; i < petalCount; i++) {
-    const angle = (i * Math.PI * 2) / petalCount - 0.25;
-    const px = fx + Math.cos(angle) * (28 * s);
-    const py = fy + Math.sin(angle) * (28 * s);
-    ctx.save();
-    ctx.translate(px, py);
-    ctx.rotate(angle);
-    ctx.beginPath();
-    ctx.moveTo(-18 * s, -15 * s);
-    ctx.bezierCurveTo(-7 * s, -30 * s, 7 * s, -30 * s, 18 * s, -15 * s);
-    ctx.bezierCurveTo(26 * s, 9 * s, -26 * s, 9 * s, -18 * s, -15 * s);
-    ctx.stroke();
-    // Inner petal texture lines
-    ctx.beginPath();
-    ctx.moveTo(0, -24 * s);
-    ctx.lineTo(0, -7 * s);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // Inner layer of 4 overlapping petals
-  for (let i = 0; i < 4; i++) {
-    const angle = (i * Math.PI * 2) / 4 + 0.35;
-    const px = fx + Math.cos(angle) * (15 * s);
-    const py = fy + Math.sin(angle) * (15 * s);
-    ctx.save();
-    ctx.translate(px, py);
-    ctx.rotate(angle);
-    ctx.beginPath();
-    ctx.moveTo(-11 * s, -11 * s);
-    ctx.bezierCurveTo(-3 * s, -20 * s, 3 * s, -20 * s, 11 * s, -11 * s);
-    ctx.bezierCurveTo(14 * s, 5 * s, -14 * s, 5 * s, -11 * s, -11 * s);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // Flower Pistil / Stamen center
-  ctx.beginPath();
-  ctx.arc(fx, fy, 7 * s, 0, Math.PI * 2);
-  ctx.stroke();
-  for (let a = 0; a < Math.PI * 2; a += 0.8) {
-    ctx.beginPath();
-    ctx.arc(fx + Math.cos(a) * (10 * s), fy + Math.sin(a) * (10 * s), 1.3 * s, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  drawFlowerBlossom(fx, fy, 1.0);
 
   ctx.restore();
 }

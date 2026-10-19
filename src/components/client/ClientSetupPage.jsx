@@ -4,14 +4,17 @@ import {
   Camera, Image as ImageIcon, Save,
   Trash2, Plus, ExternalLink, Eye, Share2, Upload, Crop,
   Info, Move, ChevronLeft, ChevronRight, Smartphone,
-  Palette, Sparkles, Sliders, RotateCw, ZoomIn, ZoomOut, Check, Layers, X
+  Palette, Sparkles, Sliders, RotateCw, ZoomIn, ZoomOut, Check, Layers, X,
+  Download, FolderArchive, Package, Loader2
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import PhotoCropModal from '../ui/PhotoCropModal';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
+import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
 import { compressImage, compressOrnament } from '../../utils/imageCompressor';
 import { PRESET_ORNAMENTS, renderOrnamentToCanvas } from '../../config/frameOrnaments';
+import { exportEventSubmissionsZip } from '../../utils/zipExport';
 
 const BORDER_PRESET_COLORS = [
   { name: 'Pasadena Botanical', bg: '#FFFFFF', text: '#2B2826', border: '#C4A482' },
@@ -90,7 +93,8 @@ export default function ClientSetupPage() {
     updateEventConfig, 
     navigateToEvent,
     navigateToAdmin,
-    introReady
+    introReady,
+    savedSubmissions
   } = useBooth();
 
   const { toast } = useToast();
@@ -98,6 +102,16 @@ export default function ClientSetupPage() {
   // If slug doesn't match an existing event, fallback to first event
   const event = activeEvent || events.find(e => e.slug === currentSlug) || events[0];
   const isWedding = (event?.eventType || 'wedding') === 'wedding';
+
+  // Photo Submissions & ZIP Export State
+  const [isZipping, setIsZipping] = useState(false);
+  const [zipProgress, setZipProgress] = useState(0);
+
+  const eventSubmissions = (savedSubmissions || []).filter(
+    s => s.eventSlug === event?.slug || s.eventId === event?.id
+  );
+  const totalSubmissionsCount = eventSubmissions.length;
+  const effectiveSubmissions = totalSubmissionsCount > 0 ? eventSubmissions : (event?.submissions || MOCK_GALLERY_PHOTOS);
 
   // Form State
   const [heroPhotos, setHeroPhotos] = useState(event?.heroPhotos || DEFAULT_HERO_PHOTOS);
@@ -109,6 +123,31 @@ export default function ClientSetupPage() {
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  const handleDownloadAllZip = async () => {
+    if (isZipping) return;
+    setIsZipping(true);
+    setZipProgress(10);
+    const eventTitle = isWedding ? `${groomName} & ${brideName}` : (eventName || event?.displayName || 'Event');
+    try {
+      toast(`Menyiapkan arsip ZIP foto untuk ${eventTitle}...`, 'info');
+      const result = await exportEventSubmissionsZip({
+        event: {
+          ...event,
+          displayName: eventTitle
+        },
+        submissions: effectiveSubmissions,
+        onProgress: (p) => setZipProgress(p),
+      });
+      toast(`Arsip foto berhasil diunduh (${result.totalPhotos} foto)`, 'success');
+    } catch (err) {
+      console.error('Failed to export ZIP:', err);
+      toast(err.message || 'Gagal mengunduh arsip ZIP', 'error');
+    } finally {
+      setIsZipping(false);
+      setZipProgress(0);
+    }
+  };
 
   // Custom Frame & Ornament State (Desain Mandiri Pengantin)
   const [frameBgColor, setFrameBgColor] = useState(event?.customFrame?.bgColor || '#6B111F');
@@ -469,6 +508,21 @@ export default function ClientSetupPage() {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={handleDownloadAllZip}
+              disabled={isZipping}
+              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:brightness-110 active:scale-95 text-white text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs disabled:opacity-60"
+              title="Unduh Seluruh Foto Tamu (.ZIP)"
+            >
+              {isZipping ? (
+                <Loader2 size={13} className="animate-spin text-amber-200" />
+              ) : (
+                <FolderArchive size={13} className="text-amber-200" />
+              )}
+              <span className="hidden xs:inline">{isZipping ? `Mengarsip ${zipProgress}%` : 'Unduh ZIP'}</span>
+              <span className="xs:hidden">{isZipping ? `${zipProgress}%` : 'ZIP'}</span>
+            </button>
+
+            <button
               onClick={() => navigateToEvent(event.slug)}
               className="px-3.5 py-1.5 rounded-full bg-[#FAF7F2] hover:bg-stone-100 border border-stone-200 text-xs font-serif font-medium text-stone-800 flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
               title="Lihat Pratinjau Tampilan Web Tamu"
@@ -521,6 +575,62 @@ export default function ClientSetupPage() {
                   <span>Buka Web</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ================= 📦 ARSIP & HASIL UNDUHAN FOTO TAMU (.ZIP) 📦 ================= */}
+        <div className="rounded-3xl bg-gradient-to-br from-[#FAF7F2] via-white to-[#F6EFE9] border border-[#EADBCC] p-5 sm:p-6 shadow-[0_8px_30px_rgba(107,17,31,0.05)] relative overflow-hidden">
+          {/* Subtle Ambient Background Accent */}
+          <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-amber-200/25 to-transparent rounded-full blur-2xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1.5 max-w-sm">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-md bg-amber-100/90 text-amber-900 border border-amber-200 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
+                  <FolderArchive size={11} className="text-amber-700" />
+                  <span>ARSIP HASIL PHOTOBOOTH</span>
+                </span>
+                <span className="text-[10px] font-mono text-stone-500">
+                  {totalSubmissionsCount > 0 ? `${totalSubmissionsCount} sesi foto tamu` : 'Siap unduh'}
+                </span>
+              </div>
+              <h2 className="text-base sm:text-lg font-serif font-bold text-stone-900 tracking-tight">
+                Unduh Seluruh Foto Tamu (.ZIP)
+              </h2>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Unduh paket lengkap berisi seluruh strip foto tamu (HD Print Ready 300 DPI) dan rekaman suara doa ucapan dalam satu file .ZIP terorganisir.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-col gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleDownloadAllZip}
+                disabled={isZipping}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 hover:brightness-110 active:scale-95 text-white font-serif font-bold text-xs shadow-md shadow-amber-950/20 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                {isZipping ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin text-amber-200" />
+                    <span>Mengarsip ({zipProgress}%)...</span>
+                  </>
+                ) : (
+                  <>
+                    <Package size={15} className="text-amber-300" />
+                    <span>Unduh Semua Foto (.ZIP)</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigateToEvent(event.slug)}
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-serif text-[11px] font-medium transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <Eye size={13} className="text-stone-500" />
+                <span>Lihat Galeri Live</span>
+              </button>
             </div>
           </div>
         </div>
