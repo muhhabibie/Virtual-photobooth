@@ -768,11 +768,11 @@ export default function StepCamera() {
               <span>{venueText}</span>
             </div>
 
-            {/* 5. Custom Message / Pesan Singkat (if entered) */}
+            {/* 5. Custom Message / Pesan Singkat (if entered - Large & Clear) */}
             {customMessage && (
               <p 
-                className="text-[7.5px] sm:text-[8px] italic font-serif truncate max-w-full px-2 mt-0.5"
-                style={{ color: isLight ? '#5A4A3E' : 'rgba(255,255,255,0.92)' }}
+                className="text-[10px] sm:text-[11.5px] font-semibold italic font-serif truncate max-w-full px-2 mt-0.5 leading-tight"
+                style={{ color: primaryTextColor }}
               >
                 {customMessage}
               </p>

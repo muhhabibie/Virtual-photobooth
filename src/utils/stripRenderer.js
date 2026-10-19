@@ -91,25 +91,25 @@ export function renderMasterPhotoStrip(canvas, {
     photoH = Math.round(photoW * 0.88); // 447 * scale
     gap = 0;
     topPad = 46 * scale;
-    footerH = (hasCustomMsg ? 180 : 158) * scale;
+    footerH = (hasCustomMsg ? 190 : 158) * scale;
   } else if (count === 2) {
     // 2 Photos (Duo Strip ~1:1.63)
     photoH = Math.round(photoW * 0.74); // 376 * scale (~4:3 landscape ratio)
     gap = 20 * scale;
     topPad = 48 * scale;
-    footerH = (hasCustomMsg ? 182 : 160) * scale;
+    footerH = (hasCustomMsg ? 192 : 160) * scale;
   } else if (count === 4) {
     // 4 Photos (Classic 4-pose 2x6 strip ~1:2.75)
     photoH = Math.round(photoW * 0.68); // 345 * scale
     gap = 16 * scale;
     topPad = 48 * scale;
-    footerH = (hasCustomMsg ? 182 : 160) * scale;
+    footerH = (hasCustomMsg ? 192 : 160) * scale;
   } else {
     // Standard 3 Photos (Exact Wendy & Mark Reference Format ~1:2.23)
     photoH = Math.round(photoW * 0.72); // 366 * scale
     gap = 18 * scale;
     topPad = 48 * scale;
-    footerH = (hasCustomMsg ? 182 : 160) * scale;
+    footerH = (hasCustomMsg ? 192 : 160) * scale;
   }
 
   const totalH = topPad + (photoH * count) + (gap * Math.max(0, count - 1)) + footerH;
@@ -235,7 +235,7 @@ export function renderMasterPhotoStrip(canvas, {
   const line1Y = nameY + 22 * scale;
   const dateY = line1Y + 24 * scale;
   const venueY = dateY + 20 * scale;
-  const msgY = venueY + 21 * scale;
+  const msgY = venueY + 24 * scale;
 
   // 4a. Guest / Couple Title (Grand Luxury Serif matching Image 1)
   ctx.save();
@@ -294,13 +294,13 @@ export function renderMasterPhotoStrip(canvas, {
   drawSpacedText(ctx, venueText, totalW / 2, venueY, 3.0 * scale);
   ctx.restore();
 
-  // 4e. Guest Wish / Message (if present)
+  // 4e. Guest Wish / Message (if present - Large, Prominent & Highly Readable)
   if (hasCustomMsg) {
     ctx.save();
-    ctx.fillStyle = isLightBg ? '#4A3E38' : 'rgba(255,255,255,0.92)';
-    const msgBaseSize = (isPolaroid ? 13.5 : 14.5) * scale;
-    ctx.font = `italic ${msgBaseSize}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-    fitTextSize(ctx, shortMessageText, photoW - 30 * scale, msgBaseSize, 11 * scale);
+    ctx.fillStyle = primaryTextColor;
+    const msgBaseSize = (isPolaroid ? 17.5 : 19) * scale;
+    ctx.font = `italic 600 ${msgBaseSize}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
+    fitTextSize(ctx, shortMessageText, photoW - 36 * scale, msgBaseSize, 13 * scale);
     ctx.textAlign = 'center';
     ctx.fillText(shortMessageText, totalW / 2, msgY);
     ctx.restore();
