@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { renderMasterPhotoStrip } from './stripRenderer';
 
 /**
  * Sanitize strings for safe filesystem filenames across Windows, macOS, and Linux
@@ -71,15 +72,74 @@ async function getAssetBinary(url) {
 }
 
 /**
+ * Render complete Photostrip canvas for a guest submission if not pre-rendered
+ */
+async function renderSubmissionStrip(item, event) {
+  try {
+    const photosList = Array.isArray(item.photos) && item.photos.length > 0
+      ? item.photos
+      : (item.photo ? [item.photo] : []);
+
+    if (photosList.length === 0) return null;
+
+    // Preload image elements to ensure canvas renders with actual pixels
+    const loadedImgs = await Promise.all(
+      photosList.map(src => {
+        return new Promise((resolve) => {
+          if (!src) return resolve(null);
+          const url = typeof src === 'string' ? src : (src.dataUrl || src.canvas?.toDataURL?.() || '');
+          if (!url) return resolve(null);
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = url;
+        });
+      })
+    );
+
+    const validPhotoObjects = loadedImgs
+      .filter(Boolean)
+      .map(img => ({ canvas: img, dataUrl: img.src }));
+
+    if (validPhotoObjects.length === 0) return null;
+
+    const canvas = document.createElement('canvas');
+    renderMasterPhotoStrip(canvas, {
+      photos: validPhotoObjects,
+      targetCount: validPhotoObjects.length,
+      stripColor: item.colorHex || item.stripColor || '#FFFFFF',
+      guestName: item.guestName,
+      guestMessage: item.message || item.guestMessage,
+      activeEvent: event,
+      scale: 2,
+    });
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) return resolve(null);
+        blob.arrayBuffer().then(buf => resolve(new Uint8Array(buf))).catch(() => resolve(null));
+      }, 'image/jpeg', 0.95);
+    });
+  } catch (err) {
+    console.warn('Failed to render strip for submission:', err);
+    return null;
+  }
+}
+
+/**
  * Export all wedding photo submissions into a structured ZIP file
  * Format Penamaan: [Nama Pengunjung]_[Nama Pengantin]
- * Contoh: Haris_Sabrina & Raka.jpg
+ * Berisi: Foto Strip Jadi (_STRIP.jpg) + Seluruh Foto Asli Pose (_Foto_X.jpg)
  */
 export async function exportEventSubmissionsZip({ event, submissions = [], onProgress = () => {} }) {
   const zip = new JSZip();
 
   const coupleName = sanitizeFilename(event?.displayName) || 'Pengantin';
   const eventFolder = zip.folder(`Foto_${coupleName}`);
+  const stripFolder = eventFolder.folder('Strip_Photobooth');
+  const individualFolder = eventFolder.folder('Foto_Individual');
+  const audioFolder = eventFolder.folder('Rekaman_Suara');
 
   // Collect all valid photo entries
   const itemsToProcess = submissions.length > 0 ? submissions : [];
@@ -93,6 +153,7 @@ export async function exportEventSubmissionsZip({ event, submissions = [], onPro
   const nameOccurrences = new Map();
   const guestWishes = [];
   let photoCount = 0;
+  let stripCount = 0;
 
   for (let idx = 0; idx < itemsToProcess.length; idx++) {
     const item = itemsToProcess[idx];
@@ -110,41 +171,61 @@ export async function exportEventSubmissionsZip({ event, submissions = [], onPro
     onProgress({
       current: idx + 1,
       total: itemsToProcess.length,
-      message: `Mengompres foto dari ${cleanGuest}...`
+      message: `Mengompres foto & strip dari ${cleanGuest}...`
     });
 
-    // 1. Process Photos
+    // 1. Process Finished Photostrip (Hasil Strip Photobooth)
+    let stripBinary = null;
+    if (item.stripUrl || item.stripPhoto) {
+      stripBinary = await getAssetBinary(item.stripUrl || item.stripPhoto);
+    }
+    if (!stripBinary) {
+      stripBinary = await renderSubmissionStrip(item, event);
+    }
+
+    if (stripBinary) {
+      stripCount++;
+      const stripFilename = `${baseFilename}_STRIP.jpg`;
+      stripFolder.file(stripFilename, stripBinary);
+      eventFolder.file(stripFilename, stripBinary);
+    }
+
+    // 2. Process Individual Cut Photos (Foto-foto Pose Asli)
     const photosList = Array.isArray(item.photos) && item.photos.length > 0
       ? item.photos
       : (item.photo ? [item.photo] : []);
 
     for (let pIdx = 0; pIdx < photosList.length; pIdx++) {
-      const photoUrl = photosList[pIdx];
+      const photoItem = photosList[pIdx];
+      const photoUrl = typeof photoItem === 'string' ? photoItem : (photoItem.dataUrl || photoItem.url || '');
       const binary = await getAssetBinary(photoUrl);
 
       if (binary) {
         photoCount++;
         const photoFilename = photosList.length === 1
-          ? `${baseFilename}.jpg`
-          : `${baseFilename}_${pIdx + 1}.jpg`;
+          ? `${baseFilename}_Foto.jpg`
+          : `${baseFilename}_Foto_${pIdx + 1}.jpg`;
 
+        individualFolder.file(photoFilename, binary);
         eventFolder.file(photoFilename, binary);
       }
     }
 
-    // 2. Process Voice Note (if any)
+    // 3. Process Voice Note (if any)
     if (item.voiceUrl || item.voiceBlob) {
       try {
         const voiceBinary = await getAssetBinary(item.voiceUrl);
         if (voiceBinary) {
-          eventFolder.file(`${baseFilename}_voice.webm`, voiceBinary);
+          const voiceFilename = `${baseFilename}_voice.webm`;
+          audioFolder.file(voiceFilename, voiceBinary);
+          eventFolder.file(voiceFilename, voiceBinary);
         }
       } catch (err) {
         console.warn("Gagal mengekspor audio:", err);
       }
     }
 
-    // 3. Collect wishes for digital guestbook log
+    // 4. Collect wishes for digital guestbook log
     if (item.message && item.message.trim()) {
       guestWishes.push({
         name: cleanGuest,

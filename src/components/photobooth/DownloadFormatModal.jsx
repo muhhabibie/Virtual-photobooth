@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Image as ImageIcon, Video, Mic, Download, Check, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Image as ImageIcon, Video, Mic, Download, Check, Sparkles, AlertCircle, Loader2, Package, FolderArchive } from 'lucide-react';
+import JSZip from 'jszip';
 import { generatePhotostripVideo } from '../../utils/videoGenerator';
 import { useToast } from '../ui/Toast';
 
@@ -8,6 +9,7 @@ export default function DownloadFormatModal({
   isOpen,
   onClose,
   photoCanvas,
+  photos = [],
   voiceUrl,
   guestName = 'Tamu Undangan',
   coupleName = 'Sabrina & Raka',
@@ -19,6 +21,7 @@ export default function DownloadFormatModal({
   const [videoProgress, setVideoProgress] = useState(0);
   const [videoStatusText, setVideoStatusText] = useState('');
   const [videoError, setVideoError] = useState(null);
+  const [isZippingBundle, setIsZippingBundle] = useState(false);
 
   if (!isOpen) return null;
 
@@ -26,6 +29,97 @@ export default function DownloadFormatModal({
   const getCanvas = () => {
     if (!photoCanvas) return null;
     return typeof photoCanvas === 'function' ? photoCanvas() : photoCanvas;
+  };
+
+  // Helper to convert dataUrl or remote url to Uint8Array
+  const getBinary = async (url) => {
+    if (!url) return null;
+    if (url.startsWith('data:')) {
+      const parts = url.split(',');
+      const binStr = atob(parts[1]);
+      const bytes = new Uint8Array(binStr.length);
+      for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+      return bytes;
+    }
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Fetch failed');
+      const buf = await res.arrayBuffer();
+      return new Uint8Array(buf);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  // 0. Download Complete Bundle: Strip + All Individual Photos (.ZIP)
+  const handleDownloadBundleZip = async () => {
+    const canvas = getCanvas();
+    if (!canvas) {
+      toast('Canvas foto belum siap.', 'error');
+      return;
+    }
+
+    setIsZippingBundle(true);
+    toast('Menyiapkan paket foto strip + foto asli...', 'info');
+
+    try {
+      const zip = new JSZip();
+
+      // 1. Add Rendered Photostrip (HD JPG)
+      const stripBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
+      if (stripBlob) {
+        const stripBuffer = await stripBlob.arrayBuffer();
+        zip.file(`${filenamePrefix}_STRIP.jpg`, new Uint8Array(stripBuffer));
+      }
+
+      // 2. Add All Individual Captured Cut Photos
+      const photoList = Array.isArray(photos) ? photos : [];
+      for (let i = 0; i < photoList.length; i++) {
+        const item = photoList[i];
+        let dataUrl = '';
+        if (typeof item === 'string') dataUrl = item;
+        else if (item?.dataUrl) dataUrl = item.dataUrl;
+        else if (item?.canvas?.toDataURL) dataUrl = item.canvas.toDataURL('image/jpeg', 0.94);
+
+        if (dataUrl) {
+          const bin = await getBinary(dataUrl);
+          if (bin) {
+            zip.file(`${filenamePrefix}_Foto_${i + 1}.jpg`, bin);
+          }
+        }
+      }
+
+      // 3. Add Voice Note (if recorded)
+      if (voiceUrl) {
+        try {
+          const vRes = await fetch(voiceUrl);
+          if (vRes.ok) {
+            const vBuf = await vRes.arrayBuffer();
+            zip.file(`${filenamePrefix}_suara.webm`, new Uint8Array(vBuf));
+          }
+        } catch (e) {
+          console.warn('Voice bundle note error:', e);
+        }
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filenamePrefix}_Strip_dan_Foto.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+
+      toast('Paket lengkap (Strip + Semua Foto) berhasil diunduh!', 'success');
+      setIsZippingBundle(false);
+      onClose();
+    } catch (err) {
+      console.error('ZIP bundle error:', err);
+      toast('Gagal mengunduh paket ZIP', 'error');
+      setIsZippingBundle(false);
+    }
   };
 
   // 1. Download Photo Strip Only (JPG HD)
@@ -216,7 +310,44 @@ export default function DownloadFormatModal({
             /* Format Selection Options */
             <div className="py-4 space-y-3 relative z-10">
               
-              {/* OPTION 1: Photo Strip Only (JPG HD - Siap Cetak) */}
+              {/* FEATURED OPTION: Photo Strip + Semua Foto Pose (.ZIP) */}
+              <div
+                onClick={!isZippingBundle ? handleDownloadBundleZip : undefined}
+                className="group p-4 rounded-2xl bg-gradient-to-r from-[#3A1424] via-[#2A0E1B] to-[#1C0A15] hover:brightness-110 border-2 border-amber-400/80 shadow-lg shadow-rose-950/40 transition-all cursor-pointer flex items-center justify-between gap-3 active:scale-98 relative overflow-hidden"
+              >
+                <div className="flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-stone-950 flex items-center justify-center flex-shrink-0 font-bold group-hover:scale-105 transition shadow-sm">
+                    {isZippingBundle ? (
+                      <Loader2 size={20} className="animate-spin text-stone-950" />
+                    ) : (
+                      <Package size={20} />
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-sm font-serif font-bold text-amber-200">
+                        Foto Strip + Semua Foto
+                      </h4>
+                      <span className="text-[9.5px] font-mono font-black uppercase px-2 py-0.5 rounded-full bg-amber-400 text-stone-950">
+                        PAKET LENGKAP .ZIP
+                      </span>
+                      <span className="text-[9.5px] font-sans font-bold text-amber-300 flex items-center gap-0.5">
+                        <Sparkles size={10} />
+                        <span>Paling Lengkap</span>
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-200 mt-1 leading-snug font-sans">
+                      Unduh <strong>foto strip berbingkai</strong> sekaligus seluruh <strong>foto asli individual per pose</strong> dalam 1 file .ZIP.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-8 h-8 rounded-full bg-amber-400 text-stone-950 flex items-center justify-center flex-shrink-0 font-bold shadow-md">
+                  <Download size={15} />
+                </div>
+              </div>
+
+              {/* OPTION 2: Photo Strip Only (JPG HD - Siap Cetak) */}
               <div
                 onClick={handleDownloadPhoto}
                 className="group p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/15 hover:border-amber-400/40 transition-all cursor-pointer flex items-center justify-between gap-3 active:scale-98"
