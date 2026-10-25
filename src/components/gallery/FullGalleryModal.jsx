@@ -9,6 +9,7 @@ import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
 import { getEventHeaderTitle, getEventDisplayName } from '../../utils/eventHeader';
 import PhotostripThumbnail from './PhotostripThumbnail';
 import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
+import PriceListModal from '../ui/PriceListModal';
 
 function getNowIndonesianDate() {
   const now = new Date();
@@ -48,6 +49,8 @@ export default function FullGalleryModal() {
   const [likes, setLikes] = useState({});
   const [fullFrameModal, setFullFrameModal] = useState(null);
   const [isZipping, setIsZipping] = useState(false);
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
 
   // Real-time user submission card
   const userSubmission = useMemo(() => {
@@ -95,8 +98,9 @@ export default function FullGalleryModal() {
 
   // Handle Bulk ZIP Download from Full Gallery
   const handleDownloadZip = async () => {
-    if (isDemo) {
-      toast('Unduh file ZIP dinonaktifkan pada Mode Demo.', 'warning');
+    if (isDemoMode) {
+      toast('Di mode demo tidak bisa download foto. Yuk pesan paket untuk acaramu!', 'warning');
+      setShowPriceModal(true);
       return;
     }
     setIsZipping(true);
@@ -421,8 +425,9 @@ export default function FullGalleryModal() {
                 <div className="w-full mt-0.5">
                   <button
                     onClick={async () => {
-                      if (isDemo) {
-                        toast('Unduh foto dinonaktifkan pada Mode Demo.', 'warning');
+                      if (isDemoMode) {
+                        toast('Di mode demo tidak bisa download foto. Yuk pesan paket untuk acaramu!', 'warning');
+                        setShowPriceModal(true);
                         return;
                       }
                       const sanitize = (name) => (name || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
@@ -481,6 +486,13 @@ export default function FullGalleryModal() {
         );
       })()}
       </AnimatePresence>
+
+      {/* Demo Mode Price List Modal */}
+      <PriceListModal
+        isOpen={showPriceModal}
+        onClose={() => setShowPriceModal(false)}
+        notice="Di mode demo tidak bisa download foto. Yuk pesan paket photobooth untuk acaramu agar seluruh tamu bisa berfoto & mengunduh sepuasnya!"
+      />
 
     </div>
   );

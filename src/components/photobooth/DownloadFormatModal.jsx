@@ -13,6 +13,8 @@ export default function DownloadFormatModal({
   coupleName = 'Sabrina & Raka',
   eventName = 'The Wedding',
   filenamePrefix = 'photobooth',
+  isDemo = false,
+  onOpenDemoModal,
 }) {
   const { toast } = useToast();
   const [isProcessingVideo, setIsProcessingVideo] = useState(false);
@@ -30,6 +32,11 @@ export default function DownloadFormatModal({
 
   // 1. Download Photo Strip Only (JPG HD)
   const handleDownloadPhoto = () => {
+    if (isDemo) {
+      toast('Di mode demo tidak bisa download foto. Yuk pesan paket untuk acaramu!', 'warning');
+      if (onOpenDemoModal) onOpenDemoModal();
+      return;
+    }
     const canvas = getCanvas();
     if (!canvas) {
       toast('Canvas foto belum siap.', 'error');
@@ -54,6 +61,11 @@ export default function DownloadFormatModal({
 
   // 2. Download Photo Strip + Audio (Video MP4 Story)
   const handleDownloadVideo = async () => {
+    if (isDemo) {
+      toast('Di mode demo tidak bisa download video. Yuk pesan paket untuk acaramu!', 'warning');
+      if (onOpenDemoModal) onOpenDemoModal();
+      return;
+    }
     const canvas = getCanvas();
     if (!canvas) {
       toast('Canvas foto belum siap.', 'error');
@@ -105,6 +117,11 @@ export default function DownloadFormatModal({
 
   // 3. Download Audio Voice Note Only
   const handleDownloadAudioOnly = async () => {
+    if (isDemo) {
+      toast('Di mode demo tidak bisa download audio. Yuk pesan paket untuk acaramu!', 'warning');
+      if (onOpenDemoModal) onOpenDemoModal();
+      return;
+    }
     if (!voiceUrl) {
       toast('Rekaman suara tidak ditemukan.', 'warning');
       return;

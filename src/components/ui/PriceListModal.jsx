@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, ArrowRight, MessageCircle } from 'lucide-react';
+import { Check, X, ArrowRight, MessageCircle, Sparkles } from 'lucide-react';
 import { PACKAGES, CONTACT_LINKS } from '../../data/mockEvents';
 
-export default function PriceListModal({ isOpen, onClose }) {
+export default function PriceListModal({ isOpen, onClose, notice }) {
   const packageList = Object.values(PACKAGES);
 
   // Close on Escape key
@@ -53,6 +53,13 @@ export default function PriceListModal({ isOpen, onClose }) {
 
           {/* Modal Header (No separate tabs, no 'sirklenice photobooth' above title) */}
           <div className="text-center pb-2.5 sm:pb-4 flex-shrink-0">
+            {notice && (
+              <div className="mb-3 px-3.5 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-[#6B111F] text-xs sm:text-sm font-sans font-medium flex items-center justify-center gap-2 shadow-2xs text-center max-w-lg mx-auto">
+                <Sparkles size={16} className="text-[#8A1828] flex-shrink-0" />
+                <span>{notice}</span>
+              </div>
+            )}
+
             <h2 className="text-xl sm:text-3xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
               Paket Photobooth Virtual
             </h2>

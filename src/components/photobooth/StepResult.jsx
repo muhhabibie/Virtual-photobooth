@@ -46,6 +46,7 @@ export default function StepResult() {
   const [activeTab, setActiveTab] = useState('filters'); // 'filters' | 'stickers'
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
 
   const filterCarouselRef = useRef(null);
   const filterRefs = useRef({});
@@ -253,11 +254,17 @@ export default function StepResult() {
   };
 
   const handleDownload = () => {
+    if (isDemoMode) {
+      toast('Di mode demo tidak bisa download foto. Yuk pesan paket untuk acaramu!', 'warning');
+      setShowDemoModal(true);
+      return;
+    }
     setShowDownloadModal(true);
   };
 
   const handlePrint = () => {
-    if (isDemo) {
+    if (isDemoMode) {
+      toast('Di mode demo tidak bisa cetak foto. Yuk pesan paket untuk acaramu!', 'warning');
       setShowDemoModal(true);
       return;
     }
@@ -498,7 +505,7 @@ export default function StepResult() {
       <div className="relative z-30 w-full max-w-md mx-auto pt-1 pb-1 px-2 flex flex-col gap-2 flex-shrink-0">
         
         {/* In Demo Mode: Quick Price List Button */}
-        {isDemo && (
+        {isDemoMode && (
           <button
             onClick={() => setShowDemoModal(true)}
             className="w-full py-2.5 px-4 rounded-full bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/40 text-amber-200 text-xs font-serif font-bold flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer shadow-sm"
@@ -553,10 +560,19 @@ export default function StepResult() {
         coupleName={getEventDisplayName(activeEvent) || 'Sabrina & Raka'}
         eventName={getEventHeaderTitle(activeEvent) || 'The Wedding'}
         filenamePrefix={`${(guestName || 'Tamu').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, '_')}_${(activeEvent?.displayName || 'Event').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, '_')}`}
+        isDemo={isDemoMode}
+        onOpenDemoModal={() => {
+          setShowDownloadModal(false);
+          setShowDemoModal(true);
+        }}
       />
 
       {/* ================= 🌟 DEMO MODE PRICE LIST MODAL 🌟 ================= */}
-      <PriceListModal isOpen={showDemoModal} onClose={() => setShowDemoModal(false)} />
+      <PriceListModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        notice="Di mode demo tidak bisa download foto. Yuk pesan paket photobooth untuk acaramu agar seluruh tamu bisa berfoto & mengunduh sepuasnya!"
+      />
 
     </div>
   );
