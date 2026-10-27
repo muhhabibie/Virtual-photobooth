@@ -85,6 +85,94 @@ function formatIndoDate(dateStr) {
   }
 }
 
+
+// Helper to parse couple names or event name from slug
+function parseSlugInfo(slug) {
+  if (!slug || slug === 'setup' || slug === 'demo') {
+    return { isWedding: true, groom: 'Raka', bride: 'Sabrina', eventTitle: 'Raka & Sabrina' };
+  }
+
+  const nonNameWords = new Set(['wedding', 'pernikahan', 'resepsi', 'event', 'party', 'fest', 'festival', 'expo', 'the', 'of']);
+
+  // Remove common prefixes
+  let clean = slug.toLowerCase().trim()
+    .replace(/^(the-wedding-of|pernikahan|wedding|resepsi|acara)-+/i, '');
+
+  const capitalize = (str) => {
+    if (!str) return '';
+    return str.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  };
+
+  // Check if it has couple separator: "-dan-", "-and-", "-with-"
+  if (clean.includes('-dan-')) {
+    const parts = clean.split('-dan-');
+    return {
+      isWedding: true,
+      groom: capitalize(parts[0]),
+      bride: capitalize(parts[1]),
+      eventTitle: `${capitalize(parts[0])} & ${capitalize(parts[1])}`
+    };
+  }
+  if (clean.includes('-and-')) {
+    const parts = clean.split('-and-');
+    return {
+      isWedding: true,
+      groom: capitalize(parts[0]),
+      bride: capitalize(parts[1]),
+      eventTitle: `${capitalize(parts[0])} & ${capitalize(parts[1])}`
+    };
+  }
+  if (clean.includes('-with-')) {
+    const parts = clean.split('-with-');
+    return {
+      isWedding: true,
+      groom: capitalize(parts[0]),
+      bride: capitalize(parts[1]),
+      eventTitle: `${capitalize(parts[0])} & ${capitalize(parts[1])}`
+    };
+  }
+
+  // If slug has two parts separated by single dash, e.g. "habibi-najwa"
+  const parts = clean.split('-');
+  if (parts.length === 2 && !nonNameWords.has(parts[0]) && !nonNameWords.has(parts[1])) {
+    return {
+      isWedding: true,
+      groom: capitalize(parts[0]),
+      bride: capitalize(parts[1]),
+      eventTitle: `${capitalize(parts[0])} & ${capitalize(parts[1])}`
+    };
+  }
+
+  // General event (e.g. "jiwa-wedding", "dies-natalis-filkom")
+  const title = slug.split('-').map(capitalize).join(' ');
+  const isWed = slug.includes('wedding') || slug.includes('pernikahan');
+  return {
+    isWedding: isWed,
+    groom: isWed ? title.replace(/wedding|pernikahan/gi, '').trim() : '',
+    bride: isWed ? 'Pasangan' : '',
+    eventTitle: title
+  };
+}
+
+function normalizeIsoDate(dateStr) {
+  if (!dateStr) return new Date().toISOString().split('T')[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  const parts = dateStr.split(/[-/]/);
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+    }
+    if (parts[2].length === 4) {
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+  }
+  const parsed = new Date(dateStr);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().split('T')[0];
+  }
+  return new Date().toISOString().split('T')[0];
+}
+
 export default function ClientSetupPage() {
   const { 
     currentSlug, 
@@ -112,30 +200,31 @@ export default function ClientSetupPage() {
   // Match existing event or construct dynamic auto-event for new slug
   const matchedEvent = activeEvent || events.find(e => (e.slug || '').toLowerCase() === (currentSlug || '').toLowerCase());
   const isNewSlugEvent = Boolean(currentSlug && currentSlug !== 'setup' && currentSlug !== 'demo' && !matchedEvent);
+  const parsedSlug = useMemo(() => parseSlugInfo(currentSlug), [currentSlug]);
 
   const event = useMemo(() => {
     if (matchedEvent) return matchedEvent;
     if (isNewSlugEvent) {
       const cleanSlug = currentSlug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
-      const defaultTitle = paramEvent || cleanSlug.replace(/-/g, ' ');
+      const defaultTitle = paramEvent || parsedSlug.eventTitle || cleanSlug.replace(/-/g, ' ');
       return {
         id: 'evt_' + cleanSlug,
         slug: cleanSlug,
-        eventType: 'wedding',
+        eventType: parsedSlug.isWedding ? 'wedding' : 'event',
         eventName: defaultTitle,
         displayName: defaultTitle,
-        groomName: paramGroom || '',
-        brideName: paramBride || '',
-        venue: paramVenue || 'Wedding Venue',
-        eventDate: paramDate || new Date().toISOString().split('T')[0],
+        groomName: paramGroom || parsedSlug.groom || '',
+        brideName: paramBride || parsedSlug.bride || '',
+        venue: paramVenue || 'Grand Ballroom Jakarta',
+        eventDate: normalizeIsoDate(paramDate),
         heroPhotos: DEFAULT_HERO_PHOTOS,
         submissions: [],
         isAutoCreated: true
       };
     }
     return events[0];
-  }, [matchedEvent, isNewSlugEvent, currentSlug, paramEvent, paramGroom, paramBride, paramVenue, paramDate, events]);
-  const isWedding = (event?.eventType || 'wedding') === 'wedding';
+  }, [matchedEvent, isNewSlugEvent, currentSlug, paramEvent, paramGroom, paramBride, paramVenue, paramDate, parsedSlug, events]);
+  const isWedding = (event?.eventType || (parsedSlug.isWedding ? 'wedding' : 'event')) === 'wedding';
 
   // Photo Submissions & ZIP Export State
   const [isZipping, setIsZipping] = useState(false);
@@ -149,15 +238,59 @@ export default function ClientSetupPage() {
 
   // Form State
   const [heroPhotos, setHeroPhotos] = useState(event?.heroPhotos || DEFAULT_HERO_PHOTOS);
-  const [eventName, setEventName] = useState(paramEvent || event?.eventName || (isWedding ? '' : (event?.displayName || '')));
-  const [groomName, setGroomName] = useState(paramGroom || event?.groomName || 'Raka');
-  const [brideName, setBrideName] = useState(paramBride || event?.brideName || 'Sabrina');
-  const [venue, setVenue] = useState(paramVenue || event?.venue || (isWedding ? 'Grand Ballroom Jakarta' : 'Venue Acara'));
-  const [eventDate, setEventDate] = useState(paramDate || event?.eventDate || '2026-05-30');
+  const [eventName, setEventName] = useState(() => {
+    if (paramEvent) return paramEvent;
+    if (event && !event.isAutoCreated && event.eventName) return event.eventName;
+    return parsedSlug.eventTitle || '';
+  });
+  const [groomName, setGroomName] = useState(() => {
+    if (paramGroom) return paramGroom;
+    if (event && !event.isAutoCreated && event.groomName) return event.groomName;
+    return parsedSlug.groom || 'Habibi';
+  });
+  const [brideName, setBrideName] = useState(() => {
+    if (paramBride) return paramBride;
+    if (event && !event.isAutoCreated && event.brideName) return event.brideName;
+    return parsedSlug.bride || 'Najwa';
+  });
+  const [venue, setVenue] = useState(() => {
+    if (paramVenue) return paramVenue;
+    if (event && !event.isAutoCreated && event.venue) return event.venue;
+    return 'Grand Ballroom Jakarta';
+  });
+  const [eventDate, setEventDate] = useState(() => {
+    if (paramDate) return normalizeIsoDate(paramDate);
+    if (event && !event.isAutoCreated && event.eventDate) return event.eventDate;
+    return new Date().toISOString().split('T')[0];
+  });
   const [clientPhone, setClientPhone] = useState(paramPhone || '');
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  // Sync state when slug or query params change
+  useEffect(() => {
+    if (currentSlug && currentSlug !== 'setup' && currentSlug !== 'demo') {
+      const info = parseSlugInfo(currentSlug);
+      if (paramGroom) setGroomName(paramGroom);
+      else if (event && !event.isAutoCreated && event.groomName) setGroomName(event.groomName);
+      else if (info.groom) setGroomName(info.groom);
+
+      if (paramBride) setBrideName(paramBride);
+      else if (event && !event.isAutoCreated && event.brideName) setBrideName(event.brideName);
+      else if (info.bride) setBrideName(info.bride);
+
+      if (paramEvent) setEventName(paramEvent);
+      else if (event && !event.isAutoCreated && event.eventName) setEventName(event.eventName);
+      else if (info.eventTitle) setEventName(info.eventTitle);
+
+      if (paramVenue) setVenue(paramVenue);
+      else if (event && !event.isAutoCreated && event.venue) setVenue(event.venue);
+
+      if (paramDate) setEventDate(normalizeIsoDate(paramDate));
+      else if (event && !event.isAutoCreated && event.eventDate) setEventDate(event.eventDate);
+    }
+  }, [currentSlug, paramGroom, paramBride, paramEvent, paramVenue, paramDate, event?.id]);
 
   const handleDownloadAllZip = async () => {
     if (isZipping) return;
@@ -1040,6 +1173,23 @@ export default function ClientSetupPage() {
                       setIsSaved(false);
                     }}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-sm focus:outline-none focus:border-[#6B111F] focus:bg-white focus:ring-2 focus:ring-[#6B111F]/10 transition placeholder-stone-400 font-serif"
+                  />
+                </div>
+
+                {/* 3. Lokasi / Venue Pernikahan */}
+                <div>
+                  <label className="text-xs text-stone-700 font-medium block mb-1.5">
+                    Lokasi / Venue Pernikahan
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Grand Ballroom Hotel Mulia / Plataran Cilandak"
+                    value={venue}
+                    onChange={(e) => {
+                      setVenue(e.target.value);
+                      setIsSaved(false);
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-sm focus:outline-none focus:border-[#6B111F] focus:bg-white focus:ring-2 focus:ring-[#6B111F]/10 transition placeholder-stone-400 font-sans"
                   />
                 </div>
               </>
