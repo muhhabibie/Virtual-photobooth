@@ -711,13 +711,13 @@ export default function ClientSetupPage() {
             <button
               onClick={handleDownloadAllZip}
               disabled={isZipping}
-              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:brightness-110 active:scale-95 text-white text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs disabled:opacity-60"
+              className="px-3 py-1.5 rounded-lg bg-stone-900 hover:bg-black active:scale-95 text-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer shadow-xs disabled:opacity-60"
               title="Unduh Seluruh Foto Tamu (.ZIP)"
             >
               {isZipping ? (
-                <Loader2 size={13} className="animate-spin text-amber-200" />
+                <Loader2 size={13} className="animate-spin text-stone-300" />
               ) : (
-                <FolderArchive size={13} className="text-amber-200" />
+                <FolderArchive size={13} className="text-stone-300" />
               )}
               <span className="hidden xs:inline">{isZipping ? `Mengarsip ${zipProgress}%` : 'Unduh ZIP'}</span>
               <span className="xs:hidden">{isZipping ? `${zipProgress}%` : 'ZIP'}</span>
@@ -738,165 +738,107 @@ export default function ClientSetupPage() {
       {/* ================= 🌟 2. MAIN CONTENT (IPHONE DOWNWARD FLOW) 🌟 ================= */}
       <main className="max-w-xl mx-auto px-4 sm:px-5 pt-5 space-y-5 relative z-10">
 
-        {/* Portal Pemesanan & Simpan Link ke WhatsApp */}
-        <div className="rounded-3xl bg-gradient-to-r from-emerald-950 via-[#1C2826] to-[#120B18] border border-emerald-500/40 p-4 sm:p-5 shadow-xl text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center flex-shrink-0 text-emerald-300 mt-0.5">
-                <Sparkles size={20} />
-              </div>
-              <div className="space-y-0.5">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold block">
-                  PORTAL SETUP AKTIF
-                </span>
-                <h3 className="text-sm sm:text-base font-serif font-bold text-white">
-                  Studio Desain Photobooth Acaramu
-                </h3>
-                <p className="text-[11px] sm:text-xs text-stone-300 font-sans leading-relaxed">
-                  Simpan link setup ini ke WhatsApp agar kamu bisa kembali mendesain & mengecek foto tamu kapan saja.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleSendSetupToWhatsApp}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-full bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white font-sans font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 transition cursor-pointer flex-shrink-0"
-            >
-              <MessageCircle size={15} />
-              <span>Simpan ke WhatsApp</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Group A: Hero Greeting Card */}
-        <div className="rounded-3xl bg-white border border-[#EADBCC]/80 p-5 sm:p-6 shadow-[0_8px_30px_rgba(107,17,31,0.04)] relative overflow-hidden">
-          <div className="relative z-10">
-            <span className="inline-block text-[10px] font-mono uppercase tracking-[0.25em] text-[#8C7A6B] mb-1 font-bold">
-              {isWedding ? 'ATUR PHOTOBOOTH PERNIKAHAN' : 'ATUR PHOTOBOOTH ACARA'}
+        {/* Clean Header & Link Card */}
+        <div className="rounded-2xl bg-white border border-stone-200 p-5 sm:p-6 shadow-sm">
+          <div>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-stone-400 font-bold block mb-1">
+              {isWedding ? 'PENGATURAN WEDDING' : 'PENGATURAN EVENT'}
             </span>
             <h1 className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight">
-              {isWedding ? 'Persiapkan Sambutan Tamu' : 'Persiapkan Display Photobooth Acara'}
+              {combinedDisplayName}
             </h1>
-            <p className="text-stone-600 text-xs mt-1.5 leading-relaxed">
+            <p className="text-stone-500 text-xs mt-1">
               {isWedding 
-                ? 'Atur nama kedua mempelai dan foto prewedding yang akan menyambut seluruh tamu undangan saat memindai QR code di meja resepsi.'
-                : 'Atur nama acara, lokasi venue, serta foto display/poster yang menyambut pengunjung saat memindai QR code di photobooth event.'}
+                ? 'Atur nama kedua mempelai, lokasi venue, dan foto banner yang tampil di layar tamu.'
+                : 'Atur nama acara, lokasi venue, dan foto poster yang tampil di layar pengunjung.'}
             </p>
+          </div>
 
-            {/* Quick Guest Link Bar */}
-            <div className="mt-4 pt-3.5 border-t border-stone-200/80 flex flex-wrap items-center justify-between gap-2.5">
-              <div className="flex items-center gap-1.5 text-xs font-mono text-stone-600 truncate max-w-[220px]">
-                <span className="text-stone-400">Tautan:</span>
-                <span className="text-[#6B111F] font-bold truncate">/{event.slug}</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleSendSetupToWhatsApp}
-                  className="px-3 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-medium flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-xs"
-                  title="Kirim tautan ke WhatsApp"
-                >
-                  <MessageCircle size={12} className="text-[#25D366]" />
-                  <span>Kirim WA</span>
-                </button>
-                <button
-                  onClick={handleCopyGuestLink}
-                  className="px-3 py-1 rounded-full bg-[#FAF7F2] hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-medium flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-xs"
-                >
-                  <Share2 size={12} className="text-[#8C7A6B]" />
-                  <span>Salin</span>
-                </button>
-                <button
-                  onClick={() => navigateToEvent(event.slug)}
-                  className="px-3.5 py-1 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold flex items-center gap-1 shadow-md shadow-rose-950/15 transition active:scale-95 cursor-pointer"
-                >
-                  <Eye size={12} />
-                  <span>Buka Web</span>
-                </button>
-              </div>
+          {/* Clean Link Bar */}
+          <div className="mt-4 pt-3.5 border-t border-stone-100 flex flex-wrap items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2 text-xs font-mono text-stone-700 bg-stone-50 px-3 py-1.5 rounded-lg border border-stone-200/80">
+              <span className="text-stone-400 font-sans text-[11px]">Link Tamu:</span>
+              <span className="font-semibold text-stone-900">/{event.slug}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCopyGuestLink}
+                className="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-medium flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+              >
+                <Share2 size={13} className="text-stone-500" />
+                <span>Salin Link</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateToEvent(event.slug)}
+                className="px-3.5 py-1.5 rounded-lg bg-stone-900 hover:bg-black text-white text-xs font-medium flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
+              >
+                <Eye size={13} />
+                <span>Buka Web Tamu</span>
+              </button>
             </div>
           </div>
         </div>
 
         {/* ================= 📦 ARSIP & HASIL UNDUHAN FOTO TAMU (.ZIP) 📦 ================= */}
-        <div className="rounded-3xl bg-gradient-to-br from-[#FAF7F2] via-white to-[#F6EFE9] border border-[#EADBCC] p-5 sm:p-6 shadow-[0_8px_30px_rgba(107,17,31,0.05)] relative overflow-hidden">
-          {/* Subtle Ambient Background Accent */}
-          <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-amber-200/25 to-transparent rounded-full blur-2xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5 max-w-sm">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-md bg-amber-100/90 text-amber-900 border border-amber-200 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
-                  <FolderArchive size={11} className="text-amber-700" />
-                  <span>ARSIP HASIL PHOTOBOOTH</span>
-                </span>
-                <span className="text-[10px] font-mono text-stone-500">
-                  {totalSubmissionsCount > 0 ? `${totalSubmissionsCount} strip foto tamu` : 'Siap unduh'}
-                </span>
-              </div>
-              <h2 className="text-base sm:text-lg font-serif font-bold text-stone-900 tracking-tight">
-                Unduh Seluruh Strip Foto Tamu (.ZIP)
+        <div className="rounded-2xl bg-white border border-stone-200 p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-serif font-bold text-stone-900">
+                Unduh Foto Tamu (.ZIP)
               </h2>
-              <p className="text-xs text-stone-600 leading-relaxed">
-                Unduh seluruh strip foto kenangan tamu berbingkai (HD Print Ready 300 DPI) dan rekaman suara doa ucapan dalam satu file .ZIP terorganisir.
-              </p>
+              <span className="px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 text-[10px] font-mono">
+                {totalSubmissionsCount > 0 ? `${totalSubmissionsCount} foto tersimpan` : 'Siap unduh'}
+              </span>
             </div>
+            <p className="text-xs text-stone-500 max-w-md">
+              Unduh seluruh strip foto kenangan tamu resolusi tinggi (300 DPI) dan rekaman suara ucapan dalam satu file .ZIP.
+            </p>
+          </div>
 
-            <div className="flex flex-col sm:flex-col gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleDownloadAllZip}
-                disabled={isZipping}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 hover:brightness-110 active:scale-95 text-white font-serif font-bold text-xs shadow-md shadow-amber-950/20 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-              >
-                {isZipping ? (
-                  <>
-                    <Loader2 size={15} className="animate-spin text-amber-200" />
-                    <span>Mengarsip ({zipProgress}%)...</span>
-                  </>
-                ) : (
-                  <>
-                    <Package size={15} className="text-amber-300" />
-                    <span>Unduh Semua Strip Foto (.ZIP)</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigateToEvent(event.slug)}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-serif text-[11px] font-medium transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-              >
-                <Eye size={13} className="text-stone-500" />
-                <span>Lihat Galeri Live</span>
-              </button>
-            </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleDownloadAllZip}
+              disabled={isZipping}
+              className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-black active:scale-95 text-white text-xs font-medium shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
+            >
+              {isZipping ? (
+                <>
+                  <Loader2 size={14} className="animate-spin text-stone-300" />
+                  <span>Mengarsip ({zipProgress}%)...</span>
+                </>
+              ) : (
+                <>
+                  <Package size={14} className="text-stone-300" />
+                  <span>Unduh Semua Foto (.ZIP)</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
         {/* ================= 📱 GROUP LIVE PREVIEW (GAMBARAN LAYAR TAMU LANGSUNG) 📱 ================= */}
-        <div className="rounded-3xl bg-white border border-[#EADBCC]/90 p-5 sm:p-6 shadow-[0_12px_35px_rgba(107,17,31,0.06)] space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-stone-100 pb-3">
+        <div className="rounded-2xl bg-white border border-stone-200 p-5 sm:p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-100 pb-3">
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8C7A6B] font-bold block">
-                SIMULASI LANGSUNG
-              </span>
               <h3 className="text-sm font-serif font-bold text-stone-900">
-                Gambaran di Layar HP Tamu
+                Pratinjau Layar Tamu
               </h3>
+              <p className="text-stone-400 text-xs">Simulasi tampilan di HP pengunjung</p>
             </div>
 
             {/* Toggle Preview Mode */}
-            <div className="inline-flex p-1 rounded-full bg-[#FAF7F2] border border-[#E5DACB] self-start sm:self-auto">
+            <div className="inline-flex p-0.5 rounded-lg bg-stone-100 border border-stone-200">
               <button
                 type="button"
                 onClick={() => setPreviewTab('hero')}
-                className={`px-3.5 py-1 rounded-full text-xs font-serif font-bold transition cursor-pointer ${
+                className={`px-3 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
                   previewTab === 'hero' 
-                    ? 'bg-[#6B111F] text-[#F5D77F] shadow-xs' 
-                    : 'text-stone-600 hover:text-stone-900'
+                    ? 'bg-white text-stone-900 shadow-xs font-semibold' 
+                    : 'text-stone-500 hover:text-stone-900'
                 }`}
               >
                 Beranda Tamu
@@ -904,10 +846,10 @@ export default function ClientSetupPage() {
               <button
                 type="button"
                 onClick={() => setPreviewTab('frame')}
-                className={`px-3.5 py-1 rounded-full text-xs font-serif font-bold transition cursor-pointer ${
+                className={`px-3 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
                   previewTab === 'frame' 
-                    ? 'bg-[#6B111F] text-[#F5D77F] shadow-xs' 
-                    : 'text-stone-600 hover:text-stone-900'
+                    ? 'bg-white text-stone-900 shadow-xs font-semibold' 
+                    : 'text-stone-500 hover:text-stone-900'
                 }`}
               >
                 Hasil Strip Foto
@@ -1122,10 +1064,7 @@ export default function ClientSetupPage() {
             </div>
           </div>
 
-          {/* Friendly UX Caption */}
-          <p className="text-stone-500 text-[11px] text-center max-w-sm mx-auto leading-relaxed pt-1">
-            Simulasi di atas langsung bereaksi saat Anda mengubah nama atau foto di bawah. Hasil inilah yang akan tampil di ponsel para tamu.
-          </p>
+
         </div>
 
         {/* Group B: Informasi Mempelai atau Acara */}
