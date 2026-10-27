@@ -99,8 +99,32 @@ export default function ClientSetupPage() {
 
   const { toast } = useToast();
 
-  // If slug doesn't match an existing event, fallback to first event
-  const event = activeEvent || events.find(e => e.slug === currentSlug) || events[0];
+  // Match existing event or construct dynamic auto-event for new slug
+  const matchedEvent = activeEvent || events.find(e => (e.slug || '').toLowerCase() === (currentSlug || '').toLowerCase());
+  const isNewSlugEvent = Boolean(currentSlug && currentSlug !== 'setup' && currentSlug !== 'demo' && !matchedEvent);
+
+  const event = useMemo(() => {
+    if (matchedEvent) return matchedEvent;
+    if (isNewSlugEvent) {
+      const cleanSlug = currentSlug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
+      const defaultTitle = paramEvent || cleanSlug.replace(/-/g, ' ');
+      return {
+        id: 'evt_' + cleanSlug,
+        slug: cleanSlug,
+        eventType: 'wedding',
+        eventName: defaultTitle,
+        displayName: defaultTitle,
+        groomName: paramGroom || '',
+        brideName: paramBride || '',
+        venue: paramVenue || 'Wedding Venue',
+        eventDate: paramDate || new Date().toISOString().split('T')[0],
+        heroPhotos: DEFAULT_HERO_PHOTOS,
+        submissions: [],
+        isAutoCreated: true
+      };
+    }
+    return events[0];
+  }, [matchedEvent, isNewSlugEvent, currentSlug, paramEvent, paramGroom, paramBride, paramVenue, paramDate, events]);
   const isWedding = (event?.eventType || 'wedding') === 'wedding';
 
   // Photo Submissions & ZIP Export State
@@ -438,7 +462,27 @@ export default function ClientSetupPage() {
     );
     setHeroPhotos(compressedPhotos);
 
-    updateEventConfig(event.id, {
+    if (event?.isAutoCreated || !events.some(e => e.id === event?.id || e.slug === event?.slug)) {
+      if (typeof createEvent === 'function') {
+        createEvent({
+          slug: event.slug,
+          eventType: event.eventType || 'wedding',
+          eventName,
+          groomName,
+          brideName,
+          venue,
+          eventDate,
+          heroPhotos: compressedPhotos,
+          customFrame: {
+            bgColor: frameBgColor,
+            textColor: frameTextColor,
+            borderColor: frameBorderColor,
+            ornaments: frameOrnaments,
+          }
+        });
+      }
+    } else {
+      updateEventConfig(event.id, {
       eventType: event.eventType || 'wedding',
       eventName,
       groomName,
@@ -452,7 +496,8 @@ export default function ClientSetupPage() {
         borderColor: frameBorderColor,
         ornaments: frameOrnaments,
       }
-    });
+      });
+    }
     setIsSaved(true);
     toast('Semua perubahan berhasil disimpan & langsung aktif di web tamu!', 'success');
   };

@@ -321,7 +321,12 @@ export function PhotoboothProvider({ children }) {
       createdAt: now,
     };
 
-    setEvents(prev => [newEvt, ...prev]);
+    setEvents(prev => {
+      const next = [newEvt, ...prev];
+      saveLocalEvents(next);
+      return next;
+    });
+    syncEventToCloud(newEvt);
     return newEvt;
   }, []);
 
