@@ -126,8 +126,8 @@ export function PhotoboothProvider({ children }) {
       if (rawPath === 'admin') {
         return { route: 'admin', slug: '', isDemo: false };
       }
-      if (rawPath.startsWith('setup/')) {
-        const setupSlug = rawPath.replace(/^setup\//, '').trim();
+      if (rawPath === 'setup' || rawPath.startsWith('setup/')) {
+        const setupSlug = rawPath.replace(/^setup\/?/, '').trim();
         return { route: 'setup', slug: setupSlug, isDemo: false };
       }
 

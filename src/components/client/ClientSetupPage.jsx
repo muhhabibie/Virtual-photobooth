@@ -5,7 +5,7 @@ import {
   Trash2, Plus, ExternalLink, Eye, Share2, Upload, Crop,
   Info, Move, ChevronLeft, ChevronRight, Smartphone,
   Palette, Sparkles, Sliders, RotateCw, ZoomIn, ZoomOut, Check, Layers, X,
-  Download, FolderArchive, Package, Loader2
+  Download, FolderArchive, Package, Loader2, MessageCircle
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
@@ -113,13 +113,24 @@ export default function ClientSetupPage() {
   const totalSubmissionsCount = eventSubmissions.length;
   const effectiveSubmissions = totalSubmissionsCount > 0 ? eventSubmissions : (event?.submissions || MOCK_GALLERY_PHOTOS);
 
+  // Parse Lynk.id Query Parameters if redirected from purchase
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const paramGroom = searchParams.get('groom') || searchParams.get('pria') || searchParams.get('pengantin_pria');
+  const paramBride = searchParams.get('bride') || searchParams.get('wanita') || searchParams.get('pengantin_wanita');
+  const paramEvent = searchParams.get('event') || searchParams.get('acara') || searchParams.get('nama_acara') || searchParams.get('nama');
+  const paramVenue = searchParams.get('venue') || searchParams.get('lokasi') || searchParams.get('tempat');
+  const paramDate = searchParams.get('date') || searchParams.get('tanggal') || searchParams.get('tgl');
+  const paramPhone = searchParams.get('wa') || searchParams.get('phone') || searchParams.get('nohp') || searchParams.get('hp');
+  const isFromLynkId = searchParams.get('from') === 'lynkid' || searchParams.has('lynkid') || searchParams.get('source') === 'lynkid' || Boolean(searchParams.get('setup') && (paramGroom || paramEvent));
+
   // Form State
   const [heroPhotos, setHeroPhotos] = useState(event?.heroPhotos || DEFAULT_HERO_PHOTOS);
-  const [eventName, setEventName] = useState(event?.eventName || (isWedding ? '' : (event?.displayName || '')));
-  const [groomName, setGroomName] = useState(event?.groomName || 'Raka');
-  const [brideName, setBrideName] = useState(event?.brideName || 'Sabrina');
-  const [venue, setVenue] = useState(event?.venue || (isWedding ? 'Grand Ballroom Jakarta' : 'Venue Acara'));
-  const [eventDate, setEventDate] = useState(event?.eventDate || '2026-05-30');
+  const [eventName, setEventName] = useState(paramEvent || event?.eventName || (isWedding ? '' : (event?.displayName || '')));
+  const [groomName, setGroomName] = useState(paramGroom || event?.groomName || 'Raka');
+  const [brideName, setBrideName] = useState(paramBride || event?.brideName || 'Sabrina');
+  const [venue, setVenue] = useState(paramVenue || event?.venue || (isWedding ? 'Grand Ballroom Jakarta' : 'Venue Acara'));
+  const [eventDate, setEventDate] = useState(paramDate || event?.eventDate || '2026-05-30');
+  const [clientPhone, setClientPhone] = useState(paramPhone || '');
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -447,10 +458,22 @@ export default function ClientSetupPage() {
   };
 
   const guestUrl = event.slug === 'demo' ? `${window.location.origin}/` : `${window.location.origin}/${event.slug}?qr=1`;
+  const setupUrl = typeof window !== 'undefined' ? `${window.location.origin}/setup/${event.slug}` : `/setup/${event.slug}`;
 
   const handleCopyGuestLink = () => {
     navigator.clipboard.writeText(guestUrl);
     toast('Tautan web tamu berhasil disalin', 'success');
+  };
+
+  const handleSendSetupToWhatsApp = () => {
+    const coupleOrTitle = isWedding ? `${groomName} & ${brideName}` : (eventName || 'Acara Saya');
+    const msg = `Halo Sirklen Photo! 📸\n\nSaya telah melakukan pemesanan via Lynk.id untuk acara *${coupleOrTitle}*.\n\nBerikut tautan dashboard setup saya:\n🔗 ${setupUrl}\n\nTautan tamu photobooth:\n🎉 ${guestUrl}\n\nMohon disimpan ya!`;
+    const targetWa = (clientPhone || '').replace(/\D/g, '');
+    const waUrl = targetWa 
+      ? `https://wa.me/${targetWa}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank');
+    toast('Membuka WhatsApp...', 'success');
   };
 
   // Display Name logic: wedding = groom & bride, non-wedding = eventName
@@ -537,6 +560,38 @@ export default function ClientSetupPage() {
       {/* ================= 🌟 2. MAIN CONTENT (IPHONE DOWNWARD FLOW) 🌟 ================= */}
       <main className="max-w-xl mx-auto px-4 sm:px-5 pt-5 space-y-5 relative z-10">
 
+        {/* Portal Pemesanan & Simpan Link ke WhatsApp */}
+        <div className="rounded-3xl bg-gradient-to-r from-emerald-950 via-[#1C2826] to-[#120B18] border border-emerald-500/40 p-4 sm:p-5 shadow-xl text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center flex-shrink-0 text-emerald-300 mt-0.5">
+                <Sparkles size={20} />
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold block">
+                  PORTAL SETUP AKTIF
+                </span>
+                <h3 className="text-sm sm:text-base font-serif font-bold text-white">
+                  Studio Desain Photobooth Acaramu
+                </h3>
+                <p className="text-[11px] sm:text-xs text-stone-300 font-sans leading-relaxed">
+                  Simpan link setup ini ke WhatsApp agar kamu bisa kembali mendesain & mengecek foto tamu kapan saja.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSendSetupToWhatsApp}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-full bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white font-sans font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 transition cursor-pointer flex-shrink-0"
+            >
+              <MessageCircle size={15} />
+              <span>Simpan ke WhatsApp</span>
+            </button>
+          </div>
+        </div>
+
         {/* Group A: Hero Greeting Card */}
         <div className="rounded-3xl bg-white border border-[#EADBCC]/80 p-5 sm:p-6 shadow-[0_8px_30px_rgba(107,17,31,0.04)] relative overflow-hidden">
           <div className="relative z-10">
@@ -560,6 +615,14 @@ export default function ClientSetupPage() {
               </div>
               
               <div className="flex items-center gap-2">
+                <button
+                  onClick={handleSendSetupToWhatsApp}
+                  className="px-3 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-medium flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-xs"
+                  title="Kirim tautan ke WhatsApp"
+                >
+                  <MessageCircle size={12} className="text-[#25D366]" />
+                  <span>Kirim WA</span>
+                </button>
                 <button
                   onClick={handleCopyGuestLink}
                   className="px-3 py-1 rounded-full bg-[#FAF7F2] hover:bg-stone-100 border border-stone-200 text-stone-700 text-xs font-medium flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-xs"
