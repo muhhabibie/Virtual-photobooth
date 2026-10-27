@@ -711,13 +711,13 @@ export default function ClientSetupPage() {
             <button
               onClick={handleDownloadAllZip}
               disabled={isZipping}
-              className="px-3 py-1.5 rounded-lg bg-stone-900 hover:bg-black active:scale-95 text-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer shadow-xs disabled:opacity-60"
+              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs disabled:opacity-60"
               title="Unduh Seluruh Foto Tamu (.ZIP)"
             >
               {isZipping ? (
-                <Loader2 size={13} className="animate-spin text-stone-300" />
+                <Loader2 size={13} className="animate-spin text-[#F5D77F]" />
               ) : (
-                <FolderArchive size={13} className="text-stone-300" />
+                <FolderArchive size={13} className="text-[#F5D77F]" />
               )}
               <span className="hidden xs:inline">{isZipping ? `Mengarsip ${zipProgress}%` : 'Unduh ZIP'}</span>
               <span className="xs:hidden">{isZipping ? `${zipProgress}%` : 'ZIP'}</span>
@@ -773,9 +773,9 @@ export default function ClientSetupPage() {
               <button
                 type="button"
                 onClick={() => navigateToEvent(event.slug)}
-                className="px-3.5 py-1.5 rounded-lg bg-stone-900 hover:bg-black text-white text-xs font-medium flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
+                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-md shadow-rose-950/20"
               >
-                <Eye size={13} />
+                <Eye size={13} className="text-[#F5D77F]" />
                 <span>Buka Web Tamu</span>
               </button>
             </div>
@@ -803,16 +803,16 @@ export default function ClientSetupPage() {
               type="button"
               onClick={handleDownloadAllZip}
               disabled={isZipping}
-              className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-black active:scale-95 text-white text-xs font-medium shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs font-serif font-bold shadow-md shadow-rose-950/20 transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {isZipping ? (
                 <>
-                  <Loader2 size={14} className="animate-spin text-stone-300" />
+                  <Loader2 size={14} className="animate-spin text-[#F5D77F]" />
                   <span>Mengarsip ({zipProgress}%)...</span>
                 </>
               ) : (
                 <>
-                  <Package size={14} className="text-stone-300" />
+                  <Package size={14} className="text-[#F5D77F]" />
                   <span>Unduh Semua Foto (.ZIP)</span>
                 </>
               )}
