@@ -163,7 +163,7 @@ export function PhotoboothProvider({ children }) {
       }
 
       // If accessed directly without QR scan -> show InvalidCodePage ("Please Scan the QR Code")
-      return { route: 'invalid', slug: rawPath, isDemo: false };
+      return { route: 'event', slug: rawPath, isDemo: false };
     } catch (e) {
       return { route: 'invalid', slug: '', isDemo: false };
     }
