@@ -99,6 +99,16 @@ export default function ClientSetupPage() {
 
   const { toast } = useToast();
 
+  // Parse Lynk.id Query Parameters if redirected from purchase
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const paramGroom = searchParams.get('groom') || searchParams.get('pria') || searchParams.get('pengantin_pria');
+  const paramBride = searchParams.get('bride') || searchParams.get('wanita') || searchParams.get('pengantin_wanita');
+  const paramEvent = searchParams.get('event') || searchParams.get('acara') || searchParams.get('nama_acara') || searchParams.get('nama');
+  const paramVenue = searchParams.get('venue') || searchParams.get('lokasi') || searchParams.get('tempat');
+  const paramDate = searchParams.get('date') || searchParams.get('tanggal') || searchParams.get('tgl');
+  const paramPhone = searchParams.get('wa') || searchParams.get('phone') || searchParams.get('nohp') || searchParams.get('hp');
+  const isFromLynkId = searchParams.get('from') === 'lynkid' || searchParams.has('lynkid') || searchParams.get('source') === 'lynkid' || Boolean(searchParams.get('setup') && (paramGroom || paramEvent));
+
   // Match existing event or construct dynamic auto-event for new slug
   const matchedEvent = activeEvent || events.find(e => (e.slug || '').toLowerCase() === (currentSlug || '').toLowerCase());
   const isNewSlugEvent = Boolean(currentSlug && currentSlug !== 'setup' && currentSlug !== 'demo' && !matchedEvent);
@@ -136,16 +146,6 @@ export default function ClientSetupPage() {
   );
   const totalSubmissionsCount = eventSubmissions.length;
   const effectiveSubmissions = totalSubmissionsCount > 0 ? eventSubmissions : (event?.submissions || MOCK_GALLERY_PHOTOS);
-
-  // Parse Lynk.id Query Parameters if redirected from purchase
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-  const paramGroom = searchParams.get('groom') || searchParams.get('pria') || searchParams.get('pengantin_pria');
-  const paramBride = searchParams.get('bride') || searchParams.get('wanita') || searchParams.get('pengantin_wanita');
-  const paramEvent = searchParams.get('event') || searchParams.get('acara') || searchParams.get('nama_acara') || searchParams.get('nama');
-  const paramVenue = searchParams.get('venue') || searchParams.get('lokasi') || searchParams.get('tempat');
-  const paramDate = searchParams.get('date') || searchParams.get('tanggal') || searchParams.get('tgl');
-  const paramPhone = searchParams.get('wa') || searchParams.get('phone') || searchParams.get('nohp') || searchParams.get('hp');
-  const isFromLynkId = searchParams.get('from') === 'lynkid' || searchParams.has('lynkid') || searchParams.get('source') === 'lynkid' || Boolean(searchParams.get('setup') && (paramGroom || paramEvent));
 
   // Form State
   const [heroPhotos, setHeroPhotos] = useState(event?.heroPhotos || DEFAULT_HERO_PHOTOS);
