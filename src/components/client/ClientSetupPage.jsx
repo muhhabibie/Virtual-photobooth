@@ -104,26 +104,23 @@ function parseSlugInfo(slug) {
   };
 
   // Check if it has couple separator: "-dan-", "-and-", "-with-"
-  if (clean.includes('-dan-')) {
-    const parts = clean.split('-dan-');
-    return {
-      isWedding: true,
-      groom: capitalize(parts[0]),
-      bride: capitalize(parts[1]),
-      eventTitle: `${capitalize(parts[0])} & ${capitalize(parts[1])}`
-    };
+  for (const sep of ['-dan-', '-and-', '-with-']) {
+    if (clean.includes(sep)) {
+      const parts = clean.split(sep);
+      return {
+        isWedding: true,
+        groom: capitalize(parts[0]),
+        bride: capitalize(parts[1]),
+        eventTitle: `${capitalize(parts[0])} & ${capitalize(parts[1])}`
+      };
+    }
   }
-  if (clean.includes('-and-')) {
-    const parts = clean.split('-and-');
-    return {
-      isWedding: true,
-      groom: capitalize(parts[0]),
-      bride: capitalize(parts[1]),
-      eventTitle: `${capitalize(parts[0])} & ${capitalize(parts[1])}`
-    };
-  }
-  if (clean.includes('-with-')) {
-    const parts = clean.split('-with-');
+
+  // Filter out non-name words from remaining parts
+  const parts = clean.split('-').filter(p => !nonNameWords.has(p));
+
+  // If exactly 2 name parts remain (e.g. "raka-sabrina" or after prefix removal "pernikahan-raka-sabrina" → "raka-sabrina")
+  if (parts.length === 2) {
     return {
       isWedding: true,
       groom: capitalize(parts[0]),
@@ -132,24 +129,27 @@ function parseSlugInfo(slug) {
     };
   }
 
-  // If slug has two parts separated by single dash, e.g. "habibi-najwa"
-  const parts = clean.split('-');
-  if (parts.length === 2 && !nonNameWords.has(parts[0]) && !nonNameWords.has(parts[1])) {
-    return {
-      isWedding: true,
-      groom: capitalize(parts[0]),
-      bride: capitalize(parts[1]),
-      eventTitle: `${capitalize(parts[0])} & ${capitalize(parts[1])}`
-    };
+  // If 3+ name parts, try first part as groom, rest as bride (e.g. "raka-ayu-sabrina")
+  if (parts.length >= 3) {
+    const isWed = slug.includes('wedding') || slug.includes('pernikahan');
+    if (isWed) {
+      // For wedding: first name = groom, last name = bride
+      return {
+        isWedding: true,
+        groom: capitalize(parts[0]),
+        bride: capitalize(parts[parts.length - 1]),
+        eventTitle: `${capitalize(parts[0])} & ${capitalize(parts[parts.length - 1])}`
+      };
+    }
   }
 
-  // General event (e.g. "jiwa-wedding", "dies-natalis-filkom")
-  const title = slug.split('-').map(capitalize).join(' ');
+  // General event (e.g. "dies-natalis-filkom", non-wedding)
+  const title = parts.map(p => capitalize(p)).join(' ') || slug.split('-').map(p => capitalize(p)).join(' ');
   const isWed = slug.includes('wedding') || slug.includes('pernikahan');
   return {
     isWedding: isWed,
-    groom: isWed ? title.replace(/wedding|pernikahan/gi, '').trim() : '',
-    bride: isWed ? 'Pasangan' : '',
+    groom: isWed && parts.length >= 1 ? capitalize(parts[0]) : '',
+    bride: isWed && parts.length >= 2 ? capitalize(parts[parts.length - 1]) : (isWed ? '' : ''),
     eventTitle: title
   };
 }
@@ -245,13 +245,18 @@ export default function ClientSetupPage() {
   });
   const [groomName, setGroomName] = useState(() => {
     if (paramGroom) return paramGroom;
-    if (event && !event.isAutoCreated && event.groomName) return event.groomName;
-    return parsedSlug.groom || 'Habibi';
+    // Prefer Firestore data, but fall back to slug parsing if Firestore has generic defaults
+    const dbGroom = event && !event.isAutoCreated ? event.groomName : '';
+    const genericDefaults = ['habibi', 'pasangan', ''];
+    if (dbGroom && !genericDefaults.includes(dbGroom.toLowerCase())) return dbGroom;
+    return parsedSlug.groom || dbGroom || '';
   });
   const [brideName, setBrideName] = useState(() => {
     if (paramBride) return paramBride;
-    if (event && !event.isAutoCreated && event.brideName) return event.brideName;
-    return parsedSlug.bride || 'Najwa';
+    const dbBride = event && !event.isAutoCreated ? event.brideName : '';
+    const genericDefaults = ['najwa', 'pasangan', ''];
+    if (dbBride && !genericDefaults.includes(dbBride.toLowerCase())) return dbBride;
+    return parsedSlug.bride || dbBride || '';
   });
   const [venue, setVenue] = useState(() => {
     if (paramVenue) return paramVenue;
