@@ -2,9 +2,20 @@
 // Integrates LocalStorage (offline instant cache) + Firebase Firestore (cloud multi-device sync)
 
 import { db } from '../config/firebase.js';
-import { collection, doc, setDoc, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from 'firebase/firestore';
 
 const EVENTS_STORAGE_KEY = 'sirklen_photo_events_db';
+
+// Delete event from Cloud Firestore
+export async function deleteEventFromCloud(slug) {
+  if (!db || !slug) return;
+  try {
+    const eventRef = doc(db, 'events', slug.toLowerCase().trim());
+    await deleteDoc(eventRef);
+  } catch (err) {
+    console.warn("[Sirklen Sync] Failed to delete event from Firestore:", err?.message || err);
+  }
+}
 
 // Helper to get local events
 export function getLocalEvents(fallbackEvents = []) {

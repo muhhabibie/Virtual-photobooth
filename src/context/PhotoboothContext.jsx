@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { subscribeSubmissions, saveSubmission, getLocalSubmissions } from '../services/submissionService';
-import { syncEventToCloud, subscribeCloudEvents, saveLocalEvents } from '../services/eventService';
+import { syncEventToCloud, subscribeCloudEvents, saveLocalEvents, deleteEventFromCloud } from '../services/eventService';
 import { INITIAL_EVENTS, PACKAGES, DEFAULT_HERO_PHOTOS, DEMO_EVENT } from '../data/mockEvents';
 import { renderMasterPhotoStrip } from '../utils/stripRenderer';
 
@@ -331,7 +331,15 @@ export function PhotoboothProvider({ children }) {
   }, []);
 
   const deleteEvent = useCallback((eventId) => {
-    setEvents(prev => prev.filter(e => e.id !== eventId));
+    setEvents(prev => {
+      const target = prev.find(e => e.id === eventId);
+      if (target?.slug) {
+        deleteEventFromCloud(target.slug);
+      }
+      const next = prev.filter(e => e.id !== eventId);
+      saveLocalEvents(next);
+      return next;
+    });
   }, []);
 
   const toggleExpireEvent = useCallback((eventId) => {
@@ -394,9 +402,15 @@ export function PhotoboothProvider({ children }) {
         const eventDate = updates.eventDate !== undefined ? updates.eventDate : e.eventDate;
         const formattedDate = eventDate ? new Date(eventDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : e.formattedDate;
 
+        const oldSlug = e.slug;
+        const newSlug = updates.slug ? updates.slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '') : oldSlug;
+        if (oldSlug && newSlug && oldSlug !== newSlug) {
+          deleteEventFromCloud(oldSlug);
+        }
         updatedEvent = {
           ...e,
           ...updates,
+          slug: newSlug,
           eventType,
           eventName,
           groomName: groom,

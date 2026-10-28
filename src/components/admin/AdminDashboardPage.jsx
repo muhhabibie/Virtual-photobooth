@@ -4,7 +4,7 @@ import {
   Plus, Calendar, QrCode, Trash2, Check, Lock, 
   ExternalLink, Eye, Image as ImageIcon, Upload, 
   MessageCircle, Share2, LogOut, Crop, Printer, Archive, 
-  ChevronRight, ChevronLeft, Smartphone, X, Camera, Copy, Sparkles
+  ChevronRight, ChevronLeft, Smartphone, X, Camera, Copy, Sparkles, Edit3
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { PACKAGES, DEFAULT_HERO_PHOTOS, EVENT_CATEGORIES } from '../../data/mockEvents';
@@ -26,7 +26,8 @@ export default function AdminDashboardPage() {
   const { 
     events, 
     createEvent, 
-    deleteEvent, 
+    deleteEvent,
+    updateEventConfig,
     toggleExpireEvent,
     updateEventHeroPhotos,
     savedSubmissions,
@@ -57,6 +58,62 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('events');
   // Category Filter in Event List: 'all' | category ids
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
+
+    // Edit Event Modal State
+  const [editModalEvent, setEditModalEvent] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    displayName: '',
+    slug: '',
+    eventType: 'wedding',
+    groomName: '',
+    brideName: '',
+    eventName: '',
+    venue: '',
+    eventDate: '',
+    package: 'standard',
+  });
+
+  const openEditModal = (evt) => {
+    setEditModalEvent(evt);
+    setEditFormData({
+      displayName: evt.displayName || '',
+      slug: evt.slug || '',
+      eventType: evt.eventType || 'wedding',
+      groomName: evt.groomName || '',
+      brideName: evt.brideName || '',
+      eventName: evt.eventName || '',
+      venue: evt.venue || '',
+      eventDate: evt.eventDate || '',
+      package: evt.package || 'standard',
+    });
+  };
+
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    if (!editModalEvent) return;
+    const cleanSlug = editFormData.slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
+    if (!cleanSlug) {
+      toast('Link / Slug tidak boleh kosong', 'error');
+      return;
+    }
+    const isWed = editFormData.eventType === 'wedding';
+    let computedDisplay = editFormData.displayName;
+    if (!computedDisplay) {
+      if (isWed && editFormData.groomName && editFormData.brideName) {
+        computedDisplay = `${editFormData.groomName} & ${editFormData.brideName}`;
+      } else {
+        computedDisplay = editFormData.eventName || cleanSlug;
+      }
+    }
+    
+    updateEventConfig(editModalEvent.id, {
+      ...editFormData,
+      slug: cleanSlug,
+      displayName: computedDisplay,
+    });
+    toast('Perubahan event berhasil disimpan!', 'success');
+    setEditModalEvent(null);
+  };
 
   // Form State for "Create Event"
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -691,6 +748,17 @@ export default function AdminDashboardPage() {
                           >
                             <Printer size={13} />
                             <span className="whitespace-nowrap">Cetak Meja</span>
+                          </button>
+
+                          <div className="w-[1px] h-3.5 bg-stone-300 flex-shrink-0" />
+
+                          <button
+                            onClick={() => openEditModal(evt)}
+                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap flex-shrink-0"
+                            title="Edit Link, Nama, dan Detail Acara"
+                          >
+                            <Edit3 size={13} className="text-amber-700" />
+                            <span>Edit</span>
                           </button>
 
                           <div className="w-[1px] h-3.5 bg-stone-300 flex-shrink-0" />
@@ -1388,6 +1456,184 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
 
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= 🌟 MODAL: EDIT EVENT 🌟 ================= */}
+      <AnimatePresence>
+        {editModalEvent && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              className="w-full max-w-lg bg-white border border-[#EADBCC] rounded-3xl p-6 sm:p-7 shadow-[0_20px_60px_rgba(107,17,31,0.15)] relative max-h-[90vh] overflow-y-auto no-scrollbar"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-stone-200 mb-5">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8C7A6B] font-bold block mb-0.5">
+                    MANAJEMEN ACARA
+                  </span>
+                  <h3 className="text-base sm:text-lg font-serif font-bold text-stone-900">
+                    Edit Detail & Link Acara
+                  </h3>
+                  <p className="text-xs text-stone-600 mt-0.5">
+                    Ubah link slug, nama mempelai/acara, tanggal, lokasi, atau paket.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditModalEvent(null)}
+                  className="p-1.5 rounded-full text-stone-400 hover:text-stone-800 hover:bg-stone-100 transition cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEdit} className="space-y-4">
+                {/* 1. Slug / Link URL */}
+                <div>
+                  <label className="text-xs font-serif font-bold text-stone-800 block mb-1">
+                    Link Acara (Slug URL) <span className="text-rose-600">*</span>
+                  </label>
+                  <div className="flex items-center rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] px-3.5 py-2.5 focus-within:border-[#6B111F] transition">
+                    <span className="text-xs font-mono text-stone-400 select-none mr-1">
+                      sirklenice.com/
+                    </span>
+                    <input
+                      type="text"
+                      value={editFormData.slug}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
+                      required
+                      placeholder="contoh-acara"
+                      className="w-full bg-transparent text-xs font-mono text-stone-900 focus:outline-none font-bold"
+                    />
+                  </div>
+                  <p className="text-[10px] text-stone-400 mt-1">
+                    Mengubah link ini akan otomatis memperbarui link tamu dan link setup.
+                  </p>
+                </div>
+
+                {/* 2. Nama Tampilan Utama */}
+                <div>
+                  <label className="text-xs font-serif font-bold text-stone-800 block mb-1">
+                    Judul Tampilan Acara
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.displayName}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, displayName: e.target.value }))}
+                    placeholder="Contoh: Raka & Sabrina"
+                    className="w-full py-2.5 px-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-xs font-serif focus:outline-none focus:border-[#6B111F]"
+                  />
+                </div>
+
+                {/* 3. Conditional Wedding Names or Event Name */}
+                {editFormData.eventType === 'wedding' ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-serif font-bold text-stone-800 block mb-1">
+                        Mempelai Pria
+                      </label>
+                      <input
+                        type="text"
+                        value={editFormData.groomName}
+                        onChange={(e) => setEditFormData(prev => ({ ...prev, groomName: e.target.value }))}
+                        placeholder="Nama Pria"
+                        className="w-full py-2.5 px-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-xs font-serif focus:outline-none focus:border-[#6B111F]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-serif font-bold text-stone-800 block mb-1">
+                        Mempelai Wanita
+                      </label>
+                      <input
+                        type="text"
+                        value={editFormData.brideName}
+                        onChange={(e) => setEditFormData(prev => ({ ...prev, brideName: e.target.value }))}
+                        placeholder="Nama Wanita"
+                        className="w-full py-2.5 px-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-xs font-serif focus:outline-none focus:border-[#6B111F]"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-xs font-serif font-bold text-stone-800 block mb-1">
+                      Nama Acara / Konser / Gathering
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.eventName}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, eventName: e.target.value }))}
+                      placeholder="Nama Acara"
+                      className="w-full py-2.5 px-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-xs font-serif focus:outline-none focus:border-[#6B111F]"
+                    />
+                  </div>
+                )}
+
+                {/* 4. Tanggal & Lokasi Venue */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-serif font-bold text-stone-800 block mb-1">
+                      Tanggal Acara
+                    </label>
+                    <input
+                      type="date"
+                      value={editFormData.eventDate}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, eventDate: e.target.value }))}
+                      className="w-full py-2.5 px-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-xs font-mono focus:outline-none focus:border-[#6B111F]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-serif font-bold text-stone-800 block mb-1">
+                      Lokasi / Venue
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.venue}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, venue: e.target.value }))}
+                      placeholder="Contoh: Grand Ballroom Jakarta"
+                      className="w-full py-2.5 px-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-xs font-serif focus:outline-none focus:border-[#6B111F]"
+                    />
+                  </div>
+                </div>
+
+                {/* 5. Paket */}
+                <div>
+                  <label className="text-xs font-serif font-bold text-stone-800 block mb-1">
+                    Pilihan Paket
+                  </label>
+                  <select
+                    value={editFormData.package}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, package: e.target.value }))}
+                    className="w-full py-2.5 px-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-xs font-serif focus:outline-none focus:border-[#6B111F]"
+                  >
+                    <option value="basic">Paket Basic (7 Hari)</option>
+                    <option value="standard">Paket Standar (10 Hari)</option>
+                    <option value="all_in">Paket Spesial (14 Hari)</option>
+                  </select>
+                </div>
+
+                {/* Actions */}
+                <div className="pt-4 border-t border-stone-200 flex items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setEditModalEvent(null)}
+                    className="px-4 py-2 rounded-full bg-[#FAF7F2] hover:bg-stone-100 text-stone-700 text-xs font-serif font-medium border border-stone-200 transition cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:brightness-110 active:scale-95 text-[#F5D77F] border border-[#F5D77F]/30 text-xs font-serif font-bold shadow-md shadow-rose-950/20 transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Check size={14} />
+                    <span>Simpan Perubahan</span>
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}
