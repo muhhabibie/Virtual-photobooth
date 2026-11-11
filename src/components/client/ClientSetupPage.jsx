@@ -91,6 +91,9 @@ function parseSlugInfo(slug) {
   if (!slug || slug === 'setup' || slug === 'demo') {
     return { isWedding: true, groom: 'Raka', bride: 'Sabrina', eventTitle: 'Raka & Sabrina' };
   }
+  if (slug.toLowerCase() === 'cfd') {
+    return { isWedding: false, groom: '', bride: '', eventTitle: 'Car Free Day Malang' };
+  }
 
   const nonNameWords = new Set(['wedding', 'pernikahan', 'resepsi', 'event', 'party', 'fest', 'festival', 'expo', 'the', 'of']);
 
@@ -999,7 +1002,19 @@ export default function ClientSetupPage() {
                       </div>
                     ))}
 
-                      {/* Photo Cuts with Solid Taupe Border Band (Reference Wendy & Mark Style) */}
+                      {/* Top Brand Header: N | sirklenice */}
+                      <div className="flex items-center justify-center gap-1 pt-0.5 pb-0.5" style={{ color: frameTextColor }}>
+                        <span className="text-[7.5px] font-mono font-black tracking-widest">N</span>
+                        <span className="text-[7px] opacity-40">|</span>
+                        <span className="text-[7px] font-sans font-semibold tracking-wide">sirklenice</span>
+                      </div>
+                      <div className="text-center pb-1">
+                        <span className="text-[6.5px] font-serif font-bold tracking-wider block uppercase truncate px-1" style={{ color: frameTextColor }}>
+                          {event?.slug === 'cfd' ? 'Car Free Day Malang' : (eventName || combinedDisplayName)}
+                        </span>
+                      </div>
+
+                      {/* Photo Cuts with Solid Taupe Border Band */}
                       <div className="space-y-1 pt-0.5 pb-1 relative z-10">
                         <div className="p-0.5 rounded-lg shadow-xs" style={{ backgroundColor: frameBorderColor || '#B89F88' }}>
                           <div className="aspect-[4/3] rounded-md overflow-hidden bg-black/10">
@@ -1030,28 +1045,29 @@ export default function ClientSetupPage() {
                         </div>
                       </div>
 
-                      {/* Spacious Footer (Reference Layout: Names, Divider Line, Date & Kalimat Space) */}
-                      <div className="text-center pt-2 pb-1 relative z-10 flex flex-col items-center">
+                      {/* Footer: Nama Tamu, Divider Diamond, Date, Location, User Quote */}
+                      <div className="text-center pt-1.5 pb-1 relative z-10 flex flex-col items-center">
                         <strong 
-                          className="text-[10px] font-serif font-black tracking-widest block uppercase truncate max-w-full"
+                          className="text-[8px] font-serif font-bold tracking-wider block uppercase truncate max-w-full"
                           style={{ color: frameTextColor }}
                         >
-                          {combinedDisplayName.toUpperCase()}
+                          NAMA TAMU
                         </strong>
-                        {/* Horizontal Divider Line */}
-                        <div 
-                          className="w-12 h-[1.2px] my-1 rounded-full"
-                          style={{ backgroundColor: frameBorderColor || '#C4A482' }}
-                        />
-                        <span className="text-[6.5px] font-mono font-bold block" style={{ color: frameTextColor }}>
-                          {formattedDisplayDate}
+                        {/* Horizontal Divider Line with Diamond */}
+                        <div className="flex items-center justify-center gap-1 my-0.5 w-16">
+                          <div className="flex-1 h-[0.8px]" style={{ backgroundColor: frameBorderColor || '#C4A482' }} />
+                          <div className="w-1 h-1 rotate-45" style={{ backgroundColor: frameBorderColor || '#C4A482' }} />
+                          <div className="flex-1 h-[0.8px]" style={{ backgroundColor: frameBorderColor || '#C4A482' }} />
+                        </div>
+                        <span className="text-[6px] font-mono font-bold block" style={{ color: frameTextColor }}>
+                          {event?.slug === 'cfd' ? '15 - 11 - 2026' : (formattedDisplayDate || '15 - 11 - 2026')}
                         </span>
-                        <span className="text-[6px] font-sans uppercase tracking-wider block opacity-75 truncate max-w-full" style={{ color: frameTextColor }}>
-                          {venue || 'PASADENA, CA'}
+                        <span className="text-[5.5px] font-sans font-bold uppercase tracking-wider block opacity-75 truncate max-w-full" style={{ color: frameTextColor }}>
+                          {event?.slug === 'cfd' ? 'IDJEN BOULEVARD' : (venue || 'IDJEN BOULEVARD')}
                         </span>
                         {/* Dedicated Sentence / Kalimat Space */}
-                        <span className="text-[5.5px] font-serif italic mt-1 text-[#8C7A6B] block">
-                          “With Love, Tamu Undangan”
+                        <span className="text-[5px] font-serif italic mt-0.5 text-[#8C7A6B] block">
+                          “kata-kata hari ini”
                         </span>
                       </div>
                     </div>

@@ -3,12 +3,85 @@ import { getEventDisplayName, getEventFormattedDate } from './eventHeader';
 
 /**
  * Universal Master Strip Renderer
- * Renders the high-end Wendy & Mark reference photostrip with luxurious typography:
- * StepFrames, StepCamera (modal), StepReview, StepVoice, and StepResult (download).
- * 
- * Supports physical 2"x6" photostrip paper (1:3 ratio, 1200x3600 at 2x Retina)
- * and Polaroid (4:5 ratio) for 1 photo.
+ * Updated to official Sirklenice standard layout:
+ * 1. Top center: Monogram [N] | sirklenice brand
+ * 2. Sub-header: Event Name (e.g. Car Free Day Malang / Wedding)
+ * 3. Photo slots (1, 2, 3, or 4 photos) with refined border mat
+ * 4. Below photo: Guest Name ("Nama Tamu" or actual guest name)
+ * 5. Horizontal divider line with center diamond accent
+ * 6. Date: 15 - 11 - 2026
+ * 7. Location: IDJEN BOULEVARD
+ * 8. Guest message/words in quotes if present: "kata-kata hari ini"
  */
+
+// Helper to draw the official Sirklen Monogram [N] + | + sirklenice brand logo
+function drawSirklenBrandHeader(ctx, totalW, topCenterY, color, scale) {
+  ctx.save();
+  // Monogram N geometry (viewBox 339x515, bounds 108..447 and 20..535)
+  const monoH = 15 * scale;
+  const monoW = monoH * (339 / 515); // ~9.9 * scale
+  const barH = 15 * scale;
+  const gap = 7 * scale;
+
+  // Measure 'sirklenice' brand text
+  const brandFont = `600 ${13.5 * scale}px 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif`;
+  ctx.font = brandFont;
+  const textMetrics = ctx.measureText('sirklenice');
+  const textW = textMetrics.width;
+
+  const totalBrandW = monoW + gap + (1.2 * scale) + gap + textW;
+  const startX = (totalW - totalBrandW) / 2;
+
+  // 1. Draw Vector Monogram N
+  const s = monoH / 515;
+  const monoX0 = startX - 108 * s;
+  const monoY0 = (topCenterY - monoH / 2) - 20 * s;
+
+  ctx.fillStyle = color;
+  ctx.save();
+  ctx.translate(monoX0, monoY0);
+  ctx.scale(s, s);
+
+  // Bottom dot
+  ctx.fillRect(108, 475, 75, 60);
+  // Top dot
+  ctx.fillRect(372, 20, 75, 58);
+  // Main glyph N
+  ctx.beginPath();
+  ctx.moveTo(108, 107);
+  ctx.lineTo(183, 107);
+  ctx.lineTo(372, 333);
+  ctx.lineTo(372, 107);
+  ctx.lineTo(447, 107);
+  ctx.lineTo(447, 445);
+  ctx.lineTo(372, 445);
+  ctx.lineTo(183, 220);
+  ctx.lineTo(183, 445);
+  ctx.lineTo(108, 445);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // 2. Draw Vertical Divider Bar '|'
+  const barX = startX + monoW + gap;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.2 * scale;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(barX, topCenterY - barH / 2);
+  ctx.lineTo(barX, topCenterY + barH / 2);
+  ctx.stroke();
+
+  // 3. Draw 'sirklenice' Text
+  const textX = barX + gap;
+  ctx.fillStyle = color;
+  ctx.font = brandFont;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('sirklenice', textX, topCenterY);
+
+  ctx.restore();
+}
 
 // Helper to draw text with letter-spacing (luxury tracking) with fallback support
 function drawSpacedText(ctx, text, x, y, letterSpacing = 0) {
@@ -44,7 +117,7 @@ function drawSpacedText(ctx, text, x, y, letterSpacing = 0) {
 }
 
 // Helper to dynamically scale down font size if text is too wide
-function fitTextSize(ctx, text, maxW, baseSize, minSize = 12) {
+function fitTextSize(ctx, text, maxW, baseSize, minSize = 11) {
   let size = baseSize;
   ctx.font = ctx.font.replace(/\d+(\.\d+)?px/, `${size}px`);
   while (size > minSize && ctx.measureText(text).width > maxW) {
@@ -69,47 +142,46 @@ export function renderMasterPhotoStrip(canvas, {
   const count = targetCount || (photos.length > 0 ? photos.length : 3);
   const isPolaroid = count === 1;
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
+  const isCFD = (activeEvent?.slug || '').toLowerCase() === 'cfd' ||
+                (activeEvent?.eventName || '').toLowerCase().includes('cfd') ||
+                (activeEvent?.eventName || '').toLowerCase().includes('car free day');
 
   // Check if custom guest message is present
   const rawMsg = guestMessage && guestMessage.trim() ? guestMessage.trim() : '';
   const hasCustomMsg = Boolean(rawMsg && rawMsg !== 'With Love' && rawMsg !== '“With Love”');
   const shortMessageText = hasCustomMsg ? `“${rawMsg.substring(0, 52)}”` : '';
 
-  // Venue / Location from activeEvent (defaults to PASADENA, CA matching Reference Image 1)
-  const venueText = (activeEvent?.venue || activeEvent?.location || activeEvent?.city || (isWedding ? 'PASADENA, CA' : 'SPECIAL EVENT PHOTOBOOTH')).toUpperCase();
+  // Venue / Location from activeEvent
+  const venueText = (activeEvent?.venue || activeEvent?.location || (isCFD ? 'IDJEN BOULEVARD' : (isWedding ? 'PASADENA, CA' : 'SPECIAL EVENT'))).toUpperCase();
 
   const totalW = 600 * scale; // 1200 px at scale 2
   const padX = 46 * scale;
-  const photoW = totalW - padX * 2; // 508 * scale (84.7% photo width, matching Image 1)
+  const photoW = totalW - padX * 2; // 508 * scale
 
-  // Spacing and dimensions dynamically tailored for 1, 2, 3, and 4 photos:
-  // Eliminates dead space completely; photos occupy ~72-78% of height, footer is tight and compact.
-  let photoH, gap, topPad, footerH;
+  // Layout Sizing: Header with Brand Logo + Event Name requires topPad ~88 * scale
+  const topPad = 88 * scale;
+  let photoH, gap, footerH;
 
   if (isPolaroid) {
     // 1 Photo (Classic Polaroid ~1:1.15)
     photoH = Math.round(photoW * 0.88); // 447 * scale
     gap = 0;
-    topPad = 46 * scale;
-    footerH = (hasCustomMsg ? 190 : 158) * scale;
+    footerH = (hasCustomMsg ? 154 : 126) * scale;
   } else if (count === 2) {
-    // 2 Photos (Duo Strip ~1:1.63)
-    photoH = Math.round(photoW * 0.74); // 376 * scale (~4:3 landscape ratio)
-    gap = 20 * scale;
-    topPad = 48 * scale;
-    footerH = (hasCustomMsg ? 192 : 160) * scale;
-  } else if (count === 4) {
-    // 4 Photos (Classic 4-pose 2x6 strip ~1:2.75)
-    photoH = Math.round(photoW * 0.68); // 345 * scale
+    // 2 Photos (Duo Strip)
+    photoH = Math.round(photoW * 0.70); // 355 * scale
     gap = 16 * scale;
-    topPad = 48 * scale;
-    footerH = (hasCustomMsg ? 192 : 160) * scale;
+    footerH = (hasCustomMsg ? 154 : 126) * scale;
+  } else if (count === 4) {
+    // 4 Photos (Classic 4-pose 2x6 strip)
+    photoH = Math.round(photoW * 0.64); // 325 * scale
+    gap = 14 * scale;
+    footerH = (hasCustomMsg ? 154 : 126) * scale;
   } else {
-    // Standard 3 Photos (Exact Wendy & Mark Reference Format ~1:2.23)
-    photoH = Math.round(photoW * 0.72); // 366 * scale
-    gap = 18 * scale;
-    topPad = 48 * scale;
-    footerH = (hasCustomMsg ? 192 : 160) * scale;
+    // Standard 3 Photos (Classic 3-pose strip)
+    photoH = Math.round(photoW * 0.70); // 355 * scale
+    gap = 16 * scale;
+    footerH = (hasCustomMsg ? 154 : 126) * scale;
   }
 
   const totalH = topPad + (photoH * count) + (gap * Math.max(0, count - 1)) + footerH;
@@ -131,31 +203,37 @@ export function renderMasterPhotoStrip(canvas, {
   const accentColor = isLightBg ? '#B89F88' : (activeEvent?.customFrame?.textColor || '#F5D77F');
   const primaryTextColor = isLightBg ? '#22201E' : '#FFFFFF';
 
-  // 2. Draw Reference Botanicals (Branch top-left & flower blossom bottom-right)
-  drawStripBotanicals(ctx, totalW, totalH, accentColor, scale);
-
-  // 2b. Header Event Title at the TOP of the strip (e.g. THE WEDDING OF SABRINA & RAKA)
-  let topHeaderTitle = '';
-  if (isWedding) {
-    const bride = activeEvent?.brideName;
-    const groom = activeEvent?.groomName;
-    const couple = (bride && groom) ? `${bride} & ${groom}` : (getEventDisplayName(activeEvent, activeEvent?.slug) || 'Sabrina & Raka');
-    topHeaderTitle = `THE WEDDING OF ${couple}`.toUpperCase();
-  } else {
-    topHeaderTitle = (activeEvent?.eventName || activeEvent?.displayName || getEventDisplayName(activeEvent, activeEvent?.slug) || 'OFFICIAL EVENT PHOTOBOOTH').toUpperCase();
+  // Optional: Draw subtle botanicals only for wedding events that requested them
+  if (isWedding && activeEvent?.customFrame?.botanicals) {
+    drawStripBotanicals(ctx, totalW, totalH, accentColor, scale);
   }
 
-  // Render Top Header with Grand Luxury Serif & Generous Letter-Spacing
+  // 2a. TOP BRAND HEADER: Logo N | Sirklenice (Top-most Center)
+  const brandCenterY = 30 * scale;
+  drawSirklenBrandHeader(ctx, totalW, brandCenterY, primaryTextColor, scale);
+
+  // 2b. TOP SUB-HEADER: Event Name / Wedding (Centered below Brand Logo)
+  let topEventName = '';
+  if (isCFD) {
+    topEventName = 'Car Free Day Malang';
+  } else if (isWedding) {
+    const bride = activeEvent?.brideName;
+    const groom = activeEvent?.groomName;
+    const couple = (bride && groom) ? `${groom} & ${bride}` : (getEventDisplayName(activeEvent, activeEvent?.slug) || 'Raka & Sabrina');
+    topEventName = `The Wedding of ${couple}`;
+  } else {
+    topEventName = activeEvent?.eventName || activeEvent?.displayName || getEventDisplayName(activeEvent, activeEvent?.slug) || 'Car Free Day Malang';
+  }
+
   ctx.save();
   ctx.fillStyle = primaryTextColor;
-  const headerBaseSize = isPolaroid ? 13.5 * scale : 14.5 * scale;
-  ctx.font = `bold ${headerBaseSize}px 'Cinzel', 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-  fitTextSize(ctx, topHeaderTitle, totalW - 70 * scale, headerBaseSize, 11 * scale);
+  const titleBaseSize = isPolaroid ? 14.5 * scale : 15.5 * scale;
+  ctx.font = `bold ${titleBaseSize}px 'Cinzel', 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
+  fitTextSize(ctx, topEventName, photoW - 20 * scale, titleBaseSize, 11 * scale);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const topTextY = Math.round(topPad * 0.52);
-  const headerTracking = isPolaroid ? 2.4 * scale : 2.8 * scale;
-  drawSpacedText(ctx, topHeaderTitle, totalW / 2, topTextY, headerTracking);
+  const eventTitleY = 60 * scale;
+  drawSpacedText(ctx, topEventName, totalW / 2, eventTitleY, 2.0 * scale);
   ctx.restore();
 
   // Center-crop helper to prevent any photo distortion
@@ -171,14 +249,14 @@ export function renderMasterPhotoStrip(canvas, {
     ctx.drawImage(imgEl, sx, sy, nw, nh, dx, dy, dw, dh);
   };
 
-  // 3. Render Photo Slots with Solid Taupe Border Band (Reference Mat)
-  const borderBand = 5.5 * scale;
+  // 3. Render Photo Slots with Refined Border Band (Mat Border)
+  const borderBand = 5 * scale;
   let drawY = topPad;
 
   for (let idx = 0; idx < count; idx++) {
     const photo = photos[idx];
 
-    // Solid Taupe Frame Band (Reference Mat)
+    // Solid Frame Band (Mat Border)
     ctx.fillStyle = accentColor;
     ctx.fillRect(padX - borderBand, drawY - borderBand, photoW + borderBand * 2, photoH + borderBand * 2);
 
@@ -213,46 +291,57 @@ export function renderMasterPhotoStrip(canvas, {
     drawY += photoH + gap;
   }
 
-  // 4. Harmonious & Balanced Footer Section (Ref: Image 1 Wendy & Mark)
+  // 4. FOOTER SECTION (Below Photos)
+  // Sequence according to user drawing:
+  // - Nama Tamu
+  // - Garis Pemisah (Divider Line with center diamond)
+  // - Tanggal: 15 - 11 - 2026
+  // - Lokasi: IDJEN BOULEVARD
+  // - User words / message (if present)
   const footerTop = topPad + (photoH * count) + (gap * Math.max(0, count - 1));
-  const dateText = getEventFormattedDate(activeEvent) || '30 · 05 · 2026';
-  
-  // Title determination: Guest name if entered; otherwise Bride & Groom / Event name
+
+  // Date determination: Always format as DD - MM - YYYY (e.g. 15 - 11 - 2026)
+  const dateText = getEventFormattedDate(activeEvent) || (isCFD ? '15 - 11 - 2026' : '15 - 11 - 2026');
+
+  // Guest Name Determination
   const rawGuestName = guestName && guestName.trim() ? guestName.trim() : '';
   let guestTitle = '';
   if (rawGuestName) {
     guestTitle = rawGuestName.toUpperCase();
+  } else if (isCFD) {
+    guestTitle = 'NAMA TAMU';
   } else if (isWedding) {
     const bride = activeEvent?.brideName;
     const groom = activeEvent?.groomName;
-    guestTitle = (bride && groom) ? `${bride} & ${groom}`.toUpperCase() : (getEventDisplayName(activeEvent, activeEvent?.slug) || 'WENDY & MARK').toUpperCase();
+    guestTitle = (bride && groom) ? `${groom} & ${bride}`.toUpperCase() : 'NAMA TAMU';
   } else {
-    guestTitle = (getEventDisplayName(activeEvent, activeEvent?.slug) || 'SPECIAL GUEST').toUpperCase();
+    guestTitle = 'NAMA TAMU';
   }
 
-  // Exact vertical positions relative to footerTop (tight, elegant & full layout)
-  const nameY = footerTop + 38 * scale;
-  const line1Y = nameY + 22 * scale;
-  const dateY = line1Y + 24 * scale;
-  const venueY = dateY + 20 * scale;
-  const msgY = venueY + 24 * scale;
+  // Exact vertical positions relative to footerTop
+  const nameY = footerTop + 33 * scale;
+  const line1Y = nameY + 20 * scale;
+  const dateY = line1Y + 23 * scale;
+  const venueY = dateY + 19 * scale;
+  const msgY = venueY + 23 * scale;
 
-  // 4a. Guest / Couple Title (Grand Luxury Serif matching Image 1)
+  // 4a. Guest Name ("Nama Tamu")
   ctx.save();
   ctx.fillStyle = primaryTextColor;
-  const nameBaseSize = (isPolaroid ? 27 : 30) * scale;
+  const nameBaseSize = (isPolaroid ? 23 : 25) * scale;
   ctx.font = `bold ${nameBaseSize}px 'Cinzel', 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-  fitTextSize(ctx, guestTitle, photoW - 20 * scale, nameBaseSize, 17 * scale);
+  fitTextSize(ctx, guestTitle, photoW - 20 * scale, nameBaseSize, 15 * scale);
   ctx.textAlign = 'center';
-  drawSpacedText(ctx, guestTitle, totalW / 2, nameY, 3.4 * scale);
+  ctx.textBaseline = 'alphabetic';
+  drawSpacedText(ctx, guestTitle, totalW / 2, nameY, 2.8 * scale);
   ctx.restore();
 
-  // 4b. Primary Divider Line with Center Diamond Accent
+  // 4b. Divider Line with Center Diamond Accent
   ctx.save();
   ctx.strokeStyle = accentColor;
-  ctx.lineWidth = 1.8 * scale;
+  ctx.lineWidth = 1.6 * scale;
   ctx.lineCap = 'round';
-  const div1Width = (isPolaroid ? 190 : 220) * scale;
+  const div1Width = (isPolaroid ? 180 : 210) * scale;
   const diamondR = 3.6 * scale;
   // Left segment
   ctx.beginPath();
@@ -264,7 +353,7 @@ export function renderMasterPhotoStrip(canvas, {
   ctx.moveTo(totalW / 2 + diamondR + 4 * scale, line1Y);
   ctx.lineTo(totalW / 2 + div1Width / 2, line1Y);
   ctx.stroke();
-  // Center luxury diamond ornament
+  // Center diamond accent
   ctx.fillStyle = accentColor;
   ctx.beginPath();
   ctx.moveTo(totalW / 2, line1Y - diamondR);
@@ -275,33 +364,36 @@ export function renderMasterPhotoStrip(canvas, {
   ctx.fill();
   ctx.restore();
 
-  // 4c. Date Text (Sophisticated Roman / Serif with Wide Tracking)
+  // 4c. Date Text (e.g. 15 - 11 - 2026)
   ctx.save();
   ctx.fillStyle = primaryTextColor;
-  const dateBaseSize = (isPolaroid ? 15 : 16.5) * scale;
+  const dateBaseSize = (isPolaroid ? 14 : 15.5) * scale;
   ctx.font = `bold ${dateBaseSize}px 'Cinzel', 'Playfair Display', Georgia, serif`;
   ctx.textAlign = 'center';
-  drawSpacedText(ctx, dateText, totalW / 2, dateY, 3.4 * scale);
+  ctx.textBaseline = 'alphabetic';
+  drawSpacedText(ctx, dateText, totalW / 2, dateY, 3.2 * scale);
   ctx.restore();
 
-  // 4d. Venue / Location Text (Crisp Subtitle matching "PASADENA, CA" in Image 1)
+  // 4d. Venue / Location Text (e.g. IDJEN BOULEVARD)
   ctx.save();
   ctx.fillStyle = primaryTextColor;
-  const venueBaseSize = (isPolaroid ? 13 : 14) * scale;
+  const venueBaseSize = (isPolaroid ? 12 : 13.5) * scale;
   ctx.font = `bold ${venueBaseSize}px 'Cinzel', 'Playfair Display', sans-serif`;
   fitTextSize(ctx, venueText, photoW - 40 * scale, venueBaseSize, 10 * scale);
   ctx.textAlign = 'center';
-  drawSpacedText(ctx, venueText, totalW / 2, venueY, 3.0 * scale);
+  ctx.textBaseline = 'alphabetic';
+  drawSpacedText(ctx, venueText, totalW / 2, venueY, 2.8 * scale);
   ctx.restore();
 
-  // 4e. Guest Wish / Message (if present - Large, Prominent & Highly Readable)
+  // 4e. Guest Words / Message (in quotes if present)
   if (hasCustomMsg) {
     ctx.save();
     ctx.fillStyle = primaryTextColor;
-    const msgBaseSize = (isPolaroid ? 17.5 : 19) * scale;
+    const msgBaseSize = (isPolaroid ? 15 : 16.5) * scale;
     ctx.font = `italic 600 ${msgBaseSize}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-    fitTextSize(ctx, shortMessageText, photoW - 36 * scale, msgBaseSize, 13 * scale);
+    fitTextSize(ctx, shortMessageText, photoW - 36 * scale, msgBaseSize, 12 * scale);
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
     ctx.fillText(shortMessageText, totalW / 2, msgY);
     ctx.restore();
   }
@@ -313,7 +405,7 @@ export function renderMasterPhotoStrip(canvas, {
     ctx.strokeRect(2 * scale, 2 * scale, totalW - 4 * scale, totalH - 4 * scale);
   }
 
-  // 6. Bride's Custom Positioned Ornaments (if any)
+  // 6. Custom Positioned Ornaments (if any)
   if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {
     drawFrameOrnaments(
       ctx,

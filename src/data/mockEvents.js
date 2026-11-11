@@ -77,6 +77,27 @@ export const DEFAULT_HERO_PHOTOS = [
 
 export const INITIAL_EVENTS = [
   {
+    id: 'event_cfd',
+    slug: 'cfd',
+    eventType: 'festival',
+    eventName: 'Car Free Day Malang',
+    displayName: 'Car Free Day Malang',
+    eventDate: '2026-11-15',
+    formattedDate: '15 November 2026',
+    venue: 'Idjen Boulevard',
+    package: 'all_in',
+    pin: '',
+    templateIds: ['wedding-classic', 'standard', 'celebration'],
+    heroPhotos: [
+      'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=1600&auto=format&fit=crop&q=85',
+      'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=1600&auto=format&fit=crop&q=85',
+      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1600&auto=format&fit=crop&q=85',
+      'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=1600&auto=format&fit=crop&q=85',
+    ],
+    expiresAt: NOW + 365 * DAY_MS,
+    createdAt: NOW,
+  },
+  {
     id: 'event_pestapora',
     slug: 'pestapora',
     eventType: 'concert',

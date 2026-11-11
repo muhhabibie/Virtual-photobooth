@@ -51,9 +51,13 @@ export function PhotoboothProvider({ children }) {
     }
   });
 
-  // Save events to local storage whenever updated
+  // Save events to local storage whenever updated & ensure CFD is synced
   useEffect(() => {
     saveLocalEvents(events);
+    const cfdEvt = events.find(e => e.slug === 'cfd') || INITIAL_EVENTS.find(e => e.slug === 'cfd');
+    if (cfdEvt) {
+      syncEventToCloud(cfdEvt);
+    }
   }, [events]);
 
   // Subscribe to real-time events stream from Cloud Firestore (cross-device sync)
@@ -190,7 +194,11 @@ export function PhotoboothProvider({ children }) {
       return DEMO_EVENT;
     }
     if (!currentSlug) return null;
-    return events.find(evt => evt.slug.toLowerCase() === currentSlug) || null;
+    const found = events.find(evt => evt.slug.toLowerCase() === currentSlug.toLowerCase());
+    if (!found && currentSlug.toLowerCase() === 'cfd') {
+      return INITIAL_EVENTS.find(e => e.slug === 'cfd') || INITIAL_EVENTS[0];
+    }
+    return found || null;
   }, [events, currentSlug, isDemo]);
 
   // Expiry Check

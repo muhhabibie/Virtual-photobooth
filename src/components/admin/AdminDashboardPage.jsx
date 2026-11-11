@@ -1382,14 +1382,17 @@ export default function AdminDashboardPage() {
                             }}
                           >
                             <div className="text-center pb-1">
-                              <span className="text-[6px] font-mono tracking-widest block uppercase opacity-80">
-                                {isWed ? 'THE WEDDING OF' : 'OFFICIAL PHOTOBOOTH'}
-                              </span>
+                              {/* Top Brand Header: N | sirklenice */}
+                              <div className="flex items-center justify-center gap-1 pb-0.5" style={{ color: theme.textHex }}>
+                                <span className="text-[7px] font-mono font-black tracking-widest">N</span>
+                                <span className="text-[6.5px] opacity-40">|</span>
+                                <span className="text-[6.5px] font-sans font-semibold tracking-wide">sirklenice</span>
+                              </div>
                               <strong 
-                                className="text-[9px] font-serif tracking-wide block truncate"
+                                className="text-[8px] font-serif tracking-wide block truncate uppercase"
                                 style={{ color: theme.textHex }}
                               >
-                                {previewModalEvent.displayName}
+                                {previewModalEvent.slug === 'cfd' ? 'Car Free Day Malang' : previewModalEvent.displayName}
                               </strong>
                             </div>
 
@@ -1402,9 +1405,23 @@ export default function AdminDashboardPage() {
                               </div>
                             </div>
 
-                            <div className="text-center pt-1 border-t border-black/10">
-                              <span className="text-[6px] font-mono opacity-80">
-                                {previewModalEvent.formattedDate || previewModalEvent.eventDate}
+                            <div className="text-center pt-1 flex flex-col items-center">
+                              <strong className="text-[7.5px] font-serif font-bold tracking-wider block uppercase" style={{ color: theme.textHex }}>
+                                NAMA TAMU
+                              </strong>
+                              <div className="flex items-center justify-center gap-1 my-0.5 w-14">
+                                <div className="flex-1 h-[0.8px] bg-black/20" />
+                                <div className="w-1 h-1 rotate-45 bg-black/30" />
+                                <div className="flex-1 h-[0.8px] bg-black/20" />
+                              </div>
+                              <span className="text-[5.5px] font-mono font-bold opacity-80">
+                                {previewModalEvent.slug === 'cfd' ? '15 - 11 - 2026' : (previewModalEvent.eventDate ? previewModalEvent.eventDate.split('-').reverse().join(' - ') : '15 - 11 - 2026')}
+                              </span>
+                              <span className="text-[5px] font-sans font-bold uppercase opacity-75">
+                                {previewModalEvent.venue || 'IDJEN BOULEVARD'}
+                              </span>
+                              <span className="text-[4.5px] font-serif italic mt-0.5 opacity-70">
+                                “kata-kata hari ini”
                               </span>
                             </div>
                           </div>
