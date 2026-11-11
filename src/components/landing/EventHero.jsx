@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode, MessageCircle, ShoppingBag, ArrowRight, Tag } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode, MessageCircle, ShoppingBag, ArrowRight, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
@@ -26,6 +26,15 @@ export default function EventHero() {
   const [showQrModal, setShowQrModal] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
 
+  // Swipe & Drag Gesture State for Mobile Touch & Laptop Mouse
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
+  const isPointerDown = useRef(false);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const isHorizontalSwipe = useRef(null);
+
   const slideImages = (activeEvent?.heroPhotos && activeEvent.heroPhotos.length > 0 
     ? activeEvent.heroPhotos 
     : DEFAULT_HERO_PHOTOS).slice(0, 5);
@@ -36,13 +45,63 @@ export default function EventHero() {
     }
   }, [slideImages.length, currentSlide]);
 
+  // Auto-play slideshow every 5 seconds (pauses when user is dragging or touching)
   useEffect(() => {
-    if (slideImages.length <= 1) return;
+    if (slideImages.length <= 1 || isInteracting) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slideImages.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [slideImages.length]);
+  }, [slideImages.length, isInteracting]);
+
+  // Pointer Drag Handlers (Smoothly handles Touch on Mobile and Mouse on Laptop)
+  const handlePointerDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    isPointerDown.current = true;
+    startX.current = e.clientX;
+    startY.current = e.clientY;
+    isHorizontalSwipe.current = null;
+    setIsDragging(true);
+    setIsInteracting(true);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isPointerDown.current) return;
+    const deltaX = e.clientX - startX.current;
+    const deltaY = e.clientY - startY.current;
+
+    // Detect gesture intent: horizontal swipe vs vertical scroll
+    if (isHorizontalSwipe.current === null) {
+      if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+        isHorizontalSwipe.current = Math.abs(deltaX) > Math.abs(deltaY);
+      }
+    }
+
+    if (isHorizontalSwipe.current) {
+      setDragOffset(deltaX);
+    }
+  };
+
+  const handlePointerUp = () => {
+    if (!isPointerDown.current) return;
+    isPointerDown.current = false;
+    setIsDragging(false);
+
+    if (isHorizontalSwipe.current) {
+      const threshold = 45;
+      if (dragOffset < -threshold) {
+        // Swiped Left -> Next Slide
+        setCurrentSlide((prev) => (prev + 1) % slideImages.length);
+      } else if (dragOffset > threshold) {
+        // Swiped Right -> Previous Slide
+        setCurrentSlide((prev) => (prev - 1 + slideImages.length) % slideImages.length);
+      }
+    }
+
+    setDragOffset(0);
+    isHorizontalSwipe.current = null;
+    setTimeout(() => setIsInteracting(false), 2000);
+  };
 
   if (!activeEvent) return null;
 
@@ -92,34 +151,78 @@ export default function EventHero() {
   return (
     <section id="beranda" className="pt-0 pb-0 overflow-hidden text-center relative bg-white select-none">
       
-      {/* ================= 🌟 1. FULL BLEED SLIDING HERO 🌟 ================= */}
-      <div className="relative w-full h-[500px] xs:h-[540px] sm:h-[680px] md:h-[780px] overflow-hidden bg-gray-950">
+      {/* ================= 🌟 1. FULL BLEED SLIDING HERO (TOUCH & MOUSE DRAGGABLE) 🌟 ================= */}
+      <div 
+        className="relative w-full h-[500px] xs:h-[540px] sm:h-[680px] md:h-[780px] overflow-hidden bg-gray-950 cursor-grab active:cursor-grabbing select-none group touch-pan-y"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
         
-        {/* Intro Reveal Wrapper (Framer controls transform here only) */}
+        {/* Intro Reveal Wrapper */}
         <motion.div 
           initial={{ opacity: 0, scale: 1.08 }}
           animate={introReady ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.08 }}
           transition={{ duration: 1.6, ease: [0.25, 1, 0.5, 1] }}
           className="absolute inset-0"
         >
-          {/* Crossfade Slides (stacked) */}
-          {slideImages.map((imgUrl, idx) => (
-            <div
-              key={`${idx}-${imgUrl.slice(-24)}`}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                idx === currentSlide ? 'opacity-100 z-[1]' : 'opacity-0 z-0'
-              }`}
-            >
-              <img
-                src={imgUrl}
-                alt={`${activeEvent.displayName} ${idx + 1}`}
-                loading="eager"
-                decoding="async"
-                className="w-full h-full object-cover object-center"
-              />
-            </div>
-          ))}
+          {/* Horizontal Carousel Track (1:1 with finger on mobile & mouse on laptop) */}
+          <div 
+            className="absolute inset-0 flex h-full"
+            style={{
+              width: `${slideImages.length * 100}%`,
+              transform: `translateX(calc(-${(currentSlide * 100) / slideImages.length}% + ${dragOffset}px))`,
+              transition: isDragging ? 'none' : 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+              willChange: 'transform'
+            }}
+          >
+            {slideImages.map((imgUrl, idx) => (
+              <div
+                key={`${idx}-${imgUrl.slice(-24)}`}
+                className="relative h-full flex-shrink-0"
+                style={{ width: `${100 / slideImages.length}%` }}
+              >
+                <img
+                  src={imgUrl}
+                  alt={`${activeEvent.displayName} ${idx + 1}`}
+                  draggable={false}
+                  loading="eager"
+                  decoding="async"
+                  className="w-full h-full object-cover object-center pointer-events-none select-none"
+                />
+              </div>
+            ))}
+          </div>
         </motion.div>
+
+        {/* Desktop / Laptop Left & Right Click Navigation Arrows */}
+        {slideImages.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentSlide((prev) => (prev - 1 + slideImages.length) % slideImages.length);
+              }}
+              className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/45 hover:bg-black/75 backdrop-blur-md border border-white/20 text-white items-center justify-center transition opacity-0 group-hover:opacity-100 cursor-pointer shadow-xl active:scale-90"
+              title="Foto Sebelumnya"
+            >
+              <ChevronLeft size={22} />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentSlide((prev) => (prev + 1) % slideImages.length);
+              }}
+              className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/45 hover:bg-black/75 backdrop-blur-md border border-white/20 text-white items-center justify-center transition opacity-0 group-hover:opacity-100 cursor-pointer shadow-xl active:scale-90"
+              title="Foto Berikutnya"
+            >
+              <ChevronRight size={22} />
+            </button>
+          </>
+        )}
 
         {/* Vignette Lighting */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none z-10" />
@@ -185,7 +288,10 @@ export default function EventHero() {
           {slideImages.map((_, idx) => (
             <button
               key={idx}
-              onClick={() => setCurrentSlide(idx)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentSlide(idx);
+              }}
               className={`transition-all duration-500 rounded-full cursor-pointer ${
                 idx === currentSlide
                   ? 'w-6 h-2 bg-amber-300 shadow-lg shadow-amber-300/50'
@@ -212,7 +318,7 @@ export default function EventHero() {
       {/* ==================== 🌟 2. CONTENT & ACTION BUTTONS 🌟 ==================== */}
       <div className="max-w-5xl mx-auto px-4 sm:px-5 relative z-20 -mt-6 sm:-mt-8">
         
-        {/* Item 6: Description Paragraph (Gentle Fade Up) */}
+        {/* Item 6: Description Paragraph */}
         <motion.p 
           initial={{ opacity: 0, y: 16 }}
           animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
@@ -240,14 +346,14 @@ export default function EventHero() {
             </div>
           </div>
         ) : (
-          /* Item 7: Main Action Buttons (Photobooth & Gallery; WA Consultation & Lynk.id Order strictly in Demo Mode) */
+          /* Item 7: Main Action Buttons */
           <motion.div 
             initial={{ opacity: 0, y: 22 }}
             animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
             transition={{ duration: 0.9, delay: 0.95, ease: [0.25, 1, 0.5, 1] }}
             className="mb-6 sm:mb-8 flex flex-col items-center justify-center gap-3 relative z-20 max-w-lg mx-auto"
           >
-            {/* Demo Indicator Badge & Price List Anchor Button (Only in Demo Mode) */}
+            {/* Demo Indicator Badge & Price List Anchor Button */}
             {isDemoMode && (
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 border border-stone-200/90 shadow-2xs">
@@ -270,7 +376,7 @@ export default function EventHero() {
               </div>
             )}
 
-            {/* Row 1: Primary Photobooth & Gallery Buttons (Always Visible for All Guests) */}
+            {/* Row 1: Primary Photobooth & Gallery Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
               <button
                 onClick={handleStartBooth}
@@ -289,10 +395,9 @@ export default function EventHero() {
               </button>
             </div>
 
-            {/* Commercial Booking CTAs (WhatsApp Consultation & Pesan Sekarang) - Strictly in Demo Mode */}
+            {/* Commercial Booking CTAs */}
             {isDemoMode && (
               <>
-                {/* Contextual Divider: Bridges Guest Experience to Commercial Booking */}
                 <div className="flex items-center gap-2.5 w-full pt-1.5 pb-0.5">
                   <span className="h-px flex-1 bg-gradient-to-r from-transparent via-stone-300 to-stone-200" />
                   <span className="text-[10px] sm:text-[11px] font-sans font-medium uppercase tracking-[0.14em] text-stone-500 select-none">
@@ -301,9 +406,7 @@ export default function EventHero() {
                   <span className="h-px flex-1 bg-gradient-to-l from-transparent via-stone-300 to-stone-200" />
                 </div>
 
-                {/* Row 2: WhatsApp Consultation & Pesan Sekarang (Opens Floating Price List Modal) */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
-                  {/* WhatsApp Consultation: Clean, Low-Friction Advisory */}
                   <a
                     href={CONTACT_LINKS.whatsapp}
                     target="_blank"
@@ -314,7 +417,6 @@ export default function EventHero() {
                     <span>Konsultasi WA</span>
                   </a>
 
-                  {/* Pesan Sekarang: Opens Floating Price List Modal */}
                   <button
                     type="button"
                     onClick={() => setShowPriceModal(true)}
@@ -332,7 +434,7 @@ export default function EventHero() {
 
       </div>
 
-      {/* Item 8: Frame Marquee (Full-Bleed Edge to Edge, No Box Constraint) */}
+      {/* Item 8: Frame Showcase (Swipeable on Mobile & Laptop) */}
       <motion.div 
         initial={{ opacity: 0, y: 26 }}
         animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 26 }}
