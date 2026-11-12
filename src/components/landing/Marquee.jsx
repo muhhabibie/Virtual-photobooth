@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
@@ -73,10 +73,11 @@ const FRAME_PREVIEWS = [
 
 export default function Marquee() {
   const { openBooth, activeEvent } = useBooth();
-  const scrollRef = useRef(null);
+  const trackRef = useRef(null);
+  const containerRef = useRef(null);
 
-  // Triple duplicated list for seamless looping and effortless multi-direction swipe
-  const duplicated = [...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS];
+  // Quadruple duplicated list for 100% seamless, uninterrupted infinite sliding
+  const duplicated = [...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS];
 
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
   const eventTitle = activeEvent?.displayName || 'Car Free Day Malang';
@@ -85,98 +86,150 @@ export default function Marquee() {
     ? activeEvent.heroPhotos
     : DEFAULT_HERO_PHOTOS;
 
-  // Interaction State for Touch Swipe & Mouse Drag
-  const [isInteracting, setIsInteracting] = useState(false);
-  const isMouseDown = useRef(false);
-  const startX = useRef(0);
-  const scrollLeftPos = useRef(0);
-  const hasDragged = useRef(false);
+  // Real-time Gesture & Motion Coordinates
+  const currentXRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+  const lastTimeRef = useRef(performance.now());
+  const singleSetWidthRef = useRef(0);
+  const [isHovered, setIsHovered] = useState(false);
 
-  // Initialize scroll position in the middle for infinite feel
-  useEffect(() => {
-    if (scrollRef.current) {
-      const oneThird = scrollRef.current.scrollWidth / 3;
-      scrollRef.current.scrollLeft = oneThird;
+  // Measure single set width for seamless infinite modulo wrapping
+  const updateMetrics = useCallback(() => {
+    if (trackRef.current) {
+      singleSetWidthRef.current = trackRef.current.scrollWidth / 4;
     }
   }, []);
 
-  // Continuous Gentle Auto-Scroll when user is NOT touching or dragging
+  useEffect(() => {
+    updateMetrics();
+    window.addEventListener('resize', updateMetrics);
+    return () => window.removeEventListener('resize', updateMetrics);
+  }, [updateMetrics]);
+
+  // CONTINUOUS SLIDING FROM RIGHT TO LEFT (Infinite Smooth Hardware-Accelerated Marquee)
   useEffect(() => {
     let animId;
-    let lastTime = performance.now();
 
-    const step = (time) => {
-      const dt = time - lastTime;
-      lastTime = time;
+    const animate = (time) => {
+      const dt = Math.min((time - lastTimeRef.current) / 1000, 0.1);
+      lastTimeRef.current = time;
 
-      if (scrollRef.current && !isInteracting) {
-        // Smooth frame-rate independent drift (~35px per second)
-        scrollRef.current.scrollLeft += (35 * dt) / 1000;
+      // Auto-slide to the left continuously when NOT actively dragged by hand/mouse
+      if (!isDraggingRef.current && trackRef.current) {
+        // Continuous sliding speed: 50px/sec (slows down to 22px/sec on desktop hover for easy reading)
+        const speed = isHovered ? 22 : 50;
+        currentXRef.current -= speed * dt;
 
-        // Loop seamlessly
-        const oneThird = scrollRef.current.scrollWidth / 3;
-        if (scrollRef.current.scrollLeft >= oneThird * 2) {
-          scrollRef.current.scrollLeft -= oneThird;
-        } else if (scrollRef.current.scrollLeft <= 10) {
-          scrollRef.current.scrollLeft += oneThird;
+        // Wrap around seamlessly without any visual jumps
+        const setWidth = singleSetWidthRef.current || (trackRef.current.scrollWidth / 4);
+        if (setWidth > 0) {
+          while (currentXRef.current <= -setWidth * 2) {
+            currentXRef.current += setWidth;
+          }
+          while (currentXRef.current > -setWidth) {
+            currentXRef.current -= setWidth;
+          }
         }
+
+        trackRef.current.style.transform = `translate3d(${currentXRef.current}px, 0, 0)`;
       }
-      animId = requestAnimationFrame(step);
+
+      animId = requestAnimationFrame(animate);
     };
 
-    animId = requestAnimationFrame(step);
+    lastTimeRef.current = performance.now();
+    animId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animId);
-  }, [isInteracting]);
+  }, [isHovered]);
 
-  // Mouse Drag Handlers for Laptop / Desktop
-  const handleMouseDown = (e) => {
-    if (!scrollRef.current) return;
-    isMouseDown.current = true;
-    hasDragged.current = false;
-    startX.current = e.pageX - scrollRef.current.offsetLeft;
-    scrollLeftPos.current = scrollRef.current.scrollLeft;
-    setIsInteracting(true);
+  // TOUCH SWIPE (MOBILE) & MOUSE DRAG (LAPTOP) HANDLERS
+  const handlePointerDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    isDraggingRef.current = true;
+    startXRef.current = e.clientX;
+    dragDistanceRef.current = 0;
   };
 
-  const handleMouseMove = (e) => {
-    if (!isMouseDown.current || !scrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX.current) * 1.3;
-    if (Math.abs(walk) > 5) {
-      hasDragged.current = true;
+  const handlePointerMove = (e) => {
+    if (!isDraggingRef.current) return;
+    const deltaX = e.clientX - startXRef.current;
+    startXRef.current = e.clientX;
+    dragDistanceRef.current += Math.abs(deltaX);
+
+    currentXRef.current += deltaX;
+
+    // Wrap around while dragging so user can swipe infinitely in either direction
+    const setWidth = singleSetWidthRef.current || (trackRef.current ? trackRef.current.scrollWidth / 4 : 0);
+    if (setWidth > 0) {
+      while (currentXRef.current <= -setWidth * 2) {
+        currentXRef.current += setWidth;
+      }
+      while (currentXRef.current > -setWidth) {
+        currentXRef.current -= setWidth;
+      }
     }
-    scrollRef.current.scrollLeft = scrollLeftPos.current - walk;
+
+    if (trackRef.current) {
+      trackRef.current.style.transform = `translate3d(${currentXRef.current}px, 0, 0)`;
+    }
   };
 
-  const handleMouseUp = () => {
-    isMouseDown.current = false;
-    setTimeout(() => {
-      hasDragged.current = false;
-      setIsInteracting(false);
-    }, 60);
+  const handlePointerUp = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    lastTimeRef.current = performance.now();
   };
 
-  // Chevron Navigation Buttons for Laptop
-  const handleScrollBtn = (direction) => {
-    if (!scrollRef.current) return;
-    setIsInteracting(true);
-    const amount = direction === 'left' ? -260 : 260;
-    scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
-    setTimeout(() => setIsInteracting(false), 900);
+  // Step scroll buttons for Laptop users
+  const handleStepScroll = (direction) => {
+    const shift = direction === 'left' ? 260 : -260;
+    currentXRef.current += shift;
+    const setWidth = singleSetWidthRef.current || (trackRef.current ? trackRef.current.scrollWidth / 4 : 0);
+    if (setWidth > 0) {
+      while (currentXRef.current <= -setWidth * 2) {
+        currentXRef.current += setWidth;
+      }
+      while (currentXRef.current > -setWidth) {
+        currentXRef.current -= setWidth;
+      }
+    }
+    if (trackRef.current) {
+      trackRef.current.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
+      trackRef.current.style.transform = `translate3d(${currentXRef.current}px, 0, 0)`;
+      setTimeout(() => {
+        if (trackRef.current) trackRef.current.style.transition = '';
+      }, 400);
+    }
   };
 
   return (
-    <div className="relative w-full overflow-hidden py-2 select-none group">
-      {/* Edge Gradients for polished aesthetic */}
+    <div 
+      ref={containerRef}
+      className="relative w-full overflow-hidden py-3 select-none group cursor-grab active:cursor-grabbing touch-pan-y"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        handlePointerUp();
+      }}
+    >
+      {/* Edge Gradient Voids for luxury aesthetic */}
       <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
       <div className="hidden sm:block absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
 
-      {/* Navigation Arrows for Laptop / Desktop */}
+      {/* Navigation Chevrons for Laptop / Desktop */}
       <button
         type="button"
-        onClick={() => handleScrollBtn('left')}
-        className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-stone-800 shadow-xl border border-stone-200/80 items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer active:scale-95"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleStepScroll('left');
+        }}
+        className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-800 shadow-xl border border-stone-200/80 items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer active:scale-95"
         title="Geser Kiri"
       >
         <ChevronLeft size={20} className="text-[#6B111F]" />
@@ -184,24 +237,21 @@ export default function Marquee() {
 
       <button
         type="button"
-        onClick={() => handleScrollBtn('right')}
-        className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-stone-800 shadow-xl border border-stone-200/80 items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer active:scale-95"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleStepScroll('right');
+        }}
+        className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-800 shadow-xl border border-stone-200/80 items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer active:scale-95"
         title="Geser Kanan"
       >
         <ChevronRight size={20} className="text-[#6B111F]" />
       </button>
 
-      {/* Swipeable & Draggable Scroll Track */}
+      {/* Infinite Hardware-Accelerated Sliding Track (Always moving right to left + 100% swipeable) */}
       <div
-        ref={scrollRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onTouchStart={() => setIsInteracting(true)}
-        onTouchEnd={() => setTimeout(() => setIsInteracting(false), 1200)}
-        className="flex items-center gap-4 overflow-x-auto scrollbar-none px-4 sm:px-8 py-2 cursor-grab active:cursor-grabbing touch-pan-x"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        ref={trackRef}
+        className="flex items-center gap-4 py-2 px-4 will-change-transform"
+        style={{ width: 'max-content' }}
       >
         {duplicated.map((card, i) => {
           const isLight = card.colorHex === '#FDFBF7' || card.colorHex === '#F3C5CB';
@@ -211,7 +261,8 @@ export default function Marquee() {
             <div
               key={`${card.id}-${i}`}
               onClick={() => {
-                if (!hasDragged.current) {
+                // If user dragged more than 6px, ignore click so it only acts as swipe
+                if (dragDistanceRef.current < 6) {
                   openBooth();
                 }
               }}
@@ -243,7 +294,7 @@ export default function Marquee() {
                 </h3>
               </div>
 
-              {/* Center Photo Slots */}
+              {/* Center Photo Slots (with automatic fallback to prevent broken images) */}
               <div className="relative flex-1 my-1.5 w-full flex flex-col gap-1.5 min-h-0 justify-center">
                 {Array.from({ length: card.slots }).map((_, idx) => (
                   <div 
@@ -251,9 +302,13 @@ export default function Marquee() {
                     className="w-full flex-1 rounded-md sm:rounded-lg overflow-hidden relative bg-black/20 shadow-inner group-hover/card:scale-[1.01] transition-transform"
                   >
                     <img 
-                      src={eventPhotos[idx % eventPhotos.length]} 
+                      src={eventPhotos[idx % eventPhotos.length] || DEFAULT_HERO_PHOTOS[idx % DEFAULT_HERO_PHOTOS.length]} 
                       alt={`Pose ${idx + 1}`}
                       draggable={false}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = DEFAULT_HERO_PHOTOS[idx % DEFAULT_HERO_PHOTOS.length] || DEFAULT_HERO_PHOTOS[0];
+                      }}
                       className="w-full h-full object-cover object-center filter brightness-[0.95] contrast-[1.02] pointer-events-none select-none"
                     />
                   </div>
