@@ -203,8 +203,10 @@ export function renderMasterPhotoStrip(canvas, {
   const accentColor = isLightBg ? '#B89F88' : (activeEvent?.customFrame?.textColor || '#F5D77F');
   const primaryTextColor = isLightBg ? '#22201E' : '#FFFFFF';
 
-  // Optional: Draw subtle botanicals only for wedding events that requested them
-  if (isWedding && activeEvent?.customFrame?.botanicals) {
+  // 1b. Signature Botanical Ornaments (Top-Left Vine Branch & Bottom-Right Floral Blossom)
+  // Always drawn on the standard Sirklen frame to match live camera viewfinder, unless explicitly disabled
+  const showBotanicals = activeEvent?.customFrame?.botanicals !== false;
+  if (showBotanicals) {
     drawStripBotanicals(ctx, totalW, totalH, accentColor, scale);
   }
 
