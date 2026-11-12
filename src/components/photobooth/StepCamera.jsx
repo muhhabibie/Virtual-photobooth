@@ -493,7 +493,7 @@ export default function StepCamera() {
     if (!vp) return;
 
     const w = vp.clientWidth || 720;
-    const h = vp.clientHeight || 960;
+    const h = vp.clientHeight || 540;
 
     const canvas = document.createElement('canvas');
     canvas.width = w * 2;
@@ -655,7 +655,7 @@ export default function StepCamera() {
             backgroundColor: currentTheme.hex,
             border: `3px solid ${currentTheme.borderHex || accentColor}`
           }}
-          className="relative w-full h-full max-h-[460px] xs:max-h-[480px] sm:max-h-[520px] rounded-2xl sm:rounded-3xl px-4 sm:px-5 pt-1.5 pb-2 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 overflow-hidden"
+          className="relative w-full max-h-[460px] xs:max-h-[480px] sm:max-h-[520px] rounded-2xl sm:rounded-3xl px-4 sm:px-5 pt-2 pb-2.5 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 overflow-hidden my-auto"
         >
           {/* Live Master Botanical & Custom Frame Ornaments Canvas */}
           <canvas
@@ -690,7 +690,7 @@ export default function StepCamera() {
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
             style={{ borderColor: accentColor }}
-            className="relative flex-1 min-h-0 w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center border-2 touch-pan-y select-none cursor-grab active:cursor-grabbing group z-10"
+            className="relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center border-2 my-1 touch-pan-y select-none cursor-grab active:cursor-grabbing group z-10"
           >
             {/* Camera Video Stream */}
             <video

@@ -168,8 +168,8 @@ export function renderMasterPhotoStrip(canvas, {
     gap = 0;
     footerH = (hasCustomMsg ? 154 : 126) * scale;
   } else if (count === 2) {
-    // 2 Photos (Duo Strip)
-    photoH = Math.round(photoW * 0.70); // 355 * scale
+    // 2 Photos (Duo Strip - 4:3 Standard)
+    photoH = Math.round(photoW * 0.75); // 381 * scale (4:3)
     gap = 16 * scale;
     footerH = (hasCustomMsg ? 154 : 126) * scale;
   } else if (count === 4) {
@@ -178,8 +178,8 @@ export function renderMasterPhotoStrip(canvas, {
     gap = 14 * scale;
     footerH = (hasCustomMsg ? 154 : 126) * scale;
   } else {
-    // Standard 3 Photos (Classic 3-pose strip)
-    photoH = Math.round(photoW * 0.70); // 355 * scale
+    // Standard 3 Photos (Classic 3-pose strip - True 4:3 Professional Photobooth Ratio)
+    photoH = Math.round(photoW * 0.75); // 381 * scale (4:3)
     gap = 16 * scale;
     footerH = (hasCustomMsg ? 154 : 126) * scale;
   }

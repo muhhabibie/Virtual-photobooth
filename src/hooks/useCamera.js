@@ -1,4 +1,4 @@
-﻿import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { FRAMES } from '../config/frames';
 
 export function useCamera() {
@@ -12,7 +12,7 @@ export function useCamera() {
       streamRef.current.getTracks().forEach(t => t.stop());
     }
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 720 }, height: { ideal: 960 } },
+      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
       audio: false,
     });
     streamRef.current = stream;
