@@ -664,7 +664,13 @@ export default function StepCamera() {
           />
 
           {/* Top Frame Header Title (Matching stripRenderer.js) */}
-          <div className="relative z-20 w-full flex items-center justify-center px-2 pt-0.5 pb-1 flex-shrink-0">
+          <div className="relative z-20 w-full flex flex-col items-center justify-center px-2 pt-0.5 pb-1 flex-shrink-0">
+            {/* Top Brand Header: N | sirklenice (Matching stripRenderer.js standard layout) */}
+            <div className="flex items-center justify-center gap-1 pb-0.5" style={{ color: primaryTextColor }}>
+              <span className="text-[8px] sm:text-[9px] font-mono font-black tracking-widest">N</span>
+              <span className="text-[7px] sm:text-[8px] opacity-40">|</span>
+              <span className="text-[7px] sm:text-[8px] font-sans font-semibold tracking-wide">sirklenice</span>
+            </div>
             <h2 
               className="text-[9px] sm:text-[10.5px] font-bold tracking-[0.16em] uppercase text-center leading-none"
               style={{ 
