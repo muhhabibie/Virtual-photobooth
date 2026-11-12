@@ -91,6 +91,10 @@ export default function EventGalleryFeed() {
         <img
           src={backdropPhoto}
           alt={coupleName}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=1600&auto=format&fit=crop&q=85';
+          }}
           style={{
             WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
             maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
@@ -177,13 +181,15 @@ export default function EventGalleryFeed() {
           <div className="flex items-center justify-center gap-3 my-1 w-full max-w-sm mx-auto">
             <div className="h-px bg-gradient-to-r from-transparent via-[#C4A46C]/60 to-transparent flex-1" />
             <span className="text-[9px] font-serif tracking-[0.25em] text-[#F5D77F] uppercase font-bold">
-              THE WEDDING OF {coupleName.toUpperCase()}
+              {activeEvent?.eventType === 'wedding' ? `THE WEDDING OF ${coupleName.toUpperCase()}` : `${coupleName.toUpperCase()}`}
             </span>
             <div className="h-px bg-gradient-to-r from-transparent via-[#C4A46C]/60 to-transparent flex-1" />
           </div>
 
           <p className="text-[11px] sm:text-xs text-amber-100/90 font-serif italic max-w-md mx-auto px-4 mt-1 leading-snug drop-shadow">
-            "Setiap senyuman, doa restu, dan kenangan manis yang terabadikan abadi dari seluruh tamu tercinta."
+            {activeEvent?.eventType === 'wedding' 
+              ? '"Setiap senyuman, doa restu, dan kenangan manis yang terabadikan abadi dari seluruh tamu tercinta."'
+              : '"Setiap senyuman, keseruan, dan kenangan manis yang terabadikan abadi dari seluruh pengunjung tercinta."'}
           </p>
         </motion.div>
       </div>

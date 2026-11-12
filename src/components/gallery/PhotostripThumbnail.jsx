@@ -10,24 +10,26 @@ export default function PhotostripThumbnail({
   showVoiceBadge = true 
 }) {
   const canvasRef = useRef(null);
-  const [renderedSrc, setRenderedSrc] = useState(item?.stripImage || null);
+  const [renderedSrc, setRenderedSrc] = useState(null);
 
   useEffect(() => {
     if (!item) return;
-
-    if (item.stripImage) {
-      setRenderedSrc(item.stripImage);
-      return;
-    }
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
 
     const photosList = Array.isArray(item.photos) && item.photos.length > 0
       ? item.photos
       : (item.photo ? [item.photo] : []);
 
+    // If item already has a verified high-res stripImage (not a corrupted 300x150 dummy canvas)
+    // and no raw photos, use it directly
+    if (photosList.length === 0 && item.stripImage && item.stripImage.length > 1000) {
+      setRenderedSrc(item.stripImage);
+      return;
+    }
+
     if (photosList.length === 0) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
     let isMounted = true;
 
@@ -38,7 +40,9 @@ export default function PhotostripThumbnail({
           const url = typeof src === 'string' ? src : (src?.dataUrl || '');
           if (!url) return resolve(null);
           const img = new Image();
-          img.crossOrigin = 'anonymous';
+          if (url.startsWith('http')) {
+            img.crossOrigin = 'anonymous';
+          }
           img.onload = () => resolve(img);
           img.onerror = () => resolve(null);
           img.src = url;
@@ -51,12 +55,17 @@ export default function PhotostripThumbnail({
         dataUrl: img.src,
       }));
 
-      if (validPhotos.length === 0) return;
+      if (validPhotos.length === 0) {
+        if (item.stripImage && item.stripImage.length > 1000) {
+          setRenderedSrc(item.stripImage);
+        }
+        return;
+      }
 
       renderMasterPhotoStrip(canvasRef.current, {
         photos: validPhotos,
         targetCount: validPhotos.length,
-        stripColor: item.colorHex || item.stripColor || '#6B111F',
+        stripColor: item.colorHex || item.stripColor || '#FFFFFF',
         guestName: item.guestName,
         guestMessage: item.message || item.guestMessage,
         activeEvent: activeEvent,
@@ -91,10 +100,12 @@ export default function PhotostripThumbnail({
           loading="lazy"
         />
       ) : (
-        <canvas
-          ref={canvasRef}
-          className="w-full h-auto object-contain block group-hover:scale-[1.02] transition-transform duration-300"
-        />
+        <div className="w-full aspect-[1/2.2] bg-[#1a0f14] flex items-center justify-center relative">
+          <canvas
+            ref={canvasRef}
+            className="w-full h-auto object-contain block group-hover:scale-[1.02] transition-transform duration-300"
+          />
+        </div>
       )}
 
       {/* Voice Badge overlay if submission has audio note */}

@@ -56,16 +56,8 @@ export default function StepResult() {
   useEffect(() => {
     if (!hasSubmittedRef.current && capturedPhotos.length > 0) {
       hasSubmittedRef.current = true;
-      const canvas = canvasRef.current;
-      let stripImage = null;
-      if (canvas) {
-        try {
-          stripImage = canvas.toDataURL('image/jpeg', 0.92);
-        } catch (e) {
-          // PhotoboothContext will fallback to generating with offscreen canvas
-        }
-      }
-      submitSession({ stripImage }).then((res) => {
+      // Do not pass unrendered DOM canvas. submitSession renders a pristine, high-res offscreen stripImage!
+      submitSession().then((res) => {
         if (res) {
           toast('Photo strip dan doa restu berhasil tersimpan', 'success');
         }
@@ -576,4 +568,4 @@ export default function StepResult() {
 
     </div>
   );
-}
+}
