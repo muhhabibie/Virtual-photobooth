@@ -51,13 +51,9 @@ export function PhotoboothProvider({ children }) {
     }
   });
 
-  // Save events to local storage whenever updated & ensure CFD is synced
+  // Save events to local storage whenever updated
   useEffect(() => {
     saveLocalEvents(events);
-    const cfdEvt = events.find(e => e.slug === 'cfd') || INITIAL_EVENTS.find(e => e.slug === 'cfd');
-    if (cfdEvt) {
-      syncEventToCloud(cfdEvt);
-    }
   }, [events]);
 
   // Subscribe to real-time events stream from Cloud Firestore (cross-device sync)

@@ -6,13 +6,21 @@ import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from 'firebas
 
 const EVENTS_STORAGE_KEY = 'sirklen_photo_events_db';
 
+// Circuit breaker for Firebase Firestore quota limits
+let isEventCloudQuotaExhausted = false;
+
 // Delete event from Cloud Firestore
 export async function deleteEventFromCloud(slug) {
-  if (!db || !slug) return;
+  if (!db || !slug || isEventCloudQuotaExhausted) return;
   try {
     const eventRef = doc(db, 'events', slug.toLowerCase().trim());
     await deleteDoc(eventRef);
   } catch (err) {
+    if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
+      isEventCloudQuotaExhausted = true;
+      console.warn("[Sirklen Sync] Firestore quota limit reached (Spark Plan). Switched to LocalStorage.");
+      return;
+    }
     console.warn("[Sirklen Sync] Failed to delete event from Firestore:", err?.message || err);
   }
 }
@@ -38,7 +46,7 @@ export function saveLocalEvents(events) {
 
 // Save or update single event to Cloud Firestore + LocalStorage
 export async function syncEventToCloud(event) {
-  if (!event || !event.slug) return;
+  if (!event || !event.slug || isEventCloudQuotaExhausted) return;
 
   // 1. Sync to Cloud Firestore if connected
   if (db) {
@@ -66,6 +74,11 @@ export async function syncEventToCloud(event) {
       const eventRef = doc(db, 'events', event.slug.toLowerCase().trim());
       await setDoc(eventRef, cleanEvent, { merge: true });
     } catch (err) {
+      if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
+        isEventCloudQuotaExhausted = true;
+        console.warn("[Sirklen Sync] Firestore quota limit reached (Spark Plan). Switched to LocalStorage.");
+        return;
+      }
       if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
         console.info("[Sirklen Sync] Firestore rules pending publication in Firebase Console. LocalStorage active.");
       } else {
@@ -77,11 +90,12 @@ export async function syncEventToCloud(event) {
 
 // Subscribe to real-time events stream from Cloud Firestore
 export function subscribeCloudEvents(onEventsUpdate) {
-  if (!db) return () => {};
+  if (!db || isEventCloudQuotaExhausted) return () => {};
 
   try {
     const eventsCol = collection(db, 'events');
-    const unsubscribe = onSnapshot(eventsCol, (snapshot) => {
+    let unsubscribe = null;
+    unsubscribe = onSnapshot(eventsCol, (snapshot) => {
       try {
         const cloudEvents = [];
         snapshot.forEach((docSnap) => {
@@ -96,6 +110,14 @@ export function subscribeCloudEvents(onEventsUpdate) {
         console.warn("Error processing cloud events snapshot:", err);
       }
     }, (err) => {
+      if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
+        isEventCloudQuotaExhausted = true;
+        console.warn("[Sirklen Sync] Firestore quota limit reached (Spark Plan). Real-time subscription paused; using LocalStorage.");
+        if (unsubscribe) {
+          try { unsubscribe(); } catch (_) {}
+        }
+        return;
+      }
       if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
         console.info("[Sirklen Sync] Firestore events real-time sync waiting for published rules in Firebase Console. LocalStorage active.");
       } else {
@@ -103,7 +125,11 @@ export function subscribeCloudEvents(onEventsUpdate) {
       }
     });
 
-    return unsubscribe;
+    return () => {
+      if (unsubscribe) {
+        try { unsubscribe(); } catch (_) {}
+      }
+    };
   } catch (e) {
     return () => {};
   }

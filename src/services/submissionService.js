@@ -7,6 +7,7 @@ import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage
 import { compressImage } from '../utils/imageCompressor.js';
 
 let isStorageDisabled = false;
+let isSubmissionCloudQuotaExhausted = false;
 
 const LOCAL_STORAGE_KEY = 'wedding_photobooth_submissions';
 
@@ -91,7 +92,7 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
   }
 
   // If Firebase Database (Firestore) is initialized, sync to Cloud
-  if (db) {
+  if (db && !isSubmissionCloudQuotaExhausted) {
     try {
       let uploadedPhotoUrls = newSubmission.photos;
 
@@ -147,7 +148,10 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
 
       await addDoc(collection(db, 'submissions'), cloudDoc);
     } catch (err) {
-      if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
+      if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
+        isSubmissionCloudQuotaExhausted = true;
+        console.warn("[Sirklen Cloud] Firestore quota limit reached (Spark Plan). Saved to LocalStorage.");
+      } else if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
         console.info("[Sirklen Cloud] Submissions saved locally (Firestore rules pending publication in Firebase Console).");
       } else {
         console.warn("[Sirklen Cloud] Submissions cloud save fallback to local:", err?.message || err);
@@ -167,10 +171,11 @@ export function subscribeSubmissions(callback) {
     console.warn("Initial local submissions callback error:", e);
   }
 
-  if (db) {
+  if (db && !isSubmissionCloudQuotaExhausted) {
     try {
       const q = query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
-      return onSnapshot(q, (snapshot) => {
+      let unsubscribe = null;
+      unsubscribe = onSnapshot(q, (snapshot) => {
         try {
           const cloudData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           const localData = getLocalSubmissions();
@@ -180,13 +185,25 @@ export function subscribeSubmissions(callback) {
           callback(getLocalSubmissions());
         }
       }, (err) => {
-        if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
+        if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
+          isSubmissionCloudQuotaExhausted = true;
+          console.warn("[Sirklen Cloud] Firestore quota limit reached (Spark Plan). Pausing live subscription; running on LocalStorage.");
+          if (unsubscribe) {
+            try { unsubscribe(); } catch (_) {}
+          }
+        } else if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
           console.info("[Sirklen Cloud] Submissions live stream waiting for published rules in Firebase Console. LocalStorage active.");
         } else {
           console.warn("[Sirklen Cloud] Submissions subscription fallback:", err?.message || err);
         }
         callback(getLocalSubmissions());
       });
+
+      return () => {
+        if (unsubscribe) {
+          try { unsubscribe(); } catch (_) {}
+        }
+      };
     } catch (e) {
       return () => {};
     }
