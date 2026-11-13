@@ -604,16 +604,10 @@ export default function HowItWorks() {
       >
         <div className="max-w-md mx-auto px-5">
           <h4 
-            className={
-              isWedding 
-                ? "text-3xl sm:text-4xl font-normal text-[#E5C158] leading-tight font-script"
-                : "text-2xl sm:text-3xl font-bold text-[#E5C158] uppercase tracking-[0.16em] leading-tight"
-            }
+            className="text-3xl sm:text-4xl md:text-5xl font-normal text-[#E5C158] leading-tight font-script tracking-wide"
             style={{ 
-              fontFamily: isWedding 
-                ? "'Alex Brush', 'Great Vibes', cursive" 
-                : "'Playfair Display', 'Cinzel', Georgia, serif",
-              textShadow: '0 2px 15px rgba(229,193,88,0.2)'
+              fontFamily: "'Alex Brush', 'Great Vibes', cursive",
+              textShadow: '0 2px 15px rgba(229,193,88,0.25)'
             }}
           >
             {eventTitle}

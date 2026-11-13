@@ -127,9 +127,9 @@ export default function Hero() {
 
           {/* Grand Festive Names (Large Calligraphy) */}
           <h1 
-            className={`text-5xl xs:text-6xl sm:text-8xl md:text-9xl ${isWedding ? 'lg:text-[115px]' : 'lg:text-[85px]'} font-normal text-white mt-0.5 sm:mt-1 leading-tight sm:leading-none drop-shadow-2xl`}
+            className="text-5xl xs:text-6xl sm:text-8xl md:text-9xl lg:text-[115px] font-normal text-white mt-0.5 sm:mt-1 leading-tight sm:leading-none drop-shadow-2xl"
             style={{ 
-              fontFamily: isWedding ? "'Alex Brush', 'Great Vibes', cursive" : "'Playfair Display', 'Cinzel', Georgia, serif",
+              fontFamily: "'Alex Brush', 'Great Vibes', cursive",
               textShadow: '0 4px 30px rgba(0,0,0,0.85), 0 0 50px rgba(245,215,127,0.45)',
               filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.7))'
             }}
