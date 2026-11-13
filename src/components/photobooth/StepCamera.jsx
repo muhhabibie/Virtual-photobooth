@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+﻿import { useEffect, useRef, useState, useCallback } from 'react';
 import { 
   ArrowLeft, RefreshCw, Timer, Disc, Camera, ArrowRight, 
   Sliders, Check, Trash2, X, ChevronRight, Image as ImageIcon,
@@ -298,8 +298,8 @@ export default function StepCamera() {
   const guestTitle = (rawGuestName || (isWedding ? 'Tamu Undangan' : 'Pengunjung Event')).toUpperCase();
   const venueText = (activeEvent?.venue || activeEvent?.location || activeEvent?.city || (isWedding ? 'PASADENA, CA' : 'SPECIAL EVENT PHOTOBOOTH')).toUpperCase();
   const rawMsg = guestMessage && guestMessage.trim() ? guestMessage.trim() : '';
-  const hasCustomMsg = Boolean(rawMsg && rawMsg !== 'With Love' && rawMsg !== '“With Love”');
-  const customMessage = hasCustomMsg ? `“${rawMsg.substring(0, 52)}”` : '';
+  const hasCustomMsg = Boolean(rawMsg && rawMsg !== 'With Love' && rawMsg !== 'â€œWith Loveâ€');
+  const customMessage = hasCustomMsg ? `â€œ${rawMsg.substring(0, 52)}â€` : '';
 
   // Real-time 60 FPS FaceMesh Tracking
   const { facesRef, isReady: isFaceMeshReady } = useFaceMesh(videoRef, selectedAccessory !== 'none');
@@ -487,17 +487,23 @@ export default function StepCamera() {
   };
 
   // Capture single photo from viewfinder with EXACT WYSIWYG object-cover crop + AR Face Tracking baked in
+  // Canvas enforces strict 4:3 at minimum 1016x762px (matches stripRenderer's photoW:photoH = 4:3 at 2x retina)
   const doCapture = useCallback(() => {
     const video = videoRef.current;
     const vp = viewportRef.current;
     if (!vp) return;
 
-    const w = vp.clientWidth || 720;
-    const h = vp.clientHeight || 540;
+    // Always enforce 4:3 aspect ratio identical to viewfinder slot & stripRenderer.js photoH = photoW * 0.75
+    const dpr = window.devicePixelRatio || 1;
+    const domW = vp.clientWidth || 360;
+    // Minimum 1016px wide (508 * 2 retina) so stripRenderer has full resolution
+    const captureW = Math.max(Math.round(domW * dpr * 2), 1016);
+    // Strict 4:3 — identical to photoH = photoW * 0.75 in stripRenderer.js
+    const captureH = Math.round(captureW * 0.75);
 
     const canvas = document.createElement('canvas');
-    canvas.width = w * 2;
-    canvas.height = h * 2;
+    canvas.width = captureW;
+    canvas.height = captureH;
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
@@ -590,7 +596,7 @@ export default function StepCamera() {
     doCapture();
 
     const photoNum = capturedPhotos.length + 1;
-    triggerTopNotice(`Foto Pose #${photoNum} Berhasil Diambil 📸`);
+    triggerTopNotice(`Foto Pose #${photoNum} Berhasil Diambil ðŸ“¸`);
 
     setTimeout(() => {
       setCapturing(false);
@@ -617,7 +623,7 @@ export default function StepCamera() {
   return (
     <div className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-black text-white select-none overflow-hidden flex flex-col justify-between p-1.5 sm:p-2.5 pb-[max(env(safe-area-inset-bottom),8px)] z-[100]">
       
-      {/* ================= 🌟 ROMANTIC WEDDING STUDIO AMBIENT AURA 🌟 ================= */}
+      {/* ================= ðŸŒŸ ROMANTIC WEDDING STUDIO AMBIENT AURA ðŸŒŸ ================= */}
       <div 
         className="absolute inset-0 pointer-events-none z-0 opacity-75 blur-[90px] transition-all duration-700"
         style={{
@@ -625,7 +631,7 @@ export default function StepCamera() {
         }}
       />
 
-      {/* ================= 🌟 1. INSTAGRAM STORY TOP HEADER BAR 🌟 ================= */}
+      {/* ================= ðŸŒŸ 1. INSTAGRAM STORY TOP HEADER BAR ðŸŒŸ ================= */}
       <div className="relative z-30 flex items-center justify-between w-full max-w-sm sm:max-w-md mx-auto flex-shrink-0 pt-0.5 px-2 pb-0.5">
         {/* Left: Close X Button */}
         <button
@@ -645,7 +651,7 @@ export default function StepCamera() {
         <div className="w-9 h-9 sm:w-10 sm:h-10 pointer-events-none" />
       </div>
 
-      {/* ================= 🌟 2. INSTAGRAM STORY VIEWFINDER WITH ROMANTIC FRAME 🌟 ================= */}
+      {/* ================= ðŸŒŸ 2. INSTAGRAM STORY VIEWFINDER WITH ROMANTIC FRAME ðŸŒŸ ================= */}
       <div className="flex-1 min-h-0 w-full max-w-sm sm:max-w-md mx-auto relative flex flex-col justify-center items-center py-0.5 sm:py-1 overflow-hidden z-10">
         
         {/* Responsive Flex Frame Viewport Container (Matching Wendy & Mark Photostrip Frame) */}
@@ -718,7 +724,7 @@ export default function StepCamera() {
             ) : (
               <div className="absolute top-2 inset-x-0 z-30 flex justify-center pointer-events-none opacity-40 group-hover:opacity-100 transition duration-300">
                 <span className="bg-black/60 backdrop-blur-xs text-amber-100/90 px-2.5 py-0.5 rounded-full text-[8px] font-mono tracking-widest uppercase shadow-md border border-white/10">
-                  ‹ Swipe / Geser Layar untuk Ganti Filter ›
+                  â€¹ Swipe / Geser Layar untuk Ganti Filter â€º
                 </span>
               </div>
             )}
@@ -789,7 +795,7 @@ export default function StepCamera() {
 
       </div>
 
-      {/* ================= 🌟 3. INSTAGRAM STORY FILTER CIRCLES CAROUSEL 🌟 ================= */}
+      {/* ================= ðŸŒŸ 3. INSTAGRAM STORY FILTER CIRCLES CAROUSEL ðŸŒŸ ================= */}
       <div className="relative z-30 flex flex-col items-center w-full max-w-sm sm:max-w-md mx-auto flex-shrink-0 gap-1 pt-0.5">
         
         {/* Tab Switcher Pills (Aksesoris AR / Tone Filter) */}
@@ -938,7 +944,7 @@ export default function StepCamera() {
 
       </div>
 
-      {/* ================= 🌟 4. INSTAGRAM BOTTOM CONTROL DOCK (CLEAN & NON-OVERLAPPING) 🌟 ================= */}
+      {/* ================= ðŸŒŸ 4. INSTAGRAM BOTTOM CONTROL DOCK (CLEAN & NON-OVERLAPPING) ðŸŒŸ ================= */}
       <div className="relative z-30 w-full max-w-sm sm:max-w-md mx-auto pt-0 pb-1 px-4 flex items-center justify-between flex-shrink-0">
         
         {/* Left: Gallery Thumbnail Button */}
@@ -987,7 +993,7 @@ export default function StepCamera() {
 
       </div>
 
-      {/* ================= 🌟 5. VERTICAL PHOTO STRIP PREVIEW MODAL 🌟 ================= */}
+      {/* ================= ðŸŒŸ 5. VERTICAL PHOTO STRIP PREVIEW MODAL ðŸŒŸ ================= */}
       {showPreviewModal && (
         <div className="fixed inset-0 z-[160] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
           <div className="w-full max-w-xs sm:max-w-sm rounded-2xl bg-[#170A12] border border-amber-400/40 p-4 text-white shadow-2xl flex flex-col items-center gap-3 max-h-[92vh] overflow-y-auto no-scrollbar">
