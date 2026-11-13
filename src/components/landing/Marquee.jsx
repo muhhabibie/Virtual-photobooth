@@ -80,6 +80,9 @@ export default function Marquee() {
   const duplicated = [...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS];
 
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
+  const bride = activeEvent?.brideName;
+  const groom = activeEvent?.groomName;
+  const coupleName = (bride && groom) ? `${groom} & ${bride}` : (activeEvent?.displayName || 'Sabrina & Raka');
   const eventTitle = activeEvent?.displayName || 'Car Free Day Malang';
   const eventDate = activeEvent?.formattedDate || '15 November 2026';
   const eventPhotos = (activeEvent?.heroPhotos && activeEvent.heroPhotos.length > 0)
@@ -348,9 +351,9 @@ export default function Marquee() {
               {/* Top Header with Brand & Event Name (Matching stripRenderer.js) */}
               <div className="text-center pt-0.5 pb-1 flex-shrink-0 z-10">
                 <div className="flex items-center justify-center gap-1 opacity-80 mb-0.5" style={{ color: card.textHex }}>
-                  <span className="text-[7px] sm:text-[8px] font-mono font-black tracking-widest">N</span>
-                  <span className="text-[6.5px] sm:text-[7.5px] opacity-40">|</span>
-                  <span className="text-[6.5px] sm:text-[7.5px] font-sans font-semibold">sirklenice</span>
+                  <span className="text-[10px] sm:text-[11px] font-mono font-black tracking-widest">N</span>
+                  <span className="text-[9px] sm:text-[10px] opacity-40">|</span>
+                  <span className="text-[9.5px] sm:text-[10.5px] font-sans font-bold tracking-wide">sirklenice</span>
                 </div>
                 <h3 
                   style={{ 
@@ -387,43 +390,55 @@ export default function Marquee() {
                 ))}
               </div>
 
-              {/* Bottom Section: Nama Tamu, Divider with Diamond, Date, Venue, Quote & Theme Name */}
+              {/* Bottom Section: Matching Image 2 Professional Wedding Layout */}
               <div className="text-center pt-1.5 sm:pt-2 pb-1 flex-shrink-0 flex flex-col items-center w-full z-10">
-                {/* Guest Name */}
-                <strong 
-                  className="text-[8.5px] sm:text-[10px] font-serif font-bold tracking-[0.14em] uppercase block leading-tight"
+                {/* Prefix Label */}
+                <span 
+                  className="text-[6.5px] sm:text-[7.5px] font-semibold tracking-[0.2em] uppercase leading-tight opacity-75"
+                  style={{ color: isLight ? '#8C7A6B' : card.textHex, fontFamily: "'Cinzel', Georgia, serif" }}
+                >
+                  {isWedding ? 'MR. & MRS' : 'NAMA TAMU'}
+                </span>
+
+                {/* Main Script Name (Image 2 style) */}
+                <h4 
+                  className="text-base sm:text-lg font-normal leading-tight my-0.5 px-1 truncate max-w-full"
                   style={{ 
                     color: card.textHex,
-                    fontFamily: "'Playfair Display', 'Cinzel', Georgia, serif" 
+                    fontFamily: "'Great Vibes', 'Alex Brush', cursive",
+                    textShadow: '0 1px 6px rgba(0,0,0,0.08)'
                   }}
                 >
-                  NAMA TAMU
-                </strong>
+                  {isWedding ? coupleName : 'Nama Tamu'}
+                </h4>
+
+                {/* Event Badge */}
+                <span 
+                  className="text-[6.5px] sm:text-[7.5px] font-black tracking-[0.24em] uppercase leading-tight opacity-90"
+                  style={{ color: card.textHex, fontFamily: "'Cinzel', Georgia, serif" }}
+                >
+                  {isWedding ? 'WEDDING' : (activeEvent?.eventName || 'EVENT').toUpperCase()}
+                </span>
 
                 {/* Divider Line with Center Diamond Accent */}
-                <div className="flex items-center justify-center gap-1 my-1 w-16 sm:w-20" style={{ color: card.textHex }}>
-                  <div className="flex-1 h-[1px] opacity-40 bg-current" />
-                  <div className="w-1.5 h-1.5 rotate-45 opacity-70 bg-current flex-shrink-0" />
-                  <div className="flex-1 h-[1px] opacity-40 bg-current" />
+                <div className="flex items-center justify-center gap-1 my-0.5 w-14 sm:w-16" style={{ color: isLight ? '#B89F88' : card.textHex }}>
+                  <div className="flex-1 h-[1px] opacity-50 bg-current" />
+                  <div className="w-1.5 h-1.5 rotate-45 opacity-80 bg-current flex-shrink-0" />
+                  <div className="flex-1 h-[1px] opacity-50 bg-current" />
                 </div>
 
                 {/* Date */}
-                <span className="text-[7px] sm:text-[8px] font-mono font-bold tracking-wider opacity-85 block leading-tight" style={{ color: card.textHex }}>
+                <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold tracking-wider opacity-85 block leading-tight" style={{ color: card.textHex }}>
                   {activeEvent?.slug === 'cfd' ? '15 - 11 - 2026' : (activeEvent?.eventDate ? activeEvent.eventDate.split('-').reverse().join(' - ') : '15 - 11 - 2026')}
                 </span>
 
                 {/* Venue */}
-                <span className="text-[6px] sm:text-[7px] font-sans font-bold uppercase tracking-widest opacity-80 block leading-tight mt-0.5" style={{ color: card.textHex }}>
+                <span className="text-[5.5px] sm:text-[6.5px] font-sans font-bold uppercase tracking-widest opacity-80 block leading-tight mt-0.5" style={{ color: card.textHex }}>
                   {activeEvent?.venue || 'IDJEN BOULEVARD'}
                 </span>
 
-                {/* Quote */}
-                <span className="text-[5.5px] sm:text-[6.5px] font-serif italic opacity-75 block leading-tight mt-0.5" style={{ color: card.textHex }}>
-                  “kata-kata hari ini”
-                </span>
-
                 {/* Theme Name Badge */}
-                <div className="mt-1.5 px-2.5 py-0.5 rounded-full border border-current/25 text-[6.5px] sm:text-[7.5px] font-mono uppercase tracking-widest opacity-70" style={{ color: card.textHex }}>
+                <div className="mt-1 px-2 py-0.5 rounded-full border border-current/25 text-[6px] sm:text-[7px] font-mono uppercase tracking-widest opacity-70" style={{ color: card.textHex }}>
                   {card.name}
                 </div>
               </div>

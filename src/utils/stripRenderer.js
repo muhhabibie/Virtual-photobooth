@@ -18,13 +18,13 @@ import { getEventDisplayName, getEventFormattedDate } from './eventHeader';
 function drawSirklenBrandHeader(ctx, totalW, topCenterY, color, scale) {
   ctx.save();
   // Monogram N geometry (viewBox 339x515, bounds 108..447 and 20..535)
-  const monoH = 15 * scale;
+  const monoH = 22 * scale;
   const monoW = monoH * (339 / 515); // ~9.9 * scale
-  const barH = 15 * scale;
-  const gap = 7 * scale;
+  const barH = 22 * scale;
+  const gap = 10 * scale;
 
   // Measure 'sirklenice' brand text
-  const brandFont = `600 ${13.5 * scale}px 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif`;
+  const brandFont = `600 ${20 * scale}px 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif`;
   ctx.font = brandFont;
   const textMetrics = ctx.measureText('sirklenice');
   const textW = textMetrics.width;
@@ -149,7 +149,7 @@ export function renderMasterPhotoStrip(canvas, {
   // Check if custom guest message is present
   const rawMsg = guestMessage && guestMessage.trim() ? guestMessage.trim() : '';
   const hasCustomMsg = Boolean(rawMsg && rawMsg !== 'With Love' && rawMsg !== '“With Love”');
-  const shortMessageText = hasCustomMsg ? `“${rawMsg.substring(0, 52)}”` : '';
+  const shortMessageText = hasCustomMsg ? `\u201C${rawMsg.substring(0, 52)}\u201D` : '';
 
   // Venue / Location from activeEvent
   const venueText = (activeEvent?.venue || activeEvent?.location || (isCFD ? 'IDJEN BOULEVARD' : (isWedding ? 'PASADENA, CA' : 'SPECIAL EVENT'))).toUpperCase();
@@ -159,29 +159,29 @@ export function renderMasterPhotoStrip(canvas, {
   const photoW = totalW - padX * 2; // 508 * scale
 
   // Layout Sizing: Header with Brand Logo + Event Name requires topPad ~88 * scale
-  const topPad = 88 * scale;
+  const topPad = 96 * scale;
   let photoH, gap, footerH;
 
   if (isPolaroid) {
     // 1 Photo (Classic Polaroid ~1:1.15)
     photoH = Math.round(photoW * 0.88); // 447 * scale
     gap = 0;
-    footerH = (hasCustomMsg ? 154 : 126) * scale;
+    footerH = (hasCustomMsg ? 195 : 168) * scale;
   } else if (count === 2) {
     // 2 Photos (Duo Strip - 4:3 Standard)
     photoH = Math.round(photoW * 0.75); // 381 * scale (4:3)
     gap = 16 * scale;
-    footerH = (hasCustomMsg ? 154 : 126) * scale;
+    footerH = (hasCustomMsg ? 195 : 168) * scale;
   } else if (count === 4) {
     // 4 Photos (Classic 4-pose 2x6 strip)
     photoH = Math.round(photoW * 0.64); // 325 * scale
     gap = 14 * scale;
-    footerH = (hasCustomMsg ? 154 : 126) * scale;
+    footerH = (hasCustomMsg ? 195 : 168) * scale;
   } else {
     // Standard 3 Photos (Classic 3-pose strip - True 4:3 Professional Photobooth Ratio)
     photoH = Math.round(photoW * 0.75); // 381 * scale (4:3)
     gap = 16 * scale;
-    footerH = (hasCustomMsg ? 154 : 126) * scale;
+    footerH = (hasCustomMsg ? 195 : 168) * scale;
   }
 
   const totalH = topPad + (photoH * count) + (gap * Math.max(0, count - 1)) + footerH;
@@ -211,7 +211,7 @@ export function renderMasterPhotoStrip(canvas, {
   }
 
   // 2a. TOP BRAND HEADER: Logo N | Sirklenice (Top-most Center)
-  const brandCenterY = 30 * scale;
+  const brandCenterY = 34 * scale;
   drawSirklenBrandHeader(ctx, totalW, brandCenterY, primaryTextColor, scale);
 
   // 2b. TOP SUB-HEADER: Event Name / Wedding (Centered below Brand Logo)
@@ -234,7 +234,7 @@ export function renderMasterPhotoStrip(canvas, {
   fitTextSize(ctx, topEventName, photoW - 20 * scale, titleBaseSize, 11 * scale);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const eventTitleY = 60 * scale;
+  const eventTitleY = 68 * scale;
   drawSpacedText(ctx, topEventName, totalW / 2, eventTitleY, 2.0 * scale);
   ctx.restore();
 
@@ -294,106 +294,150 @@ export function renderMasterPhotoStrip(canvas, {
   }
 
   // 4. FOOTER SECTION (Below Photos)
-  // Sequence according to user drawing:
-  // - Nama Tamu
-  // - Garis Pemisah (Divider Line with center diamond)
-  // - Tanggal: 15 - 11 - 2026
-  // - Lokasi: IDJEN BOULEVARD
-  // - User words / message (if present)
+  // Professional Wedding Photobooth Layout inspired by premium photo strip design:
+  // - [Prefix label: MR. & MRS / NAMA TAMU label small caps]  <- top label
+  // - Guest Name in large script/calligraphy font              <- main calligraphy name
+  // - [WEDDING / EVENT TYPE] bold caps                        <- event type badge
+  // - Divider line with center diamond                         <- separator
+  // - Date: 15 - 11 - 2026                                   <- date
+  // - Venue: IDJEN BOULEVARD                                  <- venue
+  // - Guest message (if present)                              <- message
   const footerTop = topPad + (photoH * count) + (gap * Math.max(0, count - 1));
 
-  // Date determination: Always format as DD - MM - YYYY (e.g. 15 - 11 - 2026)
-  const dateText = getEventFormattedDate(activeEvent) || (isCFD ? '15 - 11 - 2026' : '15 - 11 - 2026');
+  // Date determination: Always format as DD - MM - YYYY
+  const dateText = getEventFormattedDate(activeEvent) || '15 - 11 - 2026';
 
-  // Guest Name Determination
+  // Guest Name Determination (raw display, not all-caps for calligraphy)
   const rawGuestName = guestName && guestName.trim() ? guestName.trim() : '';
-  let guestTitle = '';
+  let guestScriptName = '';  // For large calligraphy script display
+  let prefixLabel = '';      // "MR. & MRS" / "NAMA TAMU" etc
+  let eventBadge = '';       // "WEDDING" / "CAR FREE DAY" etc
+
   if (rawGuestName) {
-    guestTitle = rawGuestName.toUpperCase();
+    // Real guest provided - display their name in calligraphy
+    guestScriptName = rawGuestName;
+    prefixLabel = isWedding ? 'MR. & MRS' : 'NAMA TAMU';
+    eventBadge = isWedding ? 'WEDDING' : (activeEvent?.eventName || 'EVENT').toUpperCase();
   } else if (isCFD) {
-    guestTitle = 'NAMA TAMU';
+    guestScriptName = 'Nama Tamu';
+    prefixLabel = 'NAMA TAMU';
+    eventBadge = 'CAR FREE DAY';
   } else if (isWedding) {
     const bride = activeEvent?.brideName;
     const groom = activeEvent?.groomName;
-    guestTitle = (bride && groom) ? `${groom} & ${bride}`.toUpperCase() : 'NAMA TAMU';
+    // Show couple name in calligraphy style: "Raka & Sabrina"
+    guestScriptName = (bride && groom) ? `${groom} & ${bride}` : 'Nama Pasangan';
+    prefixLabel = 'MR. & MRS';
+    eventBadge = 'WEDDING';
   } else {
-    guestTitle = 'NAMA TAMU';
+    guestScriptName = activeEvent?.displayName || activeEvent?.eventName || 'Nama Tamu';
+    prefixLabel = 'NAMA TAMU';
+    eventBadge = (activeEvent?.eventName || 'EVENT').toUpperCase();
   }
 
-  // Exact vertical positions relative to footerTop
-  const nameY = footerTop + 33 * scale;
-  const line1Y = nameY + 20 * scale;
-  const dateY = line1Y + 23 * scale;
-  const venueY = dateY + 19 * scale;
-  const msgY = venueY + 23 * scale;
+  // ── Vertical layout positions ──
+  // Layer 1: prefix label (small caps)        footerTop + 20
+  // Layer 2: script name (large calligraphy)  footerTop + 42
+  // Layer 3: event badge (bold caps)          footerTop + 75
+  // Layer 4: divider line                     footerTop + 92
+  // Layer 5: date                             footerTop + 112
+  // Layer 6: venue                            footerTop + 130
+  // Layer 7: message (optional)               footerTop + 152
+  const prefixY   = footerTop + 22 * scale;
+  const scriptY   = footerTop + 62 * scale;
+  const badgeY    = footerTop + 90 * scale;
+  const divY      = footerTop + 106 * scale;
+  const dateY     = footerTop + 126 * scale;
+  const venueY    = footerTop + 144 * scale;
+  const msgY      = footerTop + 166 * scale;
 
-  // 4a. Guest Name ("Nama Tamu")
+  // 4a. Prefix Label ("MR. & MRS" or "NAMA TAMU") — small elegant caps
   ctx.save();
-  ctx.fillStyle = primaryTextColor;
-  const nameBaseSize = (isPolaroid ? 23 : 25) * scale;
-  ctx.font = `bold ${nameBaseSize}px 'Cinzel', 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-  fitTextSize(ctx, guestTitle, photoW - 20 * scale, nameBaseSize, 15 * scale);
+  ctx.fillStyle = accentColor;
+  const prefixSize = (isPolaroid ? 10 : 11) * scale;
+  ctx.font = `600 ${prefixSize}px 'Cinzel', 'Cormorant Garamond', Georgia, serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  drawSpacedText(ctx, guestTitle, totalW / 2, nameY, 2.8 * scale);
+  drawSpacedText(ctx, prefixLabel, totalW / 2, prefixY, 3.5 * scale);
   ctx.restore();
 
-  // 4b. Divider Line with Center Diamond Accent
+  // 4b. Guest Name in Large Script/Calligraphy (like "Licona" in example)
+  ctx.save();
+  ctx.fillStyle = primaryTextColor;
+  const scriptBaseSize = (isPolaroid ? 42 : 46) * scale;
+  ctx.font = `${scriptBaseSize}px 'Great Vibes', 'Alex Brush', 'Dancing Script', cursive`;
+  const fittedScriptSize = fitTextSize(ctx, guestScriptName, photoW - 30 * scale, scriptBaseSize, 24 * scale);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(guestScriptName, totalW / 2, scriptY);
+  ctx.restore();
+
+  // 4c. Event Badge ("WEDDING" / "CAR FREE DAY") — bold uppercase, prominent
+  ctx.save();
+  ctx.fillStyle = primaryTextColor;
+  const badgeSize = (isPolaroid ? 13 : 15) * scale;
+  ctx.font = `900 ${badgeSize}px 'Cinzel', 'Playfair Display', Georgia, serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  drawSpacedText(ctx, eventBadge, totalW / 2, badgeY, 4.0 * scale);
+  ctx.restore();
+
+  // 4d. Divider Line with Center Diamond Accent
   ctx.save();
   ctx.strokeStyle = accentColor;
-  ctx.lineWidth = 1.6 * scale;
+  ctx.lineWidth = 1.4 * scale;
   ctx.lineCap = 'round';
-  const div1Width = (isPolaroid ? 180 : 210) * scale;
-  const diamondR = 3.6 * scale;
+  const div1Width = (isPolaroid ? 160 : 190) * scale;
+  const diamondR = 3.0 * scale;
   // Left segment
   ctx.beginPath();
-  ctx.moveTo(totalW / 2 - div1Width / 2, line1Y);
-  ctx.lineTo(totalW / 2 - diamondR - 4 * scale, line1Y);
+  ctx.moveTo(totalW / 2 - div1Width / 2, divY);
+  ctx.lineTo(totalW / 2 - diamondR - 4 * scale, divY);
   ctx.stroke();
   // Right segment
   ctx.beginPath();
-  ctx.moveTo(totalW / 2 + diamondR + 4 * scale, line1Y);
-  ctx.lineTo(totalW / 2 + div1Width / 2, line1Y);
+  ctx.moveTo(totalW / 2 + diamondR + 4 * scale, divY);
+  ctx.lineTo(totalW / 2 + div1Width / 2, divY);
   ctx.stroke();
   // Center diamond accent
   ctx.fillStyle = accentColor;
   ctx.beginPath();
-  ctx.moveTo(totalW / 2, line1Y - diamondR);
-  ctx.lineTo(totalW / 2 + diamondR, line1Y);
-  ctx.lineTo(totalW / 2, line1Y + diamondR);
-  ctx.lineTo(totalW / 2 - diamondR, line1Y);
+  ctx.moveTo(totalW / 2, divY - diamondR);
+  ctx.lineTo(totalW / 2 + diamondR, divY);
+  ctx.lineTo(totalW / 2, divY + diamondR);
+  ctx.lineTo(totalW / 2 - diamondR, divY);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
 
-  // 4c. Date Text (e.g. 15 - 11 - 2026)
+  // 4e. Date Text (e.g. 15 - 11 - 2026)
   ctx.save();
   ctx.fillStyle = primaryTextColor;
-  const dateBaseSize = (isPolaroid ? 14 : 15.5) * scale;
+  const dateBaseSize = (isPolaroid ? 12.5 : 14) * scale;
   ctx.font = `bold ${dateBaseSize}px 'Cinzel', 'Playfair Display', Georgia, serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  drawSpacedText(ctx, dateText, totalW / 2, dateY, 3.2 * scale);
+  drawSpacedText(ctx, dateText, totalW / 2, dateY, 3.0 * scale);
   ctx.restore();
 
-  // 4d. Venue / Location Text (e.g. IDJEN BOULEVARD)
+  // 4f. Venue / Location Text
   ctx.save();
   ctx.fillStyle = primaryTextColor;
-  const venueBaseSize = (isPolaroid ? 12 : 13.5) * scale;
+  const venueBaseSize = (isPolaroid ? 11 : 12) * scale;
   ctx.font = `bold ${venueBaseSize}px 'Cinzel', 'Playfair Display', sans-serif`;
-  fitTextSize(ctx, venueText, photoW - 40 * scale, venueBaseSize, 10 * scale);
+  fitTextSize(ctx, venueText, photoW - 40 * scale, venueBaseSize, 9 * scale);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  drawSpacedText(ctx, venueText, totalW / 2, venueY, 2.8 * scale);
+  drawSpacedText(ctx, venueText, totalW / 2, venueY, 2.5 * scale);
   ctx.restore();
 
-  // 4e. Guest Words / Message (in quotes if present)
+  // 4g. Guest Words / Message (in quotes if present)
   if (hasCustomMsg) {
     ctx.save();
-    ctx.fillStyle = primaryTextColor;
-    const msgBaseSize = (isPolaroid ? 15 : 16.5) * scale;
-    ctx.font = `italic 600 ${msgBaseSize}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-    fitTextSize(ctx, shortMessageText, photoW - 36 * scale, msgBaseSize, 12 * scale);
+    ctx.fillStyle = accentColor;
+    const msgBaseSize = (isPolaroid ? 13 : 14) * scale;
+    ctx.font = `italic 500 ${msgBaseSize}px 'Great Vibes', 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
+    fitTextSize(ctx, shortMessageText, photoW - 36 * scale, msgBaseSize, 10 * scale);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(shortMessageText, totalW / 2, msgY);

@@ -298,8 +298,8 @@ export default function StepCamera() {
   const guestTitle = (rawGuestName || (isWedding ? 'Tamu Undangan' : 'Pengunjung Event')).toUpperCase();
   const venueText = (activeEvent?.venue || activeEvent?.location || activeEvent?.city || (isWedding ? 'PASADENA, CA' : 'SPECIAL EVENT PHOTOBOOTH')).toUpperCase();
   const rawMsg = guestMessage && guestMessage.trim() ? guestMessage.trim() : '';
-  const hasCustomMsg = Boolean(rawMsg && rawMsg !== 'With Love' && rawMsg !== 'â€œWith Loveâ€');
-  const customMessage = hasCustomMsg ? `â€œ${rawMsg.substring(0, 52)}â€` : '';
+  const hasCustomMsg = Boolean(rawMsg && rawMsg !== 'With Love' && !rawMsg.includes('With Love'));
+  const customMessage = hasCustomMsg ? `\u201C${rawMsg.substring(0, 52)}\u201D` : '';
 
   // Real-time 60 FPS FaceMesh Tracking
   const { facesRef, isReady: isFaceMeshReady } = useFaceMesh(videoRef, selectedAccessory !== 'none');
@@ -673,9 +673,9 @@ export default function StepCamera() {
           <div className="relative z-20 w-full flex flex-col items-center justify-center px-2 pt-0.5 pb-1 flex-shrink-0">
             {/* Top Brand Header: N | sirklenice (Matching stripRenderer.js standard layout) */}
             <div className="flex items-center justify-center gap-1 pb-0.5" style={{ color: primaryTextColor }}>
-              <span className="text-[8px] sm:text-[9px] font-mono font-black tracking-widest">N</span>
-              <span className="text-[7px] sm:text-[8px] opacity-40">|</span>
-              <span className="text-[7px] sm:text-[8px] font-sans font-semibold tracking-wide">sirklenice</span>
+              <span className="text-[11px] sm:text-[13px] font-mono font-black tracking-widest">N</span>
+              <span className="text-[10px] sm:text-[12px] opacity-40">|</span>
+              <span className="text-[10.5px] sm:text-[12.5px] font-sans font-bold tracking-wider">sirklenice</span>
             </div>
             <h2 
               className="text-[9px] sm:text-[10.5px] font-bold tracking-[0.16em] uppercase text-center leading-none"
@@ -724,7 +724,7 @@ export default function StepCamera() {
             ) : (
               <div className="absolute top-2 inset-x-0 z-30 flex justify-center pointer-events-none opacity-40 group-hover:opacity-100 transition duration-300">
                 <span className="bg-black/60 backdrop-blur-xs text-amber-100/90 px-2.5 py-0.5 rounded-full text-[8px] font-mono tracking-widest uppercase shadow-md border border-white/10">
-                  â€¹ Swipe / Geser Layar untuk Ganti Filter â€º
+                  ‹ Swipe / Geser Layar untuk Ganti Filter ›
                 </span>
               </div>
             )}
@@ -741,37 +741,54 @@ export default function StepCamera() {
 
           </div>
 
-          {/* Bottom Frame Chin Preview: Guest Name, Divider with diamond, Date, Venue / Location, and optional message (Matching stripRenderer.js) */}
-          <div className="relative z-20 text-center pt-1.5 pb-1 flex-shrink-0 flex flex-col items-center w-full">
-            {/* 1. Guest Name (Bold Uppercase Serif) */}
+          {/* Bottom Frame Chin Preview: Matching Image 2 Professional Wedding Layout */}
+          <div className="relative z-20 text-center pt-1 pb-1 flex-shrink-0 flex flex-col items-center w-full">
+            {/* 1. Prefix Label: MR. & MRS / NAMA TAMU */}
+            <span 
+              className="text-[7.5px] sm:text-[8.5px] font-semibold tracking-[0.22em] uppercase leading-none opacity-80"
+              style={{ color: accentColor, fontFamily: "'Cinzel', Georgia, serif" }}
+            >
+              {isWedding ? 'MR. & MRS' : 'NAMA TAMU'}
+            </span>
+
+            {/* 2. Main Script Name (like "Licona" in example) */}
             <h3 
               style={{ 
                 color: primaryTextColor,
-                fontFamily: "'Playfair Display', 'Cormorant Garamond', 'Cinzel', Georgia, serif" 
+                fontFamily: "'Great Vibes', 'Alex Brush', cursive",
+                textShadow: '0 1px 8px rgba(0,0,0,0.1)'
               }}
-              className="text-xs sm:text-sm font-bold tracking-[0.14em] uppercase leading-tight"
+              className="text-xl sm:text-2xl font-normal leading-tight my-0.5 px-2 truncate max-w-full"
             >
-              {guestTitle}
+              {rawGuestName || (isWedding ? couple : (activeEvent?.eventName || 'Nama Tamu'))}
             </h3>
 
-            {/* 2. Primary Divider Line with Center Diamond Accent */}
-            <div className="flex items-center justify-center gap-1.5 w-full my-1">
-              <span className="w-12 sm:w-16 h-[1.5px] rounded-full" style={{ backgroundColor: accentColor }} />
+            {/* 3. Event Badge: WEDDING / CAR FREE DAY */}
+            <span 
+              className="text-[7.5px] sm:text-[9px] font-black tracking-[0.25em] uppercase leading-none mb-1 opacity-90"
+              style={{ color: primaryTextColor, fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif" }}
+            >
+              {isWedding ? 'WEDDING' : (activeEvent?.eventName || 'EVENT').toUpperCase()}
+            </span>
+
+            {/* 4. Primary Divider Line with Center Diamond Accent */}
+            <div className="flex items-center justify-center gap-1.5 w-full my-0.5">
+              <span className="w-10 sm:w-14 h-[1px] rounded-full" style={{ backgroundColor: accentColor }} />
               <span className="w-1.5 h-1.5 rotate-45 flex-shrink-0" style={{ backgroundColor: accentColor }} />
-              <span className="w-12 sm:w-16 h-[1.5px] rounded-full" style={{ backgroundColor: accentColor }} />
+              <span className="w-10 sm:w-14 h-[1px] rounded-full" style={{ backgroundColor: accentColor }} />
             </div>
 
-            {/* 3. Date */}
+            {/* 5. Date */}
             <div 
-              className="text-[8px] sm:text-[9px] font-sans font-bold tracking-wider"
+              className="text-[7.5px] sm:text-[8.5px] font-sans font-bold tracking-wider"
               style={{ color: primaryTextColor }}
             >
               <span>{getEventFormattedDate(activeEvent)}</span>
             </div>
 
-            {/* 4. Venue / Location Text (Matching stripRenderer.js) */}
+            {/* 6. Venue / Location Text */}
             <div 
-              className="text-[7.5px] sm:text-[8.5px] font-bold tracking-wider uppercase mt-0.5 truncate max-w-[90%]"
+              className="text-[7px] sm:text-[8px] font-bold tracking-wider uppercase mt-0.5 truncate max-w-[90%]"
               style={{ 
                 color: primaryTextColor,
                 fontFamily: "'Playfair Display', 'Cinzel', sans-serif"
@@ -780,11 +797,11 @@ export default function StepCamera() {
               <span>{venueText}</span>
             </div>
 
-            {/* 5. Custom Message / Pesan Singkat (if entered - Large & Clear) */}
+            {/* 7. Custom Message / Pesan Singkat (if entered) */}
             {customMessage && (
               <p 
-                className="text-[10px] sm:text-[11.5px] font-semibold italic font-serif truncate max-w-full px-2 mt-0.5 leading-tight"
-                style={{ color: primaryTextColor }}
+                className="text-[9px] sm:text-[10.5px] font-medium italic truncate max-w-full px-2 mt-0.5 leading-tight"
+                style={{ color: primaryTextColor, fontFamily: "'Great Vibes', cursive" }}
               >
                 {customMessage}
               </p>
