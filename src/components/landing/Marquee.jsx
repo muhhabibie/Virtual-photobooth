@@ -255,7 +255,7 @@ export default function Marquee() {
       >
         {duplicated.map((card, i) => {
           const isLight = card.colorHex === '#FDFBF7' || card.colorHex === '#F3C5CB';
-          const dividerColor = isLight ? 'border-[#6B111F]/20' : 'border-white/15';
+          const botanicalColor = isLight ? '#B89F88' : card.textHex;
 
           return (
             <div
@@ -267,24 +267,82 @@ export default function Marquee() {
                 }
               }}
               style={{ backgroundColor: card.colorHex }}
-              className={`relative flex-shrink-0 w-44 xs:w-48 sm:w-56 h-[440px] xs:h-[470px] sm:h-[510px] rounded-2xl sm:rounded-3xl p-3 sm:p-3.5 shadow-xl border ${card.borderHex} transform transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between group/card cursor-pointer select-none overflow-hidden`}
+              className={`relative flex-shrink-0 w-44 xs:w-48 sm:w-52 h-auto min-h-[520px] xs:min-h-[550px] sm:min-h-[590px] rounded-2xl sm:rounded-3xl p-3 sm:p-3.5 shadow-xl border ${card.borderHex} transform transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between group/card cursor-pointer select-none overflow-hidden`}
               title="Klik untuk memilih bingkai ini"
             >
-              {/* Subtle Vector Botanical Corner Accents */}
-              <svg className="absolute -top-1 -left-1 w-8 sm:w-10 h-16 sm:h-20 pointer-events-none opacity-40 z-0" viewBox="0 0 50 80" fill="none" stroke={card.textHex} strokeWidth="1.2" strokeLinecap="round">
-                <path d="M 5,0 Q 15,25 8,45 Q 3,60 5,75" />
-                <path d="M 6,10 Q 18,12 16,5 Q 12,3 6,10" />
-                <path d="M 10,22 Q 22,25 20,18 Q 15,16 10,22" />
-                <path d="M 8,36 Q 20,40 18,32 Q 13,30 8,36" />
-                <path d="M 6,52 Q 16,58 15,50 Q 10,48 6,52" />
+              {/* Top-Left Botanical Vine Branch (Matching Master Photostrip Style) */}
+              <svg 
+                className="absolute top-0 left-0 w-12 sm:w-16 h-36 sm:h-44 pointer-events-none opacity-45 z-0" 
+                viewBox="0 0 60 160" 
+                fill="none" 
+                stroke={botanicalColor} 
+                strokeWidth="1.2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                {/* Main trailing stem */}
+                <path d="M 12,0 C 22,25 28,55 18,90 C 8,125 15,145 10,160" />
+                {/* Secondary delicate branch */}
+                <path d="M 22,42 C 36,60 42,85 36,110" />
+                {/* Botanical leaves with central veins */}
+                <path d="M 14,14 C 20,13 26,17 28,24 C 22,27 16,23 14,14 Z" />
+                <path d="M 14,14 L 26,22" />
+                <path d="M 17,28 C 11,26 6,31 4,37 C 10,40 16,36 17,28 Z" />
+                <path d="M 17,28 L 5,36" />
+                <path d="M 25,48 C 34,46 41,52 44,60 C 36,63 29,59 25,48 Z" />
+                <path d="M 25,48 L 42,58" />
+                <path d="M 37,75 C 47,75 53,83 55,92 C 46,94 40,88 37,75 Z" />
+                <path d="M 37,75 L 53,90" />
+                <path d="M 37,98 C 45,102 48,110 47,118 C 40,118 36,110 37,98 Z" />
+                <path d="M 37,98 L 46,116" />
+                <path d="M 20,70 C 13,72 8,80 7,88 C 14,89 19,81 20,70 Z" />
+                <path d="M 20,70 L 8,87" />
+                <path d="M 15,105 C 22,108 26,116 26,124 C 19,125 15,117 15,105 Z" />
+                <path d="M 15,105 L 25,122" />
+                <path d="M 11,135 C 6,138 4,146 5,153 C 11,152 13,145 11,135 Z" />
+                <path d="M 11,135 L 5,151" />
               </svg>
 
-              <svg className="absolute -bottom-1 -right-1 w-8 sm:w-10 h-8 sm:h-10 pointer-events-none opacity-40 z-0" viewBox="0 0 50 50" fill="none" stroke={card.textHex} strokeWidth="1.2">
-                <circle cx="32" cy="32" r="4.5" />
-                <path d="M 32,27 C 32,20 38,20 38,27 C 38,32 32,32 32,27 Z" />
-                <path d="M 37,32 C 44,32 44,38 37,38 C 32,38 32,32 37,32 Z" />
-                <path d="M 32,37 C 32,44 26,44 26,37 C 26,32 32,32 32,37 Z" />
-                <path d="M 27,32 C 20,32 20,26 27,26 C 32,26 32,32 27,32 Z" />
+              {/* Bottom-Right Botanical Floral Blossom & Sprigs (Matching Master Photostrip Style) */}
+              <svg 
+                className="absolute bottom-1 right-1 w-16 sm:w-20 h-16 sm:h-20 pointer-events-none opacity-45 z-0" 
+                viewBox="0 0 80 80" 
+                fill="none" 
+                stroke={botanicalColor} 
+                strokeWidth="1.2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                {/* Upward sprig stems trailing along footer */}
+                <path d="M 52,48 C 50,30 58,16 54,2" />
+                <path d="M 52,28 C 42,20 38,10 40,0" />
+                {/* Sprig leaves with central veins */}
+                <path d="M 54,16 C 62,13 68,17 70,24 C 63,26 57,22 54,16 Z" />
+                <path d="M 54,16 L 68,23" />
+                <path d="M 43,20 C 35,17 30,21 28,27 C 35,29 40,26 43,20 Z" />
+                <path d="M 43,20 L 29,26" />
+                <path d="M 58,62 C 65,65 70,72 68,78 C 61,77 58,70 58,62 Z" />
+                <path d="M 58,62 L 67,76" />
+                {/* Center blossom pistil & stamen */}
+                <circle cx="52" cy="52" r="3.5" />
+                <circle cx="52" cy="46" r="1" fill={botanicalColor} />
+                <circle cx="57" cy="49" r="1" fill={botanicalColor} />
+                <circle cx="56" cy="56" r="1" fill={botanicalColor} />
+                <circle cx="50" cy="58" r="1" fill={botanicalColor} />
+                <circle cx="46" cy="53" r="1" fill={botanicalColor} />
+                <circle cx="47" cy="47" r="1" fill={botanicalColor} />
+                {/* Outer sculpted petals with texture folds */}
+                <path d="M 44,45 C 42,33 52,28 60,33 C 63,42 56,47 48,46" />
+                <path d="M 58,45 C 68,42 74,49 71,58 C 63,61 58,55 57,51" />
+                <path d="M 57,56 C 63,65 59,73 50,72 C 45,66 48,59 52,57" />
+                <path d="M 47,57 C 39,63 32,58 35,49 C 41,45 46,50 48,55" />
+                <path d="M 46,47 C 38,44 38,34 47,34 C 52,38 50,44 47,47" />
+                {/* Delicate petal vein accents */}
+                <path d="M 52,43 L 52,35" />
+                <path d="M 57,50 L 64,48" />
+                <path d="M 54,56 L 55,63" />
+                <path d="M 47,53 L 41,56" />
+                <path d="M 48,47 L 43,41" />
               </svg>
 
               {/* Top Header with Brand & Event Name (Matching stripRenderer.js) */}
@@ -306,7 +364,7 @@ export default function Marquee() {
               </div>
 
               {/* Center Photo Slots (Standard 3-pose photostrip with authentic 4:3 HP capture aspect ratio & mat border) */}
-              <div className="relative my-auto w-full flex flex-col gap-1.5 sm:gap-2 justify-center z-10">
+              <div className="relative my-auto w-full flex flex-col gap-1.5 sm:gap-2 justify-center z-10 py-1">
                 {Array.from({ length: 3 }).map((_, idx) => (
                   <div 
                     key={idx} 
@@ -330,10 +388,10 @@ export default function Marquee() {
               </div>
 
               {/* Bottom Section: Nama Tamu, Divider with Diamond, Date, Venue, Quote & Theme Name */}
-              <div className="text-center pt-1 pb-0.5 flex-shrink-0 flex flex-col items-center w-full z-10">
+              <div className="text-center pt-1.5 sm:pt-2 pb-1 flex-shrink-0 flex flex-col items-center w-full z-10">
                 {/* Guest Name */}
                 <strong 
-                  className="text-[8px] sm:text-[9.5px] font-serif font-bold tracking-[0.14em] uppercase block leading-none"
+                  className="text-[8.5px] sm:text-[10px] font-serif font-bold tracking-[0.14em] uppercase block leading-tight"
                   style={{ 
                     color: card.textHex,
                     fontFamily: "'Playfair Display', 'Cinzel', Georgia, serif" 
@@ -343,29 +401,29 @@ export default function Marquee() {
                 </strong>
 
                 {/* Divider Line with Center Diamond Accent */}
-                <div className="flex items-center justify-center gap-1 my-0.5 sm:my-1 w-16 sm:w-20" style={{ color: card.textHex }}>
+                <div className="flex items-center justify-center gap-1 my-1 w-16 sm:w-20" style={{ color: card.textHex }}>
                   <div className="flex-1 h-[1px] opacity-40 bg-current" />
                   <div className="w-1.5 h-1.5 rotate-45 opacity-70 bg-current flex-shrink-0" />
                   <div className="flex-1 h-[1px] opacity-40 bg-current" />
                 </div>
 
                 {/* Date */}
-                <span className="text-[6.5px] sm:text-[7.5px] font-mono font-bold tracking-wider opacity-85 block leading-tight" style={{ color: card.textHex }}>
+                <span className="text-[7px] sm:text-[8px] font-mono font-bold tracking-wider opacity-85 block leading-tight" style={{ color: card.textHex }}>
                   {activeEvent?.slug === 'cfd' ? '15 - 11 - 2026' : (activeEvent?.eventDate ? activeEvent.eventDate.split('-').reverse().join(' - ') : '15 - 11 - 2026')}
                 </span>
 
                 {/* Venue */}
-                <span className="text-[5.5px] sm:text-[6.5px] font-sans font-bold uppercase tracking-widest opacity-80 block leading-tight mt-0.5" style={{ color: card.textHex }}>
+                <span className="text-[6px] sm:text-[7px] font-sans font-bold uppercase tracking-widest opacity-80 block leading-tight mt-0.5" style={{ color: card.textHex }}>
                   {activeEvent?.venue || 'IDJEN BOULEVARD'}
                 </span>
 
                 {/* Quote */}
-                <span className="text-[5px] sm:text-[6px] font-serif italic opacity-75 block leading-tight mt-0.5" style={{ color: card.textHex }}>
+                <span className="text-[5.5px] sm:text-[6.5px] font-serif italic opacity-75 block leading-tight mt-0.5" style={{ color: card.textHex }}>
                   “kata-kata hari ini”
                 </span>
 
                 {/* Theme Name Badge */}
-                <div className="mt-1 px-2 py-0.5 rounded-full border border-current/25 text-[6px] sm:text-[7px] font-mono uppercase tracking-widest opacity-70" style={{ color: card.textHex }}>
+                <div className="mt-1.5 px-2.5 py-0.5 rounded-full border border-current/25 text-[6.5px] sm:text-[7.5px] font-mono uppercase tracking-widest opacity-70" style={{ color: card.textHex }}>
                   {card.name}
                 </div>
               </div>
