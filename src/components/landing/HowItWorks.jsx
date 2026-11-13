@@ -46,7 +46,43 @@ export default function HowItWorks() {
   const { openBooth, activeEvent } = useBooth();
   const { toast } = useToast();
 
-  const coupleName = activeEvent?.displayName || 'Raka & Sabrina';
+  const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding' || Boolean(activeEvent?.brideName && activeEvent?.groomName);
+
+  // Couple / Event Title dynamically adapted to active event or wedding couple
+  const weddingCouple = (activeEvent?.brideName && activeEvent?.groomName)
+    ? `${activeEvent.brideName} & ${activeEvent.groomName}`
+    : (activeEvent?.displayName || 'Sabrina & Raka');
+
+  const nonWeddingTitle = activeEvent?.eventName || activeEvent?.displayName || (activeEvent?.slug === 'cfd' ? 'Car Free Day Malang' : 'Car Free Day Malang');
+
+  const eventTitle = isWedding ? weddingCouple : nonWeddingTitle;
+  const coupleName = eventTitle;
+
+  // Format Date (e.g. 15 November 2026 or 10 Mei 2026)
+  const formatEventDate = () => {
+    if (activeEvent?.formattedDate) return activeEvent.formattedDate;
+    if (activeEvent?.eventDate) {
+      try {
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const parts = String(activeEvent.eventDate).split('-');
+        if (parts.length === 3) {
+          if (parts[0].length === 4) {
+            // YYYY-MM-DD
+            const m = months[parseInt(parts[1], 10) - 1] || parts[1];
+            return `${parseInt(parts[2], 10)} ${m} ${parts[0]}`;
+          }
+          const m = months[parseInt(parts[1], 10) - 1] || parts[1];
+          return `${parseInt(parts[0], 10)} ${m} ${parts[2]}`;
+        }
+      } catch (e) {}
+      return activeEvent.eventDate;
+    }
+    return isWedding ? '10 Mei 2026' : '15 November 2026';
+  };
+
+  const eventDateText = formatEventDate();
+  const eventVenue = activeEvent?.venue || activeEvent?.location || (isWedding ? 'Grand Ballroom Jakarta' : 'Idjen Boulevard');
+  const footerSubtext = `${eventDateText} · ${eventVenue}`.toUpperCase();
 
   // Interactive step state
   const [activeStep, setActiveStep] = useState(1);
@@ -258,7 +294,7 @@ export default function HowItWorks() {
                     style={{ color: activeDemoTheme.text }}
                     className="text-[6.5px] sm:text-[7px] font-serif font-bold uppercase tracking-widest pb-1 border-b border-black/10"
                   >
-                    THE WEDDING OF {coupleName.toUpperCase()}
+                    {isWedding ? `THE WEDDING OF ${eventTitle.toUpperCase()}` : eventTitle.toUpperCase()}
                   </p>
                   
                   <div className="flex flex-col gap-1 sm:gap-1.5 py-1 sm:py-1.5">
@@ -387,10 +423,10 @@ export default function HowItWorks() {
                       </button>
                     </div>
 
-                    {/* Watermark Mempelai */}
+                    {/* Watermark Mempelai / Event */}
                     <div className="absolute bottom-1.5 right-1.5 pointer-events-none">
                       <span className="text-[6.5px] sm:text-[7.5px] font-script text-white/90 drop-shadow-md">
-                        {coupleName} ♡
+                        {eventTitle} {isWedding ? '♡' : ''}
                       </span>
                     </div>
                   </div>
@@ -399,7 +435,7 @@ export default function HowItWorks() {
                   <div 
                     className="absolute -right-1 xs:right-1 sm:right-4 top-2 xs:top-3 sm:top-2 w-32 xs:w-36 sm:w-44 aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-[#1F0A15] to-[#2D0D1F] border-2 border-white/30 shadow-2xl transform rotate-12 translate-x-2 xs:translate-x-3 sm:translate-x-4 transition-all duration-300 hover:rotate-0 hover:scale-110 hover:z-30 z-10 cursor-pointer flex flex-col justify-between p-2 sm:p-2.5 text-center group"
                     onClick={() => setDemoRecording(!demoRecording)}
-                    title="Langkah 3: Rekam Doa Suara"
+                    title={isWedding ? "Langkah 3: Rekam Doa Suara" : "Langkah 3: Rekam Pesan Suara"}
                   >
                     {/* Step 3 Header Badge */}
                     <div className="flex justify-center">
@@ -427,7 +463,7 @@ export default function HowItWorks() {
                     {/* Bottom Status Text */}
                     <div className="border-t border-white/10 pt-0.5">
                       <span className="text-[6.5px] sm:text-[7.5px] font-serif italic text-amber-100/90 block leading-tight truncate">
-                        {demoRecording ? '● Merekam Doa...' : 'Doa untuk Mempelai'}
+                        {demoRecording ? (isWedding ? '● Merekam Doa...' : '● Merekam Suara...') : (isWedding ? 'Doa untuk Mempelai' : 'Pesan Suara')}
                       </span>
                     </div>
                   </div>
@@ -442,16 +478,16 @@ export default function HowItWorks() {
                       className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs text-white transition cursor-pointer ${
                         demoRecording ? 'bg-red-600 animate-pulse' : 'bg-[#6B111F]'
                       }`}
-                      title={demoRecording ? 'Jeda Suara' : 'Mulai Rekam Doa'}
+                      title={demoRecording ? 'Jeda Suara' : (isWedding ? 'Mulai Rekam Doa' : 'Mulai Rekam Suara')}
                     >
                       <Volume2 size={13} />
                     </button>
                     <div className="text-left">
                       <p className="text-[10px] sm:text-[11px] font-bold text-white leading-tight">
-                        {demoRecording ? 'Merekam Doa untuk Mempelai...' : 'Rekam Pesan Doa Ucapan'}
+                        {demoRecording ? (isWedding ? 'Merekam Doa untuk Mempelai...' : 'Merekam Pesan Suara...') : (isWedding ? 'Rekam Pesan Doa Ucapan' : 'Rekam Pesan Pengunjung')}
                       </p>
                       <p className="text-[8px] sm:text-[9px] text-[#F5D77F]">
-                        {demoRecording ? '00:24 / 01:00 • Doa Restu Aktif' : `Untuk ${coupleName} (Maks. 60s)`}
+                        {demoRecording ? (isWedding ? '00:24 / 01:00 • Doa Restu Aktif' : '00:24 / 01:00 • Pesan Aktif') : `Untuk ${eventTitle} (Maks. 60s)`}
                       </p>
                     </div>
                   </div>
@@ -465,7 +501,7 @@ export default function HowItWorks() {
                 </div>
 
                 <p className="text-[10px] sm:text-[11px] text-[#B3A1A8] mt-2.5 sm:mt-3">
-                  ✓ Ambil beberapa pose foto terbaik dan rekam doa restu yang tersimpan abadi di buku tamu.
+                  ✓ Ambil beberapa pose foto terbaik dan rekam pesan suara yang tersimpan abadi di buku tamu.
                 </p>
               </motion.div>
             )}
@@ -493,7 +529,7 @@ export default function HowItWorks() {
                 {/* Ready Photostrip Card */}
                 <div className="w-40 sm:w-48 bg-[#6B111F] rounded-xl sm:rounded-2xl p-2 sm:p-2.5 shadow-2xl border border-amber-300/30 mb-3 sm:mb-4">
                   <p className="text-[6.5px] sm:text-[7px] font-serif font-bold uppercase tracking-widest text-[#F5D77F] pb-1 border-b border-white/10">
-                    THE WEDDING OF {coupleName.toUpperCase()}
+                    {isWedding ? `THE WEDDING OF ${eventTitle.toUpperCase()}` : eventTitle.toUpperCase()}
                   </p>
                   <div className="my-1 sm:my-1.5 aspect-[4/3] rounded-lg overflow-hidden bg-black/40">
                     <img
@@ -509,7 +545,7 @@ export default function HowItWorks() {
                   >
                     Sarah & Dimas
                   </h4>
-                  <p className="text-[5.5px] sm:text-[6px] font-mono text-white/70">10 Mei 2026 • Grand Ballroom</p>
+                  <p className="text-[5.5px] sm:text-[6px] font-mono text-white/70">{eventDateText} • {eventVenue}</p>
                 </div>
 
                 {/* Action Buttons: Unduh HD & Bagikan Kenangan */}
@@ -568,16 +604,22 @@ export default function HowItWorks() {
       >
         <div className="max-w-md mx-auto px-5">
           <h4 
-            className="text-3xl sm:text-4xl font-normal text-[#E5C158] leading-tight font-script"
+            className={
+              isWedding 
+                ? "text-3xl sm:text-4xl font-normal text-[#E5C158] leading-tight font-script"
+                : "text-2xl sm:text-3xl font-bold text-[#E5C158] uppercase tracking-[0.16em] leading-tight"
+            }
             style={{ 
-              fontFamily: "'Alex Brush', 'Great Vibes', cursive",
+              fontFamily: isWedding 
+                ? "'Alex Brush', 'Great Vibes', cursive" 
+                : "'Playfair Display', 'Cinzel', Georgia, serif",
               textShadow: '0 2px 15px rgba(229,193,88,0.2)'
             }}
           >
-            Sabrina & Raka
+            {eventTitle}
           </h4>
           <p className="text-[9px] sm:text-[10px] font-sans tracking-[0.28em] text-[#8C7A82] uppercase mt-2 font-medium">
-            10 MEI 2026 · GRAND BALLROOM JAKARTA
+            {footerSubtext}
           </p>
         </div>
       </motion.div>

@@ -29,8 +29,46 @@ const romanticTransition = {
 };
 
 export default function Hero() {
-  const { openBooth, capturedPhotos } = useBooth();
+  const { openBooth, capturedPhotos, activeEvent } = useBooth();
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding' || Boolean(activeEvent?.brideName && activeEvent?.groomName);
+
+  const weddingCouple = (activeEvent?.brideName && activeEvent?.groomName)
+    ? `${activeEvent.brideName} & ${activeEvent.groomName}`
+    : (activeEvent?.displayName || 'Sabrina & Raka');
+
+  const nonWeddingTitle = activeEvent?.eventName || activeEvent?.displayName || (activeEvent?.slug === 'cfd' ? 'Car Free Day Malang' : 'Car Free Day Malang');
+
+  const heroTitle = isWedding ? weddingCouple : nonWeddingTitle;
+
+  const heroPill = isWedding 
+    ? 'THE WEDDING CELEBRATION OF' 
+    : (activeEvent?.slug === 'cfd' ? 'OFFICIAL FESTIVAL & EVENT PHOTOBOOTH' : 'OFFICIAL PHOTOBOOTH EVENT');
+
+  const formatHeroDate = () => {
+    if (activeEvent?.formattedDate) return activeEvent.formattedDate;
+    if (activeEvent?.eventDate) {
+      try {
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const parts = String(activeEvent.eventDate).split('-');
+        if (parts.length === 3) {
+          if (parts[0].length === 4) {
+            const m = months[parseInt(parts[1], 10) - 1] || parts[1];
+            return `${parseInt(parts[2], 10)} ${m} ${parts[0]}`;
+          }
+          const m = months[parseInt(parts[1], 10) - 1] || parts[1];
+          return `${parseInt(parts[0], 10)} ${m} ${parts[2]}`;
+        }
+      } catch (e) {}
+      return activeEvent.eventDate;
+    }
+    return isWedding ? 'Minggu, 10 Mei 2026' : '15 November 2026';
+  };
+
+  const heroDateText = formatHeroDate();
+  const heroVenue = activeEvent?.venue || activeEvent?.location || (isWedding ? 'Grand Ballroom Jakarta' : 'Idjen Boulevard Malang');
+  const heroSubtext = `${heroDateText} • ${heroVenue}`;
 
   // Auto sliding carousel every 4 seconds
   useEffect(() => {
@@ -83,26 +121,26 @@ export default function Hero() {
           {/* Top Clean Editorial Pill (No AI/sparkle logos) */}
           <div className="inline-flex items-center px-3.5 sm:px-5 py-1 sm:py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 shadow-lg mb-2 sm:mb-3">
             <span className="text-[10px] sm:text-sm font-sans font-semibold tracking-[0.2em] sm:tracking-[0.28em] text-amber-200/90 uppercase drop-shadow-md">
-              THE WEDDING CELEBRATION OF
+              {heroPill}
             </span>
           </div>
 
           {/* Grand Festive Names (Large Calligraphy) */}
           <h1 
-            className="text-5xl xs:text-6xl sm:text-8xl md:text-9xl lg:text-[115px] font-normal text-white mt-0.5 sm:mt-1 leading-tight sm:leading-none drop-shadow-2xl"
+            className={`text-5xl xs:text-6xl sm:text-8xl md:text-9xl ${isWedding ? 'lg:text-[115px]' : 'lg:text-[85px]'} font-normal text-white mt-0.5 sm:mt-1 leading-tight sm:leading-none drop-shadow-2xl`}
             style={{ 
-              fontFamily: "'Alex Brush', 'Great Vibes', cursive",
+              fontFamily: isWedding ? "'Alex Brush', 'Great Vibes', cursive" : "'Playfair Display', 'Cinzel', Georgia, serif",
               textShadow: '0 4px 30px rgba(0,0,0,0.85), 0 0 50px rgba(245,215,127,0.45)',
               filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.7))'
             }}
           >
-            Sabrina & Raka
+            {heroTitle}
           </h1>
 
           {/* Clean Date & Venue Pill (No emojis) */}
           <div className="mt-2 sm:mt-4 inline-flex items-center px-3.5 sm:px-5 py-1 sm:py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 shadow-md">
             <p className="text-[11px] sm:text-sm md:text-base text-rose-100 font-medium tracking-wide sm:tracking-wider drop-shadow-md">
-              Minggu, 10 Mei 2026 • Grand Ballroom Jakarta
+              {heroSubtext}
             </p>
           </div>
         </motion.div>
@@ -204,7 +242,7 @@ export default function Hero() {
             </div>
 
             <div className="text-center font-serif text-[6.5px] sm:text-[9px] text-[#F5D77F] font-bold tracking-wider pt-0.5 sm:pt-1.5 border-t border-white/15 z-20 bg-[#12070D]">
-              Sabrina & Raka ♡
+              {heroTitle} {isWedding ? '♡' : ''}
             </div>
           </div>
 
@@ -232,7 +270,7 @@ export default function Hero() {
             </div>
 
             <div className="text-center font-serif text-[6.5px] sm:text-[9px] text-[#F5D77F] font-bold tracking-wider pt-0.5 sm:pt-1.5 border-t border-white/15 z-20 bg-[#6B111F]">
-              Sabrina & Raka ♡
+              {heroTitle} {isWedding ? '♡' : ''}
             </div>
           </div>
 
@@ -241,7 +279,7 @@ export default function Hero() {
             <div className="relative aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-gray-900 shadow-inner group cursor-pointer" onClick={openBooth}>
               <img 
                 src={SLIDE_IMAGES[currentSlide]} 
-                alt="Sabrina and Raka Wedding" 
+                alt={isWedding ? `${heroTitle} Wedding` : `${heroTitle}`} 
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
               />
             </div>
@@ -260,7 +298,7 @@ export default function Hero() {
         className="w-full bg-white pt-8 pb-4 overflow-hidden"
       >
         <div className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-[#6B111F] mb-3 font-sans">
-          PILIHAN BINGKAI PERNIKAHAN SABRINA & RAKA
+          {isWedding ? `PILIHAN BINGKAI PERNIKAHAN ${heroTitle.toUpperCase()}` : `BINGKAI KHUSUS EVENT ${heroTitle.toUpperCase()}`}
         </div>
         <Marquee />
       </motion.div>

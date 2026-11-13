@@ -60,7 +60,13 @@ function ReviewCard({ review }) {
 }
 
 export default function GuestbookPreview() {
-  const { openBooth } = useBooth();
+  const { openBooth, activeEvent } = useBooth();
+
+  const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding' || Boolean(activeEvent?.brideName && activeEvent?.groomName);
+  const weddingCouple = (activeEvent?.brideName && activeEvent?.groomName)
+    ? `${activeEvent.brideName} & ${activeEvent.groomName}`
+    : (activeEvent?.displayName || 'Sabrina & Raka');
+  const guestbookTitle = isWedding ? weddingCouple : (activeEvent?.eventName || activeEvent?.displayName || 'Event');
 
   return (
     <section id="guestbook" className="py-20 bg-rose-50/30 overflow-hidden">
@@ -76,17 +82,17 @@ export default function GuestbookPreview() {
         >
           <div>
             <span className="inline-block bg-rose-100 text-[#8A1828] text-xs font-extrabold uppercase tracking-widest px-3.5 py-1 rounded-full mb-2 font-mono">
-              Doa & Ucapan Tamu Undangan
+              {isWedding ? 'Doa & Ucapan Tamu Undangan' : 'Pesan & Kesan Pengunjung'}
             </span>
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-              Cerita & Doa untuk Sabrina & Raka 💍
+              {`Cerita & ${isWedding ? 'Doa' : 'Kesan'} untuk ${guestbookTitle}`} {isWedding ? '💍' : '🎉'}
             </h2>
           </div>
           <button
             onClick={openBooth}
             className="inline-flex items-center gap-1.5 text-sm font-bold text-[#8A1828] hover:text-rose-950 bg-white hover:bg-rose-50 border border-rose-200 px-5 py-2.5 rounded-full transition-all self-start md:self-auto shadow-xs"
           >
-            <span>Kirim Doa Sekarang</span>
+            <span>{isWedding ? 'Kirim Doa Sekarang' : 'Tulis Pesan Sekarang'}</span>
             <ChevronRight size={16} />
           </button>
         </motion.div>

@@ -4,7 +4,13 @@ import { useBooth } from '../../context/PhotoboothContext';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const { openBooth } = useBooth();
+  const { openBooth, activeEvent } = useBooth();
+
+  const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding' || Boolean(activeEvent?.brideName && activeEvent?.groomName);
+  const weddingCouple = (activeEvent?.brideName && activeEvent?.groomName)
+    ? `${activeEvent.brideName} & ${activeEvent.groomName}`
+    : (activeEvent?.displayName || 'Sabrina & Raka');
+  const navTitle = isWedding ? weddingCouple : (activeEvent?.eventName || activeEvent?.displayName || 'Car Free Day Malang');
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -26,11 +32,11 @@ export default function Navbar() {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-[#8A1828] via-[#B8233C] to-[#E5C158] flex items-center justify-center shadow-md shadow-rose-900/20 text-white font-bold text-sm sm:text-base group-hover:scale-105 transition-transform flex-shrink-0">
-            💍
+            {isWedding ? '💍' : '📸'}
           </div>
           <div className="flex flex-col">
-            <span className="font-script text-xl sm:text-2xl text-[#8A1828] tracking-tight leading-none">
-              Sabrina & Raka
+            <span className={isWedding ? "font-script text-xl sm:text-2xl text-[#8A1828] tracking-tight leading-none" : "font-serif font-bold text-sm sm:text-base text-[#8A1828] tracking-tight leading-tight uppercase"}>
+              {navTitle}
             </span>
             <span className="text-[8px] sm:text-[9px] font-bold text-amber-700 tracking-wider uppercase font-mono mt-0.5">
               Photobooth & Guestbook
