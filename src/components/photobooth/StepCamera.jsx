@@ -5,7 +5,7 @@ import {
   Sliders, Check, Trash2, X, ChevronRight, Image as ImageIcon,
   Crown, Flower2, Glasses, Star, Heart, Smile, Wand2, Sparkle, SlidersHorizontal,
   Infinity as InfinityIcon, Type, ChevronDown, Zap, ZapOff, Eye, Sparkles, Sun,
-  Printer
+  Printer, RotateCcw
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useCamera } from '../../hooks/useCamera';
@@ -14,7 +14,7 @@ import { useToast } from '../ui/Toast';
 import { AR_ACCESSORIES, drawAccessoryOverlay } from '../../config/accessories';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { drawStripBotanicals, drawFrameOrnaments } from '../../config/frameOrnaments';
-import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
+import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
 
 const ACCESSORY_ICONS = {
   'none': { icon: Wand2, color: 'text-amber-200' },
@@ -44,8 +44,8 @@ const COLOR_THEMES = [
   { id: 'antique', name: 'Antique', hex: '#C4A46C', textHex: '#FFFFFF' },
 ];
 
-// Web Audio API Synthesizer for Realistic Instant Camera Strip Ejection Sound
-const playInstantCameraSound = () => {
+// Web Audio API Synthesizer for Professional Mechanical Shutter & Photo Ejection ("Cekirek") Sound
+const playProCekirekSound = () => {
   try {
     const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtxClass) return;
@@ -55,90 +55,125 @@ const playInstantCameraSound = () => {
     }
     const now = ctx.currentTime;
 
-    // 1. Mechanical Stepper Motor Whirring (Realistic Gear Pitch Ramp)
+    // Helper: create short mechanical noise burst for authentic shutter transients
+    const createClickBurst = (time, duration, filterFreq, gainLevel) => {
+      const bufferSize = Math.floor(ctx.sampleRate * duration);
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+      }
+      const source = ctx.createBufferSource();
+      source.buffer = noiseBuffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(filterFreq, time);
+      filter.Q.setValueAtTime(3.0, time);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(gainLevel, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      source.start(time);
+      source.stop(time + duration);
+    };
+
+    // 1. "CEK" - Primary Shutter Blade Release & Mirror Slap
+    createClickBurst(now, 0.035, 2600, 0.65);
+    const shutterOsc1 = ctx.createOscillator();
+    const shutterGain1 = ctx.createGain();
+    shutterOsc1.type = 'triangle';
+    shutterOsc1.frequency.setValueAtTime(1450, now);
+    shutterOsc1.frequency.exponentialRampToValueAtTime(160, now + 0.04);
+    shutterGain1.gain.setValueAtTime(0.55, now);
+    shutterGain1.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+    shutterOsc1.connect(shutterGain1);
+    shutterGain1.connect(ctx.destination);
+    shutterOsc1.start(now);
+    shutterOsc1.stop(now + 0.05);
+
+    // 2. "IK" - Secondary Shutter Curtain Slap (40ms later)
+    const curtainTime = now + 0.042;
+    createClickBurst(curtainTime, 0.03, 1900, 0.45);
+    const shutterOsc2 = ctx.createOscillator();
+    const shutterGain2 = ctx.createGain();
+    shutterOsc2.type = 'triangle';
+    shutterOsc2.frequency.setValueAtTime(980, curtainTime);
+    shutterOsc2.frequency.exponentialRampToValueAtTime(120, curtainTime + 0.035);
+    shutterGain2.gain.setValueAtTime(0.4, curtainTime);
+    shutterGain2.gain.exponentialRampToValueAtTime(0.001, curtainTime + 0.04);
+    shutterOsc2.connect(shutterGain2);
+    shutterGain2.connect(ctx.destination);
+    shutterOsc2.start(curtainTime);
+    shutterOsc2.stop(curtainTime + 0.045);
+
+    // 3. "-REK" - Precision Stepper Motor Drive & Photo Paper Roller Slide
+    const motorStartTime = now + 0.075;
+    const motorDuration = 2.0;
+
+    // Motor Gear Tone (Dual resonant oscillators for realistic mechanical gear action)
     const motorOsc = ctx.createOscillator();
     const motorGain = ctx.createGain();
     const motorFilter = ctx.createBiquadFilter();
 
     motorOsc.type = 'sawtooth';
-    motorOsc.frequency.setValueAtTime(130, now);
-    motorOsc.frequency.linearRampToValueAtTime(175, now + 1.6);
-    motorOsc.frequency.linearRampToValueAtTime(145, now + 2.0);
+    motorOsc.frequency.setValueAtTime(185, motorStartTime);
+    motorOsc.frequency.linearRampToValueAtTime(235, motorStartTime + 0.35);
+    motorOsc.frequency.linearRampToValueAtTime(210, motorStartTime + 1.5);
+    motorOsc.frequency.linearRampToValueAtTime(165, motorStartTime + motorDuration);
 
-    motorFilter.type = 'lowpass';
-    motorFilter.frequency.setValueAtTime(400, now);
-    motorFilter.Q.setValueAtTime(3.5, now);
+    motorFilter.type = 'bandpass';
+    motorFilter.frequency.setValueAtTime(580, motorStartTime);
+    motorFilter.Q.setValueAtTime(2.6, motorStartTime);
 
-    motorGain.gain.setValueAtTime(0.001, now);
-    motorGain.gain.exponentialRampToValueAtTime(0.22, now + 0.08);
-    motorGain.gain.setValueAtTime(0.22, now + 1.8);
-    motorGain.gain.exponentialRampToValueAtTime(0.001, now + 2.15);
+    motorGain.gain.setValueAtTime(0.001, motorStartTime);
+    motorGain.gain.exponentialRampToValueAtTime(0.24, motorStartTime + 0.06);
+    motorGain.gain.setValueAtTime(0.24, motorStartTime + 1.6);
+    motorGain.gain.exponentialRampToValueAtTime(0.001, motorStartTime + motorDuration);
 
     motorOsc.connect(motorFilter);
     motorFilter.connect(motorGain);
     motorGain.connect(ctx.destination);
+    motorOsc.start(motorStartTime);
+    motorOsc.stop(motorStartTime + motorDuration + 0.05);
 
-    motorOsc.start(now);
-    motorOsc.stop(now + 2.2);
-
-    // 2. Paper Roller Friction Sound
-    const bufferSize = Math.floor(ctx.sampleRate * 2.0);
-    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = (Math.random() * 2 - 1) * 0.35;
+    // Paper Roller Friction Hiss (tactile photo strip slide)
+    const rollerBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * motorDuration), ctx.sampleRate);
+    const rollerData = rollerBuffer.getChannelData(0);
+    for (let i = 0; i < rollerData.length; i++) {
+      rollerData[i] = (Math.random() * 2 - 1) * 0.32;
     }
-    const noiseSource = ctx.createBufferSource();
-    noiseSource.buffer = noiseBuffer;
+    const rollerSource = ctx.createBufferSource();
+    rollerSource.buffer = rollerBuffer;
 
-    const noiseFilter = ctx.createBiquadFilter();
-    noiseFilter.type = 'bandpass';
-    noiseFilter.frequency.setValueAtTime(850, now);
-    noiseFilter.Q.setValueAtTime(2.2, now);
+    const rollerFilter = ctx.createBiquadFilter();
+    rollerFilter.type = 'bandpass';
+    rollerFilter.frequency.setValueAtTime(1150, motorStartTime);
+    rollerFilter.Q.setValueAtTime(1.8, motorStartTime);
 
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.001, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.07, now + 0.1);
-    noiseGain.gain.setValueAtTime(0.07, now + 1.7);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 2.05);
+    const rollerGain = ctx.createGain();
+    rollerGain.gain.setValueAtTime(0.001, motorStartTime);
+    rollerGain.gain.exponentialRampToValueAtTime(0.09, motorStartTime + 0.09);
+    rollerGain.gain.setValueAtTime(0.09, motorStartTime + 1.5);
+    rollerGain.gain.exponentialRampToValueAtTime(0.001, motorStartTime + motorDuration);
 
-    noiseSource.connect(noiseFilter);
-    noiseFilter.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
+    rollerSource.connect(rollerFilter);
+    rollerFilter.connect(rollerGain);
+    rollerGain.connect(ctx.destination);
+    rollerSource.start(motorStartTime);
+    rollerSource.stop(motorStartTime + motorDuration + 0.05);
 
-    noiseSource.start(now);
-    noiseSource.stop(now + 2.1);
+    // 4. Subtle Mechanical Latch Click at the finish
+    const finishTime = motorStartTime + motorDuration - 0.05;
+    createClickBurst(finishTime, 0.035, 1500, 0.3);
 
-    // 3. Crisp Eject Snap & Finish Chime when strip reaches bottom
-    const finishTime = now + 2.1;
-    
-    // Snap Click
-    const clickOsc = ctx.createOscillator();
-    const clickGain = ctx.createGain();
-    clickOsc.type = 'triangle';
-    clickOsc.frequency.setValueAtTime(600, finishTime);
-    clickOsc.frequency.exponentialRampToValueAtTime(100, finishTime + 0.06);
-    clickGain.gain.setValueAtTime(0.28, finishTime);
-    clickGain.gain.exponentialRampToValueAtTime(0.001, finishTime + 0.07);
-    clickOsc.connect(clickGain);
-    clickGain.connect(ctx.destination);
-    clickOsc.start(finishTime);
-    clickOsc.stop(finishTime + 0.08);
-
-    // Sweet Chime (B5 note 987.77 Hz)
-    const chimeOsc = ctx.createOscillator();
-    const chimeGain = ctx.createGain();
-    chimeOsc.type = 'sine';
-    chimeOsc.frequency.setValueAtTime(987.77, finishTime + 0.04);
-    chimeGain.gain.setValueAtTime(0.001, finishTime + 0.04);
-    chimeGain.gain.exponentialRampToValueAtTime(0.25, finishTime + 0.07);
-    chimeGain.gain.exponentialRampToValueAtTime(0.0001, finishTime + 0.85);
-    chimeOsc.connect(chimeGain);
-    chimeGain.connect(ctx.destination);
-    chimeOsc.start(finishTime + 0.04);
-    chimeOsc.stop(finishTime + 0.9);
   } catch (err) {
-    console.warn('Web Audio instant camera sound error:', err);
+    console.warn('Web Audio pro cekirek sound error:', err);
   }
 };
 
@@ -146,6 +181,7 @@ export default function StepCamera() {
   const { 
     targetPhotoCount, 
     stripColor, 
+    stripStyle,
     selectedTimer, 
     guestName,
     guestMessage,
@@ -698,26 +734,45 @@ export default function StepCamera() {
     setTimeout(() => flash.remove(), 380);
   }, [selectedFilter, selectedAccessory, addPhoto, facesRef, facingMode]);
 
-  // Proceed directly to review step
-  const handleProceedToReview = useCallback(() => {
+  // Proceed directly to voice step (bypassing redundant review page)
+  const handleContinueToVoice = useCallback(() => {
     stop();
-    setCurrentStep('review');
+    setCurrentStep('voice');
   }, [stop, setCurrentStep]);
+
+  // Retake all photos and return to camera
+  const handleRetakeAll = useCallback(() => {
+    setCapturedPhotos([]);
+    setIsEjecting(false);
+    setEjectPhase('printing');
+  }, [setCapturedPhotos]);
 
   // Render photostrip canvas inside ejection animation
   const renderEjectStrip = useCallback(() => {
     const canvas = ejectCanvasRef.current;
-    if (!canvas) return;
-    renderMasterPhotoStrip(canvas, {
-      photos: capturedPhotos,
-      targetCount: targetPhotoCount,
-      stripColor,
-      guestName,
-      guestMessage,
-      activeEvent,
-      scale: 2,
-    });
-  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent]);
+    if (!canvas || capturedPhotos.length === 0) return;
+
+    if (stripStyle === 'botanical-wedding') {
+      renderBotanicalWeddingStrip(canvas, {
+        photos: capturedPhotos,
+        targetCount: targetPhotoCount,
+        guestName,
+        guestMessage,
+        activeEvent,
+        scale: 2,
+      });
+    } else {
+      renderMasterPhotoStrip(canvas, {
+        photos: capturedPhotos,
+        targetCount: targetPhotoCount,
+        stripColor,
+        guestName,
+        guestMessage,
+        activeEvent,
+        scale: 2,
+      });
+    }
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent, stripStyle]);
 
   useEffect(() => {
     if (isEjecting) {
@@ -745,21 +800,11 @@ export default function StepCamera() {
       const timer = setTimeout(() => {
         setIsEjecting(true);
         setEjectPhase('printing');
-        playInstantCameraSound();
+        playProCekirekSound();
       }, 350);
       return () => clearTimeout(timer);
     }
   }, [capturedPhotos.length, targetPhotoCount, capturing, isEjecting]);
-
-  // Auto-advance to review after ejection finishes
-  useEffect(() => {
-    if (ejectPhase === 'done') {
-      const autoProceedTimer = setTimeout(() => {
-        handleProceedToReview();
-      }, 1600);
-      return () => clearTimeout(autoProceedTimer);
-    }
-  }, [ejectPhase, handleProceedToReview]);
 
   // Handle Photo Delete inside preview modal
   const handleDeletePhoto = (index) => {
@@ -781,9 +826,11 @@ export default function StepCamera() {
       if (!isEjecting) {
         setIsEjecting(true);
         setEjectPhase('printing');
-        playInstantCameraSound();
+        playProCekirekSound();
+      } else if (ejectPhase === 'done') {
+        handleContinueToVoice();
       } else {
-        handleProceedToReview();
+        setEjectPhase('done');
       }
       return;
     }
@@ -797,7 +844,7 @@ export default function StepCamera() {
     setTimeout(() => {
       setCapturing(false);
     }, 200);
-  }, [capturing, capturedPhotos.length, targetPhotoCount, isEjecting, handleProceedToReview, doCapture, triggerTopNotice]);
+  }, [capturing, capturedPhotos.length, targetPhotoCount, isEjecting, ejectPhase, handleContinueToVoice, doCapture, triggerTopNotice]);
 
   const handleToggleCamera = async () => {
     try {
@@ -1191,13 +1238,15 @@ export default function StepCamera() {
                 if (!isEjecting) {
                   setIsEjecting(true);
                   setEjectPhase('printing');
-                  playInstantCameraSound();
+                  playProCekirekSound();
+                } else if (ejectPhase === 'done') {
+                  handleContinueToVoice();
                 } else {
-                  handleProceedToReview();
+                  setEjectPhase('done');
                 }
               }}
               className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 border border-emerald-300/60 text-white flex items-center justify-center shadow-lg active:scale-95 transition cursor-pointer flex-shrink-0"
-              title="Lanjut ke Peninjauan"
+              title="Lanjut ke Hasil Cetak"
             >
               <ArrowRight size={18} />
             </button>
@@ -1214,7 +1263,7 @@ export default function StepCamera() {
 
       </div>
 
-      {/* ================= 🌟 4. INSTANT CAMERA PHOTO STRIP EJECTION ANIMATION 🌟 ================= */}
+      {/* ================= 🌟 4. INSTANT CAMERA PHOTO STRIP EJECTION & "FOTO SIAP!" SCREEN 🌟 ================= */}
       <AnimatePresence>
         {isEjecting && (
           <motion.div
@@ -1222,115 +1271,165 @@ export default function StepCamera() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
-            className="fixed inset-0 z-[180] bg-black/92 backdrop-blur-xl flex flex-col items-center justify-between p-3 sm:p-4 pb-[max(env(safe-area-inset-bottom),16px)] select-none overflow-hidden"
+            className="fixed inset-0 z-[180] bg-[#0E080C]/96 backdrop-blur-xl flex flex-col items-center justify-between p-3.5 sm:p-5 pb-[max(env(safe-area-inset-bottom),14px)] select-none overflow-hidden font-sans"
           >
-            {/* Top Bar: Brand Badge & Skip Button */}
-            <div className="w-full max-w-sm flex items-center justify-between pt-1 px-1 z-40 flex-shrink-0">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10.5px] sm:text-[11px] font-mono tracking-wider text-amber-200 uppercase shadow-sm">
-                <Camera size={13} className="text-amber-300" />
-                <span>Sirklenice Instant Cam</span>
-              </div>
-              <button
-                onClick={handleProceedToReview}
-                className="text-[11px] sm:text-xs text-white/70 hover:text-white px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
-                title="Lewati Animasi"
-              >
-                <span>Lewati</span>
-                <ChevronRight size={13} />
-              </button>
-            </div>
-
-            {/* Instant Camera Dispenser Housing & Emerging Strip */}
-            <div className="relative w-full max-w-[280px] xs:max-w-[310px] sm:max-w-[340px] flex-1 min-h-0 flex flex-col items-center justify-center my-auto py-2">
-              
-              {/* Dispenser Slot Top Bar (Mechanical Housing) */}
-              <div className="relative z-30 w-full bg-gradient-to-b from-[#2d2c31] via-[#1d1c21] to-[#121115] border border-white/20 rounded-2xl sm:rounded-3xl p-3 sm:p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.9)] flex flex-col items-center gap-2">
-                {/* Live Status Header */}
-                <div className="flex items-center justify-center gap-2">
-                  {ejectPhase === 'printing' ? (
-                    <>
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                      </span>
-                      <span className="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-amber-300 uppercase animate-pulse">
-                        Mencetak Photo Strip...
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 shadow-[0_0_10px_#34d399]"></span>
-                      <span className="text-[11px] sm:text-xs font-bold text-emerald-400 tracking-wider uppercase flex items-center gap-1.5">
-                        <Sparkles size={14} className="text-amber-300 animate-spin" />
-                        Foto Siap & Selesai Dicetak!
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                {/* The Physical Aperture Slit */}
-                <div className="relative w-full h-3 sm:h-3.5 bg-black rounded-full border border-white/15 shadow-[inset_0_3px_8px_rgba(0,0,0,0.95)] flex items-center justify-center overflow-hidden">
-                  <div className="w-1/2 h-[2px] bg-gradient-to-r from-transparent via-amber-300/40 to-transparent" />
-                </div>
-              </div>
-
-              {/* The Ejection Chute / Viewport (Moving Strip) */}
-              <div className="relative z-20 w-full flex justify-center -mt-2 overflow-hidden pt-1 pb-3 flex-1 min-h-0 items-start">
-                <motion.div
-                  initial={{ y: '-95%', rotate: 0 }}
-                  animate={{
-                    y: '0%',
-                    rotate: ejectPhase === 'done' ? [0, -0.8, 0.5, 0] : 0,
-                  }}
-                  transition={{
-                    y: { duration: 2.3, ease: [0.12, 0.9, 0.25, 1] },
-                    rotate: { duration: 0.6, ease: 'easeOut', delay: 2.2 }
-                  }}
-                  onAnimationComplete={() => {
-                    setEjectPhase('done');
-                  }}
-                  className="relative flex flex-col items-center bg-[#FAF8F5] rounded-xl sm:rounded-2xl p-1 sm:p-1.5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] border-2 border-white/40 ring-1 ring-black/40"
-                >
-                  {/* High Quality Canvas Render */}
-                  <canvas
-                    ref={ejectCanvasRef}
-                    className="w-auto h-auto max-h-[48vh] xs:max-h-[52vh] sm:max-h-[55vh] max-w-[210px] xs:max-w-[240px] sm:max-w-[260px] block rounded-lg shadow-sm"
-                  />
-
-                  {/* Glossy Photo Paper Sheen Reflection */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-white/5 pointer-events-none rounded-xl sm:rounded-2xl" />
-
-                  {/* Realistic paper bottom edge shadow */}
-                  <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-black/10 to-transparent pointer-events-none rounded-b-xl" />
-                </motion.div>
-              </div>
-
-            </div>
-
-            {/* Bottom Proceed Action Button */}
-            <div className="relative z-40 w-full max-w-xs flex flex-col items-center gap-1.5 pt-1 pb-1 flex-shrink-0">
-              {ejectPhase === 'done' ? (
-                <>
-                  <button
-                    onClick={handleProceedToReview}
-                    className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer border border-emerald-300/40 animate-pulse"
+            {/* Top Area: Dispenser Slot during printing OR "Foto Siap!" Header when done */}
+            <div className="w-full max-w-md flex flex-col items-center z-40 flex-shrink-0">
+              <AnimatePresence mode="wait">
+                {ejectPhase === 'printing' ? (
+                  <motion.div
+                    key="printing-header"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.25 }}
+                    className="w-full flex flex-col items-center gap-2 pt-1"
                   >
-                    <span>Lihat & Review Foto</span>
-                    <ArrowRight size={18} />
-                  </button>
-                  <span className="text-[10px] text-gray-400 font-mono tracking-wider">
-                    Otomatis beralih dalam sekejap...
-                  </span>
-                </>
-              ) : (
-                <button
-                  onClick={handleProceedToReview}
-                  className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white font-medium text-xs backdrop-blur-md border border-white/10 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <span>Lewati Animasi</span>
-                  <ChevronRight size={14} />
-                </button>
-              )}
+                    {/* Top Bar: Brand Badge & Skip Button */}
+                    <div className="w-full flex items-center justify-between px-1">
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10.5px] sm:text-[11px] font-mono tracking-wider text-amber-200 uppercase shadow-sm">
+                        <Camera size={13} className="text-amber-300" />
+                        <span>Sirklenice Instant Cam</span>
+                      </div>
+                      <button
+                        onClick={() => setEjectPhase('done')}
+                        className="text-[11px] sm:text-xs text-white/70 hover:text-white px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+                        title="Lewati Animasi"
+                      >
+                        <span>Lewati</span>
+                        <ChevronRight size={13} />
+                      </button>
+                    </div>
+
+                    {/* Dispenser Slot Top Bar (Mechanical Housing) */}
+                    <div className="relative z-30 w-full max-w-[280px] xs:max-w-[310px] sm:max-w-[340px] bg-gradient-to-b from-[#2d2c31] via-[#1d1c21] to-[#121115] border border-white/20 rounded-2xl sm:rounded-3xl p-3 sm:p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.9)] flex flex-col items-center gap-2 mt-1">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                        </span>
+                        <span className="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-amber-300 uppercase animate-pulse">
+                          Mencetak Photo Strip...
+                        </span>
+                      </div>
+                      {/* The Physical Aperture Slit */}
+                      <div className="relative w-full h-3 sm:h-3.5 bg-black rounded-full border border-white/15 shadow-[inset_0_3px_8px_rgba(0,0,0,0.95)] flex items-center justify-center overflow-hidden">
+                        <div className="w-1/2 h-[2px] bg-gradient-to-r from-transparent via-amber-300/40 to-transparent" />
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="done-header"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35 }}
+                    className="text-center w-full z-40 flex-shrink-0 pt-1"
+                  >
+                    <p className="text-[9px] sm:text-[10px] font-mono tracking-[0.25em] text-[#E5C158] uppercase font-bold">
+                      SESI FOTO SELESAI
+                    </p>
+                    <h1 
+                      className="text-4xl xs:text-5xl sm:text-6xl text-white font-normal leading-tight my-0.5 sm:my-1 drop-shadow-2xl"
+                      style={{ 
+                        fontFamily: "'Alex Brush', 'Great Vibes', cursive",
+                        textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 0 30px rgba(229,193,88,0.35)'
+                      }}
+                    >
+                      Foto Siap!
+                    </h1>
+                    <p className="text-[11px] sm:text-xs text-[#C4A46C] font-serif italic tracking-wide">
+                      {getEventDisplayName(activeEvent, activeEvent?.slug)} {activeEvent?.eventType === 'wedding' || (!activeEvent?.eventType && !activeEvent?.slug) ? 'Wedding' : ''}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Middle: Photo Strip Container */}
+            <div className={`relative z-20 w-full flex justify-center items-center flex-1 min-h-0 my-auto py-1.5 ${
+              ejectPhase === 'printing' ? '-mt-2 overflow-hidden items-start' : 'overflow-visible'
+            }`}>
+              <motion.div
+                initial={{ y: '-95%', rotate: 0 }}
+                animate={{
+                  y: '0%',
+                  rotate: ejectPhase === 'done' ? [0, -0.6, 0.4, 0] : 0,
+                }}
+                transition={{
+                  y: { duration: 2.1, ease: [0.12, 0.9, 0.25, 1] },
+                  rotate: { duration: 0.5, ease: 'easeOut', delay: 2.05 }
+                }}
+                onAnimationComplete={() => {
+                  setEjectPhase('done');
+                }}
+                className={`relative flex flex-col items-center bg-[#FAF8F5] rounded-2xl p-1 sm:p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_25px_rgba(245,215,127,0.15)] border-2 border-white/40 ring-1 ring-black/40 transition-all duration-300 ${
+                  ejectPhase === 'done' ? 'scale-100' : 'scale-98'
+                }`}
+              >
+                {/* Photostrip Canvas */}
+                <canvas
+                  ref={ejectCanvasRef}
+                  className="w-auto h-auto max-h-[54vh] xs:max-h-[58vh] sm:max-h-[62vh] max-w-[220px] xs:max-w-[250px] sm:max-w-[280px] block rounded-xl shadow-inner"
+                />
+
+                {/* Glossy Photo Paper Sheen Reflection */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-white/5 pointer-events-none rounded-2xl" />
+
+                {/* Paper bottom edge shadow */}
+                <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-black/10 to-transparent pointer-events-none rounded-b-xl" />
+              </motion.div>
+            </div>
+
+            {/* Bottom Action Controls: Skip during printing OR "Ulang" & "Lanjutkan" when done */}
+            <div className="relative z-40 w-full max-w-md mx-auto flex items-center justify-center pt-2 pb-1 flex-shrink-0">
+              <AnimatePresence mode="wait">
+                {ejectPhase === 'printing' ? (
+                  <motion.div
+                    key="printing-btn"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="w-full flex justify-center"
+                  >
+                    <button
+                      onClick={() => setEjectPhase('done')}
+                      className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white font-medium text-xs backdrop-blur-md border border-white/10 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
+                    >
+                      <span>Lewati Animasi Cetak</span>
+                      <ChevronRight size={14} />
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="done-btns"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35 }}
+                    className="w-full flex items-center gap-3"
+                  >
+                    {/* Ulang Button (Retake) */}
+                    <button
+                      onClick={handleRetakeAll}
+                      className="px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer shadow-md"
+                      title="Foto Ulang Semua Pose"
+                    >
+                      <RotateCcw size={15} />
+                      <span>Ulang</span>
+                    </button>
+
+                    {/* Lanjutkan Gold Button (Proceed to Voice) */}
+                    <button
+                      onClick={handleContinueToVoice}
+                      className="flex-1 py-3 sm:py-3.5 px-6 sm:px-8 rounded-xl bg-gradient-to-r from-[#B59150] via-[#C4A46C] to-[#B59150] hover:brightness-110 text-white font-serif font-bold text-xs sm:text-sm shadow-xl shadow-amber-950/40 flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer border border-[#E5C158]/40"
+                      title="Lanjutkan ke Rekam Ucapan"
+                    >
+                      <span>Lanjutkan</span>
+                      <ArrowRight size={16} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
@@ -1392,9 +1491,11 @@ export default function StepCamera() {
                     if (!isEjecting) {
                       setIsEjecting(true);
                       setEjectPhase('printing');
-                      playInstantCameraSound();
+                      playProCekirekSound();
+                    } else if (ejectPhase === 'done') {
+                      handleContinueToVoice();
                     } else {
-                      handleProceedToReview();
+                      setEjectPhase('done');
                     }
                   }}
                   className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
