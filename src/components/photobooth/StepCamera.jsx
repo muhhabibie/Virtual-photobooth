@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, RefreshCw, Timer, Disc, Camera, ArrowRight, 
   Sliders, Check, Trash2, X, ChevronRight, Image as ImageIcon,
   Crown, Flower2, Glasses, Star, Heart, Smile, Wand2, Sparkle, SlidersHorizontal,
-  Infinity as InfinityIcon, Type, ChevronDown, Zap, ZapOff, Eye, Sparkles, Sun
+  Infinity as InfinityIcon, Type, ChevronDown, Zap, ZapOff, Eye, Sparkles, Sun,
+  Printer
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useCamera } from '../../hooks/useCamera';
@@ -42,6 +44,104 @@ const COLOR_THEMES = [
   { id: 'antique', name: 'Antique', hex: '#C4A46C', textHex: '#FFFFFF' },
 ];
 
+// Web Audio API Synthesizer for Realistic Instant Camera Strip Ejection Sound
+const playInstantCameraSound = () => {
+  try {
+    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtxClass) return;
+    const ctx = new AudioCtxClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+    const now = ctx.currentTime;
+
+    // 1. Mechanical Stepper Motor Whirring (Realistic Gear Pitch Ramp)
+    const motorOsc = ctx.createOscillator();
+    const motorGain = ctx.createGain();
+    const motorFilter = ctx.createBiquadFilter();
+
+    motorOsc.type = 'sawtooth';
+    motorOsc.frequency.setValueAtTime(130, now);
+    motorOsc.frequency.linearRampToValueAtTime(175, now + 1.6);
+    motorOsc.frequency.linearRampToValueAtTime(145, now + 2.0);
+
+    motorFilter.type = 'lowpass';
+    motorFilter.frequency.setValueAtTime(400, now);
+    motorFilter.Q.setValueAtTime(3.5, now);
+
+    motorGain.gain.setValueAtTime(0.001, now);
+    motorGain.gain.exponentialRampToValueAtTime(0.22, now + 0.08);
+    motorGain.gain.setValueAtTime(0.22, now + 1.8);
+    motorGain.gain.exponentialRampToValueAtTime(0.001, now + 2.15);
+
+    motorOsc.connect(motorFilter);
+    motorFilter.connect(motorGain);
+    motorGain.connect(ctx.destination);
+
+    motorOsc.start(now);
+    motorOsc.stop(now + 2.2);
+
+    // 2. Paper Roller Friction Sound
+    const bufferSize = Math.floor(ctx.sampleRate * 2.0);
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * 0.35;
+    }
+    const noiseSource = ctx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.setValueAtTime(850, now);
+    noiseFilter.Q.setValueAtTime(2.2, now);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.001, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.07, now + 0.1);
+    noiseGain.gain.setValueAtTime(0.07, now + 1.7);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 2.05);
+
+    noiseSource.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+
+    noiseSource.start(now);
+    noiseSource.stop(now + 2.1);
+
+    // 3. Crisp Eject Snap & Finish Chime when strip reaches bottom
+    const finishTime = now + 2.1;
+    
+    // Snap Click
+    const clickOsc = ctx.createOscillator();
+    const clickGain = ctx.createGain();
+    clickOsc.type = 'triangle';
+    clickOsc.frequency.setValueAtTime(600, finishTime);
+    clickOsc.frequency.exponentialRampToValueAtTime(100, finishTime + 0.06);
+    clickGain.gain.setValueAtTime(0.28, finishTime);
+    clickGain.gain.exponentialRampToValueAtTime(0.001, finishTime + 0.07);
+    clickOsc.connect(clickGain);
+    clickGain.connect(ctx.destination);
+    clickOsc.start(finishTime);
+    clickOsc.stop(finishTime + 0.08);
+
+    // Sweet Chime (B5 note 987.77 Hz)
+    const chimeOsc = ctx.createOscillator();
+    const chimeGain = ctx.createGain();
+    chimeOsc.type = 'sine';
+    chimeOsc.frequency.setValueAtTime(987.77, finishTime + 0.04);
+    chimeGain.gain.setValueAtTime(0.001, finishTime + 0.04);
+    chimeGain.gain.exponentialRampToValueAtTime(0.25, finishTime + 0.07);
+    chimeGain.gain.exponentialRampToValueAtTime(0.0001, finishTime + 0.85);
+    chimeOsc.connect(chimeGain);
+    chimeGain.connect(ctx.destination);
+    chimeOsc.start(finishTime + 0.04);
+    chimeOsc.stop(finishTime + 0.9);
+  } catch (err) {
+    console.warn('Web Audio instant camera sound error:', err);
+  }
+};
+
 export default function StepCamera() {
   const { 
     targetPhotoCount, 
@@ -74,6 +174,8 @@ export default function StepCamera() {
   const [selectedAccessory, setSelectedAccessory] = useState('royal-crown'); // Default to Royal Crown
   const [controlTab, setControlTab] = useState('accessories'); // 'accessories' | 'filters'
   const [showPreviewModal, setShowPreviewModal] = useState(false); // Full photo strip preview modal
+  const [isEjecting, setIsEjecting] = useState(false); // Instant camera photo strip ejection animation
+  const [ejectPhase, setEjectPhase] = useState('printing'); // 'printing' | 'done'
   const [facingMode, setFacingMode] = useState('user'); // 'user' | 'environment'
   const [topNotice, setTopNotice] = useState(null);
   const topNoticeTimerRef = useRef(null);
@@ -89,6 +191,7 @@ export default function StepCamera() {
   const accessoryRefs = useRef({});
   const filterRefs = useRef({});
   const modalCanvasRef = useRef({});
+  const ejectCanvasRef = useRef(null);
 
   const accessoryCarouselRef = useRef(null);
   const filterCarouselRef = useRef(null);
@@ -595,16 +698,68 @@ export default function StepCamera() {
     setTimeout(() => flash.remove(), 380);
   }, [selectedFilter, selectedAccessory, addPhoto, facesRef, facingMode]);
 
-  // Automatically navigate to review step when target photos reached
+  // Proceed directly to review step
+  const handleProceedToReview = useCallback(() => {
+    stop();
+    setCurrentStep('review');
+  }, [stop, setCurrentStep]);
+
+  // Render photostrip canvas inside ejection animation
+  const renderEjectStrip = useCallback(() => {
+    const canvas = ejectCanvasRef.current;
+    if (!canvas) return;
+    renderMasterPhotoStrip(canvas, {
+      photos: capturedPhotos,
+      targetCount: targetPhotoCount,
+      stripColor,
+      guestName,
+      guestMessage,
+      activeEvent,
+      scale: 2,
+    });
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent]);
+
   useEffect(() => {
-    if (capturedPhotos.length > 0 && targetPhotoCount > 0 && capturedPhotos.length >= targetPhotoCount && !capturing) {
+    if (isEjecting) {
+      renderEjectStrip();
+      const raf = requestAnimationFrame(renderEjectStrip);
+      if (document.fonts?.ready) {
+        document.fonts.ready.then(renderEjectStrip);
+      }
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [isEjecting, renderEjectStrip]);
+
+  // Reset ejection state if photos are deleted or session reset
+  useEffect(() => {
+    if (capturedPhotos.length < targetPhotoCount) {
+      setIsEjecting(false);
+      setEjectPhase('printing');
+    }
+  }, [capturedPhotos.length, targetPhotoCount]);
+
+  // Automatically start photo strip ejection animation when target photos reached
+  useEffect(() => {
+    if (capturedPhotos.length > 0 && targetPhotoCount > 0 && capturedPhotos.length >= targetPhotoCount && !capturing && !isEjecting) {
+      setShowPreviewModal(false);
       const timer = setTimeout(() => {
-        stop();
-        setCurrentStep('review');
-      }, 500);
+        setIsEjecting(true);
+        setEjectPhase('printing');
+        playInstantCameraSound();
+      }, 350);
       return () => clearTimeout(timer);
     }
-  }, [capturedPhotos.length, targetPhotoCount, capturing, stop, setCurrentStep]);
+  }, [capturedPhotos.length, targetPhotoCount, capturing, isEjecting]);
+
+  // Auto-advance to review after ejection finishes
+  useEffect(() => {
+    if (ejectPhase === 'done') {
+      const autoProceedTimer = setTimeout(() => {
+        handleProceedToReview();
+      }, 1600);
+      return () => clearTimeout(autoProceedTimer);
+    }
+  }, [ejectPhase, handleProceedToReview]);
 
   // Handle Photo Delete inside preview modal
   const handleDeletePhoto = (index) => {
@@ -613,6 +768,8 @@ export default function StepCamera() {
     if (updated.length === 0) {
       setShowPreviewModal(false);
     }
+    setIsEjecting(false);
+    setEjectPhase('printing');
     toast(`Foto Pose ${index + 1} berhasil dihapus`, 'default');
   };
 
@@ -621,8 +778,13 @@ export default function StepCamera() {
     if (capturing) return;
 
     if (capturedPhotos.length >= targetPhotoCount) {
-      stop();
-      setCurrentStep('review');
+      if (!isEjecting) {
+        setIsEjecting(true);
+        setEjectPhase('printing');
+        playInstantCameraSound();
+      } else {
+        handleProceedToReview();
+      }
       return;
     }
 
@@ -630,12 +792,12 @@ export default function StepCamera() {
     doCapture();
 
     const photoNum = capturedPhotos.length + 1;
-    triggerTopNotice(`Foto Pose #${photoNum} Berhasil Diambil ðŸ“¸`);
+    triggerTopNotice(`Foto Pose #${photoNum} Berhasil Diambil 📸`);
 
     setTimeout(() => {
       setCapturing(false);
     }, 200);
-  }, [capturing, capturedPhotos.length, targetPhotoCount, stop, setCurrentStep, doCapture, triggerTopNotice]);
+  }, [capturing, capturedPhotos.length, targetPhotoCount, isEjecting, handleProceedToReview, doCapture, triggerTopNotice]);
 
   const handleToggleCamera = async () => {
     try {
@@ -1025,7 +1187,15 @@ export default function StepCamera() {
           {/* Right: Next / Proceed Button or Flip Camera */}
           {isComplete ? (
             <button
-              onClick={() => { stop(); setCurrentStep('review'); }}
+              onClick={() => {
+                if (!isEjecting) {
+                  setIsEjecting(true);
+                  setEjectPhase('printing');
+                  playInstantCameraSound();
+                } else {
+                  handleProceedToReview();
+                }
+              }}
               className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 border border-emerald-300/60 text-white flex items-center justify-center shadow-lg active:scale-95 transition cursor-pointer flex-shrink-0"
               title="Lanjut ke Peninjauan"
             >
@@ -1044,7 +1214,129 @@ export default function StepCamera() {
 
       </div>
 
-      {/* ================= 🌟 5. VERTICAL PHOTO STRIP PREVIEW MODAL ðŸŒŸ ================= */}
+      {/* ================= 🌟 4. INSTANT CAMERA PHOTO STRIP EJECTION ANIMATION 🌟 ================= */}
+      <AnimatePresence>
+        {isEjecting && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }}
+            className="fixed inset-0 z-[180] bg-black/92 backdrop-blur-xl flex flex-col items-center justify-between p-3 sm:p-4 pb-[max(env(safe-area-inset-bottom),16px)] select-none overflow-hidden"
+          >
+            {/* Top Bar: Brand Badge & Skip Button */}
+            <div className="w-full max-w-sm flex items-center justify-between pt-1 px-1 z-40 flex-shrink-0">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10.5px] sm:text-[11px] font-mono tracking-wider text-amber-200 uppercase shadow-sm">
+                <Camera size={13} className="text-amber-300" />
+                <span>Sirklenice Instant Cam</span>
+              </div>
+              <button
+                onClick={handleProceedToReview}
+                className="text-[11px] sm:text-xs text-white/70 hover:text-white px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+                title="Lewati Animasi"
+              >
+                <span>Lewati</span>
+                <ChevronRight size={13} />
+              </button>
+            </div>
+
+            {/* Instant Camera Dispenser Housing & Emerging Strip */}
+            <div className="relative w-full max-w-[280px] xs:max-w-[310px] sm:max-w-[340px] flex-1 min-h-0 flex flex-col items-center justify-center my-auto py-2">
+              
+              {/* Dispenser Slot Top Bar (Mechanical Housing) */}
+              <div className="relative z-30 w-full bg-gradient-to-b from-[#2d2c31] via-[#1d1c21] to-[#121115] border border-white/20 rounded-2xl sm:rounded-3xl p-3 sm:p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.9)] flex flex-col items-center gap-2">
+                {/* Live Status Header */}
+                <div className="flex items-center justify-center gap-2">
+                  {ejectPhase === 'printing' ? (
+                    <>
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                      </span>
+                      <span className="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-amber-300 uppercase animate-pulse">
+                        Mencetak Photo Strip...
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 shadow-[0_0_10px_#34d399]"></span>
+                      <span className="text-[11px] sm:text-xs font-bold text-emerald-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <Sparkles size={14} className="text-amber-300 animate-spin" />
+                        Foto Siap & Selesai Dicetak!
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {/* The Physical Aperture Slit */}
+                <div className="relative w-full h-3 sm:h-3.5 bg-black rounded-full border border-white/15 shadow-[inset_0_3px_8px_rgba(0,0,0,0.95)] flex items-center justify-center overflow-hidden">
+                  <div className="w-1/2 h-[2px] bg-gradient-to-r from-transparent via-amber-300/40 to-transparent" />
+                </div>
+              </div>
+
+              {/* The Ejection Chute / Viewport (Moving Strip) */}
+              <div className="relative z-20 w-full flex justify-center -mt-2 overflow-hidden pt-1 pb-3 flex-1 min-h-0 items-start">
+                <motion.div
+                  initial={{ y: '-95%', rotate: 0 }}
+                  animate={{
+                    y: '0%',
+                    rotate: ejectPhase === 'done' ? [0, -0.8, 0.5, 0] : 0,
+                  }}
+                  transition={{
+                    y: { duration: 2.3, ease: [0.12, 0.9, 0.25, 1] },
+                    rotate: { duration: 0.6, ease: 'easeOut', delay: 2.2 }
+                  }}
+                  onAnimationComplete={() => {
+                    setEjectPhase('done');
+                  }}
+                  className="relative flex flex-col items-center bg-[#FAF8F5] rounded-xl sm:rounded-2xl p-1 sm:p-1.5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] border-2 border-white/40 ring-1 ring-black/40"
+                >
+                  {/* High Quality Canvas Render */}
+                  <canvas
+                    ref={ejectCanvasRef}
+                    className="w-auto h-auto max-h-[48vh] xs:max-h-[52vh] sm:max-h-[55vh] max-w-[210px] xs:max-w-[240px] sm:max-w-[260px] block rounded-lg shadow-sm"
+                  />
+
+                  {/* Glossy Photo Paper Sheen Reflection */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-white/5 pointer-events-none rounded-xl sm:rounded-2xl" />
+
+                  {/* Realistic paper bottom edge shadow */}
+                  <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-black/10 to-transparent pointer-events-none rounded-b-xl" />
+                </motion.div>
+              </div>
+
+            </div>
+
+            {/* Bottom Proceed Action Button */}
+            <div className="relative z-40 w-full max-w-xs flex flex-col items-center gap-1.5 pt-1 pb-1 flex-shrink-0">
+              {ejectPhase === 'done' ? (
+                <>
+                  <button
+                    onClick={handleProceedToReview}
+                    className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-[0_0_25px_rgba(16,185,129,0.5)] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer border border-emerald-300/40 animate-pulse"
+                  >
+                    <span>Lihat & Review Foto</span>
+                    <ArrowRight size={18} />
+                  </button>
+                  <span className="text-[10px] text-gray-400 font-mono tracking-wider">
+                    Otomatis beralih dalam sekejap...
+                  </span>
+                </>
+              ) : (
+                <button
+                  onClick={handleProceedToReview}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white font-medium text-xs backdrop-blur-md border border-white/10 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span>Lewati Animasi</span>
+                  <ChevronRight size={14} />
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= 🌟 5. VERTICAL PHOTO STRIP PREVIEW MODAL 🌟 ================= */}
       {showPreviewModal && (
         <div className="fixed inset-0 z-[160] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
           <div className="w-full max-w-xs sm:max-w-sm rounded-2xl bg-[#170A12] border border-amber-400/40 p-4 text-white shadow-2xl flex flex-col items-center gap-3 max-h-[92vh] overflow-y-auto no-scrollbar">
@@ -1095,7 +1387,16 @@ export default function StepCamera() {
                 </button>
               ) : (
                 <button
-                  onClick={() => { stop(); setCurrentStep('review'); }}
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    if (!isEjecting) {
+                      setIsEjecting(true);
+                      setEjectPhase('printing');
+                      playInstantCameraSound();
+                    } else {
+                      handleProceedToReview();
+                    }
+                  }}
                   className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
                 >
                   <Check size={14} />
