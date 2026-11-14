@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { subscribeSubmissions, saveSubmission, getLocalSubmissions } from '../services/submissionService';
+import { subscribeSubmissions, saveSubmission, getLocalSubmissions, deleteSubmission as removeSubmissionService } from '../services/submissionService';
 import { syncEventToCloud, subscribeCloudEvents, saveLocalEvents, deleteEventFromCloud } from '../services/eventService';
 import { INITIAL_EVENTS, PACKAGES, DEFAULT_HERO_PHOTOS, DEMO_EVENT } from '../data/mockEvents';
 import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../utils/stripRenderer';
@@ -644,22 +644,16 @@ export function PhotoboothProvider({ children }) {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [resolveRouteFromUrl, capturedPhotos]);
 
-  // 4. Submissions Real-time Database
-  const [savedSubmissions, setSavedSubmissions] = useState([]);
+  // 4. Submissions Real-time Database (Multi-Device Live Stream)
+  const [savedSubmissions, setSavedSubmissions] = useState(() => getLocalSubmissions());
 
   useEffect(() => {
-    if (isDemo) {
-      // In Demo Mode: read exclusively from LocalStorage without connecting to Firestore
-      const local = getLocalSubmissions().filter(s => s.eventSlug === 'demo' || s.isDemo);
-      setSavedSubmissions(local);
-      return;
-    }
-
+    // Always subscribe to live stream for real-time multi-device sync (HP <-> Laptop)
     const unsubscribe = subscribeSubmissions((items) => {
       setSavedSubmissions(items);
     });
     return () => unsubscribe();
-  }, [isDemo]);
+  }, []);
 
   const submitSession = useCallback(async (extraData = {}) => {
     if (capturedPhotos.length === 0 || isEventExpired) return null;
@@ -688,7 +682,7 @@ export function PhotoboothProvider({ children }) {
             scale: 2,
           });
         }
-        stripImage = offCanvas.toDataURL('image/jpeg', 0.92);
+        stripImage = offCanvas.toDataURL('image/jpeg', 0.88);
       } catch (e) {
         console.warn('Failed to pre-render stripImage in submitSession:', e);
       }
@@ -708,14 +702,40 @@ export function PhotoboothProvider({ children }) {
       voiceDuration: extraData?.voiceDuration !== undefined ? extraData.voiceDuration : voiceDuration,
       isDemo: isDemo,
     });
-    const updatedLocal = getLocalSubmissions();
-    if (isDemo) {
-      setSavedSubmissions(updatedLocal.filter(s => s.eventSlug === 'demo' || s.isDemo));
-    } else {
-      setSavedSubmissions(updatedLocal);
+
+    // Immediately update local React state with the newly created submission
+    // This ensures visitor gallery updates IMMEDIATELY without waiting or requiring a manual page refresh!
+    if (result) {
+      setSavedSubmissions(prev => {
+        const filtered = prev.filter(s => s.id !== result.id && s.id !== result.localId);
+        return [result, ...filtered];
+      });
     }
+
     return result;
   }, [capturedPhotos, isEventExpired, activeEvent, currentSlug, guestName, guestMessage, stripColor, stripStyle, voiceBlob, voiceUrl, voiceDuration, isDemo]);
+
+  // Delete submission from local & cloud
+  const deleteSubmission = useCallback(async (submissionId) => {
+    try {
+      if (typeof submissionId === 'string' && (submissionId.startsWith('mock_') || submissionId.startsWith('user-latest') || submissionId.startsWith('user-submission'))) {
+        try {
+          const raw = localStorage.getItem('sirklen_hidden_mock_submissions') || '[]';
+          const list = JSON.parse(raw);
+          if (!list.includes(submissionId)) {
+            list.push(submissionId);
+            localStorage.setItem('sirklen_hidden_mock_submissions', JSON.stringify(list));
+          }
+        } catch (e) {}
+      }
+      await removeSubmissionService(submissionId);
+      setSavedSubmissions(prev => prev.filter(s => s.id !== submissionId));
+      return true;
+    } catch (e) {
+      console.error("Failed to delete submission:", e);
+      return false;
+    }
+  }, []);
 
   return (
     <PhotoboothContext.Provider value={{
@@ -759,7 +779,7 @@ export function PhotoboothProvider({ children }) {
       voiceBlob, setVoiceBlob,
       voiceUrl, setVoiceUrl,
       voiceDuration, setVoiceDuration,
-      savedSubmissions, submitSession,
+      savedSubmissions, submitSession, deleteSubmission,
       boothOpen, setBoothOpen, openBooth, closeBooth, goBack,
       galleryModalOpen, openGalleryModal, closeGalleryModal,
       currentStep, setCurrentStep,

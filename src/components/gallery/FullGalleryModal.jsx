@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Plus, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive, Video, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive, Video, Loader2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
@@ -42,7 +42,8 @@ export default function FullGalleryModal() {
     voiceDuration,
     activeEvent,
     isDemo,
-    savedSubmissions
+    savedSubmissions,
+    deleteSubmission,
   } = useBooth();
   const { toast } = useToast();
 
@@ -53,6 +54,15 @@ export default function FullGalleryModal() {
   const [isZipping, setIsZipping] = useState(false);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [hiddenMockIds, setHiddenMockIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('sirklen_hidden_mock_submissions') || '[]');
+    } catch {
+      return [];
+    }
+  });
   const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
 
   // Intercept phone back button when zoomed photo modal is active
@@ -94,30 +104,68 @@ export default function FullGalleryModal() {
     };
   }, [capturedPhotos, guestName, stripColor, voiceUrl, voiceDuration, guestMessage]);
 
-  // Filter real-time savedSubmissions strictly by active event
+  // Filter real-time savedSubmissions by active event
   const eventSubmissions = useMemo(() => {
     if (!savedSubmissions || savedSubmissions.length === 0) return [];
     if (!activeEvent) return savedSubmissions;
-    return savedSubmissions.filter(sub => 
-      sub.eventSlug === activeEvent.slug || sub.eventId === activeEvent.id
-    );
+    const currentSlug = activeEvent.slug;
+    const isDemoEvent = currentSlug === 'demo' || currentSlug === 'sabrina-raka' || currentSlug === 'raka-sabrina' || !currentSlug;
+    return savedSubmissions.filter(sub => {
+      if (sub.eventId && activeEvent.id && sub.eventId === activeEvent.id) return true;
+      if (sub.eventSlug && currentSlug && sub.eventSlug === currentSlug) return true;
+      if (isDemoEvent && (sub.eventSlug === 'demo' || sub.eventSlug === 'sabrina-raka' || sub.eventSlug === 'raka-sabrina' || !sub.eventSlug)) {
+        return true;
+      }
+      return false;
+    });
   }, [savedSubmissions, activeEvent]);
 
   // Base list fallback (mock items only for default demo wedding)
   const baseList = useMemo(() => {
     if (eventSubmissions.length > 0) {
-      return eventSubmissions;
+      return eventSubmissions.filter(sub => !hiddenMockIds.includes(sub.id));
     }
     if (!activeEvent || activeEvent.slug === 'sabrina-raka' || activeEvent.slug === 'raka-sabrina' || activeEvent.slug === 'demo' || activeEvent.isDemo || isDemo) {
-      return MOCK_GALLERY_PHOTOS;
+      return MOCK_GALLERY_PHOTOS.filter(sub => !hiddenMockIds.includes(sub.id));
     }
     return [];
-  }, [eventSubmissions, activeEvent, isDemo]);
+  }, [eventSubmissions, activeEvent, isDemo, hiddenMockIds]);
 
   const fullList = useMemo(() => {
-    if (!userSubmission) return baseList;
+    if (!userSubmission || hiddenMockIds.includes(userSubmission.id)) return baseList;
     return [userSubmission, ...baseList.filter(s => s.id !== userSubmission.id)];
-  }, [userSubmission, baseList]);
+  }, [userSubmission, baseList, hiddenMockIds]);
+
+  // Handle Photo Deletion from Visitor Gallery
+  const handleDeletePhoto = async () => {
+    if (!fullFrameModal) return;
+    setIsDeleting(true);
+    try {
+      const targetId = fullFrameModal.id;
+      
+      // If it's a mock photo or live temp photo, persist in hiddenMockIds
+      if (typeof targetId === 'string' && (targetId.startsWith('mock_') || targetId.startsWith('user-latest') || targetId.startsWith('user-submission'))) {
+        const nextHidden = [...hiddenMockIds, targetId];
+        setHiddenMockIds(nextHidden);
+        try {
+          localStorage.setItem('sirklen_hidden_mock_submissions', JSON.stringify(nextHidden));
+        } catch (e) {}
+      }
+
+      if (deleteSubmission) {
+        await deleteSubmission(targetId);
+      }
+
+      toast('Foto berhasil dihapus dari galeri 🗑️', 'success');
+      setShowDeleteConfirm(false);
+      setFullFrameModal(null);
+    } catch (err) {
+      console.error('Failed to delete photo:', err);
+      toast('Gagal menghapus foto. Silakan coba lagi.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Handle Bulk ZIP Download from Full Gallery
   const handleDownloadZip = async () => {
@@ -591,12 +639,84 @@ export default function FullGalleryModal() {
                       )}
                     </button>
                   )}
+
+                  {/* Option 3: Delete Photo from Visitor Gallery */}
+                  <div className="w-full mt-3 pt-2.5 border-t border-white/10 flex flex-col items-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="w-full py-2.5 sm:py-3 rounded-full bg-red-950/40 hover:bg-red-900/60 text-red-300 hover:text-red-100 border border-red-500/30 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-lg"
+                    >
+                      <Trash2 size={15} className="text-red-400" />
+                      <span>Hapus Foto dari Galeri</span>
+                    </button>
+                  </div>
                 </div>
 
             </div>
           </div>
         );
       })()}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isDeleting) setShowDeleteConfirm(false);
+            }}
+            className="fixed inset-0 z-[140] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 cursor-default select-none"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-2xl bg-[#1C0810] border border-red-500/40 p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.9)] text-center flex flex-col items-center"
+            >
+              <div className="w-14 h-14 rounded-full bg-red-900/30 border border-red-500/40 flex items-center justify-center mb-3 text-red-400 shadow-inner">
+                <Trash2 size={26} />
+              </div>
+              <h4 className="text-base sm:text-lg font-bold text-white mb-1.5">Hapus Foto Ini?</h4>
+              <p className="text-xs text-rose-200/80 mb-6 leading-relaxed">
+                Foto ini akan dihapus permanen dari galeri pengunjung dan tidak dapat dipulihkan lagi.
+              </p>
+              <div className="flex gap-3 w-full">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-2.5 sm:py-3 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold border border-white/20 transition active:scale-95 cursor-pointer disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={handleDeletePhoto}
+                  className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white text-xs sm:text-sm font-bold shadow-lg shadow-red-950/60 flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      <span>Menghapus...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={15} />
+                      <span>Ya, Hapus</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Demo Mode Price List Modal */}

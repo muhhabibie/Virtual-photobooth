@@ -2,7 +2,7 @@
 // Supports both Firebase Cloud Persistence (Multi-device Realtime) & LocalStorage Fallback
 
 import { db, storage } from '../config/firebase.js';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { compressImage } from '../utils/imageCompressor.js';
 
@@ -70,14 +70,35 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
     }
   }
 
+  // 1. Optimize and compress all photos first (~45-65KB per cut)
+  // This prevents QuotaExceededError in mobile LocalStorage (5MB max) and guarantees Firestore docs remain well within 1MB.
+  const rawPhotos = photos.map(p => typeof p === 'string' ? p : p.dataUrl);
+  let compressedPhotos = rawPhotos;
+  try {
+    compressedPhotos = await Promise.all(
+      rawPhotos.map(p => compressImage(p, 540, 0.78))
+    );
+  } catch (compErr) {
+    console.warn("Photo compression fallback:", compErr);
+  }
+
+  // Also compress stripImage if present
+  let compressedStripImage = stripImage;
+  if (stripImage && typeof stripImage === 'string' && stripImage.startsWith('data:image')) {
+    try {
+      compressedStripImage = await compressImage(stripImage, 700, 0.80);
+    } catch (_) {}
+  }
+
+  const submissionId = `sub_${Date.now()}`;
   const newSubmission = {
-    id: `sub_${Date.now()}`,
+    id: submissionId,
     eventId: eventId || 'demo_event',
     eventSlug: eventSlug || 'demo',
     guestName: guestName || 'Tamu Undangan',
     message: guestMessage || '',
-    photos: photos.map(p => typeof p === 'string' ? p : p.dataUrl),
-    stripImage: stripImage || null,
+    photos: compressedPhotos,
+    stripImage: compressedStripImage || null,
     shortDate: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }),
     takenDate: new Date().toLocaleString('id-ID'),
     colorHex: stripColor || '#6B111F',
@@ -90,62 +111,20 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
     createdAt: Date.now(),
   };
 
-  // Always save to LocalStorage first
+  // 2. Always save to LocalStorage first (with compressed photos, this always succeeds instantly!)
   saveLocalSubmission(newSubmission);
 
-  // If in Demo Mode, skip all Firebase network sync (Firestore & Cloud Storage)
-  if (isDemo) {
-    return newSubmission;
-  }
-
-  // If Firebase Database (Firestore) is initialized, sync to Cloud
+  // 3. Sync to Cloud Firestore in REAL TIME for multi-device live sync (HP -> Laptop)
   if (db && !isSubmissionCloudQuotaExhausted) {
     try {
-      let uploadedPhotoUrls = newSubmission.photos;
-
-      // Try uploading to Storage if enabled and not blocked by CORS
-      if (storage && !isStorageDisabled) {
-        try {
-          const cloudUrls = [];
-          for (let i = 0; i < photos.length; i++) {
-            const photoData = typeof photos[i] === 'string' ? photos[i] : photos[i].dataUrl;
-            const photoRef = ref(storage, `photos/${newSubmission.id}_${i}.jpg`);
-            await uploadString(photoRef, photoData, 'data_url');
-            const downloadUrl = await getDownloadURL(photoRef);
-            cloudUrls.push(downloadUrl);
-          }
-          if (cloudUrls.length === photos.length) {
-            uploadedPhotoUrls = cloudUrls;
-          }
-        } catch (stErr) {
-          isStorageDisabled = true;
-          // Persist flag so next page load skips Storage entirely (no more CORS preflight spam)
-          try { sessionStorage.setItem(_STORAGE_CORS_KEY, '1'); } catch(_) {}
-          if (stErr?.code === 'storage/unauthorized') {
-            console.info('[Sirklen Cloud] Storage rules pending — retaining photos in Firestore document.');
-          } else {
-            console.info('[Sirklen Cloud] Storage CORS/network issue — using compressed Firestore fallback. Run CORS fix on Firebase bucket to enable Storage.');
-          }
-        }
-      }
-
-      // If photos are still base64 strings (Storage CORS or rules unconfigured), compress them so document stays well under Firestore's 1MB limit
-      if (uploadedPhotoUrls === newSubmission.photos) {
-        try {
-          uploadedPhotoUrls = await Promise.all(
-            newSubmission.photos.map(p => compressImage(p, 480, 0.72))
-          );
-        } catch (compErr) {
-          // fallback to original photos
-        }
-      }
-
       const cloudDoc = {
+        localId: submissionId,
         eventId: newSubmission.eventId,
         eventSlug: newSubmission.eventSlug,
         guestName: newSubmission.guestName,
         message: newSubmission.message,
-        photos: uploadedPhotoUrls,
+        photos: compressedPhotos,
+        stripImage: compressedStripImage || null,
         shortDate: newSubmission.shortDate,
         takenDate: newSubmission.takenDate,
         colorHex: newSubmission.colorHex,
@@ -157,7 +136,8 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
         createdAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, 'submissions'), cloudDoc);
+      const docRef = await addDoc(collection(db, 'submissions'), cloudDoc);
+      newSubmission.cloudDocId = docRef.id;
     } catch (err) {
       if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
         isSubmissionCloudQuotaExhausted = true;
@@ -165,12 +145,37 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
       } else if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
         console.info("[Sirklen Cloud] Submissions saved locally (Firestore rules pending publication in Firebase Console).");
       } else {
-        console.warn("[Sirklen Cloud] Submissions cloud save fallback to local:", err?.message || err);
+        console.warn("[Sirklen Cloud] Submissions cloud save error:", err?.message || err);
       }
     }
   }
 
   return newSubmission;
+}
+
+// Delete submission from LocalStorage and Cloud Firestore
+export async function deleteSubmission(submissionId) {
+  if (!submissionId) return false;
+
+  // 1. Remove from LocalStorage
+  try {
+    const existing = getLocalSubmissions();
+    const updated = existing.filter(item => item.id !== submissionId && item.localId !== submissionId);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.warn("Failed to delete submission from LocalStorage:", e);
+  }
+
+  // 2. Remove from Cloud Firestore
+  if (db && !isSubmissionCloudQuotaExhausted) {
+    try {
+      await deleteDoc(doc(db, 'submissions', submissionId));
+    } catch (err) {
+      console.warn("[Sirklen Cloud] Failed to delete submission from Firestore:", err?.message || err);
+    }
+  }
+
+  return true;
 }
 
 // Subscribe to real-time submissions stream
@@ -190,15 +195,26 @@ export function subscribeSubmissions(callback) {
         try {
           const cloudData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           const localData = getLocalSubmissions();
-          const merged = [...cloudData, ...localData];
+          
+          // Deduplicate items between Firestore & LocalStorage (by localId, id, or guestName+takenDate)
+          const seen = new Set();
+          const merged = [];
+          for (const item of [...cloudData, ...localData]) {
+            const key = item.localId || item.id || `${item.guestName}_${item.takenDate}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              merged.push(item);
+            }
+          }
           callback(merged);
         } catch (err) {
+          console.warn("Error processing submissions snapshot:", err);
           callback(getLocalSubmissions());
         }
       }, (err) => {
         if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
           isSubmissionCloudQuotaExhausted = true;
-          console.warn("[Sirklen Cloud] Firestore quota limit reached (Spark Plan). Pausing live subscription; running on LocalStorage.");
+          console.warn("[Sirklen Cloud] Firestore quota limit reached. Pausing live subscription; running on LocalStorage.");
           if (unsubscribe) {
             try { unsubscribe(); } catch (_) {}
           }

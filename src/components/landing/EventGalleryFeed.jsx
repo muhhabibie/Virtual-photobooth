@@ -57,22 +57,34 @@ export default function EventGalleryFeed() {
     message: guestMessage || '',
   } : null;
 
-  // Filter real-time savedSubmissions strictly by active event
+  // Filter real-time savedSubmissions by active event
   const eventSubmissions = useMemo(() => {
     if (!savedSubmissions || savedSubmissions.length === 0) return [];
     if (!activeEvent) return savedSubmissions;
-    return savedSubmissions.filter(sub => 
-      sub.eventSlug === activeEvent.slug || sub.eventId === activeEvent.id
-    );
+    const currentSlug = activeEvent.slug;
+    const isDemoEvent = currentSlug === 'demo' || currentSlug === 'sabrina-raka' || currentSlug === 'raka-sabrina' || !currentSlug;
+    return savedSubmissions.filter(sub => {
+      if (sub.eventId && activeEvent.id && sub.eventId === activeEvent.id) return true;
+      if (sub.eventSlug && currentSlug && sub.eventSlug === currentSlug) return true;
+      if (isDemoEvent && (sub.eventSlug === 'demo' || sub.eventSlug === 'sabrina-raka' || sub.eventSlug === 'raka-sabrina' || !sub.eventSlug)) {
+        return true;
+      }
+      return false;
+    });
   }, [savedSubmissions, activeEvent]);
 
   // Base cards list per event
   const baseCards = useMemo(() => {
-    let list = eventSubmissions;
+    let hiddenIds = [];
+    try {
+      hiddenIds = JSON.parse(localStorage.getItem('sirklen_hidden_mock_submissions') || '[]');
+    } catch (e) {}
+
+    let list = eventSubmissions.filter(sub => !hiddenIds.includes(sub.id));
     if (list.length === 0 && (!activeEvent || activeEvent.slug === 'sabrina-raka' || activeEvent.slug === 'raka-sabrina' || activeEvent.slug === 'demo' || activeEvent.isDemo)) {
-      list = MOCK_GALLERY_PHOTOS;
+      list = MOCK_GALLERY_PHOTOS.filter(sub => !hiddenIds.includes(sub.id));
     }
-    return userCard ? [userCard, ...list.filter(s => s.id !== userCard.id)] : list;
+    return userCard && !hiddenIds.includes(userCard.id) ? [userCard, ...list.filter(s => s.id !== userCard.id)] : list;
   }, [eventSubmissions, activeEvent, userCard]);
   
   // Ensure enough items (at least 5) before repeating 4x so infinite wrapping is flawless
