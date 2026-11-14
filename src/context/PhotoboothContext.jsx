@@ -504,6 +504,10 @@ export function PhotoboothProvider({ children }) {
     if (isEventExpired) return;
     const defaultBg = activeEvent?.customFrame?.bgColor || '#FFFFFF';
     setStripColor(defaultBg);
+    setCapturedPhotos([]);        // Fresh session: clear previous photos!
+    setSelectedPhotoIndex(0);
+    setVoiceBlob(null);
+    setVoiceUrl(null);
     setBoothOpen(true);
     setCurrentStepState('frames');
     boothHistoryDepthRef.current = 1; // reset depth; 1 = the 'frames' entry we push below
@@ -516,6 +520,10 @@ export function PhotoboothProvider({ children }) {
   const closeBooth = useCallback(() => {
     setBoothOpen(false);
     setCurrentStepState('frames'); // reset to frames for next session
+    setCapturedPhotos([]);        // Reset photos so opening booth next time is fresh
+    setSelectedPhotoIndex(0);
+    setVoiceBlob(null);
+    setVoiceUrl(null);
     try {
       const depth = boothHistoryDepthRef.current;
       boothHistoryDepthRef.current = 0;

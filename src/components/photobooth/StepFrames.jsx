@@ -34,6 +34,8 @@ export default function StepFrames() {
     setGuestMessage,
     activeEvent,
     setCurrentStep,
+    setCapturedPhotos,
+    setSelectedPhotoIndex,
     stripStyle, setStripStyle,
     closeBooth 
   } = useBooth();
@@ -100,6 +102,8 @@ export default function StepFrames() {
       return;
     }
     setNameError(false);
+    setCapturedPhotos([]);
+    setSelectedPhotoIndex(0);
     setCurrentStep('camera');
   };
 
