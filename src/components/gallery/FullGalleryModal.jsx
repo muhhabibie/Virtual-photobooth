@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Plus, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive } from 'lucide-react';
+import { ArrowLeft, Plus, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive, Video, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
@@ -9,6 +9,7 @@ import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
 import { getEventHeaderTitle, getEventDisplayName } from '../../utils/eventHeader';
 import PhotostripThumbnail from './PhotostripThumbnail';
 import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
+import { generatePhotostripVideo } from '../../utils/videoGenerator';
 import PriceListModal from '../ui/PriceListModal';
 
 function getNowIndonesianDate() {
@@ -50,6 +51,7 @@ export default function FullGalleryModal() {
   const [likes, setLikes] = useState({});
   const [fullFrameModal, setFullFrameModal] = useState(null);
   const [isZipping, setIsZipping] = useState(false);
+  const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
   const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
 
@@ -507,6 +509,88 @@ export default function FullGalleryModal() {
                     <Download size={15} />
                     <span>Download Photo Strip HD</span>
                   </button>
+
+                  {/* Option 2: Download Video + Audio MP4 Story (If voice note exists) */}
+                  {(fullFrameModal.hasVoice || fullFrameModal.voiceUrl) && (
+                    <button
+                      onClick={async () => {
+                        if (isDemoMode) {
+                          toast('Di mode demo tidak bisa download video. Yuk pesan paket untuk acaramu!', 'warning');
+                          setShowPriceModal(true);
+                          return;
+                        }
+                        setIsDownloadingVideo(true);
+                        toast('Menyiapkan video photo strip + rekaman suara...', 'info');
+
+                        try {
+                          const offCanvas = document.createElement('canvas');
+                          const photosList = Array.isArray(fullFrameModal.photos) && fullFrameModal.photos.length > 0
+                            ? fullFrameModal.photos
+                            : (fullFrameModal.photo ? [fullFrameModal.photo] : []);
+                          
+                          const loadedImgs = await Promise.all(
+                            photosList.map(src => new Promise(res => {
+                              const img = new Image();
+                              img.crossOrigin = 'anonymous';
+                              img.onload = () => res(img);
+                              img.onerror = () => res(null);
+                              img.src = typeof src === 'string' ? src : (src?.dataUrl || '');
+                            }))
+                          );
+                          const valid = loadedImgs.filter(Boolean).map(img => ({ canvas: img, dataUrl: img.src }));
+                          renderMasterPhotoStrip(offCanvas, {
+                            photos: valid,
+                            targetCount: valid.length,
+                            stripColor: fullFrameModal.colorHex || fullFrameModal.stripColor || '#6B111F',
+                            guestName: fullFrameModal.guestName,
+                            guestMessage: fullFrameModal.message || fullFrameModal.guestMessage,
+                            activeEvent,
+                            scale: 2,
+                          });
+
+                          const result = await generatePhotostripVideo({
+                            photoCanvas: offCanvas,
+                            voiceUrl: fullFrameModal.voiceUrl,
+                            guestName: fullFrameModal.guestName || 'Tamu Undangan',
+                            coupleName: activeEvent?.displayName || 'Sabrina & Raka',
+                            eventName: activeEvent?.eventName || 'The Wedding',
+                          });
+
+                          const videoUrl = URL.createObjectURL(result.blob);
+                          const a = document.createElement('a');
+                          const sanitize = (name) => (name || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
+                          const guest = sanitize(fullFrameModal.guestName) || 'Tamu';
+                          const filename = `${guest}_voice_story.${result.extension}`;
+                          a.download = filename;
+                          a.href = videoUrl;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          setTimeout(() => URL.revokeObjectURL(videoUrl), 3000);
+                          toast(`Video MP4 + Suara berhasil diunduh (${filename})! 🎬`, 'success');
+                        } catch (err) {
+                          console.error('Video download error:', err);
+                          toast('Gagal memproses video bersuara.', 'error');
+                        } finally {
+                          setIsDownloadingVideo(false);
+                        }
+                      }}
+                      disabled={isDownloadingVideo}
+                      className="w-full mt-2 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#8C6534] via-[#A3783F] to-[#8C6534] hover:from-[#7A562B] hover:to-[#7A562B] text-white border border-[#BFA069]/40 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xl transition active:scale-95 cursor-pointer disabled:opacity-50"
+                    >
+                      {isDownloadingVideo ? (
+                        <>
+                          <Loader2 size={15} className="animate-spin text-amber-200" />
+                          <span>Memproses Video MP4...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Video size={15} className="text-amber-200" />
+                          <span>Download Video + Suara (MP4 Story)</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
 
             </div>
