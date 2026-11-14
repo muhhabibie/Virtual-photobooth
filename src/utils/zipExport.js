@@ -190,7 +190,8 @@ export async function exportEventSubmissionsZip({ event, submissions = [], onPro
       try {
         const voiceBinary = await getAssetBinary(item.voiceUrl);
         if (voiceBinary) {
-          const voiceFilename = `${baseFilename}_voice.webm`;
+          const ext = item.voiceUrl && (item.voiceUrl.includes('mp4') || item.voiceUrl.includes('m4a')) ? 'mp4' : (item.voiceUrl && item.voiceUrl.includes('aac') ? 'aac' : 'webm');
+          const voiceFilename = `${baseFilename}_voice.${ext}`;
           eventFolder.file(voiceFilename, voiceBinary);
         }
       } catch (err) {

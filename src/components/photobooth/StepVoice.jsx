@@ -15,6 +15,7 @@ export default function StepVoice() {
     capturedPhotos,
     setVoiceBlob,
     setVoiceUrl,
+    setVoiceDuration,
     setCurrentStep,
     goBack,
     activeEvent,
@@ -68,28 +69,60 @@ export default function StepVoice() {
     return () => reset();
   }, []);
 
-  const handleMainButtonClick = () => {
+  // Synchronize captured audio blob & url to context state as soon as recorded
+  useEffect(() => {
+    if (audioBlob && audioUrl) {
+      setVoiceBlob(audioBlob);
+      setVoiceUrl(audioUrl);
+      setVoiceDuration(seconds || 15);
+    }
+  }, [audioBlob, audioUrl, seconds, setVoiceBlob, setVoiceUrl, setVoiceDuration]);
+
+  const handleMainButtonClick = async () => {
     if (isRecording) {
-      stop();
+      const res = await stop();
+      if (res && res.blob) {
+        setVoiceBlob(res.blob);
+        setVoiceUrl(res.url);
+        setVoiceDuration(seconds || 15);
+      }
     } else {
       if (audioUrl) {
         reset();
         setVoiceBlob(null);
         setVoiceUrl(null);
+        setVoiceDuration(0);
         toast('Mengambil ulang pesan suara...', 'info');
       }
       start();
     }
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
+    let finalBlob = audioBlob;
+    let finalUrl = audioUrl;
+
     if (isRecording) {
-      stop();
+      try {
+        const res = await stop();
+        if (res && res.blob) {
+          finalBlob = res.blob;
+          finalUrl = res.url;
+        }
+      } catch (e) {
+        console.warn('Error stopping recording in handleFinish:', e);
+      }
     }
-    if (audioBlob) {
-      setVoiceBlob(audioBlob);
-      setVoiceUrl(audioUrl);
+
+    if (finalBlob) {
+      setVoiceBlob(finalBlob);
+      setVoiceUrl(finalUrl);
+      setVoiceDuration(seconds || 15);
       toast('Pesan suara berhasil disimpan', 'success');
+    } else {
+      setVoiceBlob(null);
+      setVoiceUrl(null);
+      setVoiceDuration(0);
     }
     setCurrentStep('result');
   };

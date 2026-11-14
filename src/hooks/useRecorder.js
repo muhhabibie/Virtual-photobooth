@@ -13,25 +13,44 @@ export function useRecorder() {
   const intervalRef = useRef(null);
   const streamRef = useRef(null);
   const audioUrlRef = useRef(null);
+  const audioBlobRef = useRef(null);
+  const mimeTypeRef = useRef('audio/webm');
+  const stopResolverRef = useRef(null);
 
   useEffect(() => {
     audioUrlRef.current = audioUrl;
   }, [audioUrl]);
 
+  useEffect(() => {
+    audioBlobRef.current = audioBlob;
+  }, [audioBlob]);
+
   const stop = useCallback(() => {
-    if (mrRef.current && mrRef.current.state !== 'inactive') {
-      try {
-        mrRef.current.stop();
-      } catch (e) {
-        console.warn("MediaRecorder stop error:", e);
-      }
-    }
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
     setIsRecording(false);
     setIsPaused(false);
+
+    return new Promise((resolve) => {
+      const mr = mrRef.current;
+      if (!mr || mr.state === 'inactive') {
+        resolve({ blob: audioBlobRef.current, url: audioUrlRef.current });
+        return;
+      }
+
+      stopResolverRef.current = resolve;
+      try {
+        mr.stop();
+      } catch (e) {
+        console.warn("MediaRecorder stop error:", e);
+        if (stopResolverRef.current) {
+          stopResolverRef.current({ blob: audioBlobRef.current, url: audioUrlRef.current });
+          stopResolverRef.current = null;
+        }
+      }
+    });
   }, []);
 
   const pause = useCallback(() => {
@@ -100,22 +119,28 @@ export function useRecorder() {
       streamRef.current = stream;
       chunksRef.current = [];
 
-      // Determine best supported MIME type for current browser (iOS Safari vs Android vs Desktop)
+      // Determine best supported MIME type prioritizing cross-platform playback (iOS Safari vs Android vs Desktop)
+      const mimeCandidates = [
+        'audio/mp4',
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/aac',
+      ];
+
+      let selectedMime = 'audio/webm';
       let options = undefined;
-      let mimeType = 'audio/webm';
 
       if (typeof MediaRecorder.isTypeSupported === 'function') {
-        if (MediaRecorder.isTypeSupported('audio/webm')) {
-          mimeType = 'audio/webm';
-          options = { mimeType: 'audio/webm' };
-        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-          mimeType = 'audio/mp4';
-          options = { mimeType: 'audio/mp4' };
-        } else if (MediaRecorder.isTypeSupported('audio/aac')) {
-          mimeType = 'audio/aac';
-          options = { mimeType: 'audio/aac' };
+        for (const cand of mimeCandidates) {
+          if (MediaRecorder.isTypeSupported(cand)) {
+            selectedMime = cand;
+            options = { mimeType: cand };
+            break;
+          }
         }
       }
+      mimeTypeRef.current = selectedMime;
 
       const mr = new MediaRecorder(stream, options);
       mrRef.current = mr;
@@ -127,15 +152,27 @@ export function useRecorder() {
       };
 
       mr.onstop = () => {
+        let finalBlob = audioBlobRef.current;
+        let finalUrl = audioUrlRef.current;
+
         if (chunksRef.current.length > 0) {
-          const blob = new Blob(chunksRef.current, { type: mimeType });
-          const url = URL.createObjectURL(blob);
-          setAudioBlob(blob);
-          setAudioUrl(url);
+          const mime = mimeTypeRef.current || mr.mimeType || 'audio/mp4';
+          finalBlob = new Blob(chunksRef.current, { type: mime });
+          finalUrl = URL.createObjectURL(finalBlob);
+          audioBlobRef.current = finalBlob;
+          audioUrlRef.current = finalUrl;
+          setAudioBlob(finalBlob);
+          setAudioUrl(finalUrl);
         }
+
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(t => t.stop());
           streamRef.current = null;
+        }
+
+        if (stopResolverRef.current) {
+          stopResolverRef.current({ blob: finalBlob, url: finalUrl });
+          stopResolverRef.current = null;
         }
       };
 
@@ -167,6 +204,8 @@ export function useRecorder() {
     if (audioUrlRef.current) {
       try { URL.revokeObjectURL(audioUrlRef.current); } catch (e) {}
     }
+    audioBlobRef.current = null;
+    audioUrlRef.current = null;
     setSeconds(0);
     setAudioUrl(null);
     setAudioBlob(null);

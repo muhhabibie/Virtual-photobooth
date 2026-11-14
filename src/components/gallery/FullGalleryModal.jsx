@@ -38,6 +38,7 @@ export default function FullGalleryModal() {
     guestMessage,
     stripColor,
     voiceUrl,
+    voiceDuration,
     activeEvent,
     isDemo,
     savedSubmissions
@@ -85,10 +86,11 @@ export default function FullGalleryModal() {
       textHex: stripColor === '#FDFBF7' || stripColor === '#F3C5CB' ? '#6B111F' : '#F5D77F',
       hasVoice: !!voiceUrl,
       voiceUrl: voiceUrl,
+      voiceDuration: voiceDuration || 15,
       message: guestMessage && guestMessage.trim() ? guestMessage.trim() : '',
       likes: 1,
     };
-  }, [capturedPhotos, guestName, stripColor, voiceUrl, guestMessage]);
+  }, [capturedPhotos, guestName, stripColor, voiceUrl, voiceDuration, guestMessage]);
 
   // Filter real-time savedSubmissions strictly by active event
   const eventSubmissions = useMemo(() => {
@@ -442,7 +444,7 @@ export default function FullGalleryModal() {
                     <SpotifyVoicePlayer
                       voiceUrl={fullFrameModal.voiceUrl}
                       guestName={fullFrameModal.guestName}
-                      totalDuration={24}
+                      totalDuration={fullFrameModal.voiceDuration || 12}
                     />
                   </div>
                 )}

@@ -454,6 +454,7 @@ export function PhotoboothProvider({ children }) {
 
   const [voiceBlob, setVoiceBlob] = useState(null);
   const [voiceUrl, setVoiceUrl] = useState(null);
+  const [voiceDuration, setVoiceDuration] = useState(0);
 
   const [boothOpen, setBoothOpen] = useState(false);
   const [galleryModalOpen, setGalleryModalOpen] = useState(false);
@@ -497,6 +498,7 @@ export function PhotoboothProvider({ children }) {
     setSelectedPhotoIndex(0);
     setVoiceBlob(null);
     setVoiceUrl(null);
+    setVoiceDuration(0);
     setCurrentStepState('frames');
   }, []);
 
@@ -508,6 +510,7 @@ export function PhotoboothProvider({ children }) {
     setSelectedPhotoIndex(0);
     setVoiceBlob(null);
     setVoiceUrl(null);
+    setVoiceDuration(0);
     setBoothOpen(true);
     setCurrentStepState('frames');
     boothHistoryDepthRef.current = 1; // reset depth; 1 = the 'frames' entry we push below
@@ -524,6 +527,7 @@ export function PhotoboothProvider({ children }) {
     setSelectedPhotoIndex(0);
     setVoiceBlob(null);
     setVoiceUrl(null);
+    setVoiceDuration(0);
     try {
       const depth = boothHistoryDepthRef.current;
       boothHistoryDepthRef.current = 0;
@@ -678,8 +682,9 @@ export function PhotoboothProvider({ children }) {
       stripColor,
       stripStyle,
       stripImage,
-      voiceBlob,
-      voiceUrl,
+      voiceBlob: extraData?.voiceBlob !== undefined ? extraData.voiceBlob : voiceBlob,
+      voiceUrl: extraData?.voiceUrl !== undefined ? extraData.voiceUrl : voiceUrl,
+      voiceDuration: extraData?.voiceDuration !== undefined ? extraData.voiceDuration : voiceDuration,
       isDemo: isDemo,
     });
     const updatedLocal = getLocalSubmissions();
@@ -689,7 +694,7 @@ export function PhotoboothProvider({ children }) {
       setSavedSubmissions(updatedLocal);
     }
     return result;
-  }, [capturedPhotos, isEventExpired, activeEvent, currentSlug, guestName, guestMessage, stripColor, voiceBlob, voiceUrl, isDemo]);
+  }, [capturedPhotos, isEventExpired, activeEvent, currentSlug, guestName, guestMessage, stripColor, stripStyle, voiceBlob, voiceUrl, voiceDuration, isDemo]);
 
   return (
     <PhotoboothContext.Provider value={{
@@ -732,6 +737,7 @@ export function PhotoboothProvider({ children }) {
       selectedPhotoIndex, setSelectedPhotoIndex,
       voiceBlob, setVoiceBlob,
       voiceUrl, setVoiceUrl,
+      voiceDuration, setVoiceDuration,
       savedSubmissions, submitSession,
       boothOpen, setBoothOpen, openBooth, closeBooth, goBack,
       galleryModalOpen, openGalleryModal, closeGalleryModal,
