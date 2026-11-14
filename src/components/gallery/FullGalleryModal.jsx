@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ArrowLeft, Plus, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
