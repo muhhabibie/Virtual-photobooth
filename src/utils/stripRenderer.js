@@ -175,22 +175,22 @@ export function renderMasterPhotoStrip(canvas, {
     // 1 Photo (Classic Polaroid ~1:1.15)
     photoH = Math.round(photoW * 0.88); // 447 * scale
     gap = 0;
-    footerH = (hasCustomMsg ? 195 : 168) * scale;
+    footerH = (hasCustomMsg ? 204 : 168) * scale;
   } else if (count === 2) {
     // 2 Photos (Duo Strip - 4:3 Standard)
     photoH = Math.round(photoW * 0.75); // 381 * scale (4:3)
     gap = 16 * scale;
-    footerH = (hasCustomMsg ? 195 : 168) * scale;
+    footerH = (hasCustomMsg ? 204 : 168) * scale;
   } else if (count === 4) {
     // 4 Photos (Classic 4-pose 2x6 strip)
     photoH = Math.round(photoW * 0.64); // 325 * scale
     gap = 14 * scale;
-    footerH = (hasCustomMsg ? 195 : 168) * scale;
+    footerH = (hasCustomMsg ? 204 : 168) * scale;
   } else {
     // Standard 3 Photos (Classic 3-pose strip - True 4:3 Professional Photobooth Ratio)
     photoH = Math.round(photoW * 0.75); // 381 * scale (4:3)
     gap = 16 * scale;
-    footerH = (hasCustomMsg ? 195 : 168) * scale;
+    footerH = (hasCustomMsg ? 204 : 168) * scale;
   }
 
   const totalH = topPad + (photoH * count) + (gap * Math.max(0, count - 1)) + footerH;
@@ -361,28 +361,28 @@ export function renderMasterPhotoStrip(canvas, {
 
   // ── Vertical layout positions ──
   // Layer 1: prefix label (small caps)        footerTop + 20
-  // Layer 2: script name (large calligraphy)  footerTop + 42
-  // Layer 3: event badge (bold caps)          footerTop + 75
-  // Layer 4: divider line                     footerTop + 92
-  // Layer 5: date                             footerTop + 112
-  // Layer 6: venue                            footerTop + 130
-  // Layer 7: message (optional)               footerTop + 152
+  // Layer 2: script name (large typography)   footerTop + 46
+  // Layer 3: event badge (bold caps)          footerTop + 84
+  // Layer 4: divider line                     footerTop + 100
+  // Layer 5: date                             footerTop + 120
+  // Layer 6: venue                            footerTop + 138
+  // Layer 7: message (optional quote)         footerTop + 164
   const prefixY   = footerTop + 22 * scale; // kept for reference but not drawn
-  const scriptY   = footerTop + 50 * scale;
-  const badgeY    = footerTop + 90 * scale;
-  const divY      = footerTop + 106 * scale;
-  const dateY     = footerTop + 126 * scale;
-  const venueY    = footerTop + 144 * scale;
-  const msgY      = footerTop + 166 * scale;
+  const scriptY   = footerTop + 48 * scale;
+  const badgeY    = footerTop + 86 * scale;
+  const divY      = footerTop + 102 * scale;
+  const dateY     = footerTop + 122 * scale;
+  const venueY    = footerTop + 140 * scale;
+  const msgY      = footerTop + 165 * scale;
 
-  // 4a. Prefix Label removed by design — only calligraphy name shown
+  // 4a. Prefix Label removed by design — only name shown
 
-  // 4b. Guest Name in Large Aesthetic & Legible Script/Calligraphy
+  // 4b. Guest Name in Large Aesthetic, Professional & Editorial Typography
   ctx.save();
   ctx.fillStyle = primaryTextColor;
-  const scriptBaseSize = (isPolaroid ? 42 : 46) * scale;
-  ctx.font = `${scriptBaseSize}px 'Parisienne', 'Alex Brush', 'Great Vibes', cursive`;
-  const fittedScriptSize = fitTextSize(ctx, guestScriptName, photoW - 30 * scale, scriptBaseSize, 24 * scale);
+  const scriptBaseSize = (isPolaroid ? 38 : 42) * scale;
+  ctx.font = `italic 600 ${scriptBaseSize}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
+  fitTextSize(ctx, guestScriptName, photoW - 30 * scale, scriptBaseSize, 22 * scale);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(guestScriptName, totalW / 2, scriptY);
@@ -391,11 +391,11 @@ export function renderMasterPhotoStrip(canvas, {
   // 4c. Event Badge ("WEDDING" / "CAR FREE DAY") — bold uppercase, prominent
   ctx.save();
   ctx.fillStyle = primaryTextColor;
-  const badgeSize = (isPolaroid ? 13 : 15) * scale;
-  ctx.font = `900 ${badgeSize}px 'Cinzel', 'Playfair Display', Georgia, serif`;
+  const badgeSize = (isPolaroid ? 12.5 : 14) * scale;
+  ctx.font = `bold ${badgeSize}px 'Cinzel', 'Playfair Display', Georgia, serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  drawSpacedText(ctx, eventBadge, totalW / 2, badgeY, 4.0 * scale);
+  drawSpacedText(ctx, eventBadge, totalW / 2, badgeY, 3.2 * scale);
   ctx.restore();
 
   // 4d. Divider Line with Center Diamond Accent
@@ -429,43 +429,38 @@ export function renderMasterPhotoStrip(canvas, {
   // 4e. Date Text (e.g. 15 - 11 - 2026)
   ctx.save();
   ctx.fillStyle = primaryTextColor;
-  const dateBaseSize = (isPolaroid ? 12.5 : 14) * scale;
-  ctx.font = `bold ${dateBaseSize}px 'Cinzel', 'Playfair Display', Georgia, serif`;
+  const dateBaseSize = (isPolaroid ? 12 : 13) * scale;
+  ctx.font = `600 ${dateBaseSize}px 'Cinzel', 'Playfair Display', Georgia, serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  drawSpacedText(ctx, dateText, totalW / 2, dateY, 3.0 * scale);
+  drawSpacedText(ctx, dateText, totalW / 2, dateY, 2.8 * scale);
   ctx.restore();
 
   // 4f. Venue / Location Text
   ctx.save();
   ctx.fillStyle = primaryTextColor;
-  const venueBaseSize = (isPolaroid ? 11 : 12) * scale;
-  ctx.font = `bold ${venueBaseSize}px 'Cinzel', 'Playfair Display', sans-serif`;
+  const venueBaseSize = (isPolaroid ? 10.5 : 11.5) * scale;
+  ctx.font = `600 ${venueBaseSize}px 'Cinzel', 'Playfair Display', sans-serif`;
   fitTextSize(ctx, venueText, photoW - 40 * scale, venueBaseSize, 9 * scale);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  drawSpacedText(ctx, venueText, totalW / 2, venueY, 2.5 * scale);
+  drawSpacedText(ctx, venueText, totalW / 2, venueY, 2.2 * scale);
   ctx.restore();
 
-  // 4g. Guest Words / Message (clean, easy-to-read font instead of handwritten cursive)
+  // 4g. Guest Words / Short Message (Refined, elegant literary quote in Cormorant Garamond serif)
   if (hasCustomMsg) {
     ctx.save();
     ctx.fillStyle = accentColor;
-    const msgBaseSize = (isPolaroid ? 12 : 13) * scale;
-    ctx.font = `italic 500 ${msgBaseSize}px 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
-    fitTextSize(ctx, shortMessageText, photoW - 36 * scale, msgBaseSize, 9 * scale);
+    const msgBaseSize = (isPolaroid ? 13 : 14.5) * scale;
+    ctx.font = `italic 500 ${msgBaseSize}px 'Cormorant Garamond', 'Playfair Display', Georgia, serif`;
+    fitTextSize(ctx, shortMessageText, photoW - 36 * scale, msgBaseSize, 10 * scale);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(shortMessageText, totalW / 2, msgY);
+    drawSpacedText(ctx, shortMessageText, totalW / 2, msgY, 0.8 * scale);
     ctx.restore();
   }
 
-  // 5. Outer Frame Border (if customized)
-  if (activeEvent?.customFrame?.borderColor) {
-    ctx.strokeStyle = activeEvent.customFrame.borderColor;
-    ctx.lineWidth = 4 * scale;
-    ctx.strokeRect(2 * scale, 2 * scale, totalW - 4 * scale, totalH - 4 * scale);
-  }
+  // 5. Outer Frame Border removed by user request (clean, borderless edge-to-edge frame background)
 
   // 6. Custom Positioned Ornaments (if any)
   if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {

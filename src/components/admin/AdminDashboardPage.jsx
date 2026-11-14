@@ -1619,7 +1619,6 @@ export default function AdminDashboardPage() {
                             style={{ 
                               backgroundColor: theme.hex,
                               color: theme.textHex,
-                              border: `1.5px solid ${theme.borderHex}`
                             }}
                           >
                             <div className="text-center pb-1">
@@ -1647,7 +1646,7 @@ export default function AdminDashboardPage() {
                             </div>
 
                             <div className="text-center pt-1 flex flex-col items-center">
-                              <span className="text-[9.5px] font-normal leading-tight block truncate" style={{ fontFamily: "'Great Vibes', cursive", color: theme.textHex }}>Nama Tamu</span>
+                              <span className="text-[9.5px] font-semibold leading-tight block truncate italic" style={{ fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif", color: theme.textHex }}>Nama Tamu</span>
                               <div className="flex items-center justify-center gap-1 my-0.5 w-14">
                                 <div className="flex-1 h-[0.8px] bg-black/20" />
                                 <div className="w-1 h-1 rotate-45 bg-black/30" />
@@ -1659,7 +1658,7 @@ export default function AdminDashboardPage() {
                               <span className="text-[5px] font-sans font-bold uppercase opacity-75">
                                 {previewModalEvent.venue || 'IDJEN BOULEVARD'}
                               </span>
-                              <span className="text-[4.5px] font-serif italic mt-0.5 opacity-70">
+                              <span className="text-[5px] italic mt-0.5 opacity-80" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                                 “kata-kata hari ini”
                               </span>
                             </div>

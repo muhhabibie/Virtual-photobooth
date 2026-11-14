@@ -328,7 +328,7 @@ export default function ClientSetupPage() {
   // Custom Frame & Ornament State (Desain Mandiri Pengantin)
   const [frameBgColor, setFrameBgColor] = useState(event?.customFrame?.bgColor || '#6B111F');
   const [frameTextColor, setFrameTextColor] = useState(event?.customFrame?.textColor || '#F5D77F');
-  const [frameBorderColor, setFrameBorderColor] = useState(event?.customFrame?.borderColor || '#8A1828');
+  const [frameBorderColor, setFrameBorderColor] = useState(event?.customFrame?.borderColor || null);
   const [frameOrnaments, setFrameOrnaments] = useState(event?.customFrame?.ornaments || []);
   const [activeOrnId, setActiveOrnId] = useState(null);
   const [studioTab, setStudioTab] = useState('presets'); // 'presets' | 'upload' | 'palette'
@@ -978,7 +978,7 @@ export default function ClientSetupPage() {
                     style={{ 
                       backgroundColor: frameBgColor,
                       color: frameTextColor,
-                      border: `1.5px solid ${frameBorderColor}`
+                      border: frameBorderColor ? `1.5px solid ${frameBorderColor}` : 'none'
                     }}
                   >
                     {/* Live Ornaments Overlay */}
@@ -1449,7 +1449,7 @@ export default function ClientSetupPage() {
                 style={{ 
                   backgroundColor: frameBgColor,
                   color: frameTextColor,
-                  border: `2.5px solid ${frameBorderColor}`
+                  border: frameBorderColor ? `2.5px solid ${frameBorderColor}` : 'none'
                 }}
                 className="relative w-[230px] xs:w-[250px] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.25)] p-3 flex flex-col justify-between overflow-hidden select-none transition-colors duration-300 min-h-[690px] aspect-[1/3]"
               >
