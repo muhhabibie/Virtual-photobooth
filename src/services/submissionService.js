@@ -6,7 +6,12 @@ import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 
 import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { compressImage } from '../utils/imageCompressor.js';
 
-let isStorageDisabled = false;
+// Persist CORS-block flag in sessionStorage so fresh page loads skip Storage immediately
+// without triggering preflight OPTIONS requests that always fail when CORS is not configured.
+const _STORAGE_CORS_KEY = 'sirklen_storage_cors_blocked';
+let isStorageDisabled = (() => {
+  try { return sessionStorage.getItem(_STORAGE_CORS_KEY) === '1'; } catch(_) { return false; }
+})();
 let isSubmissionCloudQuotaExhausted = false;
 
 const LOCAL_STORAGE_KEY = 'wedding_photobooth_submissions';
@@ -112,10 +117,12 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
           }
         } catch (stErr) {
           isStorageDisabled = true;
+          // Persist flag so next page load skips Storage entirely (no more CORS preflight spam)
+          try { sessionStorage.setItem(_STORAGE_CORS_KEY, '1'); } catch(_) {}
           if (stErr?.code === 'storage/unauthorized') {
-            console.info("[Sirklen Cloud] Storage rules pending publication in Firebase Console. Retaining photo data in document.");
+            console.info('[Sirklen Cloud] Storage rules pending — retaining photos in Firestore document.');
           } else {
-            console.info("[Sirklen Cloud] Storage CORS / network fallback: Retaining compressed photos in document.");
+            console.info('[Sirklen Cloud] Storage CORS/network issue — using compressed Firestore fallback. Run CORS fix on Firebase bucket to enable Storage.');
           }
         }
       }
