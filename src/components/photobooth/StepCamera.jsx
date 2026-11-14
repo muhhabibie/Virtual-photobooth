@@ -274,28 +274,21 @@ export default function StepCamera() {
     touchStartYRef.current = null;
   };
 
-  // Active theme matched to the chosen stripColor & stripStyle
-  const isBotanicalStyle = stripStyle === 'botanical-wedding';
-  const currentTheme = isBotanicalStyle
+  // Active theme matched to the chosen stripColor
+  const currentTheme = ((activeEvent?.customFrame && stripColor === activeEvent.customFrame.bgColor)
     ? {
-        hex: '#FFFFFF',
-        borderHex: '#4A7C59',
-        textHex: '#8B6914'
+        hex: activeEvent.customFrame.bgColor,
+        textHex: activeEvent.customFrame.textColor || '#22201E',
+        borderHex: activeEvent.customFrame.borderColor || '#B89F88'
       }
-    : ((activeEvent?.customFrame && stripColor === activeEvent.customFrame.bgColor)
-      ? {
-          hex: activeEvent.customFrame.bgColor,
-          textHex: activeEvent.customFrame.textColor || '#22201E',
-          borderHex: activeEvent.customFrame.borderColor || '#B89F88'
-        }
-      : (COLOR_THEMES.find(c => c.hex.toLowerCase() === (stripColor || '').toLowerCase()) || {
-          hex: stripColor || '#FFFFFF',
-          borderHex: '#B89F88',
-          textHex: '#22201E'
-        }));
-  const isLight = isBotanicalStyle || currentTheme.hex?.toLowerCase() === '#ffffff' || currentTheme.hex === '#FDFBF7' || currentTheme.hex === '#F3C5CB';
-  const accentColor = isBotanicalStyle ? '#4A7C59' : (isLight ? '#B89F88' : (activeEvent?.customFrame?.textColor || '#F5D77F'));
-  const primaryTextColor = isBotanicalStyle ? '#3D3020' : (isLight ? '#22201E' : '#FFFFFF');
+    : (COLOR_THEMES.find(c => c.hex.toLowerCase() === (stripColor || '').toLowerCase()) || {
+        hex: stripColor || '#FFFFFF',
+        borderHex: '#B89F88',
+        textHex: '#22201E'
+      }));
+  const isLight = currentTheme.hex?.toLowerCase() === '#ffffff' || currentTheme.hex === '#FDFBF7' || currentTheme.hex === '#F3C5CB';
+  const accentColor = isLight ? '#B89F88' : (activeEvent?.customFrame?.textColor || '#F5D77F');
+  const primaryTextColor = isLight ? '#22201E' : '#FFFFFF';
 
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
   const bride = activeEvent?.brideName;
