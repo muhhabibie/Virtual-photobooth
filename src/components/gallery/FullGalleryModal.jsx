@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { ArrowLeft, Plus, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive, Video, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
+import { getDeletedSubmissionIds, isSubmissionDeleted } from '../../services/submissionService';
 import { useToast } from '../ui/Toast';
 import { exportEventSubmissionsZip } from '../../utils/zipExport';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
@@ -119,17 +120,19 @@ export default function FullGalleryModal() {
 
   // Base list fallback (mock items only for default demo wedding)
   const baseList = useMemo(() => {
+    const deletedSet = getDeletedSubmissionIds();
     if (eventSubmissions.length > 0) {
-      return eventSubmissions.filter(sub => !hiddenMockIds.includes(sub.id));
+      return eventSubmissions.filter(sub => !isSubmissionDeleted(sub, null, deletedSet) && !hiddenMockIds.includes(sub.id));
     }
     if (!activeEvent || activeEvent.slug === 'sabrina-raka' || activeEvent.slug === 'raka-sabrina' || activeEvent.slug === 'demo' || activeEvent.isDemo || isDemo) {
-      return MOCK_GALLERY_PHOTOS.filter(sub => !hiddenMockIds.includes(sub.id));
+      return MOCK_GALLERY_PHOTOS.filter(sub => !isSubmissionDeleted(sub.id, null, deletedSet) && !hiddenMockIds.includes(sub.id));
     }
     return [];
   }, [eventSubmissions, activeEvent, isDemo, hiddenMockIds]);
 
   const fullList = useMemo(() => {
-    if (!userSubmission || hiddenMockIds.includes(userSubmission.id)) return baseList;
+    const deletedSet = getDeletedSubmissionIds();
+    if (!userSubmission || isSubmissionDeleted(userSubmission, null, deletedSet) || hiddenMockIds.includes(userSubmission.id)) return baseList;
     return [userSubmission, ...baseList.filter(s => s.id !== userSubmission.id)];
   }, [userSubmission, baseList, hiddenMockIds]);
 

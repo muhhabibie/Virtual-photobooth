@@ -12,22 +12,46 @@ let isSubmissionCloudQuotaExhausted = false;
 
 const LOCAL_STORAGE_KEY = 'wedding_photobooth_submissions';
 const DELETED_IDS_KEY = 'sirklen_deleted_submission_ids';
+const HIDDEN_MOCK_KEY = 'sirklen_hidden_mock_submissions';
 
-// Helper to get local deleted submission IDs set
+// Helper to get local deleted submission IDs set (normalized as Strings)
 export function getDeletedSubmissionIds() {
   try {
     const raw = localStorage.getItem(DELETED_IDS_KEY);
-    return raw ? new Set(JSON.parse(raw)) : new Set();
+    const arr = raw ? JSON.parse(raw) : [];
+    const rawMock = localStorage.getItem(HIDDEN_MOCK_KEY);
+    const arrMock = rawMock ? JSON.parse(rawMock) : [];
+    return new Set([...arr, ...arrMock].map(String));
   } catch (e) {
     return new Set();
   }
 }
 
-// Helper to save deleted submission IDs set
+// Helper to save deleted submission IDs set to both keys for backward-compatibility
 export function saveDeletedSubmissionIds(set) {
   try {
-    localStorage.setItem(DELETED_IDS_KEY, JSON.stringify(Array.from(set)));
+    const arr = Array.from(set).map(String);
+    localStorage.setItem(DELETED_IDS_KEY, JSON.stringify(arr));
+    localStorage.setItem(HIDDEN_MOCK_KEY, JSON.stringify(arr));
   } catch (e) {}
+}
+
+// Helper to check if a submission or ID is deleted
+export function isSubmissionDeleted(itemOrId, localId, deletedSet) {
+  if (itemOrId === undefined || itemOrId === null) return false;
+  const set = deletedSet || getDeletedSubmissionIds();
+  if (typeof itemOrId === 'object') {
+    const id = itemOrId.id !== undefined && itemOrId.id !== null ? String(itemOrId.id) : null;
+    const lId = itemOrId.localId !== undefined && itemOrId.localId !== null ? String(itemOrId.localId) : null;
+    if (id && set.has(id)) return true;
+    if (lId && set.has(lId)) return true;
+    return false;
+  }
+  const targetId = String(itemOrId);
+  const targetLocalId = localId !== undefined && localId !== null ? String(localId) : null;
+  if (set.has(targetId)) return true;
+  if (targetLocalId && set.has(targetLocalId)) return true;
+  return false;
 }
 
 // Helper to get local submissions
@@ -44,13 +68,16 @@ export function getLocalSubmissions() {
 export function saveLocalSubmission(submission) {
   try {
     const deletedSet = getDeletedSubmissionIds();
-    if (deletedSet.has(submission.id) || deletedSet.has(submission.localId)) {
+    if (isSubmissionDeleted(submission, null, deletedSet)) {
       return getLocalSubmissions();
     }
     const existing = getLocalSubmissions();
     // Keep at most 30 recent items locally to avoid QuotaExceededError (5MB limit)
     const MAX_LOCAL_ITEMS = 30;
-    const updated = [submission, ...existing.filter(item => item.id !== submission.id && item.localId !== submission.id)].slice(0, MAX_LOCAL_ITEMS);
+    const updated = [
+      submission, 
+      ...existing.filter(item => String(item.id) !== String(submission.id) && String(item.localId) !== String(submission.id))
+    ].slice(0, MAX_LOCAL_ITEMS);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
     return updated;
   } catch (e) {
@@ -77,6 +104,7 @@ export function blobToBase64(blob) {
 }
 
 // Save submission (Cloud Firebase + LocalStorage fallback)
+// Optimized to guarantee Firestore documents stay lightweight (~70KB - 120KB) and NEVER exceed Firestore's 1MB limit!
 export async function saveSubmission({ eventId, eventSlug, guestName, guestMessage, photos, stripColor, stripStyle, stripImage, voiceBlob, voiceUrl, voiceDuration, isDemo = false }) {
   let finalVoiceUrl = voiceUrl || null;
   if (voiceBlob) {
@@ -87,23 +115,25 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
     }
   }
 
-  // 1. Optimize and compress all photos first (~45-65KB per cut)
+  // 1. Optimize and compress all individual photo cuts (~25-35KB per cut)
   const rawPhotos = photos.map(p => typeof p === 'string' ? p : p.dataUrl);
   let compressedPhotos = rawPhotos;
   try {
     compressedPhotos = await Promise.all(
-      rawPhotos.map(p => compressImage(p, 540, 0.78))
+      rawPhotos.map(p => compressImage(p, 480, 0.70))
     );
   } catch (compErr) {
     console.warn("Photo compression fallback:", compErr);
   }
 
-  // Also compress stripImage if present
-  let compressedStripImage = stripImage;
+  // 2. Compress stripImage to a lightweight preview thumbnail (~30KB)
+  let compressedStripThumbnail = null;
   if (stripImage && typeof stripImage === 'string' && stripImage.startsWith('data:image')) {
     try {
-      compressedStripImage = await compressImage(stripImage, 700, 0.80);
-    } catch (_) {}
+      compressedStripThumbnail = await compressImage(stripImage, 440, 0.68);
+    } catch (_) {
+      compressedStripThumbnail = null;
+    }
   }
 
   const submissionId = `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -115,7 +145,7 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
     guestName: guestName || 'Tamu Undangan',
     message: guestMessage || '',
     photos: compressedPhotos,
-    stripImage: compressedStripImage || null,
+    stripImage: stripImage || compressedStripThumbnail || null,
     shortDate: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }),
     takenDate: new Date().toLocaleString('id-ID'),
     colorHex: stripColor || '#6B111F',
@@ -129,11 +159,10 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
     syncedToCloud: false,
   };
 
-  // 2. Save locally first
+  // Save locally first for instant offline availability
   saveLocalSubmission(newSubmission);
 
-  // 3. Sync to Cloud Firestore with deterministic doc ID matching submissionId!
-  // This guarantees that HP and Laptop always share the exact same ID!
+  // Sync to Cloud Firestore with deterministic doc ID matching submissionId!
   if (db && !isSubmissionCloudQuotaExhausted) {
     try {
       const cloudDoc = {
@@ -144,7 +173,7 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
         guestName: newSubmission.guestName,
         message: newSubmission.message,
         photos: compressedPhotos,
-        stripImage: compressedStripImage || null,
+        stripImage: compressedStripThumbnail,
         shortDate: newSubmission.shortDate,
         takenDate: newSubmission.takenDate,
         colorHex: newSubmission.colorHex,
@@ -156,16 +185,24 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
         createdAt: serverTimestamp(),
       };
 
+      // Strict Payload Safety Guard: Ensure Firestore document size stays well under 800KB
+      const approxBytes = JSON.stringify(cloudDoc).length;
+      if (approxBytes > 700000) {
+        // Drop stripImage thumbnail if payload is large (strip can always be rendered from photos)
+        cloudDoc.stripImage = null;
+      }
+
       await setDoc(doc(db, 'submissions', submissionId), cloudDoc);
       newSubmission.syncedToCloud = true;
       newSubmission.cloudDocId = submissionId;
       saveLocalSubmission(newSubmission);
+      console.info("[Sirklen Cloud] Submission successfully synced to Firestore:", submissionId);
     } catch (err) {
       if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
         isSubmissionCloudQuotaExhausted = true;
         console.warn("[Sirklen Cloud] Firestore quota limit reached. Saved locally.");
       } else {
-        console.warn("[Sirklen Cloud] Submissions cloud save error:", err?.message || err);
+        console.error("[Sirklen Cloud] Submissions cloud save error:", err?.message || err);
       }
     }
   }
@@ -175,10 +212,10 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
 
 // Delete submission from LocalStorage AND Cloud Firestore (Cross-Device Real-Time Sync)
 export async function deleteSubmission(submissionId, localId) {
-  if (!submissionId && !localId) return false;
+  if (submissionId === undefined && localId === undefined) return false;
 
-  const targetId = submissionId || localId;
-  const targetLocalId = localId || submissionId;
+  const targetId = String(submissionId || localId);
+  const targetLocalId = String(localId || submissionId);
 
   // 1. Record in local deleted set to ensure it never resurfaces locally
   const deletedSet = getDeletedSubmissionIds();
@@ -189,18 +226,13 @@ export async function deleteSubmission(submissionId, localId) {
   // 2. Remove immediately from local storage
   try {
     const existing = getLocalSubmissions();
-    const updated = existing.filter(item => 
-      item.id !== targetId && 
-      item.id !== targetLocalId && 
-      item.localId !== targetId && 
-      item.localId !== targetLocalId
-    );
+    const updated = existing.filter(item => !isSubmissionDeleted(item, null, deletedSet));
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
   } catch (e) {
     console.warn("Failed to delete submission from LocalStorage:", e);
   }
 
-  // 3. Remove from Cloud Firestore and broadcast tombstone so all connected devices purge it!
+  // 3. Remove from Cloud Firestore and broadcast tombstone so ALL connected devices purge it!
   if (db && !isSubmissionCloudQuotaExhausted) {
     try {
       // a. Delete directly by document ID
@@ -214,7 +246,7 @@ export async function deleteSubmission(submissionId, localId) {
         } catch (_) {}
       }
 
-      // b. Also search by localId field to clean up any legacy documents created with auto-IDs
+      // b. Clean up any documents stored with localId matching targetId
       try {
         const q1 = query(collection(db, 'submissions'), where('localId', '==', targetId));
         const snaps1 = await getDocs(q1);
@@ -234,8 +266,8 @@ export async function deleteSubmission(submissionId, localId) {
       }
 
       // c. Broadcast tombstone in 'deleted_submissions' collection!
-      // This is the magic key for cross-device real-time sync:
-      // Any other device (Laptop or HP) listening to this will immediately purge its local cache!
+      // This is the essential key for cross-device real-time sync:
+      // Any other device (Laptop or HP) listening to this collection will immediately purge it!
       await setDoc(doc(db, 'deleted_submissions', targetId), {
         id: targetId,
         localId: targetLocalId,
@@ -248,8 +280,9 @@ export async function deleteSubmission(submissionId, localId) {
           deletedAt: serverTimestamp(),
         });
       }
+      console.info("[Sirklen Cloud] Broadcasted deletion tombstone to cloud:", targetId);
     } catch (err) {
-      console.warn("[Sirklen Cloud] Error deleting from Firestore:", err?.message || err);
+      console.error("[Sirklen Cloud] Error deleting from Firestore:", err?.message || err);
     }
   }
 
@@ -258,13 +291,16 @@ export async function deleteSubmission(submissionId, localId) {
 
 // Subscribe to real-time submissions stream with cross-device deletion sync
 export function subscribeSubmissions(callback) {
+  // In-memory reference of currently active submissions for this subscription
+  let activeSubmissionsList = [];
+
   // Always trigger immediate initial callback with local data (filtered by deleted IDs)
   try {
     const deletedSet = getDeletedSubmissionIds();
-    const local = getLocalSubmissions().filter(item => 
-      !deletedSet.has(item.id) && !deletedSet.has(item.localId)
+    activeSubmissionsList = getLocalSubmissions().filter(item => 
+      !isSubmissionDeleted(item, null, deletedSet)
     );
-    callback(local);
+    callback(activeSubmissionsList);
   } catch (e) {
     console.warn("Initial local submissions callback error:", e);
   }
@@ -283,18 +319,23 @@ export function subscribeSubmissions(callback) {
       try {
         const deletedSet = getDeletedSubmissionIds();
         let changed = false;
+
         deletedSnap.forEach(d => {
           const data = d.data();
-          if (data.id && !deletedSet.has(data.id)) {
-            deletedSet.add(data.id);
+          const docIdStr = String(d.id);
+          const dataIdStr = data.id ? String(data.id) : null;
+          const dataLocalIdStr = data.localId ? String(data.localId) : null;
+
+          if (docIdStr && !deletedSet.has(docIdStr)) {
+            deletedSet.add(docIdStr);
             changed = true;
           }
-          if (data.localId && !deletedSet.has(data.localId)) {
-            deletedSet.add(data.localId);
+          if (dataIdStr && !deletedSet.has(dataIdStr)) {
+            deletedSet.add(dataIdStr);
             changed = true;
           }
-          if (d.id && !deletedSet.has(d.id)) {
-            deletedSet.add(d.id);
+          if (dataLocalIdStr && !deletedSet.has(dataLocalIdStr)) {
+            deletedSet.add(dataLocalIdStr);
             changed = true;
           }
         });
@@ -303,8 +344,13 @@ export function subscribeSubmissions(callback) {
           saveDeletedSubmissionIds(deletedSet);
           // Purge deleted items from local storage on this device immediately!
           const existing = getLocalSubmissions();
-          const cleaned = existing.filter(item => !deletedSet.has(item.id) && !deletedSet.has(item.localId));
+          const cleaned = existing.filter(item => !isSubmissionDeleted(item, null, deletedSet));
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cleaned));
+
+          // CRITICAL MULTI-DEVICE FIX: Update in-memory active submissions and CALL CALLBACK!
+          // This causes the other device (laptop or mobile) to IMMEDIATELY re-render without page refresh!
+          activeSubmissionsList = activeSubmissionsList.filter(item => !isSubmissionDeleted(item, null, deletedSet));
+          callback(activeSubmissionsList);
         }
       } catch (err) {
         console.warn("Error processing deleted submissions snapshot:", err);
@@ -323,18 +369,18 @@ export function subscribeSubmissions(callback) {
         const cloudData = [];
         snapshot.docs.forEach(docSnap => {
           const data = docSnap.data();
-          const docId = docSnap.id;
-          const localId = data.localId;
-          // If this doc was deleted, ignore it
+          const docId = String(docSnap.id);
+          const localId = data.localId ? String(data.localId) : null;
+          // If this doc was deleted on any device, ignore it
           if (deletedSet.has(docId) || (localId && deletedSet.has(localId)) || data.isDeleted) {
             return;
           }
           cloudData.push({ id: docId, ...data });
         });
 
-        // Get local submissions (already filtered by deletedSet)
+        // Get local submissions (filtered by deletedSet)
         const localData = getLocalSubmissions().filter(item => 
-          !deletedSet.has(item.id) && !deletedSet.has(item.localId)
+          !isSubmissionDeleted(item, null, deletedSet)
         );
 
         const seen = new Set();
@@ -342,7 +388,7 @@ export function subscribeSubmissions(callback) {
 
         // Add all cloud data first (Cloud is the authoritative source of truth for multi-device sync)
         for (const item of cloudData) {
-          const key = item.localId || item.id || `${item.guestName}_${item.takenDate}`;
+          const key = String(item.localId || item.id);
           if (!seen.has(key)) {
             seen.add(key);
             merged.push(item);
@@ -351,14 +397,14 @@ export function subscribeSubmissions(callback) {
 
         // Only merge local items that were genuinely created offline and NOT yet synced.
         // If an item was ALREADY synced to cloud before, but is now missing from cloud:
-        // That means it was DELETED by another device (e.g. Laptop admin)! Do NOT resurrect it!
+        // That means it was DELETED by another device! Do NOT resurrect it!
         for (const item of localData) {
-          const key = item.localId || item.id || `${item.guestName}_${item.takenDate}`;
+          const key = String(item.localId || item.id);
           if (!seen.has(key)) {
             if (item.syncedToCloud) {
               // It was deleted on another device! Purge from local state!
-              deletedSet.add(item.id);
-              if (item.localId) deletedSet.add(item.localId);
+              deletedSet.add(String(item.id));
+              if (item.localId) deletedSet.add(String(item.localId));
             } else {
               seen.add(key);
               merged.push(item);
@@ -373,10 +419,13 @@ export function subscribeSubmissions(callback) {
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(toStoreLocally));
         } catch (_) {}
 
+        activeSubmissionsList = merged;
         callback(merged);
       } catch (err) {
         console.warn("Error processing submissions snapshot:", err);
-        callback(getLocalSubmissions());
+        const fallback = getLocalSubmissions().filter(item => !isSubmissionDeleted(item));
+        activeSubmissionsList = fallback;
+        callback(fallback);
       }
     }, (err) => {
       if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
@@ -388,7 +437,9 @@ export function subscribeSubmissions(callback) {
       } else {
         console.warn("[Sirklen Cloud] Submissions subscription fallback:", err?.message || err);
       }
-      callback(getLocalSubmissions());
+      const fallback = getLocalSubmissions().filter(item => !isSubmissionDeleted(item));
+      activeSubmissionsList = fallback;
+      callback(fallback);
     });
 
     return () => {

@@ -8,6 +8,7 @@ import {
   Images, Search, Volume2, Loader2
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
+import { getDeletedSubmissionIds, isSubmissionDeleted } from '../../services/submissionService';
 import { PACKAGES, DEFAULT_HERO_PHOTOS, EVENT_CATEGORIES } from '../../data/mockEvents';
 import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
 import { exportEventSubmissionsZip } from '../../utils/zipExport';
@@ -269,14 +270,11 @@ export default function AdminDashboardPage() {
   // Helper to get submissions for a specific event
   const getEventSubmissions = (evt) => {
     if (!evt) return [];
-    let hiddenIds = [];
-    try {
-      hiddenIds = JSON.parse(localStorage.getItem('sirklen_hidden_mock_submissions') || '[]');
-    } catch (e) {}
+    const deletedSet = getDeletedSubmissionIds();
 
     const isDemoTarget = evt.slug === 'demo' || evt.slug === 'sabrina-raka' || evt.slug === 'raka-sabrina' || !evt.slug;
     let subs = (savedSubmissions || []).filter(s => {
-      if (hiddenIds.includes(s.id)) return false;
+      if (isSubmissionDeleted(s, null, deletedSet)) return false;
       if (s.eventId && evt.id && s.eventId === evt.id) return true;
       if (s.eventSlug && evt.slug && s.eventSlug === evt.slug) return true;
       if (isDemoTarget && (s.eventSlug === 'demo' || s.eventSlug === 'sabrina-raka' || s.eventSlug === 'raka-sabrina' || !s.eventSlug)) {
@@ -286,7 +284,7 @@ export default function AdminDashboardPage() {
     });
 
     if (subs.length === 0 && (evt.slug === 'sabrina-raka' || evt.slug === 'raka-sabrina' || evt.slug === 'demo' || evt.isDemo)) {
-      subs = MOCK_GALLERY_PHOTOS.filter(s => !hiddenIds.includes(s.id));
+      subs = MOCK_GALLERY_PHOTOS.filter(s => !isSubmissionDeleted(s.id, null, deletedSet));
     }
 
     return subs;
@@ -312,8 +310,8 @@ export default function AdminDashboardPage() {
     if (!photoToDelete?.photo) return;
     setIsDeletingPhoto(true);
     try {
-      const targetId = photoToDelete.photo.id;
-      const targetLocalId = photoToDelete.photo.localId || photoToDelete.photo.id;
+      const targetId = String(photoToDelete.photo.id);
+      const targetLocalId = String(photoToDelete.photo.localId || photoToDelete.photo.id);
       if (deleteSubmission) {
         await deleteSubmission(targetId, targetLocalId);
       }
