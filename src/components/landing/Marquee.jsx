@@ -68,11 +68,19 @@ const FRAME_PREVIEWS = [
     textHex: '#E2F5D5',
     borderHex: 'border-white/20',
     slots: 3
+  },
+  {
+    id: 9,
+    name: 'Pasadena Botanical',
+    colorHex: '#FFFFFF',
+    textHex: '#2B2826',
+    borderHex: 'border-[#C4A482]/40',
+    slots: 3
   }
 ];
 
 export default function Marquee() {
-  const { openBooth, activeEvent } = useBooth();
+  const { openBooth, activeEvent, setStripColor } = useBooth();
   const trackRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -257,7 +265,7 @@ export default function Marquee() {
         style={{ width: 'max-content' }}
       >
         {duplicated.map((card, i) => {
-          const isLight = card.colorHex === '#FDFBF7' || card.colorHex === '#F3C5CB';
+          const isLight = card.colorHex === '#FDFBF7' || card.colorHex === '#F3C5CB' || card.colorHex === '#FFFFFF';
           const botanicalColor = isLight ? '#B89F88' : card.textHex;
 
           return (
@@ -266,6 +274,7 @@ export default function Marquee() {
               onClick={() => {
                 // If user dragged more than 6px, ignore click so it only acts as swipe
                 if (dragDistanceRef.current < 6) {
+                  if (setStripColor) setStripColor(card.colorHex);
                   openBooth();
                 }
               }}

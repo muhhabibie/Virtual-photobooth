@@ -19,6 +19,9 @@ const BASE_COLOR_THEMES = [
   { id: 'slate', name: 'Slate', hex: '#2D3748', textHex: '#E2E8F0', styleName: 'NOIR SLATE', subName: 'Modern Dark' },
   { id: 'blush', name: 'Blush', hex: '#F3C5CB', textHex: '#6B111F', styleName: 'BLUSH ROMANCE', subName: 'Sweet Pastel' },
   { id: 'antique', name: 'Antique', hex: '#C4A46C', textHex: '#FFFFFF', styleName: 'ANTIQUE GOLD', subName: 'Vintage Luxury' },
+  { id: 'vintage', name: 'Vintage', hex: '#5E0915', textHex: '#F5D77F', styleName: 'CLASSIC VINTAGE', subName: 'Deep Wine Classic' },
+  { id: 'midnight', name: 'Midnight', hex: '#120B18', textHex: '#F5D77F', styleName: 'MIDNIGHT DARK', subName: 'Luxury Dark' },
+  { id: 'sage', name: 'Sage', hex: '#26402E', borderHex: '#3B5943', textHex: '#E2F5D5', styleName: 'SAGE BOTANICAL', subName: 'Forest Earthy' },
 ];
 const COLOR_THEMES = BASE_COLOR_THEMES;
 
@@ -28,6 +31,7 @@ export default function StepFrames() {
     setTargetPhotoCount, 
     stripColor, 
     setStripColor,
+    setStripColorName,
     guestName,
     setGuestName,
     guestMessage,
@@ -63,9 +67,17 @@ export default function StepFrames() {
   }, [activeEvent]);
 
   const [activeColorIdx, setActiveColorIdx] = useState(() => {
-    const found = colorThemes.findIndex(c => c.hex === stripColor);
+    const found = colorThemes.findIndex(c => c.hex?.toLowerCase() === (stripColor || '').toLowerCase());
     return found >= 0 ? found : 0;
   });
+
+  // Sync active index if stripColor changes externally (e.g. clicked from Marquee)
+  useEffect(() => {
+    const found = colorThemes.findIndex(c => c.hex?.toLowerCase() === (stripColor || '').toLowerCase());
+    if (found >= 0 && found !== activeColorIdx) {
+      setActiveColorIdx(found);
+    }
+  }, [stripColor, colorThemes]);
 
   const canvasRef = useRef(null);
 
@@ -79,6 +91,7 @@ export default function StepFrames() {
     setActiveColorIdx(idx);
     const theme = colorThemes[idx];
     setStripColor(theme.hex);
+    if (setStripColorName) setStripColorName(theme.name);
     setStripStyle('standard');
   };
 
@@ -411,7 +424,7 @@ export default function StepFrames() {
             </div>
 
             {/* Color Swatches */}
-            <div className={`grid gap-1.5 sm:gap-2.5 ${colorThemes.length > 5 ? 'grid-cols-6' : 'grid-cols-5'}`}>
+            <div className="grid grid-cols-5 sm:grid-cols-9 md:grid-cols-10 gap-2 sm:gap-2.5">
               {colorThemes.map((c, idx) => {
                 const isSelected = activeColorIdx === idx;
                 return (
