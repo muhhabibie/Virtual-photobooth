@@ -408,7 +408,7 @@ export default function Marquee() {
                   className="text-base sm:text-lg font-normal leading-tight my-0.5 px-1 truncate max-w-full"
                   style={{ 
                     color: card.textHex,
-                    fontFamily: "'Great Vibes', 'Alex Brush', cursive",
+                    fontFamily: "'Parisienne', 'Alex Brush', 'Great Vibes', cursive",
                     textShadow: '0 1px 6px rgba(0,0,0,0.08)'
                   }}
                 >

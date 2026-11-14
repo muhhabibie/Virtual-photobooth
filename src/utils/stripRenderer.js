@@ -316,7 +316,22 @@ export function renderMasterPhotoStrip(canvas, {
   // Date determination: Always format as DD - MM - YYYY
   const dateText = getEventFormattedDate(activeEvent) || '15 - 11 - 2026';
 
-  // Guest Name Determination (raw display, not all-caps for calligraphy)
+  // Helper to ensure title case for legible calligraphy (avoiding bunched all-caps cursive)
+  const formatScriptText = (str) => {
+    if (!str) return '';
+    const trimmed = str.trim();
+    // If user typed in ALL CAPS (length > 1), convert each word to Capitalized
+    if (trimmed === trimmed.toUpperCase() && trimmed.length > 1) {
+      return trimmed
+        .toLowerCase()
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+    }
+    return trimmed;
+  };
+
+  // Guest Name Determination (raw display, formatted for calligraphy legibility)
   const rawGuestName = guestName && guestName.trim() ? guestName.trim() : '';
   let guestScriptName = '';  // For large calligraphy script display
   let prefixLabel = '';      // "MR. & MRS" / "NAMA TAMU" etc
@@ -324,7 +339,7 @@ export function renderMasterPhotoStrip(canvas, {
 
   if (rawGuestName) {
     // Real guest provided - display their name in calligraphy
-    guestScriptName = rawGuestName;
+    guestScriptName = formatScriptText(rawGuestName);
     prefixLabel = isWedding ? 'MR. & MRS' : 'NAMA TAMU';
     eventBadge = isWedding ? 'WEDDING' : (activeEvent?.eventName || 'EVENT').toUpperCase();
   } else if (isCFD) {
@@ -339,7 +354,7 @@ export function renderMasterPhotoStrip(canvas, {
     prefixLabel = 'MR. & MRS';
     eventBadge = 'WEDDING';
   } else {
-    guestScriptName = activeEvent?.displayName || activeEvent?.eventName || 'Nama Tamu';
+    guestScriptName = formatScriptText(activeEvent?.displayName || activeEvent?.eventName || 'Nama Tamu');
     prefixLabel = 'NAMA TAMU';
     eventBadge = (activeEvent?.eventName || 'EVENT').toUpperCase();
   }
@@ -362,11 +377,11 @@ export function renderMasterPhotoStrip(canvas, {
 
   // 4a. Prefix Label removed by design — only calligraphy name shown
 
-  // 4b. Guest Name in Large Script/Calligraphy (like "Licona" in example)
+  // 4b. Guest Name in Large Aesthetic & Legible Script/Calligraphy
   ctx.save();
   ctx.fillStyle = primaryTextColor;
   const scriptBaseSize = (isPolaroid ? 42 : 46) * scale;
-  ctx.font = `${scriptBaseSize}px 'Great Vibes', 'Alex Brush', 'Dancing Script', cursive`;
+  ctx.font = `${scriptBaseSize}px 'Parisienne', 'Alex Brush', 'Great Vibes', cursive`;
   const fittedScriptSize = fitTextSize(ctx, guestScriptName, photoW - 30 * scale, scriptBaseSize, 24 * scale);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
@@ -432,13 +447,13 @@ export function renderMasterPhotoStrip(canvas, {
   drawSpacedText(ctx, venueText, totalW / 2, venueY, 2.5 * scale);
   ctx.restore();
 
-  // 4g. Guest Words / Message (in quotes if present)
+  // 4g. Guest Words / Message (clean, easy-to-read font instead of handwritten cursive)
   if (hasCustomMsg) {
     ctx.save();
     ctx.fillStyle = accentColor;
-    const msgBaseSize = (isPolaroid ? 13 : 14) * scale;
-    ctx.font = `italic 500 ${msgBaseSize}px 'Great Vibes', 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-    fitTextSize(ctx, shortMessageText, photoW - 36 * scale, msgBaseSize, 10 * scale);
+    const msgBaseSize = (isPolaroid ? 12 : 13) * scale;
+    ctx.font = `italic 500 ${msgBaseSize}px 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+    fitTextSize(ctx, shortMessageText, photoW - 36 * scale, msgBaseSize, 9 * scale);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(shortMessageText, totalW / 2, msgY);
@@ -787,7 +802,7 @@ export function renderBotanicalWeddingStrip(canvas, {
   ctx.letterSpacing = '0px';
   ctx.restore();
 
-  // 8b. Guest name in large gold script calligraphy
+  // 8b. Guest name in large aesthetic & legible script calligraphy
   const rawGuestName = guestName && guestName.trim() ? guestName.trim() : '';
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
   let scriptName = rawGuestName;
@@ -797,15 +812,20 @@ export function renderBotanicalWeddingStrip(canvas, {
     scriptName = (bride && groom) ? `${groom} & ${bride}` : (activeEvent?.displayName || 'Nama Tamu');
   }
 
+  // Format all-caps input to Title Case so script calligraphy remains legible
+  if (scriptName === scriptName.toUpperCase() && scriptName.length > 1) {
+    scriptName = scriptName.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+
   ctx.save();
   ctx.fillStyle = scriptColor;
   const scriptBase = (isPolaroid ? 52 : 58) * scale;
-  ctx.font = `${scriptBase}px 'Great Vibes', 'Alex Brush', 'Dancing Script', cursive`;
+  ctx.font = `${scriptBase}px 'Parisienne', 'Alex Brush', 'Great Vibes', cursive`;
   // Auto-shrink if too wide
   let scriptSize = scriptBase;
   while (scriptSize > 28 * scale && ctx.measureText(scriptName).width > geoRX * 1.6) {
     scriptSize -= 2 * scale;
-    ctx.font = `${scriptSize}px 'Great Vibes', 'Alex Brush', 'Dancing Script', cursive`;
+    ctx.font = `${scriptSize}px 'Parisienne', 'Alex Brush', 'Great Vibes', cursive`;
   }
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
