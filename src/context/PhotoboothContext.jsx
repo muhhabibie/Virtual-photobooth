@@ -715,21 +715,29 @@ export function PhotoboothProvider({ children }) {
     return result;
   }, [capturedPhotos, isEventExpired, activeEvent, currentSlug, guestName, guestMessage, stripColor, stripStyle, voiceBlob, voiceUrl, voiceDuration, isDemo]);
 
-  // Delete submission from local & cloud
-  const deleteSubmission = useCallback(async (submissionId) => {
+  // Delete submission from local & cloud (with real-time multi-device sync)
+  const deleteSubmission = useCallback(async (submissionId, localId) => {
     try {
-      if (typeof submissionId === 'string' && (submissionId.startsWith('mock_') || submissionId.startsWith('user-latest') || submissionId.startsWith('user-submission'))) {
+      const targetId = submissionId || localId;
+      const targetLocalId = localId || submissionId;
+
+      if (typeof targetId === 'string' && (targetId.startsWith('mock_') || targetId.startsWith('user-latest') || targetId.startsWith('user-submission'))) {
         try {
           const raw = localStorage.getItem('sirklen_hidden_mock_submissions') || '[]';
           const list = JSON.parse(raw);
-          if (!list.includes(submissionId)) {
-            list.push(submissionId);
+          if (!list.includes(targetId)) {
+            list.push(targetId);
             localStorage.setItem('sirklen_hidden_mock_submissions', JSON.stringify(list));
           }
         } catch (e) {}
       }
-      await removeSubmissionService(submissionId);
-      setSavedSubmissions(prev => prev.filter(s => s.id !== submissionId));
+      await removeSubmissionService(targetId, targetLocalId);
+      setSavedSubmissions(prev => prev.filter(s => 
+        s.id !== targetId && 
+        s.id !== targetLocalId && 
+        s.localId !== targetId && 
+        s.localId !== targetLocalId
+      ));
       return true;
     } catch (e) {
       console.error("Failed to delete submission:", e);

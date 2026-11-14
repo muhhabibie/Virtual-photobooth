@@ -313,8 +313,9 @@ export default function AdminDashboardPage() {
     setIsDeletingPhoto(true);
     try {
       const targetId = photoToDelete.photo.id;
+      const targetLocalId = photoToDelete.photo.localId || photoToDelete.photo.id;
       if (deleteSubmission) {
-        await deleteSubmission(targetId);
+        await deleteSubmission(targetId, targetLocalId);
       }
       toast('Foto pengunjung berhasil dihapus dari sistem 🗑️', 'success');
       setPhotoToDelete(null);
