@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { 
   ArrowLeft, RefreshCw, Timer, Disc, Camera, ArrowRight, 
   Sliders, Check, Trash2, X, ChevronRight, Image as ImageIcon,
