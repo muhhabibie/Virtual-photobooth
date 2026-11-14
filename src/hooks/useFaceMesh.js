@@ -16,11 +16,12 @@ export function useFaceMesh(videoRef, isEnabled = true) {
     if (!isEnabled) return;
 
     try {
+      const VERSION = '0.4.1633559619';
       // Check if FaceMesh is already available globally or load script
       if (!window.FaceMesh) {
         await new Promise((resolve, reject) => {
           const script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js';
+          script.src = `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@${VERSION}/face_mesh.js`;
           script.crossOrigin = 'anonymous';
           script.onload = () => resolve();
           script.onerror = (e) => reject(e);
@@ -31,7 +32,7 @@ export function useFaceMesh(videoRef, isEnabled = true) {
       if (!window.FaceMesh) return;
 
       const faceMesh = new window.FaceMesh({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@${VERSION}/${file}`,
       });
 
       faceMesh.setOptions({

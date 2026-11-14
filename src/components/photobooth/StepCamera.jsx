@@ -296,6 +296,19 @@ export default function StepCamera() {
   const couple = (bride && groom) ? `${bride} & ${groom}` : (getEventDisplayName(activeEvent, activeEvent?.slug) || 'Sabrina & Raka');
   const topHeaderTitle = isWedding ? `THE WEDDING OF ${couple}`.toUpperCase() : (activeEvent?.eventName || activeEvent?.displayName || 'OFFICIAL EVENT PHOTOBOOTH').toUpperCase();
   const rawGuestName = guestName && guestName.trim() ? guestName.trim() : '';
+  // Format all-caps input to Title Case so script calligraphy remains legible
+  const formattedGuestName = useMemo(() => {
+    if (!rawGuestName) return '';
+    if (rawGuestName === rawGuestName.toUpperCase() && rawGuestName.length > 1) {
+      return rawGuestName
+        .toLowerCase()
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+    }
+    return rawGuestName;
+  }, [rawGuestName]);
+
   const guestTitle = (rawGuestName || (isWedding ? 'Tamu Undangan' : 'Pengunjung Event')).toUpperCase();
   const venueText = (activeEvent?.venue || activeEvent?.location || activeEvent?.city || (isWedding ? 'PASADENA, CA' : 'SPECIAL EVENT PHOTOBOOTH')).toUpperCase();
   const rawMsg = guestMessage && guestMessage.trim() ? guestMessage.trim() : '';
@@ -769,12 +782,12 @@ export default function StepCamera() {
             <h3 
               style={{ 
                 color: primaryTextColor,
-                fontFamily: "'Great Vibes', 'Alex Brush', cursive",
+                fontFamily: "'Parisienne', 'Alex Brush', 'Great Vibes', cursive",
                 textShadow: '0 1px 8px rgba(0,0,0,0.1)'
               }}
               className="text-xl sm:text-2xl font-normal leading-tight my-0.5 px-2 truncate max-w-full"
             >
-              {rawGuestName || (isWedding ? couple : (activeEvent?.eventName || 'Nama Tamu'))}
+              {formattedGuestName || (isWedding ? couple : (activeEvent?.eventName || 'Nama Tamu'))}
             </h3>
 
             {/* 3. Event Badge: WEDDING / CAR FREE DAY */}
@@ -811,11 +824,14 @@ export default function StepCamera() {
               <span>{venueText}</span>
             </div>
 
-            {/* 7. Custom Message / Pesan Singkat (if entered) */}
+            {/* 7. Custom Message / Pesan Singkat (clean & easy-to-read font, not handwritten) */}
             {customMessage && (
               <p 
-                className="text-[9px] sm:text-[10.5px] font-medium italic truncate max-w-full px-2 mt-0.5 leading-tight"
-                style={{ color: primaryTextColor, fontFamily: "'Great Vibes', cursive" }}
+                className="text-[8.5px] sm:text-[10px] font-medium italic truncate max-w-full px-2 mt-0.5 leading-tight tracking-normal"
+                style={{ 
+                  color: primaryTextColor, 
+                  fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+                }}
               >
                 {customMessage}
               </p>
