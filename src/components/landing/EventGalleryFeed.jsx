@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Share2, Plus, Volume2, ArrowRight, Heart } from 'lucide-react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { Share2, Plus, Volume2, ArrowRight, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
@@ -75,8 +75,163 @@ export default function EventGalleryFeed() {
     return userCard ? [userCard, ...list.filter(s => s.id !== userCard.id)] : list;
   }, [eventSubmissions, activeEvent, userCard]);
   
-  // Duplicated for infinite continuous seamless loop from right to left
-  const doubledCards = [...baseCards, ...baseCards];
+  // Ensure enough items (at least 5) before repeating 4x so infinite wrapping is flawless
+  const displayCards = useMemo(() => {
+    if (!baseCards || baseCards.length === 0) return [];
+    let set = baseCards;
+    while (set.length < 5) {
+      set = [...set, ...baseCards];
+    }
+    return [...set, ...set, ...set, ...set];
+  }, [baseCards]);
+
+  // Real-time Gesture & Motion Coordinates
+  const containerRef = useRef(null);
+  const trackRef = useRef(null);
+  const currentXRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+  const lastTimeRef = useRef(performance.now());
+  const singleSetWidthRef = useRef(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const velocityRef = useRef(0);
+  const lastPointerXRef = useRef(0);
+  const lastPointerTimeRef = useRef(0);
+
+  // Measure single set width for seamless infinite modulo wrapping
+  const updateMetrics = useCallback(() => {
+    if (trackRef.current) {
+      singleSetWidthRef.current = trackRef.current.scrollWidth / 4;
+    }
+  }, []);
+
+  useEffect(() => {
+    updateMetrics();
+    const timer = setTimeout(updateMetrics, 400);
+    window.addEventListener('resize', updateMetrics);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateMetrics);
+    };
+  }, [updateMetrics, displayCards]);
+
+  // CONTINUOUS SLIDING FROM RIGHT TO LEFT (Infinite Smooth Hardware-Accelerated Animation)
+  useEffect(() => {
+    let animId;
+
+    const animate = (time) => {
+      const dt = Math.min((time - lastTimeRef.current) / 1000, 0.1);
+      lastTimeRef.current = time;
+
+      // Auto-slide to the left continuously when NOT actively dragged by hand/mouse
+      if (!isDraggingRef.current && trackRef.current) {
+        // Continuous sliding speed: 45px/sec (slows down to 20px/sec on desktop hover for easy browsing)
+        const baseSpeed = isHovered ? -20 : -45;
+
+        // If user swiped with momentum, decay smoothly toward baseSpeed
+        if (Math.abs(velocityRef.current) > 3) {
+          const decay = Math.pow(0.92, dt * 60);
+          velocityRef.current = velocityRef.current * decay + baseSpeed * (1 - decay);
+          currentXRef.current += velocityRef.current * dt;
+        } else {
+          currentXRef.current += baseSpeed * dt;
+        }
+
+        // Wrap around seamlessly without any visual jumps
+        const setWidth = singleSetWidthRef.current || (trackRef.current.scrollWidth / 4);
+        if (setWidth > 0) {
+          while (currentXRef.current <= -setWidth * 2) {
+            currentXRef.current += setWidth;
+          }
+          while (currentXRef.current > -setWidth) {
+            currentXRef.current -= setWidth;
+          }
+        }
+
+        trackRef.current.style.transform = `translate3d(${currentXRef.current}px, 0, 0)`;
+      }
+
+      animId = requestAnimationFrame(animate);
+    };
+
+    lastTimeRef.current = performance.now();
+    animId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animId);
+  }, [isHovered]);
+
+  // TOUCH SWIPE (MOBILE) & MOUSE DRAG (LAPTOP) HANDLERS
+  const handlePointerDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    isDraggingRef.current = true;
+    startXRef.current = e.clientX;
+    lastPointerXRef.current = e.clientX;
+    lastPointerTimeRef.current = performance.now();
+    dragDistanceRef.current = 0;
+    velocityRef.current = 0;
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDraggingRef.current) return;
+    const deltaX = e.clientX - startXRef.current;
+    startXRef.current = e.clientX;
+    dragDistanceRef.current += Math.abs(deltaX);
+
+    currentXRef.current += deltaX;
+
+    const now = performance.now();
+    const dt = Math.max((now - lastPointerTimeRef.current) / 1000, 0.001);
+    if (dt > 0.005) {
+      const currentVel = (e.clientX - lastPointerXRef.current) / dt;
+      velocityRef.current = velocityRef.current * 0.3 + currentVel * 0.7;
+      lastPointerXRef.current = e.clientX;
+      lastPointerTimeRef.current = now;
+    }
+
+    // Wrap around while dragging so user can swipe infinitely in either direction
+    const setWidth = singleSetWidthRef.current || (trackRef.current ? trackRef.current.scrollWidth / 4 : 0);
+    if (setWidth > 0) {
+      while (currentXRef.current <= -setWidth * 2) {
+        currentXRef.current += setWidth;
+      }
+      while (currentXRef.current > -setWidth) {
+        currentXRef.current -= setWidth;
+      }
+    }
+
+    if (trackRef.current) {
+      trackRef.current.style.transform = `translate3d(${currentXRef.current}px, 0, 0)`;
+    }
+  };
+
+  const handlePointerUp = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    lastTimeRef.current = performance.now();
+    velocityRef.current = Math.max(-1200, Math.min(1200, velocityRef.current));
+  };
+
+  // Step scroll buttons for Laptop users
+  const handleStepScroll = (direction) => {
+    const shift = direction === 'left' ? 280 : -280;
+    currentXRef.current += shift;
+    const setWidth = singleSetWidthRef.current || (trackRef.current ? trackRef.current.scrollWidth / 4 : 0);
+    if (setWidth > 0) {
+      while (currentXRef.current <= -setWidth * 2) {
+        currentXRef.current += setWidth;
+      }
+      while (currentXRef.current > -setWidth) {
+        currentXRef.current -= setWidth;
+      }
+    }
+    if (trackRef.current) {
+      trackRef.current.style.transition = 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)';
+      trackRef.current.style.transform = `translate3d(${currentXRef.current}px, 0, 0)`;
+      setTimeout(() => {
+        if (trackRef.current) trackRef.current.style.transition = '';
+      }, 450);
+    }
+  };
 
   const backdropPhoto = activeEvent?.heroPhotos && activeEvent.heroPhotos.length > 0
     ? activeEvent.heroPhotos[0]
@@ -194,25 +349,69 @@ export default function EventGalleryFeed() {
         </motion.div>
       </div>
 
-      {/* ================= 🌟 3. RIGHT-TO-LEFT HORIZONTAL INFINITE CAROUSEL 🌟 ================= */}
-      <div className="relative w-full overflow-hidden py-3 z-20">
-        
+      {/* ================= 🌟 3. RIGHT-TO-LEFT HORIZONTAL SWIPEABLE & AUTO-SLIDING CAROUSEL 🌟 ================= */}
+      <div 
+        ref={containerRef}
+        className="relative w-full overflow-hidden py-3 select-none group cursor-grab active:cursor-grabbing touch-pan-y z-20"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => {
+          setIsHovered(false);
+          handlePointerUp();
+        }}
+      >
         {/* Soft edge blur vignettes */}
         <div className="absolute left-0 inset-y-0 w-8 sm:w-24 bg-gradient-to-r from-[#0E050A] to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 inset-y-0 w-8 sm:w-24 bg-gradient-to-l from-[#0E050A] to-transparent z-10 pointer-events-none" />
 
-        {/* Infinite Sliding Track (Right to Left) */}
-        <div className="marquee-track-h flex items-center gap-3.5 sm:gap-5 hover:[animation-play-state:paused] cursor-pointer">
-          {doubledCards.map((card, idx) => (
+        {/* Navigation Chevrons for Laptop / Desktop */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleStepScroll('left');
+          }}
+          className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-[#F5D77F] shadow-2xl border border-amber-400/40 items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer active:scale-95 backdrop-blur-sm"
+          title="Geser Kiri"
+        >
+          <ChevronLeft size={22} className="text-[#F5D77F]" />
+        </button>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleStepScroll('right');
+          }}
+          className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-[#F5D77F] shadow-2xl border border-amber-400/40 items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer active:scale-95 backdrop-blur-sm"
+          title="Geser Kanan"
+        >
+          <ChevronRight size={22} className="text-[#F5D77F]" />
+        </button>
+
+        {/* Infinite Hardware-Accelerated Sliding Track (Always moving right to left + 100% swipeable) */}
+        <div 
+          ref={trackRef}
+          className="flex items-center gap-3.5 sm:gap-5 will-change-transform"
+          style={{ width: 'max-content' }}
+        >
+          {displayCards.map((card, idx) => (
             <div
               key={`${card.id}-${idx}`}
-              onClick={openGalleryModal}
+              onClick={() => {
+                if (dragDistanceRef.current < 8) {
+                  openGalleryModal();
+                }
+              }}
               className="w-44 xs:w-50 sm:w-56 flex-shrink-0 cursor-pointer transition-all duration-300 transform hover:scale-105"
             >
               <PhotostripThumbnail
                 item={card}
                 activeEvent={activeEvent}
-                className="w-full shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_20px_rgba(245,215,127,0.12)] border border-white/20 hover:border-amber-400/50"
+                className="w-full shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_20px_rgba(245,215,127,0.12)] border border-white/20 hover:border-amber-400/50 pointer-events-none select-none"
               />
             </div>
           ))}
