@@ -5,7 +5,7 @@ import {
   Sliders, Check, Trash2, X, ChevronRight, Image as ImageIcon,
   Crown, Flower2, Glasses, Star, Heart, Smile, Wand2, Sparkle, SlidersHorizontal,
   Infinity as InfinityIcon, Type, ChevronDown, Zap, ZapOff, Eye, Sparkles, Sun,
-  Printer, RotateCcw
+  Printer, RotateCcw, Download, CheckCircle2
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useCamera } from '../../hooks/useCamera';
@@ -762,6 +762,23 @@ export default function StepCamera() {
     setEjectPhase('printing');
   }, [setCapturedPhotos]);
 
+  // Quick direct download of ejected strip
+  const handleQuickDownloadStrip = useCallback(() => {
+    const canvas = ejectCanvasRef.current;
+    if (!canvas) return;
+    try {
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      const link = document.createElement('a');
+      link.download = `photostrip-${activeEvent?.slug || 'sirklen'}-${Date.now()}.jpg`;
+      link.href = dataUrl;
+      link.click();
+      toast('Strip foto berhasil diunduh!', 'success');
+    } catch (err) {
+      console.error('Download strip error:', err);
+      toast('Gagal mengunduh strip foto', 'error');
+    }
+  }, [activeEvent, toast]);
+
   // Render photostrip canvas inside ejection animation
   const renderEjectStrip = useCallback(() => {
     const canvas = ejectCanvasRef.current;
@@ -925,7 +942,7 @@ export default function StepCamera() {
           ref={frameContainerRef}
           style={{ 
             backgroundColor: currentTheme.hex,
-            border: `3px solid ${currentTheme.borderHex || accentColor}`
+            border: 'none'
           }}
           className="relative w-full max-h-[calc(100dvh-225px)] sm:max-h-[500px] rounded-2xl sm:rounded-3xl px-3 sm:px-5 pt-1.5 sm:pt-2 pb-2 sm:pb-2.5 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 overflow-hidden my-auto"
         >
@@ -1311,104 +1328,107 @@ export default function StepCamera() {
             transition={{ duration: 0.35 }}
             className="fixed inset-0 z-[180] bg-[#0E080C]/96 backdrop-blur-xl flex flex-col items-center justify-between p-3.5 sm:p-5 pb-[max(env(safe-area-inset-bottom),14px)] select-none overflow-hidden font-sans"
           >
-            {/* Top Area: Dispenser Slot during printing OR "Foto Siap!" Header when done */}
-            <div className="w-full max-w-md flex flex-col items-center z-40 flex-shrink-0">
-              <AnimatePresence mode="wait">
-                {ejectPhase === 'printing' ? (
-                  <motion.div
-                    key="printing-header"
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.25 }}
-                    className="w-full flex flex-col items-center gap-2 pt-1"
-                  >
-                    {/* Top Bar: Brand Badge & Skip Button */}
-                    <div className="w-full flex items-center justify-between px-1">
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10.5px] sm:text-[11px] font-mono tracking-wider text-amber-200 uppercase shadow-sm">
-                        <Camera size={13} className="text-amber-300" />
-                        <span>Sirklenice Instant Cam</span>
-                      </div>
-                      <button
-                        onClick={() => setEjectPhase('done')}
-                        className="text-[11px] sm:text-xs text-white/70 hover:text-white px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
-                        title="Lewati Animasi"
-                      >
-                        <span>Lewati</span>
-                        <ChevronRight size={13} />
-                      </button>
-                    </div>
+            {/* Top Area: Mechanical Printer Housing (Permanently anchored at top throughout printing & done) */}
+            <div className="w-full max-w-md flex flex-col items-center z-40 flex-shrink-0 pt-1">
+              {/* Top Bar: Brand Badge & Skip / Status Pill */}
+              <div className="w-full flex items-center justify-between px-1 mb-2">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10.5px] sm:text-[11px] font-mono tracking-wider text-amber-200 uppercase shadow-sm">
+                  <Camera size={13} className="text-amber-300" />
+                  <span>Sirklenice Instant Cam</span>
+                </div>
 
-                    {/* Dispenser Slot Top Bar (Mechanical Housing) */}
-                    <div className="relative z-30 w-full max-w-[280px] xs:max-w-[310px] sm:max-w-[340px] bg-gradient-to-b from-[#2d2c31] via-[#1d1c21] to-[#121115] border border-white/20 rounded-2xl sm:rounded-3xl p-3 sm:p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.9)] flex flex-col items-center gap-2 mt-1">
+                {ejectPhase === 'printing' ? (
+                  <button
+                    onClick={() => setEjectPhase('done')}
+                    className="text-[11px] sm:text-xs text-white/70 hover:text-white px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+                    title="Lewati Animasi"
+                  >
+                    <span>Lewati</span>
+                    <ChevronRight size={13} />
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10.5px] font-mono tracking-wider shadow-sm">
+                    <CheckCircle2 size={12} className="text-emerald-400" />
+                    <span>READY</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Dispenser Slot Top Bar (Mechanical Housing) */}
+              <div className="relative z-30 w-full max-w-[280px] xs:max-w-[310px] sm:max-w-[340px] bg-gradient-to-b from-[#2d2c31] via-[#1d1c21] to-[#121115] border border-white/20 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3 shadow-[0_20px_50px_rgba(0,0,0,0.9)] flex flex-col items-center gap-1.5 sm:gap-2">
+                <AnimatePresence mode="wait">
+                  {ejectPhase === 'printing' ? (
+                    <motion.div
+                      key="status-printing"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center justify-center gap-2"
+                    >
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                      </span>
+                      <span className="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-amber-300 uppercase animate-pulse">
+                        Mencetak Photo Strip...
+                      </span>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="status-done"
+                      initial={{ opacity: 0, scale: 0.96 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex flex-col items-center justify-center gap-0.5"
+                    >
                       <div className="flex items-center justify-center gap-2">
                         <span className="relative flex h-2.5 w-2.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                         </span>
-                        <span className="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-amber-300 uppercase animate-pulse">
-                          Mencetak Photo Strip...
+                        <span className="text-[11px] sm:text-xs font-mono font-bold tracking-wider text-emerald-400 uppercase">
+                          Foto Selesai Dicetak
                         </span>
                       </div>
-                      {/* The Physical Aperture Slit */}
-                      <div className="relative w-full h-3 sm:h-3.5 bg-black rounded-full border border-white/15 shadow-[inset_0_3px_8px_rgba(0,0,0,0.95)] flex items-center justify-center overflow-hidden">
-                        <div className="w-1/2 h-[2px] bg-gradient-to-r from-transparent via-amber-300/40 to-transparent" />
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="done-header"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35 }}
-                    className="text-center w-full z-40 flex-shrink-0 pt-1"
-                  >
-                    <p className="text-[9px] sm:text-[10px] font-mono tracking-[0.25em] text-[#E5C158] uppercase font-bold">
-                      SESI FOTO SELESAI
-                    </p>
-                    <h1 
-                      className="text-4xl xs:text-5xl sm:text-6xl text-white font-normal leading-tight my-0.5 sm:my-1 drop-shadow-2xl"
-                      style={{ 
-                        fontFamily: "'Alex Brush', 'Great Vibes', cursive",
-                        textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 0 30px rgba(229,193,88,0.35)'
-                      }}
-                    >
-                      Foto Siap!
-                    </h1>
-                    <p className="text-[11px] sm:text-xs text-[#C4A46C] font-serif italic tracking-wide">
-                      {getEventDisplayName(activeEvent, activeEvent?.slug)} {activeEvent?.eventType === 'wedding' || (!activeEvent?.eventType && !activeEvent?.slug) ? 'Wedding' : ''}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      <span className="text-[9.5px] sm:text-[10px] text-amber-200/80 font-serif italic">
+                        Strip foto siap diambil & disimpan
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* The Physical Aperture Slit (Mechanical slot from which paper hangs) */}
+                <div className="relative w-full h-3 sm:h-3.5 bg-black rounded-full border border-white/15 shadow-[inset_0_3px_8px_rgba(0,0,0,0.95)] flex items-center justify-center overflow-hidden">
+                  {ejectPhase === 'printing' ? (
+                    <div className="w-1/2 h-[2px] bg-gradient-to-r from-transparent via-amber-300/40 to-transparent" />
+                  ) : (
+                    <div className="w-2/3 h-[1.5px] bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Middle: Photo Strip Container */}
-            <div className={`relative z-20 w-full flex justify-center items-center flex-1 min-h-0 my-auto py-1.5 ${
-              ejectPhase === 'printing' ? '-mt-2 overflow-hidden items-start' : 'overflow-visible'
-            }`}>
+            {/* Middle: Photo Strip Container (Permanently attached to and hanging from printer slit) */}
+            <div className="relative z-20 w-full flex justify-center items-start flex-1 min-h-0 -mt-2.5 sm:-mt-3 overflow-hidden py-1">
               <motion.div
-                initial={{ y: '-95%', rotate: 0 }}
+                initial={{ y: '-91%', rotate: 0 }}
                 animate={{
                   y: '0%',
-                  rotate: ejectPhase === 'done' ? [0, -0.6, 0.4, 0] : 0,
+                  rotate: ejectPhase === 'done' ? [0, -0.5, 0.3, 0] : 0,
                 }}
                 transition={{
-                  y: { duration: 2.1, ease: [0.12, 0.9, 0.25, 1] },
-                  rotate: { duration: 0.5, ease: 'easeOut', delay: 2.05 }
+                  y: { duration: 2.2, ease: [0.15, 0.9, 0.25, 1] },
+                  rotate: { duration: 0.5, ease: 'easeOut', delay: 2.15 }
                 }}
                 onAnimationComplete={() => {
                   setEjectPhase('done');
                 }}
-                className={`relative flex flex-col items-center bg-[#FAF8F5] rounded-2xl p-1 sm:p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_25px_rgba(245,215,127,0.15)] border-2 border-white/40 ring-1 ring-black/40 transition-all duration-300 ${
-                  ejectPhase === 'done' ? 'scale-100' : 'scale-98'
-                }`}
+                className="relative flex flex-col items-center bg-[#FAF8F5] rounded-2xl p-1 sm:p-1.5 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_20px_rgba(245,215,127,0.12)] border-2 border-white/40 ring-1 ring-black/40 transition-all duration-300"
               >
                 {/* Photostrip Canvas */}
                 <canvas
                   ref={ejectCanvasRef}
-                  className="w-auto h-auto max-h-[54vh] xs:max-h-[58vh] sm:max-h-[62vh] max-w-[220px] xs:max-w-[250px] sm:max-w-[280px] block rounded-xl shadow-inner"
+                  className="w-auto h-auto max-h-[50vh] xs:max-h-[54vh] sm:max-h-[58vh] max-w-[210px] xs:max-w-[240px] sm:max-w-[270px] block rounded-xl shadow-inner"
                 />
 
                 {/* Glossy Photo Paper Sheen Reflection */}
@@ -1419,8 +1439,8 @@ export default function StepCamera() {
               </motion.div>
             </div>
 
-            {/* Bottom Action Controls: Skip during printing OR "Ulang" & "Lanjutkan" when done */}
-            <div className="relative z-40 w-full max-w-md mx-auto flex items-center justify-center pt-2 pb-1 flex-shrink-0">
+            {/* Bottom Action Controls: Skip during printing OR Retake, Download, and Continue when done */}
+            <div className="relative z-40 w-full max-w-md mx-auto flex items-center justify-center pt-1.5 pb-1 flex-shrink-0">
               <AnimatePresence mode="wait">
                 {ejectPhase === 'printing' ? (
                   <motion.div
@@ -1444,22 +1464,31 @@ export default function StepCamera() {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35 }}
-                    className="w-full flex items-center gap-3"
+                    className="w-full flex items-center gap-2.5"
                   >
                     {/* Ulang Button (Retake) */}
                     <button
                       onClick={handleRetakeAll}
-                      className="px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer shadow-md"
+                      className="px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer shadow-md"
                       title="Foto Ulang Semua Pose"
                     >
                       <RotateCcw size={15} />
                       <span>Ulang</span>
                     </button>
 
-                    {/* Lanjutkan Gold Button (Proceed to Voice) */}
+                    {/* Quick Direct Download Button */}
+                    <button
+                      onClick={handleQuickDownloadStrip}
+                      className="p-3 sm:p-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-amber-300 hover:text-amber-200 flex items-center justify-center active:scale-95 transition cursor-pointer shadow-md flex-shrink-0"
+                      title="Unduh Strip Foto Langsung"
+                    >
+                      <Download size={16} />
+                    </button>
+
+                    {/* Lanjutkan Gold Button (Proceed to Voice / Result) */}
                     <button
                       onClick={handleContinueToVoice}
-                      className="flex-1 py-3 sm:py-3.5 px-6 sm:px-8 rounded-xl bg-gradient-to-r from-[#B59150] via-[#C4A46C] to-[#B59150] hover:brightness-110 text-white font-serif font-bold text-xs sm:text-sm shadow-xl shadow-amber-950/40 flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer border border-[#E5C158]/40"
+                      className="flex-1 py-3 sm:py-3.5 px-5 sm:px-7 rounded-xl bg-gradient-to-r from-[#B59150] via-[#C4A46C] to-[#B59150] hover:brightness-110 text-white font-serif font-bold text-xs sm:text-sm shadow-xl shadow-amber-950/40 flex items-center justify-center gap-2 active:scale-98 transition cursor-pointer border border-[#E5C158]/40"
                       title="Lanjutkan ke Rekam Ucapan"
                     >
                       <span>Lanjutkan</span>
