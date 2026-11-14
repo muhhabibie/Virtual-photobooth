@@ -241,7 +241,7 @@ export default function EventGalleryFeed() {
     <section id="gallery-feed" className="relative bg-gradient-to-b from-[#0E050A] via-[#0E050A] to-[#14060C] text-white pt-0 pb-24 sm:pb-28 overflow-hidden select-none">
       
       {/* ================= 🌟 1. TOP ROMANTIC WEDDING PHOTO WITH CINEMATIC MASK FADE 🌟 ================= */}
-      <div className="relative w-full h-[280px] sm:h-[340px] overflow-hidden bg-[#0E050A]">
+      <div className="relative w-full h-[280px] sm:h-[340px] overflow-hidden bg-gradient-to-b from-white via-[#0E050A] to-[#0E050A]">
         {/* Background Wedding Couple Photo with Mask Fade */}
         <img
           src={backdropPhoto}
@@ -251,14 +251,19 @@ export default function EventGalleryFeed() {
             e.currentTarget.src = 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=1600&auto=format&fit=crop&q=85';
           }}
           style={{
-            WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
-            maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
+            maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
           }}
           className="w-full h-full object-cover object-top filter brightness-85"
         />
 
-        {/* Top Soft Shadow */}
-        <div className="absolute top-0 inset-x-0 h-20 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
+        {/* Top Seamless Transparent Fog Fade from White Hero to Photo */}
+        <div 
+          className="absolute top-0 inset-x-0 h-24 sm:h-36 pointer-events-none z-10"
+          style={{
+            background: 'linear-gradient(to bottom, #ffffff 0%, rgba(255, 255, 255, 0.8) 35%, rgba(255, 255, 255, 0) 100%)'
+          }}
+        />
 
         {/* Bottom Soft Opacity Blur Overlay */}
         <div className="absolute bottom-0 inset-x-0 h-28 sm:h-36 bg-gradient-to-t from-[#0E050A] via-[#0E050A]/70 to-transparent backdrop-blur-[2px] pointer-events-none" />
