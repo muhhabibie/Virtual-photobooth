@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Mic, Square, Pause, Play, X } from 'lucide-react';
+import { ArrowLeft, Mic, Square, Pause, Play, X, Home } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useRecorder } from '../../hooks/useRecorder';
 import { useToast } from '../ui/Toast';
@@ -146,13 +146,14 @@ export default function StepVoice() {
           <span>REKAM PESAN SUARA</span>
         </div>
 
-        {/* Right Close X Button */}
+        {/* Right: Tombol Kembali ke Dashboard */}
         <button
           onClick={closeBooth}
-          className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md"
-          title="Tutup"
+          className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-amber-400/40 text-amber-200 text-[10px] sm:text-xs font-serif font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer shadow-md flex-shrink-0"
+          title="Kembali ke Dashboard"
         >
-          <X size={18} />
+          <Home size={13} className="text-amber-300" />
+          <span>Kembali ke Dashboard</span>
         </button>
       </div>
 

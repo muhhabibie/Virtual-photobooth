@@ -5,7 +5,7 @@ import {
   Sliders, Check, Trash2, X, ChevronRight, Image as ImageIcon,
   Crown, Flower2, Glasses, Star, Heart, Smile, Wand2, Sparkle, SlidersHorizontal,
   Infinity as InfinityIcon, Type, ChevronDown, Zap, ZapOff, Eye, Sparkles, Sun,
-  Printer, RotateCcw, Download, CheckCircle2
+  Printer, RotateCcw, Download, CheckCircle2, Home
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useCamera } from '../../hooks/useCamera';
@@ -915,23 +915,30 @@ export default function StepCamera() {
       />
 
       {/* ================= ðŸŒŸ 1. INSTAGRAM STORY TOP HEADER BAR ðŸŒŸ ================= */}
-      <div className="relative z-30 flex items-center justify-between w-full max-w-sm sm:max-w-md mx-auto flex-shrink-0 pt-0.5 px-2 pb-0.5">
-        {/* Left: Close X Button */}
+      <div className="relative z-30 flex items-center justify-between w-full max-w-sm sm:max-w-md mx-auto flex-shrink-0 pt-0.5 px-2 pb-0.5 gap-1.5">
+        {/* Left: Kembali Arrow */}
         <button
           onClick={() => { stop(); goBack(); }}
-          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md"
-          title="Tutup & Kembali"
+          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md flex-shrink-0"
+          title="Kembali ke Pilihan Bingkai"
         >
-          <X size={18} />
+          <ArrowLeft size={16} />
         </button>
 
         {/* Center: Pose Counter Badge */}
-        <div className="px-3.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-amber-200 text-[10.5px] font-mono font-bold tracking-widest uppercase flex items-center justify-center shadow-md">
+        <div className="px-2.5 sm:px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-amber-200 text-[10px] sm:text-[10.5px] font-mono font-bold tracking-widest uppercase flex items-center justify-center shadow-md truncate">
           <span>POSE {nextPhotoNum} / {targetPhotoCount}</span>
         </div>
 
-        {/* Right: Empty Spacer */}
-        <div className="w-9 h-9 sm:w-10 sm:h-10 pointer-events-none" />
+        {/* Right: Tombol Kembali ke Dashboard */}
+        <button
+          onClick={() => { stop(); closeBooth(); }}
+          className="h-8 px-2.5 sm:px-3 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-amber-400/40 text-amber-200 text-[10px] sm:text-xs font-serif font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer shadow-md flex-shrink-0"
+          title="Kembali ke Dashboard"
+        >
+          <Home size={12} className="text-amber-300" />
+          <span>Kembali ke Dashboard</span>
+        </button>
       </div>
 
       {/* ================= ðŸŒŸ 2. INSTAGRAM STORY VIEWFINDER WITH ROMANTIC FRAME ðŸŒŸ ================= */}

@@ -464,28 +464,19 @@ export default function StepResult() {
           <span>{voiceUrl ? 'Download Foto & Audio (Video / JPG)' : 'Download Photo Strip HD (JPG)'}</span>
         </button>
 
-        {/* Secondary Actions */}
-        <div className="flex items-center gap-2 w-full">
-          <button
-            onClick={closeBooth}
-            className="flex-1 py-2.5 rounded-full bg-[#1C1C1E] hover:bg-[#2C2C2E] border border-white/20 text-white text-xs font-serif font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
-            title="Kembali ke Dashboard"
-          >
-            <Home size={14} className="text-amber-300" />
-            <span>Kembali ke Dashboard</span>
-          </button>
-
-          <button
-            onClick={() => {
-              closeBooth();
-              document.getElementById('gallery-feed')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="flex-1 py-2.5 rounded-full bg-[#24101D] hover:bg-[#321728] border border-amber-400/40 text-amber-200 text-xs font-serif font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
-          >
-            <BookOpen size={14} />
-            <span>Buku Tamu</span>
-          </button>
-        </div>
+        {/* Secondary Action: Buku Tamu Only (Kembali ke Dashboard ada di pojok kanan atas) */}
+        <button
+          onClick={() => {
+            closeBooth();
+            setTimeout(() => {
+              (document.getElementById('guestbook') || document.getElementById('gallery-feed'))?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }}
+          className="w-full py-2.5 sm:py-3 rounded-full bg-[#24101D] hover:bg-[#321728] border border-amber-400/40 text-amber-200 text-xs sm:text-sm font-serif font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
+        >
+          <BookOpen size={15} />
+          <span>Buku Tamu</span>
+        </button>
 
       </div>
 

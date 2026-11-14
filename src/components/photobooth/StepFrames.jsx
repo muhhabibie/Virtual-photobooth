@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
@@ -183,10 +183,11 @@ export default function StepFrames() {
 
           <button
             onClick={closeBooth}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white shadow-sm border border-gray-200/80 flex items-center justify-center text-gray-500 hover:text-gray-900 active:scale-95 transition cursor-pointer flex-shrink-0 ml-2"
-            title="Tutup"
+            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-full bg-white hover:bg-stone-50 shadow-sm border border-stone-200/90 text-stone-700 text-[10px] sm:text-xs font-serif font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer flex-shrink-0 ml-2"
+            title="Kembali ke Dashboard"
           >
-            <X size={16} />
+            <Home size={13} className="text-[#6B111F]" />
+            <span>Kembali ke Dashboard</span>
           </button>
         </div>
 
