@@ -439,12 +439,18 @@ export default function EventHero() {
         initial={{ opacity: 0, y: 26 }}
         animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 26 }}
         transition={{ duration: 0.9, delay: 1.15, ease: [0.25, 1, 0.5, 1] }}
-        className="w-full bg-white pt-6 pb-6 overflow-hidden relative z-20"
+        className="w-full bg-white pt-6 pb-0 overflow-hidden relative z-20"
       >
         <div className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-[#6B111F] mb-3 font-sans px-4">
           BINGKAI KHUSUS {isWedding ? 'PERNIKAHAN' : 'EVENT'} {activeEvent.displayName.toUpperCase()}
         </div>
         <Marquee />
+
+        {/* Section transition: fade white → dark for seamless blend into EventGalleryFeed */}
+        <div
+          className="w-full h-20 sm:h-28 pointer-events-none"
+          style={{ background: 'linear-gradient(to bottom, #ffffff 0%, #0E050A 100%)' }}
+        />
       </motion.div>
 
       {/* PRIVATE PIN MODAL OVERLAY */}
