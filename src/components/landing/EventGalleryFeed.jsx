@@ -368,10 +368,6 @@ export default function EventGalleryFeed() {
           handlePointerUp();
         }}
       >
-        {/* Soft edge blur vignettes */}
-        <div className="absolute left-0 inset-y-0 w-8 sm:w-24 bg-gradient-to-r from-[#0E050A] to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 inset-y-0 w-8 sm:w-24 bg-gradient-to-l from-[#0E050A] to-transparent z-10 pointer-events-none" />
-
         {/* Navigation Chevrons for Laptop / Desktop */}
         <button
           type="button"
