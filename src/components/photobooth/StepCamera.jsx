@@ -771,11 +771,7 @@ export default function StepCamera() {
 
           {/* Bottom Frame Chin Preview: Matching Image 2 Professional Wedding Layout */}
           <div className="relative z-20 text-center pt-1 pb-1 flex-shrink-0 flex flex-col items-center w-full">
-            {isBotanicalStyle && (
-              <span className="text-[7px] sm:text-[8px] font-semibold tracking-[0.25em] uppercase text-[#B8912A] mb-0.5">
-                MR. & MRS
-              </span>
-            )}
+            
             {/* Guest Name in calligraphy */}
             <h3 
               style={{ 

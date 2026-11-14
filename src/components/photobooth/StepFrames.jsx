@@ -13,17 +13,6 @@ const STRIP_TYPES = [
 ];
 
 const BASE_COLOR_THEMES = [
-  { 
-    id: 'licona-botanical', 
-    name: 'Botanical Licona', 
-    style: 'botanical-wedding',
-    hex: '#FFFFFF', 
-    borderHex: '#4A7C59', 
-    textHex: '#8B6914', 
-    styleName: 'BOTANICAL WEDDING (LICONA)', 
-    subName: 'Sage Green & Gold Geometric',
-    badge: 'NEW LUXURY' 
-  },
   { id: 'botanical', name: 'Botanical', hex: '#FFFFFF', borderHex: '#C4A482', textHex: '#2B2826', styleName: 'PASADENA BOTANICAL', subName: 'Elegan Putih & Emas' },
   { id: 'burgundy', name: 'Burgundy', hex: '#6B111F', textHex: '#F5D77F', styleName: 'ROYAL BURGUNDY', subName: 'Minimalis Royal' },
   { id: 'ivory', name: 'Ivory', hex: '#FDFBF7', borderHex: '#E2DDD5', textHex: '#6B111F', styleName: 'IVORY BLISS', subName: 'Clean & Pure' },
@@ -88,11 +77,7 @@ export default function StepFrames() {
     setActiveColorIdx(idx);
     const theme = colorThemes[idx];
     setStripColor(theme.hex);
-    if (theme.style === 'botanical-wedding') {
-      setStripStyle('botanical-wedding');
-    } else {
-      setStripStyle('standard');
-    }
+    setStripStyle('standard');
   };
 
   const handlePrev = () => {
