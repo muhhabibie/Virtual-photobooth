@@ -4,7 +4,8 @@ import {
   Plus, Calendar, QrCode, Trash2, Check, Lock, 
   ExternalLink, Eye, Image as ImageIcon, Upload, 
   MessageCircle, Share2, LogOut, Crop, Printer, Archive, 
-  ChevronRight, ChevronLeft, Smartphone, X, Camera, Copy, Sparkles, Edit3
+  ChevronRight, ChevronLeft, Smartphone, X, Camera, Copy, Sparkles, Edit3,
+  Images, Search, Volume2, Loader2
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { PACKAGES, DEFAULT_HERO_PHOTOS, EVENT_CATEGORIES } from '../../data/mockEvents';
@@ -13,6 +14,8 @@ import { exportEventSubmissionsZip } from '../../utils/zipExport';
 import QRCodeCanvas from '../ui/QRCodeCanvas';
 import PhotoCropModal from '../ui/PhotoCropModal';
 import TentCardModal from '../ui/TentCardModal';
+import PhotostripThumbnail from '../gallery/PhotostripThumbnail';
+import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { useToast } from '../ui/Toast';
 
 const PREVIEW_FRAME_THEMES = [
@@ -31,6 +34,7 @@ export default function AdminDashboardPage() {
     toggleExpireEvent,
     updateEventHeroPhotos,
     savedSubmissions,
+    deleteSubmission,
     navigateToEvent,
     navigateToSetup,
     introReady,
@@ -54,10 +58,16 @@ export default function AdminDashboardPage() {
   const [currentCropImage, setCurrentCropImage] = useState(null);
   const [activeCropIdx, setActiveCropIdx] = useState(null);
 
-  // Active Tab inside Dashboard: 'events' | 'qr'
+  // Active Tab inside Dashboard: 'events' | 'qr' | 'submissions'
   const [activeTab, setActiveTab] = useState('events');
   // Category Filter in Event List: 'all' | category ids
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
+
+  // Visitor Submissions & Photo Deletion Manager State
+  const [selectedSubmissionsEventId, setSelectedSubmissionsEventId] = useState(() => events[0]?.id || 'event_cfd');
+  const [submissionSearch, setSubmissionSearch] = useState('');
+  const [photoToDelete, setPhotoToDelete] = useState(null);
+  const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
 
     // Edit Event Modal State
   const [editModalEvent, setEditModalEvent] = useState(null);
@@ -253,6 +263,66 @@ export default function AdminDashboardPage() {
       toast(err.message || 'Gagal mengunduh ZIP', 'error');
     } finally {
       setZippingEventId(null);
+    }
+  };
+
+  // Helper to get submissions for a specific event
+  const getEventSubmissions = (evt) => {
+    if (!evt) return [];
+    let hiddenIds = [];
+    try {
+      hiddenIds = JSON.parse(localStorage.getItem('sirklen_hidden_mock_submissions') || '[]');
+    } catch (e) {}
+
+    const isDemoTarget = evt.slug === 'demo' || evt.slug === 'sabrina-raka' || evt.slug === 'raka-sabrina' || !evt.slug;
+    let subs = (savedSubmissions || []).filter(s => {
+      if (hiddenIds.includes(s.id)) return false;
+      if (s.eventId && evt.id && s.eventId === evt.id) return true;
+      if (s.eventSlug && evt.slug && s.eventSlug === evt.slug) return true;
+      if (isDemoTarget && (s.eventSlug === 'demo' || s.eventSlug === 'sabrina-raka' || s.eventSlug === 'raka-sabrina' || !s.eventSlug)) {
+        return true;
+      }
+      return false;
+    });
+
+    if (subs.length === 0 && (evt.slug === 'sabrina-raka' || evt.slug === 'raka-sabrina' || evt.slug === 'demo' || evt.isDemo)) {
+      subs = MOCK_GALLERY_PHOTOS.filter(s => !hiddenIds.includes(s.id));
+    }
+
+    return subs;
+  };
+
+  const selectedSubmissionsEvent = useMemo(() => {
+    return events.find(e => e.id === selectedSubmissionsEventId) || events[0];
+  }, [events, selectedSubmissionsEventId]);
+
+  const eventSubmissionsList = useMemo(() => {
+    if (!selectedSubmissionsEvent) return [];
+    const subs = getEventSubmissions(selectedSubmissionsEvent);
+    if (!submissionSearch.trim()) return subs;
+    const q = submissionSearch.toLowerCase().trim();
+    return subs.filter(s => 
+      (s.guestName && s.guestName.toLowerCase().includes(q)) || 
+      (s.message && s.message.toLowerCase().includes(q))
+    );
+  }, [savedSubmissions, selectedSubmissionsEvent, submissionSearch]);
+
+  // Handle Photo Deletion from Admin Dashboard
+  const handleConfirmDeletePhoto = async () => {
+    if (!photoToDelete?.photo) return;
+    setIsDeletingPhoto(true);
+    try {
+      const targetId = photoToDelete.photo.id;
+      if (deleteSubmission) {
+        await deleteSubmission(targetId);
+      }
+      toast('Foto pengunjung berhasil dihapus dari sistem 🗑️', 'success');
+      setPhotoToDelete(null);
+    } catch (err) {
+      console.error('Failed to delete photo from admin:', err);
+      toast('Gagal menghapus foto. Silakan coba lagi.', 'error');
+    } finally {
+      setIsDeletingPhoto(false);
     }
   };
 
@@ -563,6 +633,18 @@ export default function AdminDashboardPage() {
               <QrCode size={13} />
               <span>Cetak QR Code</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('submissions')}
+              className={`px-4 py-1.5 rounded-full text-xs font-serif font-bold transition flex items-center gap-2 cursor-pointer ${
+                activeTab === 'submissions'
+                  ? 'bg-[#6B111F] text-[#F5D77F] shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <Images size={13} />
+              <span>Foto Pengunjung ({savedSubmissions?.length || 0})</span>
+            </button>
           </div>
 
           {/* Category Filter Pills (Zero Emojis, Clean Elegant Pills) */}
@@ -717,6 +799,20 @@ export default function AdminDashboardPage() {
                         {/* Secondary Row: Tools & Utilities (Clean Segmented Toolbar, Fully Responsive Scroll) */}
                         <div className="flex items-center gap-1 p-1 bg-[#FAF7F2] border border-[#E5DACB] rounded-2xl shadow-xs overflow-x-auto max-w-full no-scrollbar">
                           <button
+                            onClick={() => {
+                              setSelectedSubmissionsEventId(evt.id);
+                              setActiveTab('submissions');
+                            }}
+                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-[#6B111F] hover:bg-rose-50 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap flex-shrink-0"
+                            title="Kelola & hapus foto tamu acara ini"
+                          >
+                            <Images size={13} className="text-[#8A1828]" />
+                            <span>Foto Tamu ({getEventSubmissions(evt).length})</span>
+                          </button>
+
+                          <div className="w-[1px] h-3.5 bg-stone-300 flex-shrink-0" />
+
+                          <button
                             onClick={() => openHeroPhotosManager(evt)}
                             className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-white text-xs font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap flex-shrink-0"
                             title="Kelola foto banner prewedding / event"
@@ -851,6 +947,151 @@ export default function AdminDashboardPage() {
                 />
               </div>
             )}
+          </div>
+        )}
+
+        {/* ================= 🌟 TAB 3: VISITOR PHOTOS & SUBMISSIONS MANAGER 🌟 ================= */}
+        {activeTab === 'submissions' && (
+          <div className="space-y-6">
+            
+            {/* Header Card with Event Selector and Actions */}
+            <div className="p-5 sm:p-6 rounded-3xl bg-white border border-[#EADBCC] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8C7A6B] font-bold block">
+                  MANAJEMEN FOTO PENGUNJUNG
+                </span>
+                <h3 className="text-base sm:text-lg font-serif font-bold text-stone-900">
+                  Kelola & Hapus Foto per Acara
+                </h3>
+                <p className="text-xs text-stone-600">
+                  Pilih acara untuk meninjau foto strip pengunjung dan hapus foto yang tidak diinginkan dari sistem.
+                </p>
+              </div>
+
+              {/* Event Selector Dropdown & ZIP Action */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-serif font-bold text-stone-700 whitespace-nowrap">Pilih Acara:</span>
+                  <select
+                    value={selectedSubmissionsEventId}
+                    onChange={(e) => setSelectedSubmissionsEventId(e.target.value)}
+                    className="py-2 px-3 rounded-xl bg-[#FAF7F2] border border-[#E5DACB] text-stone-900 text-xs font-serif font-bold focus:outline-none focus:border-[#6B111F]"
+                  >
+                    {events.map(ev => (
+                      <option key={ev.id} value={ev.id}>
+                        {ev.displayName} ({getEventSubmissions(ev).length} Foto)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedSubmissionsEvent && (
+                  <button
+                    onClick={() => handleDownloadEventZip(selectedSubmissionsEvent)}
+                    disabled={zippingEventId === selectedSubmissionsEvent.id}
+                    className="py-2 px-3.5 rounded-xl bg-[#FAF7F2] hover:bg-stone-100 text-stone-800 border border-[#E5DACB] text-xs font-serif font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  >
+                    <Archive size={13} className={zippingEventId === selectedSubmissionsEvent.id ? 'animate-bounce text-amber-600' : ''} />
+                    <span>Download ZIP ({getEventSubmissions(selectedSubmissionsEvent).length})</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Search Bar & Counter */}
+            <div className="flex items-center justify-between gap-3 px-1">
+              <div className="relative flex-1 max-w-sm">
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                  type="text"
+                  placeholder="Cari nama tamu atau pesan..."
+                  value={submissionSearch}
+                  onChange={(e) => setSubmissionSearch(e.target.value)}
+                  className="w-full pl-9 pr-3.5 py-2 rounded-full bg-white border border-[#EADBCC] text-stone-900 text-xs focus:outline-none focus:border-[#6B111F]"
+                />
+              </div>
+              <span className="text-xs font-mono text-stone-500 font-bold">
+                {eventSubmissionsList.length} Foto Terpilih
+              </span>
+            </div>
+
+            {/* Grid of Submissions Cards */}
+            {eventSubmissionsList.length === 0 ? (
+              <div className="p-12 text-center rounded-3xl bg-white border border-[#EADBCC] shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center text-3xl mx-auto mb-3">
+                  📸
+                </div>
+                <h4 className="text-base font-serif font-bold text-stone-900 mb-1">
+                  Belum Ada Foto untuk Acara Ini
+                </h4>
+                <p className="text-xs text-stone-500 max-w-sm mx-auto">
+                  Foto yang diambil oleh tamu melalui web photobooth acara ini akan otomatis muncul di sini secara real-time.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+                {eventSubmissionsList.map((sub) => (
+                  <div
+                    key={sub.id}
+                    className="rounded-2xl bg-[#14060E] border border-amber-400/20 text-white overflow-hidden p-3.5 shadow-lg flex flex-col justify-between hover:border-amber-400/50 transition-all duration-200"
+                  >
+                    <div>
+                      {/* Photostrip Thumbnail */}
+                      <div className="w-full rounded-xl overflow-hidden shadow-md mb-3 border border-white/10 bg-black/40">
+                        <PhotostripThumbnail
+                          item={sub}
+                          activeEvent={selectedSubmissionsEvent}
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Info & Message */}
+                      <div className="space-y-1 px-0.5 mb-3">
+                        <div className="flex items-center justify-between gap-1">
+                          <h4 className="text-xs font-serif font-bold text-[#F5D77F] truncate">
+                            {sub.guestName || 'Tamu Undangan'}
+                          </h4>
+                          <span className="text-[10px] text-stone-400 font-mono whitespace-nowrap">
+                            {sub.shortDate || (sub.takenDate ? sub.takenDate.split('•')[0] : '')}
+                          </span>
+                        </div>
+
+                        {sub.message && (
+                          <p className="text-[11px] text-rose-100/80 font-sans italic line-clamp-2 leading-snug">
+                            "{sub.message}"
+                          </p>
+                        )}
+
+                        {/* Voice Note Player Preview */}
+                        {(sub.hasVoice || sub.voiceUrl) && (
+                          <div className="pt-1.5">
+                            <SpotifyVoicePlayer
+                              voiceUrl={sub.voiceUrl}
+                              guestName={sub.guestName}
+                              totalDuration={sub.voiceDuration || 15}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bottom Admin Delete Button */}
+                    <div className="pt-2.5 border-t border-white/10 mt-auto">
+                      <button
+                        type="button"
+                        onClick={() => setPhotoToDelete({ photo: sub, eventName: selectedSubmissionsEvent?.displayName || 'Acara' })}
+                        className="w-full py-2 px-3 rounded-xl bg-red-950/50 hover:bg-red-900/80 text-red-300 hover:text-red-100 border border-red-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-sm"
+                        title="Hapus foto ini dari galeri dan server"
+                      >
+                        <Trash2 size={13} className="text-red-400" />
+                        <span>Hapus Foto</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
           </div>
         )}
 
@@ -1649,6 +1890,58 @@ export default function AdminDashboardPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= 🌟 MODAL: CONFIRM DELETE PHOTO (ADMIN DASHBOARD) 🌟 ================= */}
+      <AnimatePresence>
+        {photoToDelete && (
+          <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.94, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.94, opacity: 0 }}
+              className="w-full max-w-sm rounded-3xl bg-white border border-red-200 p-6 text-center shadow-2xl flex flex-col items-center"
+            >
+              <div className="w-14 h-14 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mb-3 text-red-600 shadow-xs">
+                <Trash2 size={24} />
+              </div>
+              <h4 className="text-base sm:text-lg font-serif font-bold text-stone-900 mb-1">
+                Hapus Foto Pengunjung?
+              </h4>
+              <p className="text-xs text-stone-600 mb-6 leading-relaxed">
+                Foto milik <strong>{photoToDelete.photo.guestName || 'Tamu'}</strong> pada acara <strong>{photoToDelete.eventName}</strong> akan dihapus permanen dari server dan galeri pengunjung.
+              </p>
+              <div className="flex gap-2.5 w-full">
+                <button
+                  type="button"
+                  disabled={isDeletingPhoto}
+                  onClick={() => setPhotoToDelete(null)}
+                  className="flex-1 py-2.5 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-serif font-bold border border-stone-200 transition active:scale-95 cursor-pointer disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeletingPhoto}
+                  onClick={handleConfirmDeletePhoto}
+                  className="flex-1 py-2.5 rounded-full bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white text-xs font-serif font-bold shadow-md shadow-red-900/30 flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-50"
+                >
+                  {isDeletingPhoto ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" />
+                      <span>Menghapus...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={13} />
+                      <span>Ya, Hapus</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
