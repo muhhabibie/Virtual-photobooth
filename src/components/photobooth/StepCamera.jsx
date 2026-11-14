@@ -206,6 +206,7 @@ export default function StepCamera() {
 
   const [capturing, setCapturing] = useState(false);
   const [cameraError, setCameraError] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('natural');
   const [selectedAccessory, setSelectedAccessory] = useState('royal-crown'); // Default to Royal Crown
   const [controlTab, setControlTab] = useState('accessories'); // 'accessories' | 'filters'
@@ -518,14 +519,28 @@ export default function StepCamera() {
   // Initialize camera
   const initCamera = useCallback(async () => {
     setCameraError(false);
+    setIsCameraReady(false);
     try {
       const stream = await start('user');
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play().then(() => {
+            setIsCameraReady(true);
+          }).catch(() => {
+            setIsCameraReady(true);
+          });
+        };
+        // Fallback timer in case onloadedmetadata fired early
+        setTimeout(() => {
+          if (videoRef.current?.readyState >= 2) {
+            setIsCameraReady(true);
+          }
+        }, 300);
       }
     } catch (err) {
       setCameraError(true);
+      setIsCameraReady(false);
     }
   }, [start]);
 
@@ -835,6 +850,11 @@ export default function StepCamera() {
       return;
     }
 
+    if (!isCameraReady) {
+      triggerTopNotice('Menyiapkan kamera...');
+      return;
+    }
+
     setCapturing(true);
     doCapture();
 
@@ -844,18 +864,21 @@ export default function StepCamera() {
     setTimeout(() => {
       setCapturing(false);
     }, 200);
-  }, [capturing, capturedPhotos.length, targetPhotoCount, isEjecting, ejectPhase, handleContinueToVoice, doCapture, triggerTopNotice]);
+  }, [capturing, capturedPhotos.length, targetPhotoCount, isEjecting, ejectPhase, isCameraReady, handleContinueToVoice, doCapture, triggerTopNotice]);
 
   const handleToggleCamera = async () => {
     try {
+      setIsCameraReady(false);
       const stream = await toggle();
       setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
+        setIsCameraReady(true);
       }
     } catch (e) {
       toast('Gagal memutar kamera', 'error');
+      setIsCameraReady(true);
     }
   };
 
@@ -956,6 +979,21 @@ export default function StepCamera() {
               ref={arCanvasRef}
               className="absolute inset-0 w-full h-full pointer-events-none z-20"
             />
+
+            {/* Camera Connecting Overlay */}
+            {!isCameraReady && !cameraError && (
+              <div className="absolute inset-0 bg-black/85 flex flex-col items-center justify-center gap-2.5 z-30 animate-fadeIn">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-amber-400/40">
+                  <Camera size={20} className="text-amber-300 animate-pulse" />
+                </div>
+                <span className="text-xs font-mono font-bold tracking-wider text-amber-200">
+                  Menghubungkan Kamera...
+                </span>
+                <span className="text-[10px] text-gray-400 font-sans">
+                  Mohon izinkan akses kamera jika diminta
+                </span>
+              </div>
+            )}
 
             {/* Instagram Style Swipe Toast / Floating Active Filter Toast */}
             {swipeToast ? (
@@ -1227,7 +1265,7 @@ export default function StepCamera() {
           {/* Center: Tap Hint or Capturing Status */}
           <div className="text-center pointer-events-none px-2">
             <span className="text-[8px] sm:text-[9px] font-mono tracking-widest text-white/50 uppercase">
-              {capturing ? 'Memotret...' : 'Ketuk Lingkaran untuk Memotret'}
+              {capturing ? 'Memotret...' : (!isCameraReady ? 'Menyiapkan Kamera...' : 'Ketuk Lingkaran untuk Memotret')}
             </span>
           </div>
 

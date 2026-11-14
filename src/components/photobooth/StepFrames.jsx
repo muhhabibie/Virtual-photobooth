@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
+import { preloadFaceMesh } from '../../hooks/useFaceMesh';
 
 const STRIP_TYPES = [
   { id: 1, name: 'Polaroid', sub: '1 frame', badge: 'CLASSIC', badgeColor: 'bg-[#6B111F]', slots: 1 },
@@ -45,7 +46,13 @@ export default function StepFrames() {
   } = useBooth();
 
   const [nameError, setNameError] = useState(false);
+  const [isStartingCamera, setIsStartingCamera] = useState(false);
   const nameInputRef = useRef(null);
+
+  // Pre-warm MediaPipe FaceMesh in the background during idle time on StepFrames!
+  useEffect(() => {
+    preloadFaceMesh();
+  }, []);
 
   // Compute color themes with Bride's custom frame dynamically featured
   const colorThemes = useMemo(() => {
@@ -115,8 +122,10 @@ export default function StepFrames() {
       return;
     }
     setNameError(false);
+    setIsStartingCamera(true);
     setCapturedPhotos([]);
     setSelectedPhotoIndex(0);
+    // Instant switch to camera
     setCurrentStep('camera');
   };
 
@@ -469,9 +478,17 @@ export default function StepFrames() {
 
           <button
             onClick={handleStartCamera}
-            className="flex-1 py-3 sm:py-3.5 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-[#6B111F] hover:bg-[#520C16] text-[#F5D77F] text-xs sm:text-sm font-serif font-bold shadow-lg shadow-rose-950/25 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-98 transition cursor-pointer"
+            disabled={isStartingCamera}
+            className="flex-1 py-3 sm:py-3.5 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-[#6B111F] hover:bg-[#520C16] text-[#F5D77F] text-xs sm:text-sm font-serif font-bold shadow-lg shadow-rose-950/25 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-98 transition cursor-pointer disabled:opacity-80"
           >
-            <span>Mulai Foto ({targetPhotoCount} Pose)</span>
+            {isStartingCamera ? (
+              <>
+                <RefreshCw size={14} className="animate-spin text-amber-300" />
+                <span>Menyiapkan Kamera...</span>
+              </>
+            ) : (
+              <span>Mulai Foto ({targetPhotoCount} Pose)</span>
+            )}
           </button>
         </div>
       </div>
