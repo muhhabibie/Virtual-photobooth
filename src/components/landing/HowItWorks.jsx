@@ -523,7 +523,7 @@ export default function HowItWorks() {
                   Unduh & Bagikan Kenangan Kamu
                 </h3>
                 <p className="text-[11px] sm:text-xs text-[#D8C6A5] font-serif italic mb-3">
-                  Simpan photo strip berbingkai kualitas HD (2X Retina) & bagikan momen bahagiamu.
+                  Simpan photo strip berbingkai kualitas HD & bagikan momen bahagiamu.
                 </p>
 
                 {/* Ready Photostrip Card */}

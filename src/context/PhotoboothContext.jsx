@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo, u
 import { subscribeSubmissions, saveSubmission, getLocalSubmissions } from '../services/submissionService';
 import { syncEventToCloud, subscribeCloudEvents, saveLocalEvents, deleteEventFromCloud } from '../services/eventService';
 import { INITIAL_EVENTS, PACKAGES, DEFAULT_HERO_PHOTOS, DEMO_EVENT } from '../data/mockEvents';
-import { renderMasterPhotoStrip } from '../utils/stripRenderer';
+import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../utils/stripRenderer';
 
 const PhotoboothContext = createContext(null);
 
@@ -444,6 +444,7 @@ export function PhotoboothProvider({ children }) {
   const [targetPhotoCount, setTargetPhotoCount] = useState(3);
   const [stripColor, setStripColor] = useState('#FFFFFF');
   const [stripColorName, setStripColorName] = useState('Botanical');
+  const [stripStyle, setStripStyle] = useState('standard'); // 'standard' | 'botanical-wedding'
 
   const [selectedFrameIndex, setSelectedFrameIndex] = useState(0);
   const [selectedTimer, setSelectedTimer] = useState(3);
@@ -489,6 +490,7 @@ export function PhotoboothProvider({ children }) {
     setGuestMessage('');
     setStripColor('#FFFFFF');
     setStripColorName('Botanical');
+    setStripStyle('standard');
     setSelectedFrameIndex(0);
     setSelectedTimer(3);
     setCapturedPhotos([]);
@@ -633,15 +635,26 @@ export function PhotoboothProvider({ children }) {
     if (!stripImage) {
       try {
         const offCanvas = document.createElement('canvas');
-        renderMasterPhotoStrip(offCanvas, {
-          photos: capturedPhotos,
-          targetCount: capturedPhotos.length,
-          stripColor,
-          guestName,
-          guestMessage,
-          activeEvent,
-          scale: 2,
-        });
+        if (stripStyle === 'botanical-wedding') {
+          renderBotanicalWeddingStrip(offCanvas, {
+            photos: capturedPhotos,
+            targetCount: capturedPhotos.length,
+            guestName,
+            guestMessage,
+            activeEvent,
+            scale: 2,
+          });
+        } else {
+          renderMasterPhotoStrip(offCanvas, {
+            photos: capturedPhotos,
+            targetCount: capturedPhotos.length,
+            stripColor,
+            guestName,
+            guestMessage,
+            activeEvent,
+            scale: 2,
+          });
+        }
         stripImage = offCanvas.toDataURL('image/jpeg', 0.92);
       } catch (e) {
         console.warn('Failed to pre-render stripImage in submitSession:', e);
@@ -655,6 +668,7 @@ export function PhotoboothProvider({ children }) {
       guestMessage,
       photos: capturedPhotos,
       stripColor,
+      stripStyle,
       stripImage,
       voiceBlob,
       voiceUrl,
@@ -703,6 +717,7 @@ export function PhotoboothProvider({ children }) {
       targetPhotoCount, setTargetPhotoCount,
       stripColor, setStripColor,
       stripColorName, setStripColorName,
+      stripStyle, setStripStyle,
       selectedFrameIndex, setSelectedFrameIndex,
       selectedTimer, setSelectedTimer,
       capturedPhotos, addPhoto, setCapturedPhotos,

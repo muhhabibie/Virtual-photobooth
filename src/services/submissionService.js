@@ -60,7 +60,7 @@ export function blobToBase64(blob) {
 }
 
 // Save submission (Cloud Firebase + LocalStorage fallback)
-export async function saveSubmission({ eventId, eventSlug, guestName, guestMessage, photos, stripColor, stripImage, voiceBlob, voiceUrl, isDemo = false }) {
+export async function saveSubmission({ eventId, eventSlug, guestName, guestMessage, photos, stripColor, stripStyle, stripImage, voiceBlob, voiceUrl, isDemo = false }) {
   let finalVoiceUrl = voiceUrl || null;
   if (voiceBlob) {
     try {
@@ -81,6 +81,7 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
     shortDate: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }),
     takenDate: new Date().toLocaleString('id-ID'),
     colorHex: stripColor || '#6B111F',
+    stripStyle: stripStyle || 'standard',
     textHex: stripColor === '#FDFBF7' || stripColor === '#F3C5CB' ? '#6B111F' : '#F5D77F',
     hasVoice: !!finalVoiceUrl,
     voiceUrl: finalVoiceUrl,
@@ -147,6 +148,7 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
         shortDate: newSubmission.shortDate,
         takenDate: newSubmission.takenDate,
         colorHex: newSubmission.colorHex,
+        stripStyle: newSubmission.stripStyle || 'standard',
         textHex: newSubmission.textHex,
         hasVoice: !!finalVoiceUrl,
         voiceUrl: finalVoiceUrl,

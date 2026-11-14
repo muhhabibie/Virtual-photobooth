@@ -4,7 +4,7 @@ import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
-import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
+import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
 import { CONTACT_LINKS, PACKAGES } from '../../data/mockEvents';
 import PriceListModal from '../ui/PriceListModal';
 import DownloadFormatModal from './DownloadFormatModal';
@@ -26,6 +26,7 @@ export default function StepResult() {
     guestName,
     guestMessage,
     stripColor,
+    stripStyle,
     voiceUrl,
     activeEvent,
     isDemo,
@@ -159,17 +160,29 @@ export default function StepResult() {
 
     const activeFilterObj = PHOTO_FILTERS.find(f => f.id === selectedFilter) || PHOTO_FILTERS[0];
 
-    renderMasterPhotoStrip(canvas, {
-      photos: capturedPhotos,
-      targetCount: capturedPhotos.length,
-      stripColor,
-      guestName,
-      guestMessage,
-      activeEvent,
-      filterCss: activeFilterObj.css,
-      scale: 2,
-    });
-  }, [capturedPhotos, stripColor, guestName, guestMessage, selectedFilter, activeEvent]);
+    if (stripStyle === 'botanical-wedding') {
+      renderBotanicalWeddingStrip(canvas, {
+        photos: capturedPhotos,
+        targetCount: capturedPhotos.length,
+        guestName,
+        guestMessage,
+        activeEvent,
+        filterCss: activeFilterObj.css,
+        scale: 2,
+      });
+    } else {
+      renderMasterPhotoStrip(canvas, {
+        photos: capturedPhotos,
+        targetCount: capturedPhotos.length,
+        stripColor,
+        guestName,
+        guestMessage,
+        activeEvent,
+        filterCss: activeFilterObj.css,
+        scale: 2,
+      });
+    }
+  }, [capturedPhotos, stripColor, guestName, guestMessage, selectedFilter, activeEvent, stripStyle]);
 
   useEffect(() => {
     renderStrip();

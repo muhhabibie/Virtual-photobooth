@@ -599,6 +599,7 @@ export function renderBotanicalWeddingStrip(canvas, {
   guestName = '',
   guestMessage = '',
   activeEvent = null,
+  filterCss = 'none',
   scale = 2,
 }) {
   if (!canvas) return;
@@ -683,6 +684,9 @@ export function renderBotanicalWeddingStrip(canvas, {
     const photo = photos[idx];
     if (photo && (photo.canvas || photo.dataUrl)) {
       ctx.save();
+      if (filterCss && filterCss !== 'none') {
+        ctx.filter = filterCss;
+      }
       if (photo.canvas) {
         drawCover(photo.canvas, padX, drawY, photoW, photoH);
       } else if (photo.dataUrl) {
@@ -735,6 +739,32 @@ export function renderBotanicalWeddingStrip(canvas, {
   const geoRX = 195 * scale;
   const geoRY = 88 * scale;
   drawGeoHexFrame(ctx, footerCX, footerCY, geoRX, geoRY, goldColor, 1.6 * scale);
+
+  // 7b. Golden intertwined heart on the left of the name (matching reference image)
+  ctx.save();
+  const heartX = footerCX - geoRX * 0.92;
+  const heartY = footerCY - 14 * scale;
+  const heartS = 24 * scale;
+  ctx.translate(heartX, heartY);
+  ctx.strokeStyle = goldColor;
+  ctx.lineWidth = 1.8 * scale;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  // Outer heart
+  ctx.beginPath();
+  ctx.moveTo(0, heartS * 0.3);
+  ctx.bezierCurveTo(-heartS * 0.52, -heartS * 0.22, -heartS * 0.65, heartS * 0.45, 0, heartS * 0.88);
+  ctx.bezierCurveTo(heartS * 0.65, heartS * 0.45, heartS * 0.52, -heartS * 0.22, 0, heartS * 0.3);
+  ctx.stroke();
+  // Inner heart
+  ctx.lineWidth = 1.1 * scale;
+  ctx.globalAlpha = 0.65;
+  ctx.beginPath();
+  ctx.moveTo(0, heartS * 0.36);
+  ctx.bezierCurveTo(-heartS * 0.36, -heartS * 0.08, -heartS * 0.45, heartS * 0.45, 0, heartS * 0.76);
+  ctx.bezierCurveTo(heartS * 0.45, heartS * 0.45, heartS * 0.36, -heartS * 0.08, 0, heartS * 0.36);
+  ctx.stroke();
+  ctx.restore();
 
   // 8. Text inside the frame
   // 8a. "MR. & MRS" prefix — small elegant gold caps

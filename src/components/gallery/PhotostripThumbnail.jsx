@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Volume2 } from 'lucide-react';
-import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
+import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
 
 export default function PhotostripThumbnail({ 
   item, 
@@ -62,15 +62,26 @@ export default function PhotostripThumbnail({
         return;
       }
 
-      renderMasterPhotoStrip(canvasRef.current, {
-        photos: validPhotos,
-        targetCount: validPhotos.length,
-        stripColor: item.colorHex || item.stripColor || '#FFFFFF',
-        guestName: item.guestName,
-        guestMessage: item.message || item.guestMessage,
-        activeEvent: activeEvent,
-        scale: 1.5,
-      });
+      if (item.stripStyle === 'botanical-wedding') {
+        renderBotanicalWeddingStrip(canvasRef.current, {
+          photos: validPhotos,
+          targetCount: validPhotos.length,
+          guestName: item.guestName,
+          guestMessage: item.message || item.guestMessage,
+          activeEvent: activeEvent,
+          scale: 1.5,
+        });
+      } else {
+        renderMasterPhotoStrip(canvasRef.current, {
+          photos: validPhotos,
+          targetCount: validPhotos.length,
+          stripColor: item.colorHex || item.stripColor || '#FFFFFF',
+          guestName: item.guestName,
+          guestMessage: item.message || item.guestMessage,
+          activeEvent: activeEvent,
+          scale: 1.5,
+        });
+      }
 
       try {
         const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.88);

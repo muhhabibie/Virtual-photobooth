@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { RotateCcw, ArrowRight, X } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
-import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
+import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
 import { getEventDisplayName } from '../../utils/eventHeader';
 
 export default function StepReview() {
@@ -10,6 +10,7 @@ export default function StepReview() {
     guestMessage,
     targetPhotoCount,
     stripColor,
+    stripStyle,
     capturedPhotos,
     setCapturedPhotos,
     setCurrentStep,
@@ -23,16 +24,27 @@ export default function StepReview() {
     const canvas = canvasRef.current;
     if (!canvas || capturedPhotos.length === 0) return;
 
-    renderMasterPhotoStrip(canvas, {
-      photos: capturedPhotos,
-      targetCount: targetPhotoCount,
-      stripColor,
-      guestName,
-      guestMessage,
-      activeEvent,
-      scale: 2,
-    });
-  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent]);
+    if (stripStyle === 'botanical-wedding') {
+      renderBotanicalWeddingStrip(canvas, {
+        photos: capturedPhotos,
+        targetCount: targetPhotoCount,
+        guestName,
+        guestMessage,
+        activeEvent,
+        scale: 2,
+      });
+    } else {
+      renderMasterPhotoStrip(canvas, {
+        photos: capturedPhotos,
+        targetCount: targetPhotoCount,
+        stripColor,
+        guestName,
+        guestMessage,
+        activeEvent,
+        scale: 2,
+      });
+    }
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent, stripStyle]);
 
   useEffect(() => {
     renderStrip();
