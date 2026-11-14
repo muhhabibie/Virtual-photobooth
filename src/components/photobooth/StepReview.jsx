@@ -50,6 +50,13 @@ export default function StepReview() {
     renderStrip();
   }, [renderStrip]);
 
+  // If user reaches review without any captured photos, redirect immediately to camera
+  useEffect(() => {
+    if (!capturedPhotos || capturedPhotos.length === 0) {
+      setCurrentStep('camera');
+    }
+  }, [capturedPhotos, setCurrentStep]);
+
   // Retake or remove a single photo from the strip
   const handleRemovePhoto = (indexToRemove) => {
     const updated = capturedPhotos.filter((_, idx) => idx !== indexToRemove);

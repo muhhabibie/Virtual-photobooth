@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { 
   ArrowLeft, RefreshCw, Timer, Disc, Camera, ArrowRight, 
   Sliders, Check, Trash2, X, ChevronRight, Image as ImageIcon,
@@ -584,7 +584,7 @@ export default function StepCamera() {
 
   // Automatically navigate to review step when target photos reached
   useEffect(() => {
-    if (capturedPhotos.length >= targetPhotoCount && !capturing) {
+    if (capturedPhotos.length > 0 && targetPhotoCount > 0 && capturedPhotos.length >= targetPhotoCount && !capturing) {
       const timer = setTimeout(() => {
         stop();
         setCurrentStep('review');

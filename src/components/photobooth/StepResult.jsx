@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Download, Volume2, Check, X, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Printer, Lock, MessageCircle, ShoppingBag, Camera, ArrowRight } from 'lucide-react';
+import { Download, Volume2, Check, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Home, Lock, MessageCircle, ShoppingBag, Camera, ArrowRight } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
@@ -32,6 +32,7 @@ export default function StepResult() {
     isDemo,
     submitSession,
     setCurrentStep,
+    goBack,
     reset,
     closeBooth,
   } = useBooth();
@@ -267,99 +268,33 @@ export default function StepResult() {
     setShowDownloadModal(true);
   };
 
-  const handlePrint = () => {
-    if (isDemoMode) {
-      toast('Di mode demo tidak bisa cetak foto. Yuk pesan paket untuk acaramu!', 'warning');
-      setShowDemoModal(true);
-      return;
-    }
-
-    const canvas = getExportCanvas();
-    if (!canvas) return;
-
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.96);
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast('Izinkan pop-up browser untuk membuka jendela cetak', 'warning');
-      return;
-    }
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Cetak Photo Strip</title>
-          <style>
-            @page {
-              size: 2in 6in;
-              margin: 0;
-            }
-            @media print {
-              html, body {
-                margin: 0;
-                padding: 0;
-                background: #ffffff;
-                width: 100%;
-                height: 100%;
-              }
-              img {
-                width: 100%;
-                height: auto;
-                display: block;
-                page-break-inside: avoid;
-              }
-            }
-            body {
-              margin: 0;
-              padding: 20px;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              min-height: 100vh;
-              background: #111;
-            }
-            img {
-              max-height: 94vh;
-              width: auto;
-              box-shadow: 0 4px 25px rgba(0,0,0,0.5);
-              border-radius: 4px;
-            }
-          </style>
-        </head>
-        <body>
-          <img src="${dataUrl}" onload="setTimeout(() => { window.focus(); window.print(); }, 250);" />
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
   return (
     <div className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-black text-white select-none overflow-hidden flex flex-col justify-between p-1.5 sm:p-2.5 pb-[max(env(safe-area-inset-bottom),10px)] z-[100]">
       
       {/* ================= 🌟 1. INSTAGRAM STORY TOP BAR 🌟 ================= */}
-      <div className="relative z-30 flex items-center justify-between w-full max-w-md mx-auto flex-shrink-0 pt-1 px-2 pb-1">
-        {/* Left: Retake / New Photo Button */}
+      <div className="relative z-30 flex items-center justify-between w-full max-w-md mx-auto flex-shrink-0 pt-1 px-2 pb-1 gap-1.5">
+        {/* Left: Kembali ke Tahap Sebelumnya (Voice Note) */}
         <button
-          onClick={() => { reset(); setCurrentStep('camera'); }}
-          className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md"
-          title="Foto Baru"
+          onClick={goBack}
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md flex-shrink-0"
+          title="Kembali ke Pesan Suara"
         >
           <ArrowLeft size={18} />
         </button>
 
         {/* Center: Title Badge */}
-        <div className="px-4 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-amber-200 text-[11px] font-mono font-bold tracking-widest uppercase flex items-center justify-center shadow-md">
-          <span>HASIL PHOTO STRIP</span>
+        <div className="px-2.5 sm:px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-amber-200 text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase flex items-center justify-center shadow-md truncate">
+          <span>HASIL STRIP</span>
         </div>
 
-        {/* Right: Close X Button */}
+        {/* Right: Tombol Kembali ke Dashboard (Menggantikan tombol X) */}
         <button 
           onClick={closeBooth} 
-          className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md"
-          title="Tutup"
+          className="h-9 px-2.5 sm:px-3.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-amber-400/40 text-amber-200 text-[10px] sm:text-xs font-serif font-bold flex items-center gap-1.5 active:scale-95 transition cursor-pointer shadow-md flex-shrink-0"
+          title="Kembali ke Dashboard"
         >
-          <X size={18} />
+          <Home size={13} className="text-amber-300" />
+          <span>Kembali ke Dashboard</span>
         </button>
       </div>
 
@@ -532,13 +467,12 @@ export default function StepResult() {
         {/* Secondary Actions */}
         <div className="flex items-center gap-2 w-full">
           <button
-            onClick={handlePrint}
-            className="flex-1 py-2.5 rounded-full bg-[#1C1C1E] hover:bg-[#2C2C2E] border border-amber-300/30 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
-            title="Cetak langsung photo strip"
+            onClick={closeBooth}
+            className="flex-1 py-2.5 rounded-full bg-[#1C1C1E] hover:bg-[#2C2C2E] border border-white/20 text-white text-xs font-serif font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer"
+            title="Kembali ke Dashboard"
           >
-            <Printer size={14} className="text-amber-300" />
-            <span>Cetak</span>
-            {isDemo && <Lock size={10} className="text-amber-400/80" />}
+            <Home size={14} className="text-amber-300" />
+            <span>Kembali ke Dashboard</span>
           </button>
 
           <button

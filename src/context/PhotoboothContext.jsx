@@ -462,6 +462,7 @@ export function PhotoboothProvider({ children }) {
   const isPopstateHandlingRef = useRef(false);
   // Track how many history entries booth has pushed so closeBooth() can jump past them all
   const boothHistoryDepthRef = useRef(0);
+  const isClosingBoothRef = useRef(false);
 
   // Initialize base state on mount if not already tagged
   useEffect(() => {
@@ -504,6 +505,7 @@ export function PhotoboothProvider({ children }) {
 
   const openBooth = useCallback(() => {
     if (isEventExpired) return;
+    isClosingBoothRef.current = false;
     const defaultBg = activeEvent?.customFrame?.bgColor || '#FFFFFF';
     setStripColor(defaultBg);
     setCapturedPhotos([]);        // Fresh session: clear previous photos!
@@ -521,6 +523,7 @@ export function PhotoboothProvider({ children }) {
   }, [isEventExpired, activeEvent]);
 
   const closeBooth = useCallback(() => {
+    isClosingBoothRef.current = true;
     setBoothOpen(false);
     setCurrentStepState('frames'); // reset to frames for next session
     setCapturedPhotos([]);        // Reset photos so opening booth next time is fresh
@@ -538,6 +541,12 @@ export function PhotoboothProvider({ children }) {
         window.history.back();
       }
     } catch (e) {}
+
+    setTimeout(() => {
+      isClosingBoothRef.current = false;
+      setBoothOpen(false);
+      setCurrentStepState('frames');
+    }, 350);
   }, []);
 
   const setCurrentStep = useCallback((nextStep) => {
@@ -584,14 +593,26 @@ export function PhotoboothProvider({ children }) {
   // Complete Browser Navigation Listener (Hardware Back Button / Gesture on Mobile)
   useEffect(() => {
     const handlePopState = (e) => {
+      if (isClosingBoothRef.current) {
+        setBoothOpen(false);
+        setCurrentStepState('frames');
+        return;
+      }
+
       isPopstateHandlingRef.current = true;
       const state = e.state;
 
       if (state && state.__sirklen__) {
         if (state.type === 'booth') {
+          // Guard: if state requests review/voice/result but no photos exist, default to frames
+          const stepRequiresPhotos = state.step === 'review' || state.step === 'voice' || state.step === 'result';
+          const safeStep = (stepRequiresPhotos && (!capturedPhotos || capturedPhotos.length === 0))
+            ? 'frames'
+            : (state.step || 'frames');
+
           setBoothOpen(true);
           setGalleryModalOpen(false);
-          setCurrentStepState(state.step || 'frames');
+          setCurrentStepState(safeStep);
         } else if (state.type === 'gallery') {
           setGalleryModalOpen(true);
           setBoothOpen(false);
@@ -621,7 +642,7 @@ export function PhotoboothProvider({ children }) {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [resolveRouteFromUrl]);
+  }, [resolveRouteFromUrl, capturedPhotos]);
 
   // 4. Submissions Real-time Database
   const [savedSubmissions, setSavedSubmissions] = useState([]);
