@@ -8,6 +8,7 @@ import { QR_THEMES, resolveEventQrTheme } from '../../utils/qrTheme';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
 import MonochromeFloralOrnament from './MonochromeFloralOrnament';
 import { useToast } from './Toast';
+import { formatVanityDomain } from '../../utils/tableQrRenderer';
 
 export default function TentCardModal({ isOpen, onClose, event }) {
   const { toast } = useToast();
@@ -257,6 +258,25 @@ export default function TentCardModal({ isOpen, onClose, event }) {
             }
 
             ctx.drawImage(img, qrX, qrY, qrSize, qrSize);
+
+            // Center Monogram Emblem on QR Code (Aesthetic & 100% scan safe)
+            const emblemR = 28;
+            const emblemCX = qrX + qrSize / 2;
+            const emblemCY = qrY + qrSize / 2;
+            ctx.beginPath();
+            ctx.arc(emblemCX, emblemCY, emblemR, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+            ctx.strokeStyle = activeTheme.goldAccent;
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            ctx.fillStyle = activeTheme.canvasTextHex || '#222';
+            ctx.font = 'italic bold 22px "Playfair Display", Georgia, serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Ń', emblemCX, emblemCY);
+
             resolve();
           };
           img.onerror = resolve;
@@ -277,9 +297,10 @@ export default function TentCardModal({ isOpen, onClose, event }) {
           ctx.fillRect(pillX, pillY, pillW, pillH);
         }
 
-        ctx.fillStyle = '#E2E8F0';
-        ctx.font = '16px monospace';
-        ctx.fillText(`sirklenice.com/${event.slug}`, canvas.width / 2, pillY + 28);
+        ctx.fillStyle = activeTheme.canvasSubtextHex || '#E2E8F0';
+        ctx.font = '600 16px "Plus Jakarta Sans", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(formatVanityDomain(eventUrl, event?.slug), canvas.width / 2, pillY + 27);
       };
 
       await drawCardSide(0, 1200);
@@ -452,8 +473,8 @@ export default function TentCardModal({ isOpen, onClose, event }) {
                     </div>
                   </div>
 
-                  <p className="text-[10px] font-mono text-gray-300 tracking-wider">
-                    sirklenice.com/{event.slug}
+                  <p className="text-[11px] font-sans font-semibold text-gray-300 tracking-wider">
+                    {formatVanityDomain(eventUrl, event.slug)}
                   </p>
                 </div>
               </div>
