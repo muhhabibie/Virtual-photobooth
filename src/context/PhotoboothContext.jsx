@@ -458,6 +458,8 @@ export function PhotoboothProvider({ children }) {
   const [galleryModalOpen, setGalleryModalOpen] = useState(false);
   const [currentStep, setCurrentStepState] = useState('frames');
   const isPopstateHandlingRef = useRef(false);
+  // Track how many history entries booth has pushed so closeBooth() can jump past them all
+  const boothHistoryDepthRef = useRef(0);
 
   // Initialize base state on mount if not already tagged
   useEffect(() => {
@@ -502,6 +504,7 @@ export function PhotoboothProvider({ children }) {
     setStripColor(defaultBg);
     setBoothOpen(true);
     setCurrentStepState('frames');
+    boothHistoryDepthRef.current = 1; // reset depth; 1 = the 'frames' entry we push below
 
     try {
       window.history.pushState({ __sirklen__: true, type: 'booth', step: 'frames' }, '');
@@ -510,8 +513,14 @@ export function PhotoboothProvider({ children }) {
 
   const closeBooth = useCallback(() => {
     setBoothOpen(false);
+    setCurrentStepState('frames'); // reset to frames for next session
     try {
-      if (window.history.state && window.history.state.type === 'booth') {
+      const depth = boothHistoryDepthRef.current;
+      boothHistoryDepthRef.current = 0;
+      if (depth > 0) {
+        // Jump back past ALL booth history entries in one go
+        window.history.go(-depth);
+      } else if (window.history.state && window.history.state.type === 'booth') {
         window.history.back();
       }
     } catch (e) {}
@@ -522,20 +531,25 @@ export function PhotoboothProvider({ children }) {
     if (!isPopstateHandlingRef.current) {
       try {
         window.history.pushState({ __sirklen__: true, type: 'booth', step: nextStep }, '');
+        boothHistoryDepthRef.current += 1; // track depth so closeBooth can go(-depth)
       } catch (e) {}
     }
   }, []);
 
+  // Step order: frames → camera → review → voice → result
+  // Back order:  result → voice → review → camera → frames → dashboard(closeBooth)
   const goBack = useCallback(() => {
     try {
       window.history.back();
     } catch (e) {
-      if (currentStep === 'camera') setCurrentStep('frames');
-      else if (currentStep === 'review') setCurrentStep('camera');
-      else if (currentStep === 'voice') setCurrentStep('review');
+      // Fallback if history API not available
+      if (currentStep === 'result') setCurrentStepState('voice');
+      else if (currentStep === 'voice') setCurrentStepState('review');
+      else if (currentStep === 'review') setCurrentStepState('camera');
+      else if (currentStep === 'camera') setCurrentStepState('frames');
       else closeBooth();
     }
-  }, [currentStep, setCurrentStep, closeBooth]);
+  }, [currentStep, closeBooth]);
 
   const openGalleryModal = useCallback(() => {
     setGalleryModalOpen(true);
@@ -582,6 +596,7 @@ export function PhotoboothProvider({ children }) {
         setBoothOpen(false);
         setGalleryModalOpen(false);
         setCurrentStepState('frames');
+        boothHistoryDepthRef.current = 0; // booth fully exited via HW back
         setRouteState(resolveRouteFromUrl());
       }
 

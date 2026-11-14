@@ -16,6 +16,7 @@ export default function StepVoice() {
     setVoiceBlob,
     setVoiceUrl,
     setCurrentStep,
+    goBack,
     activeEvent,
     closeBooth
   } = useBooth();
@@ -100,7 +101,7 @@ export default function StepVoice() {
       <div className="relative z-30 flex items-center justify-between w-full max-w-md mx-auto flex-shrink-0 pt-1 px-2 pb-1">
         {/* Back to Photo Review */}
         <button
-          onClick={() => { reset(); setCurrentStep('review'); }}
+          onClick={() => { reset(); goBack(); }}
           className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md"
           title="Foto Ulang"
         >

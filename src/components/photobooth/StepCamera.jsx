@@ -54,6 +54,7 @@ export default function StepCamera() {
     capturedPhotos, 
     setCapturedPhotos,
     setCurrentStep, 
+    goBack,
     closeBooth 
   } = useBooth();
 
@@ -652,7 +653,7 @@ export default function StepCamera() {
       <div className="relative z-30 flex items-center justify-between w-full max-w-sm sm:max-w-md mx-auto flex-shrink-0 pt-0.5 px-2 pb-0.5">
         {/* Left: Close X Button */}
         <button
-          onClick={() => { stop(); if (typeof goBack === 'function') goBack(); else setCurrentStep('frames'); }}
+          onClick={() => { stop(); goBack(); }}
           className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md"
           title="Tutup & Kembali"
         >
@@ -692,7 +693,7 @@ export default function StepCamera() {
             <div className="flex items-center justify-center gap-1 pb-0.5" style={{ color: primaryTextColor }}>
               <span className="text-[11px] sm:text-[13px] font-mono font-black tracking-widest">N</span>
               <span className="text-[10px] sm:text-[12px] opacity-40">|</span>
-              <span className="text-[10.5px] sm:text-[12.5px] font-sans font-bold tracking-wider">sirklenice</span>
+              <span className="text-[10.5px] sm:text-[12.5px] font-bold italic tracking-wider" style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif" }}>sirklenice</span>
             </div>
             <h2 
               className="text-[9px] sm:text-[10.5px] font-bold tracking-[0.16em] uppercase text-center leading-none"
@@ -760,15 +761,7 @@ export default function StepCamera() {
 
           {/* Bottom Frame Chin Preview: Matching Image 2 Professional Wedding Layout */}
           <div className="relative z-20 text-center pt-1 pb-1 flex-shrink-0 flex flex-col items-center w-full">
-            {/* 1. Prefix Label: MR. & MRS / NAMA TAMU */}
-            <span 
-              className="text-[7.5px] sm:text-[8.5px] font-semibold tracking-[0.22em] uppercase leading-none opacity-80"
-              style={{ color: accentColor, fontFamily: "'Cinzel', Georgia, serif" }}
-            >
-              {isWedding ? 'MR. & MRS' : 'NAMA TAMU'}
-            </span>
-
-            {/* 2. Main Script Name (like "Licona" in example) */}
+            {/* Guest Name in calligraphy — no prefix label */}
             <h3 
               style={{ 
                 color: primaryTextColor,
