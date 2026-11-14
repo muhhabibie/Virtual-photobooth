@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle } from 'luc
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
-import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
+import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
 
 const STRIP_TYPES = [
   { id: 1, name: 'Polaroid', sub: '1 frame', badge: 'CLASSIC', badgeColor: 'bg-[#6B111F]', slots: 1 },
