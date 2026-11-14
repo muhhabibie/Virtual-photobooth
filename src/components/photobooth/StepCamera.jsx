@@ -304,6 +304,23 @@ export default function StepCamera() {
   // Real-time 60 FPS FaceMesh Tracking
   const { facesRef, isReady: isFaceMeshReady } = useFaceMesh(videoRef, selectedAccessory !== 'none');
 
+    // Intercept phone back button when preview modal is active
+  useEffect(() => {
+    if (!showPreviewModal) return;
+    try {
+      window.history.pushState({ __sirklen__: true, type: 'camera_preview' }, '');
+    } catch (e) {}
+
+    const handlePreviewPop = () => {
+      setShowPreviewModal(false);
+    };
+
+    window.addEventListener('popstate', handlePreviewPop, { once: true });
+    return () => {
+      window.removeEventListener('popstate', handlePreviewPop);
+    };
+  }, [showPreviewModal]);
+
   // Render photostrip canvas inside preview modal (100% Identical to StepResult Output)
   const renderModalStrip = useCallback(() => {
     const canvas = modalCanvasRef.current;
@@ -635,7 +652,7 @@ export default function StepCamera() {
       <div className="relative z-30 flex items-center justify-between w-full max-w-sm sm:max-w-md mx-auto flex-shrink-0 pt-0.5 px-2 pb-0.5">
         {/* Left: Close X Button */}
         <button
-          onClick={() => { stop(); setCurrentStep('frames'); }}
+          onClick={() => { stop(); if (typeof goBack === 'function') goBack(); else setCurrentStep('frames'); }}
           className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-90 transition cursor-pointer shadow-md"
           title="Tutup & Kembali"
         >
@@ -1030,7 +1047,14 @@ export default function StepCamera() {
                 </span>
               </div>
               <button
-                onClick={() => setShowPreviewModal(false)}
+                onClick={() => {
+                setShowPreviewModal(false);
+                try {
+                  if (window.history.state?.type === 'camera_preview') {
+                    window.history.back();
+                  }
+                } catch (e) {}
+              }}
                 className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-xs transition cursor-pointer"
                 title="Tutup Preview"
               >

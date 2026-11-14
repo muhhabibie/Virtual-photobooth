@@ -52,6 +52,25 @@ export default function FullGalleryModal() {
   const [showPriceModal, setShowPriceModal] = useState(false);
   const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
 
+  // Intercept phone back button when zoomed photo modal is active
+  useEffect(() => {
+    if (!fullFrameModal) return;
+    try {
+      window.history.pushState({ __sirklen__: true, type: 'gallery_photo' }, '');
+    } catch (e) {}
+
+    const handlePhotoPop = () => {
+      setFullFrameModal(null);
+    };
+
+    window.addEventListener('popstate', handlePhotoPop, { once: true });
+    return () => {
+      window.removeEventListener('popstate', handlePhotoPop);
+    };
+  }, [fullFrameModal]);
+
+
+
   // Real-time user submission card
   const userSubmission = useMemo(() => {
     if (!capturedPhotos || capturedPhotos.length === 0) return null;
@@ -381,7 +400,14 @@ export default function FullGalleryModal() {
             >
               {/* Floating Close Button */}
               <button
-                onClick={() => setFullFrameModal(null)}
+                onClick={() => {
+                    setFullFrameModal(null);
+                    try {
+                      if (window.history.state?.type === 'gallery_photo') {
+                        window.history.back();
+                      }
+                    } catch (e) {}
+                  }}
                 className="fixed top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center text-base font-bold backdrop-blur-md border border-white/25 transition active:scale-95 cursor-pointer z-50 shadow-2xl"
                 title="Tutup"
               >

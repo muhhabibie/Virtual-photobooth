@@ -171,14 +171,7 @@ export function PhotoboothProvider({ children }) {
 
   const [routeState, setRouteState] = useState(resolveRouteFromUrl);
 
-  // Sync with browser navigation (Back / Forward buttons)
-  useEffect(() => {
-    const handlePopState = () => {
-      setRouteState(resolveRouteFromUrl());
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [resolveRouteFromUrl]);
+  // Browser navigation is handled comprehensively below with modal & photobooth step integration
 
   const currentRoute = routeState.route; // 'admin' | 'setup' | 'event' | 'invalid'
   const currentSlug = routeState.slug;
@@ -463,8 +456,17 @@ export function PhotoboothProvider({ children }) {
 
   const [boothOpen, setBoothOpen] = useState(false);
   const [galleryModalOpen, setGalleryModalOpen] = useState(false);
+  const [currentStep, setCurrentStepState] = useState('frames');
+  const isPopstateHandlingRef = useRef(false);
 
-  const [currentStep, setCurrentStep] = useState('frames');
+  // Initialize base state on mount if not already tagged
+  useEffect(() => {
+    try {
+      if (!window.history.state || !window.history.state.__sirklen__) {
+        window.history.replaceState({ __sirklen__: true, type: 'root' }, '');
+      }
+    } catch (e) {}
+  }, []);
 
   const addPhoto = useCallback((photoData) => {
     setCapturedPhotos(prev => {
@@ -491,7 +493,7 @@ export function PhotoboothProvider({ children }) {
     setSelectedPhotoIndex(0);
     setVoiceBlob(null);
     setVoiceUrl(null);
-    setCurrentStep('frames');
+    setCurrentStepState('frames');
   }, []);
 
   const openBooth = useCallback(() => {
@@ -499,20 +501,98 @@ export function PhotoboothProvider({ children }) {
     const defaultBg = activeEvent?.customFrame?.bgColor || '#FFFFFF';
     setStripColor(defaultBg);
     setBoothOpen(true);
-    setCurrentStep('frames');
+    setCurrentStepState('frames');
+
+    try {
+      window.history.pushState({ __sirklen__: true, type: 'booth', step: 'frames' }, '');
+    } catch (e) {}
   }, [isEventExpired, activeEvent]);
 
   const closeBooth = useCallback(() => {
     setBoothOpen(false);
+    try {
+      if (window.history.state && window.history.state.type === 'booth') {
+        window.history.back();
+      }
+    } catch (e) {}
   }, []);
+
+  const setCurrentStep = useCallback((nextStep) => {
+    setCurrentStepState(nextStep);
+    if (!isPopstateHandlingRef.current) {
+      try {
+        window.history.pushState({ __sirklen__: true, type: 'booth', step: nextStep }, '');
+      } catch (e) {}
+    }
+  }, []);
+
+  const goBack = useCallback(() => {
+    try {
+      window.history.back();
+    } catch (e) {
+      if (currentStep === 'camera') setCurrentStep('frames');
+      else if (currentStep === 'review') setCurrentStep('camera');
+      else if (currentStep === 'voice') setCurrentStep('review');
+      else closeBooth();
+    }
+  }, [currentStep, setCurrentStep, closeBooth]);
 
   const openGalleryModal = useCallback(() => {
     setGalleryModalOpen(true);
+    try {
+      window.history.pushState({ __sirklen__: true, type: 'gallery' }, '');
+    } catch (e) {}
   }, []);
 
   const closeGalleryModal = useCallback(() => {
     setGalleryModalOpen(false);
+    try {
+      if (window.history.state && window.history.state.type === 'gallery') {
+        window.history.back();
+      }
+    } catch (e) {}
   }, []);
+
+  // Complete Browser Navigation Listener (Hardware Back Button / Gesture on Mobile)
+  useEffect(() => {
+    const handlePopState = (e) => {
+      isPopstateHandlingRef.current = true;
+      const state = e.state;
+
+      if (state && state.__sirklen__) {
+        if (state.type === 'booth') {
+          setBoothOpen(true);
+          setGalleryModalOpen(false);
+          setCurrentStepState(state.step || 'frames');
+        } else if (state.type === 'gallery') {
+          setGalleryModalOpen(true);
+          setBoothOpen(false);
+        } else if (state.type === 'route') {
+          setBoothOpen(false);
+          setGalleryModalOpen(false);
+          setCurrentStepState('frames');
+          setRouteState(resolveRouteFromUrl());
+        } else if (state.type === 'root') {
+          setBoothOpen(false);
+          setGalleryModalOpen(false);
+          setCurrentStepState('frames');
+          setRouteState(resolveRouteFromUrl());
+        }
+      } else {
+        setBoothOpen(false);
+        setGalleryModalOpen(false);
+        setCurrentStepState('frames');
+        setRouteState(resolveRouteFromUrl());
+      }
+
+      setTimeout(() => {
+        isPopstateHandlingRef.current = false;
+      }, 50);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [resolveRouteFromUrl]);
 
   // 4. Submissions Real-time Database
   const [savedSubmissions, setSavedSubmissions] = useState([]);
@@ -615,7 +695,7 @@ export function PhotoboothProvider({ children }) {
       voiceBlob, setVoiceBlob,
       voiceUrl, setVoiceUrl,
       savedSubmissions, submitSession,
-      boothOpen, setBoothOpen, openBooth, closeBooth,
+      boothOpen, setBoothOpen, openBooth, closeBooth, goBack,
       galleryModalOpen, openGalleryModal, closeGalleryModal,
       currentStep, setCurrentStep,
       customFrame: activeEvent?.customFrame || null,
