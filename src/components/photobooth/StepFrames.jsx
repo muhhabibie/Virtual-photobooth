@@ -194,32 +194,34 @@ export default function StepFrames() {
           </div>
 
           {/* Large Canvas Strip with Navigation Arrows */}
-          <div className="relative w-full flex items-center justify-center py-1 sm:py-2">
+          <div className="relative w-full flex items-center justify-center py-2 sm:py-3">
             
             {/* Left Arrow */}
             <button
+              type="button"
               onClick={handlePrev}
-              className="absolute left-0 sm:left-3 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/95 backdrop-blur-md shadow-lg border border-gray-200/80 flex items-center justify-center text-gray-700 hover:text-[#6B111F] active:scale-90 transition cursor-pointer"
+              className="absolute left-1 sm:left-4 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 hover:bg-white text-gray-800 hover:text-[#6B111F] shadow-xl border border-stone-200/90 flex items-center justify-center active:scale-90 transition cursor-pointer"
               title="Warna Sebelumnya"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={20} />
             </button>
 
-            {/* Floating Large Live Strip Canvas */}
-            <div className="p-1 sm:p-1.5 rounded-2xl shadow-2xl shadow-rose-950/20 bg-white/60 backdrop-blur-sm border border-white/90 transition-all duration-300 transform hover:scale-[1.01] max-w-[240px] xs:max-w-[270px] sm:max-w-[320px] w-full flex items-center justify-center">
+            {/* Floating Large Live Strip Canvas (Substantially Enlarged & Framed) */}
+            <div className="relative inline-flex items-center justify-center p-2 sm:p-2.5 rounded-2xl sm:rounded-3xl shadow-2xl shadow-rose-950/20 bg-white/80 backdrop-blur-md border border-white transition-all duration-300 transform hover:scale-[1.01]">
               <canvas
                 ref={canvasRef}
-                className="w-full max-h-[300px] xs:max-h-[340px] sm:max-h-[380px] h-auto mx-auto object-contain rounded-xl shadow-xs"
+                className="h-[390px] xs:h-[440px] sm:h-[500px] w-auto max-w-[280px] xs:max-w-[320px] sm:max-w-[360px] mx-auto object-contain rounded-xl sm:rounded-2xl shadow-md transition-all duration-300"
               />
             </div>
 
             {/* Right Arrow */}
             <button
+              type="button"
               onClick={handleNext}
-              className="absolute right-0 sm:right-3 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white/95 backdrop-blur-md shadow-lg border border-gray-200/80 flex items-center justify-center text-gray-700 hover:text-[#6B111F] active:scale-90 transition cursor-pointer"
+              className="absolute right-1 sm:right-4 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 hover:bg-white text-gray-800 hover:text-[#6B111F] shadow-xl border border-stone-200/90 flex items-center justify-center active:scale-90 transition cursor-pointer"
               title="Warna Selanjutnya"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={20} />
             </button>
           </div>
 
