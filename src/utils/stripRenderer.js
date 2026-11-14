@@ -23,9 +23,12 @@ function drawSirklenBrandHeader(ctx, totalW, topCenterY, color, scale) {
   const barH = 22 * scale;
   const gap = 10 * scale;
 
-  // Measure 'sirklenice' brand text
-  const brandFont = `italic 600 ${20 * scale}px 'Cormorant Garamond', 'Playfair Display', 'Libre Baskerville', Georgia, serif`;
+  // Measure 'sirklenice' brand text with luxury Playfair italic typography & letter spacing
+  const brandFont = `italic 600 ${22 * scale}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
   ctx.font = brandFont;
+  if ('letterSpacing' in ctx) {
+    try { ctx.letterSpacing = `${1.4 * scale}px`; } catch (_) {}
+  }
   const textMetrics = ctx.measureText('sirklenice');
   const textW = textMetrics.width;
 
@@ -76,9 +79,15 @@ function drawSirklenBrandHeader(ctx, totalW, topCenterY, color, scale) {
   const textX = barX + gap;
   ctx.fillStyle = color;
   ctx.font = brandFont;
+  if ('letterSpacing' in ctx) {
+    try { ctx.letterSpacing = `${1.4 * scale}px`; } catch (_) {}
+  }
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   ctx.fillText('sirklenice', textX, topCenterY);
+  if ('letterSpacing' in ctx) {
+    try { ctx.letterSpacing = '0px'; } catch (_) {}
+  }
 
   ctx.restore();
 }

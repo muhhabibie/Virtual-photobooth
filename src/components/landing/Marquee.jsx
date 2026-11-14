@@ -353,7 +353,7 @@ export default function Marquee() {
                 <div className="flex items-center justify-center gap-1 opacity-80 mb-0.5" style={{ color: card.textHex }}>
                   <span className="text-[10px] sm:text-[11px] font-mono font-black tracking-widest">N</span>
                   <span className="text-[9px] sm:text-[10px] opacity-40">|</span>
-                  <span className="text-[9.5px] sm:text-[10.5px] font-sans font-bold tracking-wide">sirklenice</span>
+                  <span className="text-[11px] sm:text-[12px] font-semibold italic tracking-[0.12em]" style={{ fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif" }}>sirklenice</span>
                 </div>
                 <h3 
                   style={{ 
@@ -392,13 +392,7 @@ export default function Marquee() {
 
               {/* Bottom Section: Matching Image 2 Professional Wedding Layout */}
               <div className="text-center pt-1.5 sm:pt-2 pb-1 flex-shrink-0 flex flex-col items-center w-full z-10">
-                {/* Prefix Label */}
-                <span 
-                  className="text-[6.5px] sm:text-[7.5px] font-semibold tracking-[0.2em] uppercase leading-tight opacity-75"
-                  style={{ color: isLight ? '#8C7A6B' : card.textHex, fontFamily: "'Cinzel', Georgia, serif" }}
-                >
-                  {isWedding ? 'MR. & MRS' : 'NAMA TAMU'}
-                </span>
+                {/* Prefix label removed */}
 
                 {/* Main Script Name (Image 2 style) */}
                 <h4 

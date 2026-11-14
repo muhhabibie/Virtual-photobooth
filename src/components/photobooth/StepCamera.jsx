@@ -346,6 +346,9 @@ export default function StepCamera() {
 
   useEffect(() => {
     renderModalStrip();
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(renderModalStrip);
+    }
   }, [renderModalStrip]);
 
   // Smoothly center the active AR accessory or tone filter in the carousel view (Instagram Style)
@@ -700,7 +703,7 @@ export default function StepCamera() {
             <div className="flex items-center justify-center gap-1 pb-0.5" style={{ color: primaryTextColor }}>
               <span className="text-[11px] sm:text-[13px] font-mono font-black tracking-widest">N</span>
               <span className="text-[10px] sm:text-[12px] opacity-40">|</span>
-              <span className="text-[10.5px] sm:text-[12.5px] font-bold italic tracking-wider" style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif" }}>sirklenice</span>
+              <span className="text-[12px] sm:text-[14px] font-semibold italic tracking-[0.14em]" style={{ fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif" }}>sirklenice</span>
             </div>
             <h2 
               className="text-[9px] sm:text-[10.5px] font-bold tracking-[0.16em] uppercase text-center leading-none"

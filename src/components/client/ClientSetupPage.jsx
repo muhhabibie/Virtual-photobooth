@@ -1006,7 +1006,7 @@ export default function ClientSetupPage() {
                       <div className="flex items-center justify-center gap-1 pt-0.5 pb-0.5" style={{ color: frameTextColor }}>
                         <span className="text-[7.5px] font-mono font-black tracking-widest">N</span>
                         <span className="text-[7px] opacity-40">|</span>
-                        <span className="text-[7px] font-sans font-semibold tracking-wide">sirklenice</span>
+                        <span className="text-[8px] font-semibold italic tracking-[0.12em]" style={{ fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif" }}>sirklenice</span>
                       </div>
                       <div className="text-center pb-1">
                         <span className="text-[6.5px] font-serif font-bold tracking-wider block uppercase truncate px-1" style={{ color: frameTextColor }}>
@@ -1047,12 +1047,7 @@ export default function ClientSetupPage() {
 
                       {/* Footer: Nama Tamu, Divider Diamond, Date, Location, User Quote */}
                       <div className="text-center pt-1.5 pb-1 relative z-10 flex flex-col items-center">
-                        <strong 
-                          className="text-[8px] font-serif font-bold tracking-wider block uppercase truncate max-w-full"
-                          style={{ color: frameTextColor }}
-                        >
-                          NAMA TAMU
-                        </strong>
+                        <span className="text-[10px] font-normal leading-tight block truncate" style={{ fontFamily: "'Great Vibes', cursive", color: frameTextColor }}>{guestName || 'Nama Tamu'}</span>
                         {/* Horizontal Divider Line with Diamond */}
                         <div className="flex items-center justify-center gap-1 my-0.5 w-16">
                           <div className="flex-1 h-[0.8px]" style={{ backgroundColor: frameBorderColor || '#C4A482' }} />

@@ -118,28 +118,35 @@ export default function StepFrames() {
     setCurrentStep('camera');
   };
 
-  // Render high fidelity large live strip preview on canvas
+  // Render high fidelity large live strip preview on canvas (with font loading listener)
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const render = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    if (stripStyle === 'botanical-wedding') {
-      renderBotanicalWeddingStrip(canvas, {
-        targetCount: targetPhotoCount,
-        guestName,
-        guestMessage,
-        activeEvent,
-        scale: 1,
-      });
-    } else {
-      renderMasterPhotoStrip(canvas, {
-        targetCount: targetPhotoCount,
-        stripColor: activeTheme.hex,
-        guestName,
-        guestMessage,
-        activeEvent,
-        scale: 1,
-      });
+      if (stripStyle === 'botanical-wedding') {
+        renderBotanicalWeddingStrip(canvas, {
+          targetCount: targetPhotoCount,
+          guestName,
+          guestMessage,
+          activeEvent,
+          scale: 1,
+        });
+      } else {
+        renderMasterPhotoStrip(canvas, {
+          targetCount: targetPhotoCount,
+          stripColor: activeTheme.hex,
+          guestName,
+          guestMessage,
+          activeEvent,
+          scale: 1,
+        });
+      }
+    };
+
+    render();
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(render);
     }
   }, [targetPhotoCount, activeTheme, guestName, guestMessage, activeEvent, stripStyle]);
 

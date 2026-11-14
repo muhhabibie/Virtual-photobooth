@@ -1386,7 +1386,7 @@ export default function AdminDashboardPage() {
                               <div className="flex items-center justify-center gap-1 pb-0.5" style={{ color: theme.textHex }}>
                                 <span className="text-[7px] font-mono font-black tracking-widest">N</span>
                                 <span className="text-[6.5px] opacity-40">|</span>
-                                <span className="text-[6.5px] font-sans font-semibold tracking-wide">sirklenice</span>
+                                <span className="text-[7.5px] font-semibold italic tracking-[0.12em]" style={{ fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif" }}>sirklenice</span>
                               </div>
                               <strong 
                                 className="text-[8px] font-serif tracking-wide block truncate uppercase"
@@ -1406,9 +1406,7 @@ export default function AdminDashboardPage() {
                             </div>
 
                             <div className="text-center pt-1 flex flex-col items-center">
-                              <strong className="text-[7.5px] font-serif font-bold tracking-wider block uppercase" style={{ color: theme.textHex }}>
-                                NAMA TAMU
-                              </strong>
+                              <span className="text-[9.5px] font-normal leading-tight block truncate" style={{ fontFamily: "'Great Vibes', cursive", color: theme.textHex }}>Nama Tamu</span>
                               <div className="flex items-center justify-center gap-1 my-0.5 w-14">
                                 <div className="flex-1 h-[0.8px] bg-black/20" />
                                 <div className="w-1 h-1 rotate-45 bg-black/30" />
