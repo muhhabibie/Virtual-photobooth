@@ -1,16 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { 
   X, Check, RotateCw, ZoomIn, ZoomOut, Move, Crop, RefreshCw
 } from 'lucide-react';
 import { compressImage } from '../../utils/imageCompressor';
-
-const ASPECT_RATIOS = [
-  { id: '16:9', name: '16:9 Landscape', ratio: 16 / 9, desc: 'Mendatar / Layar Lebar' },
-  { id: '4:3', name: '4:3 Landscape', ratio: 4 / 3, desc: 'Standar Kamera' },
-  { id: '3:4', name: '3:4 Portrait', ratio: 3 / 4, desc: 'Tegak / Layar HP' },
-  { id: '1:1', name: '1:1 Persegi', ratio: 1 / 1, desc: 'Bujur Sangkar' },
-  { id: '9:16', name: '9:16 Story', ratio: 9 / 16, desc: 'Layar Penuh HP' },
-];
 
 export default function PhotoCropModal({ 
   isOpen, 
@@ -22,7 +14,7 @@ export default function PhotoCropModal({
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0); // 0, 90, 180, 270
-  const [selectedRatioId, setSelectedRatioId] = useState('3:4');
+  const [selectedRatioId, setSelectedRatioId] = useState('original');
   
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgDimensions, setImgDimensions] = useState({ width: 0, height: 0 });
@@ -34,8 +26,29 @@ export default function PhotoCropModal({
   const initialPinchDistRef = useRef(null);
   const initialZoomRef = useRef(1);
 
+  // Dynamic aspect ratio options: includes "Asli (Tanpa Potong)" and Poster A4
+  const availableRatios = useMemo(() => {
+    const isRotated = rotation === 90 || rotation === 270;
+    const effectiveW = isRotated ? imgDimensions.height : imgDimensions.width;
+    const effectiveH = isRotated ? imgDimensions.width : imgDimensions.height;
+    const naturalRatio = (effectiveW && effectiveH) ? (effectiveW / effectiveH) : (3 / 4);
+
+    return [
+      { id: 'original', name: 'Asli (Tanpa Potong)', ratio: naturalRatio, desc: 'Sesuai Rasio Asli Gambar' },
+      { id: 'poster', name: 'Poster (A4 / Flyer)', ratio: 1 / 1.414, desc: 'Standar Flyer & Poster' },
+      { id: '4:5', name: '4:5 Feed', ratio: 4 / 5, desc: 'Tegak Instagram' },
+      { id: '3:4', name: '3:4 Portrait', ratio: 3 / 4, desc: 'Tegak / Layar HP' },
+      { id: '1:1', name: '1:1 Persegi', ratio: 1 / 1, desc: 'Bujur Sangkar' },
+      { id: '9:16', name: '9:16 Story', ratio: 9 / 16, desc: 'Layar Penuh HP' },
+      { id: '4:3', name: '4:3 Landscape', ratio: 4 / 3, desc: 'Standar Kamera' },
+      { id: '16:9', name: '16:9 Landscape', ratio: 16 / 9, desc: 'Mendatar / Layar Lebar' },
+    ];
+  }, [imgDimensions, rotation]);
+
   // Selected aspect ratio object
-  const currentRatioObj = ASPECT_RATIOS.find(r => r.id === selectedRatioId) || ASPECT_RATIOS[0];
+  const currentRatioObj = useMemo(() => {
+    return availableRatios.find(r => r.id === selectedRatioId) || availableRatios[0];
+  }, [availableRatios, selectedRatioId]);
 
   // Calculate box dimensions inside viewport based on container width & ratio
   const [boxSize, setBoxSize] = useState({ width: 270, height: 360 });
@@ -47,6 +60,7 @@ export default function PhotoCropModal({
       setPan({ x: 0, y: 0 });
       setRotation(0);
       setImgLoaded(false);
+      setSelectedRatioId('original');
     }
   }, [isOpen, imageUrl]);
 
@@ -60,7 +74,7 @@ export default function PhotoCropModal({
       const maxW = Math.min(screenW - 48, 360);
       const maxH = Math.min(screenH - 300, 440);
 
-      const r = currentRatioObj.ratio;
+      const r = currentRatioObj.ratio || (3 / 4);
       let w = maxW;
       let h = w / r;
 
@@ -81,12 +95,8 @@ export default function PhotoCropModal({
     const { naturalWidth, naturalHeight } = e.target;
     setImgDimensions({ width: naturalWidth, height: naturalHeight });
     setImgLoaded(true);
-    // If photo is landscape, default to 16:9 or 4:3
-    if (naturalWidth > naturalHeight) {
-      setSelectedRatioId('16:9');
-    } else {
-      setSelectedRatioId('3:4');
-    }
+    // Default to 'original' so the entire image / poster is 100% visible without any cropping
+    setSelectedRatioId('original');
   };
 
   // Base rendered image dimensions to cover the crop box
@@ -98,12 +108,22 @@ export default function PhotoCropModal({
     const effectiveW = isRotated ? imgDimensions.height : imgDimensions.width;
     const effectiveH = isRotated ? imgDimensions.width : imgDimensions.height;
 
+    // For 'original' mode: fit image to show FULL content (no cropping at all)
+    if (selectedRatioId === 'original') {
+      const scaleToCover = Math.min(boxSize.width / effectiveW, boxSize.height / effectiveH);
+      return {
+        w: Math.round(imgDimensions.width * scaleToCover),
+        h: Math.round(imgDimensions.height * scaleToCover)
+      };
+    }
+
+    // For other modes: cover the box so the box is always filled (may crop sides)
     const scaleToCover = Math.max(boxSize.width / effectiveW, boxSize.height / effectiveH);
     return {
       w: Math.round(imgDimensions.width * scaleToCover),
       h: Math.round(imgDimensions.height * scaleToCover)
     };
-  }, [imgDimensions, boxSize, rotation]);
+  }, [imgDimensions, boxSize, rotation, selectedRatioId]);
 
   // Pointer / Touch drag handling
   const handlePointerDown = (e) => {
@@ -148,7 +168,7 @@ export default function PhotoCropModal({
       const t2 = e.touches[1];
       const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
       const factor = dist / initialPinchDistRef.current;
-      const newZoom = Math.min(3, Math.max(1, initialZoomRef.current * factor));
+      const newZoom = Math.min(3, Math.max(0.5, initialZoomRef.current * factor));
       setZoom(Number(newZoom.toFixed(2)));
     }
   };
@@ -170,14 +190,21 @@ export default function PhotoCropModal({
     setRotation(0);
   };
 
-  // High-Resolution Export
+  // High-Resolution Ultra-Sharp Export (Retina HD 2048px @ 0.94 - Text & Details Stay Crystal Clear)
   const handleApplyCrop = () => {
     const img = imgRef.current;
     if (!img) return;
 
-    // Export Resolution: target 1200px width for HD crisp display
-    const exportW = 1200;
-    const exportH = Math.round(exportW / currentRatioObj.ratio);
+    const targetDimension = 2048;
+    const ratio = currentRatioObj.ratio || (imgDimensions.width / imgDimensions.height) || 1;
+    let exportW, exportH;
+    if (ratio >= 1) {
+      exportW = targetDimension;
+      exportH = Math.round(targetDimension / ratio);
+    } else {
+      exportH = targetDimension;
+      exportW = Math.round(targetDimension * ratio);
+    }
 
     const canvas = document.createElement('canvas');
     canvas.width = exportW;
@@ -203,7 +230,7 @@ export default function PhotoCropModal({
     ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
     ctx.restore();
 
-    const croppedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+    const croppedBase64 = canvas.toDataURL('image/jpeg', 0.94);
     onCropComplete(croppedBase64);
   };
 
@@ -322,12 +349,13 @@ export default function PhotoCropModal({
         
         {/* Aspect Ratio Selector Pills */}
         <div className="flex items-center justify-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
-          {ASPECT_RATIOS.map((item) => (
+          {availableRatios.map((item) => (
             <button
               key={item.id}
               onClick={() => {
                 setSelectedRatioId(item.id);
                 setPan({ x: 0, y: 0 });
+                setZoom(1);
               }}
               className={`px-3 py-1 rounded-full text-[10px] font-serif font-bold transition whitespace-nowrap cursor-pointer ${
                 selectedRatioId === item.id
@@ -410,7 +438,8 @@ export default function PhotoCropModal({
 
           <button
             onClick={async () => {
-              const compressed = await compressImage(imageUrl, 1280, 0.84);
+              // "Pakai Asli" = use the original image at full quality without any crop transformation
+              const compressed = await compressImage(imageUrl, 2048, 0.94);
               onCropComplete(compressed);
             }}
             className="py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs font-serif font-bold transition active:scale-95 cursor-pointer text-center px-1"

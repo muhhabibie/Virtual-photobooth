@@ -389,7 +389,7 @@ export default function ClientSetupPage() {
     const reader = new FileReader();
     reader.onload = async (eventResult) => {
       const base64Url = eventResult.target.result;
-      const optimized = await compressImage(base64Url, 1600, 0.88);
+    const optimized = await compressImage(base64Url, 2048, 0.94);
       setCurrentCropImage(optimized);
       setActiveCropIdx(null); // adding new photo
       setCropModalOpen(true);
@@ -596,10 +596,12 @@ export default function ClientSetupPage() {
   // Save all changes
   const handleSaveAll = async () => {
     toast('Menyimpan pengaturan...', 'info');
-    // Ensure all hero photos are capped at 5 and compressed to lightweight web JPEGs
+    // Ensure all hero photos are capped at 5 and preserved at high quality
+    // For base64 photos (uploaded): compress with 1600px max at 0.92 quality (crisp & sharp for display)
+    // For HTTP URLs (Unsplash/CDN): pass-through as-is (no re-compression needed)
     const limitedPhotos = heroPhotos.slice(0, MAX_HERO_PHOTOS);
     const compressedPhotos = await Promise.all(
-      limitedPhotos.map(photo => compressImage(photo, 1280, 0.84))
+      limitedPhotos.map(photo => compressImage(photo, 1920, 0.92))
     );
     setHeroPhotos(compressedPhotos);
 
