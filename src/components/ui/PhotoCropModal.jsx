@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { 
   X, Check, RotateCw, ZoomIn, ZoomOut, Move, Crop, RefreshCw
 } from 'lucide-react';
-import { compressImage } from '../../utils/imageCompressor';
+import { compressHeroPhoto } from '../../utils/imageCompressor';
 
 export default function PhotoCropModal({ 
   isOpen, 
@@ -190,12 +190,12 @@ export default function PhotoCropModal({
     setRotation(0);
   };
 
-  // High-Resolution Ultra-Sharp Export (Retina HD 2048px @ 0.94 - Text & Details Stay Crystal Clear)
-  const handleApplyCrop = () => {
+  // High-Resolution Optimized Export (Retina HD 1080px @ 0.82 - Crystal Clear & Stays within Cloud Quota)
+  const handleApplyCrop = async () => {
     const img = imgRef.current;
     if (!img) return;
 
-    const targetDimension = 2048;
+    const targetDimension = 1080;
     const ratio = currentRatioObj.ratio || (imgDimensions.width / imgDimensions.height) || 1;
     let exportW, exportH;
     if (ratio >= 1) {
@@ -230,8 +230,9 @@ export default function PhotoCropModal({
     ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
     ctx.restore();
 
-    const croppedBase64 = canvas.toDataURL('image/jpeg', 0.94);
-    onCropComplete(croppedBase64);
+    const croppedBase64 = canvas.toDataURL('image/jpeg', 0.82);
+    const safeOptimized = await compressHeroPhoto(croppedBase64, 1080, 200000);
+    onCropComplete(safeOptimized);
   };
 
   if (!isOpen || !imageUrl) return null;
@@ -438,8 +439,8 @@ export default function PhotoCropModal({
 
           <button
             onClick={async () => {
-              // "Pakai Asli" = use the original image at full quality without any crop transformation
-              const compressed = await compressImage(imageUrl, 2048, 0.94);
+              // "Pakai Asli" = use the original image optimized for hero banner
+              const compressed = await compressHeroPhoto(imageUrl, 1080, 200000);
               onCropComplete(compressed);
             }}
             className="py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs font-serif font-bold transition active:scale-95 cursor-pointer text-center px-1"

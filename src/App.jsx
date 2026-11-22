@@ -22,7 +22,7 @@ const PageLoader = () => (
 );
 
 function AppContent() {
-  const { activeEvent, currentRoute, isDemo } = useBooth();
+  const { activeEvent, currentRoute, isDemo, isEventsLoading } = useBooth();
 
   // 1. Client Setup Portal (/setup/:slug)
   if (currentRoute === 'setup') {
@@ -42,7 +42,12 @@ function AppContent() {
     );
   }
 
-  // 3. Invalid Code / Scan QR Page (Root / without QR scan, or non-existent event slug)
+  // 3. Graceful loader while cloud events synchronize (prevents flashing "Invalid Code" on initial load)
+  if (isEventsLoading && !activeEvent && currentRoute === 'event') {
+    return <PageLoader />;
+  }
+
+  // 4. Invalid Code / Scan QR Page (Root / without QR scan, or non-existent event slug)
   if (currentRoute === 'invalid' || !activeEvent) {
     return <InvalidCodePage />;
   }

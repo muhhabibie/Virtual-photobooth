@@ -12,7 +12,7 @@ import { useToast } from '../ui/Toast';
 import PhotoCropModal from '../ui/PhotoCropModal';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
 import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
-import { compressImage, compressOrnament } from '../../utils/imageCompressor';
+import { compressImage, compressOrnament, compressHeroPhoto } from '../../utils/imageCompressor';
 import { PRESET_ORNAMENTS, renderOrnamentToCanvas } from '../../config/frameOrnaments';
 import { exportEventSubmissionsZip } from '../../utils/zipExport';
 
@@ -275,6 +275,7 @@ export default function ClientSetupPage() {
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Sync state when slug or query params change
   useEffect(() => {
@@ -389,7 +390,7 @@ export default function ClientSetupPage() {
     const reader = new FileReader();
     reader.onload = async (eventResult) => {
       const base64Url = eventResult.target.result;
-    const optimized = await compressImage(base64Url, 2048, 0.94);
+      const optimized = await compressHeroPhoto(base64Url, 1080, 250000);
       setCurrentCropImage(optimized);
       setActiveCropIdx(null); // adding new photo
       setCropModalOpen(true);
@@ -406,16 +407,17 @@ export default function ClientSetupPage() {
   };
 
   // When crop is finished in modal
-  const handleCropComplete = (croppedBase64) => {
+  const handleCropComplete = async (croppedBase64) => {
+    const optimized = await compressHeroPhoto(croppedBase64, 1080, 200000);
     if (activeCropIdx !== null) {
-      setHeroPhotos(prev => prev.map((p, i) => i === activeCropIdx ? croppedBase64 : p));
+      setHeroPhotos(prev => prev.map((p, i) => i === activeCropIdx ? optimized : p));
       toast('Foto berhasil disesuaikan', 'success');
     } else {
       if (heroPhotos.length >= MAX_HERO_PHOTOS) {
         toast(`Maksimal ${MAX_HERO_PHOTOS} foto slide`, 'warning');
         return;
       }
-      setHeroPhotos(prev => [...prev.slice(0, MAX_HERO_PHOTOS - 1), croppedBase64]);
+      setHeroPhotos(prev => [...prev.slice(0, MAX_HERO_PHOTOS - 1), optimized]);
       toast('Foto baru berhasil ditambahkan', 'success');
     }
     setCropModalOpen(false);
@@ -593,56 +595,57 @@ export default function ClientSetupPage() {
     toast(`Warna diterapkan: ${palette.name}`, 'success');
   };
 
-  // Save all changes
+  // Save all changes with strict byte budget compression & Cloud Firestore sync
   const handleSaveAll = async () => {
-    toast('Menyimpan pengaturan...', 'info');
-    // Ensure all hero photos are capped at 5 and preserved at high quality
-    // For base64 photos (uploaded): compress with 1600px max at 0.92 quality (crisp & sharp for display)
-    // For HTTP URLs (Unsplash/CDN): pass-through as-is (no re-compression needed)
-    const limitedPhotos = heroPhotos.slice(0, MAX_HERO_PHOTOS);
-    const compressedPhotos = await Promise.all(
-      limitedPhotos.map(photo => compressImage(photo, 1920, 0.92))
-    );
-    setHeroPhotos(compressedPhotos);
+    if (isSaving) return;
+    setIsSaving(true);
+    toast('Menyimpan pengaturan ke Cloud & Web Tamu...', 'info');
 
-    if (event?.isAutoCreated || !events.some(e => e.id === event?.id || e.slug === event?.slug)) {
-      if (typeof createEvent === 'function') {
-        createEvent({
-          slug: event.slug,
-          eventType: event.eventType || 'wedding',
-          eventName,
-          groomName,
-          brideName,
-          venue,
-          eventDate,
-          heroPhotos: compressedPhotos,
-          customFrame: {
-            bgColor: frameBgColor,
-            textColor: frameTextColor,
-            borderColor: frameBorderColor,
-            ornaments: frameOrnaments,
-          }
-        });
+    try {
+      // Ensure all hero photos are capped at 5 and strictly compressed within budget
+      // Total budget for all hero photos combined: 700KB (guaranteed < 1MB Firestore limit)
+      const limitedPhotos = heroPhotos.slice(0, MAX_HERO_PHOTOS);
+      const photoBudget = Math.floor(700000 / Math.max(limitedPhotos.length, 1));
+      const compressedPhotos = await Promise.all(
+        limitedPhotos.map(photo => compressHeroPhoto(photo, 1000, photoBudget))
+      );
+      setHeroPhotos(compressedPhotos);
+
+      const payload = {
+        slug: event.slug,
+        eventType: event.eventType || 'wedding',
+        eventName,
+        groomName,
+        brideName,
+        venue,
+        eventDate,
+        heroPhotos: compressedPhotos,
+        customFrame: {
+          bgColor: frameBgColor,
+          textColor: frameTextColor,
+          borderColor: frameBorderColor,
+          ornaments: frameOrnaments,
+        }
+      };
+
+      if (event?.isAutoCreated || !events.some(e => e.id === event?.id || e.slug === event?.slug)) {
+        if (typeof createEvent === 'function') {
+          await createEvent(payload);
+        }
+      } else {
+        if (typeof updateEventConfig === 'function') {
+          await updateEventConfig(event.id, payload);
+        }
       }
-    } else {
-      updateEventConfig(event.id, {
-      eventType: event.eventType || 'wedding',
-      eventName,
-      groomName,
-      brideName,
-      venue,
-      eventDate,
-      heroPhotos: compressedPhotos,
-      customFrame: {
-        bgColor: frameBgColor,
-        textColor: frameTextColor,
-        borderColor: frameBorderColor,
-        ornaments: frameOrnaments,
-      }
-      });
+
+      setIsSaved(true);
+      toast('Semua perubahan berhasil disimpan & langsung aktif di web tamu!', 'success');
+    } catch (saveErr) {
+      console.error("Save error:", saveErr);
+      toast('Gagal menyimpan: ' + (saveErr?.message || 'Terjadi kesalahan sistem'), 'error');
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaved(true);
-    toast('Semua perubahan berhasil disimpan & langsung aktif di web tamu!', 'success');
   };
 
   const guestUrl = event.slug === 'demo' ? `${window.location.origin}/` : `${window.location.origin}/${event.slug}?qr=1`;
@@ -2126,9 +2129,17 @@ export default function ClientSetupPage() {
             <button
               type="button"
               onClick={handleSaveAll}
-              className="flex-1 py-2.5 sm:py-3 px-6 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs sm:text-sm font-serif font-bold flex items-center justify-center shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap tracking-wide"
+              disabled={isSaving}
+              className={`flex-1 py-2.5 sm:py-3 px-6 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] active:scale-95 text-[#F5D77F] border border-[#F5D77F]/40 text-xs sm:text-sm font-serif font-bold flex items-center justify-center gap-2 shadow-md shadow-rose-950/20 transition cursor-pointer whitespace-nowrap tracking-wide ${isSaving ? 'opacity-80 cursor-wait' : ''}`}
             >
-              <span>Simpan Pengaturan</span>
+              {isSaving ? (
+                <>
+                  <Loader2 size={16} className="animate-spin text-[#F5D77F]" />
+                  <span>Menyimpan ke Cloud...</span>
+                </>
+              ) : (
+                <span>Simpan Pengaturan</span>
+              )}
             </button>
           </div>
 

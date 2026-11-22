@@ -3,6 +3,7 @@
 
 import { db } from '../config/firebase.js';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from 'firebase/firestore';
+import { compressHeroPhoto } from '../utils/imageCompressor.js';
 
 const EVENTS_STORAGE_KEY = 'sirklen_photo_events_db';
 
@@ -35,22 +36,55 @@ export function getLocalEvents(fallbackEvents = []) {
   }
 }
 
-// Helper to save events to LocalStorage
+// Helper to save events to LocalStorage with automatic quota protection
 export function saveLocalEvents(events) {
+  if (!events || !Array.isArray(events)) return;
   try {
     localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
   } catch (e) {
-    console.warn("Failed to save events to LocalStorage (possibly quota exceeded):", e);
+    console.warn("LocalStorage quota reached, pruning local event cache:", e);
+    try {
+      // Keep up to 10 events, strip heavy heroPhotos from older events in local cache
+      const trimmed = events.slice(0, 10).map((evt, idx) => {
+        if (idx < 2) return evt;
+        return {
+          ...evt,
+          heroPhotos: (evt.heroPhotos || []).slice(0, 1)
+        };
+      });
+      localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(trimmed));
+    } catch (err2) {
+      try {
+        const minimal = events.slice(0, 5).map(evt => ({
+          id: evt.id,
+          slug: evt.slug,
+          displayName: evt.displayName,
+          eventName: evt.eventName,
+          eventType: evt.eventType,
+          eventDate: evt.eventDate
+        }));
+        localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(minimal));
+      } catch (_) {}
+    }
   }
 }
 
 // Save or update single event to Cloud Firestore + LocalStorage
 export async function syncEventToCloud(event) {
-  if (!event || !event.slug || isEventCloudQuotaExhausted) return;
+  if (!event || !event.slug || isEventCloudQuotaExhausted) return false;
 
   // 1. Sync to Cloud Firestore if connected
   if (db) {
     try {
+      // Guarantee hero photos are strictly compressed within budget before Firestore setDoc
+      let safeHeroPhotos = event.heroPhotos || [];
+      if (Array.isArray(safeHeroPhotos) && safeHeroPhotos.length > 0) {
+        const photoBudget = Math.floor(700000 / Math.max(safeHeroPhotos.length, 1));
+        safeHeroPhotos = await Promise.all(
+          safeHeroPhotos.slice(0, 5).map(p => compressHeroPhoto(p, 1000, photoBudget))
+        );
+      }
+
       const cleanEvent = {
         id: event.id || `evt_${event.slug}`,
         slug: event.slug,
@@ -64,7 +98,7 @@ export async function syncEventToCloud(event) {
         formattedDate: event.formattedDate || '',
         package: event.package || 'standard',
         pin: event.pin || '',
-        heroPhotos: event.heroPhotos || [],
+        heroPhotos: safeHeroPhotos,
         templateIds: event.templateIds || [],
         customFrame: event.customFrame || null,
         expiresAt: event.expiresAt || (Date.now() + 14 * 86400 * 1000),
@@ -73,28 +107,35 @@ export async function syncEventToCloud(event) {
 
       const eventRef = doc(db, 'events', event.slug.toLowerCase().trim());
       await setDoc(eventRef, cleanEvent, { merge: true });
+      return true;
     } catch (err) {
       if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
         isEventCloudQuotaExhausted = true;
         console.warn("[Sirklen Sync] Firestore quota limit reached (Spark Plan). Switched to LocalStorage.");
-        return;
+        return false;
       }
       if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
         console.info("[Sirklen Sync] Firestore rules pending publication in Firebase Console. LocalStorage active.");
       } else {
         console.warn("[Sirklen Sync] Event cloud sync fallback to local:", err?.message || err);
       }
+      return false;
     }
   }
+  return false;
 }
 
 // Subscribe to real-time events stream from Cloud Firestore
-export function subscribeCloudEvents(onEventsUpdate) {
-  if (!db || isEventCloudQuotaExhausted) return () => {};
+export function subscribeCloudEvents(onEventsUpdate, onReady) {
+  if (!db || isEventCloudQuotaExhausted) {
+    if (typeof onReady === 'function') onReady();
+    return () => {};
+  }
 
   try {
     const eventsCol = collection(db, 'events');
     let unsubscribe = null;
+    let initialFired = false;
     unsubscribe = onSnapshot(eventsCol, (snapshot) => {
       try {
         const cloudEvents = [];
@@ -106,8 +147,16 @@ export function subscribeCloudEvents(onEventsUpdate) {
         if (cloudEvents.length > 0) {
           onEventsUpdate(cloudEvents);
         }
+        if (!initialFired && typeof onReady === 'function') {
+          initialFired = true;
+          onReady();
+        }
       } catch (err) {
         console.warn("Error processing cloud events snapshot:", err);
+        if (!initialFired && typeof onReady === 'function') {
+          initialFired = true;
+          onReady();
+        }
       }
     }, (err) => {
       if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
@@ -116,12 +165,20 @@ export function subscribeCloudEvents(onEventsUpdate) {
         if (unsubscribe) {
           try { unsubscribe(); } catch (_) {}
         }
+        if (!initialFired && typeof onReady === 'function') {
+          initialFired = true;
+          onReady();
+        }
         return;
       }
       if (err?.code === 'permission-denied' || err?.message?.includes('Missing or insufficient permissions')) {
         console.info("[Sirklen Sync] Firestore events real-time sync waiting for published rules in Firebase Console. LocalStorage active.");
       } else {
         console.warn("[Sirklen Sync] Firestore events subscription fallback:", err?.message || err);
+      }
+      if (!initialFired && typeof onReady === 'function') {
+        initialFired = true;
+        onReady();
       }
     });
 
@@ -131,6 +188,7 @@ export function subscribeCloudEvents(onEventsUpdate) {
       }
     };
   } catch (e) {
+    if (typeof onReady === 'function') onReady();
     return () => {};
   }
 }

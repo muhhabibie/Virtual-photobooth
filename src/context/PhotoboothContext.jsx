@@ -56,6 +56,8 @@ export function PhotoboothProvider({ children }) {
     saveLocalEvents(events);
   }, [events]);
 
+  const [isEventsLoading, setIsEventsLoading] = useState(true);
+
   // Subscribe to real-time events stream from Cloud Firestore (cross-device sync)
   useEffect(() => {
     const unsubscribe = subscribeCloudEvents((cloudEvents) => {
@@ -88,9 +90,18 @@ export function PhotoboothProvider({ children }) {
         }
         return prev;
       });
+    }, () => {
+      setIsEventsLoading(false);
     });
 
-    return () => unsubscribe();
+    const timer = setTimeout(() => {
+      setIsEventsLoading(false);
+    }, 1500);
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   // Intro Animation State for synchronizing staggered content reveals
@@ -268,7 +279,7 @@ export function PhotoboothProvider({ children }) {
   }, []);
 
   // Event Management (Create, Edit, Delete, Expire, Update Hero Photos)
-  const createEvent = useCallback(({ 
+  const createEvent = useCallback(async ({ 
     eventType = 'wedding',
     eventName = '',
     groomName = '', 
@@ -279,7 +290,8 @@ export function PhotoboothProvider({ children }) {
     package: pkgKey, 
     pin, 
     templateIds, 
-    heroPhotos 
+    heroPhotos,
+    customFrame
   }) => {
     const pkg = PACKAGES[pkgKey] || PACKAGES.standard;
     const activeDays = pkg.activeDays || 10;
@@ -314,6 +326,7 @@ export function PhotoboothProvider({ children }) {
       pin: pin || '',
       templateIds: templateIds || ['wedding-classic', 'gold-luxury'],
       heroPhotos: heroPhotos && heroPhotos.length > 0 ? heroPhotos : DEFAULT_HERO_PHOTOS,
+      customFrame: customFrame || null,
       expiresAt: now + activeDays * 86400 * 1000,
       createdAt: now,
     };
@@ -323,7 +336,7 @@ export function PhotoboothProvider({ children }) {
       saveLocalEvents(next);
       return next;
     });
-    syncEventToCloud(newEvt);
+    await syncEventToCloud(newEvt);
     return newEvt;
   }, []);
 
@@ -352,28 +365,30 @@ export function PhotoboothProvider({ children }) {
     }));
   }, []);
 
-  const updateEventHeroPhotos = useCallback((eventId, newPhotoUrls) => {
+  const updateEventHeroPhotos = useCallback(async (eventId, newPhotoUrls) => {
+    let updatedEventToSync = null;
     setEvents(prev => {
-      let updatedEvent = null;
       const next = prev.map(e => {
         if (e.id === eventId || e.slug === eventId) {
-          updatedEvent = {
+          updatedEventToSync = {
             ...e,
             heroPhotos: newPhotoUrls
           };
-          return updatedEvent;
+          return updatedEventToSync;
         }
         return e;
       });
       saveLocalEvents(next);
-      if (updatedEvent) {
-        syncEventToCloud(updatedEvent);
-      }
       return next;
     });
+    if (updatedEventToSync) {
+      await syncEventToCloud(updatedEventToSync);
+    }
+    return updatedEventToSync;
   }, []);
 
-  const updateEventConfig = useCallback((eventId, updates) => {
+  const updateEventConfig = useCallback(async (eventId, updates) => {
+    let updatedEventToSync = null;
     setEvents(prev => {
       let updatedEvent = null;
       const next = prev.map(e => {
@@ -417,16 +432,18 @@ export function PhotoboothProvider({ children }) {
           eventDate,
           formattedDate
         };
+        updatedEventToSync = updatedEvent;
         return updatedEvent;
       }
       return e;
     });
     saveLocalEvents(next);
-    if (updatedEvent) {
-      syncEventToCloud(updatedEvent);
-    }
     return next;
   });
+  if (updatedEventToSync) {
+    await syncEventToCloud(updatedEventToSync);
+  }
+  return updatedEventToSync;
 }, []);
 
   // 3. Guest Info & Photobooth State
@@ -746,6 +763,7 @@ export function PhotoboothProvider({ children }) {
   return (
     <PhotoboothContext.Provider value={{
       events,
+      isEventsLoading,
       currentRoute,
       currentSlug,
       isDemo,
