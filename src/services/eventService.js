@@ -101,6 +101,7 @@ export async function syncEventToCloud(event) {
         heroPhotos: safeHeroPhotos,
         templateIds: event.templateIds || [],
         customFrame: event.customFrame || null,
+        hideHeroTextOverlay: event.hideHeroTextOverlay !== undefined ? !!event.hideHeroTextOverlay : null,
         expiresAt: event.expiresAt || (Date.now() + 14 * 86400 * 1000),
         updatedAt: Date.now(),
       };

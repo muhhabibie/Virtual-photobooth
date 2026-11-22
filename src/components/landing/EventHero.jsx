@@ -106,6 +106,10 @@ export default function EventHero() {
   if (!activeEvent) return null;
 
   const isWedding = (activeEvent.eventType || 'wedding') === 'wedding';
+  const shouldHideOverlay = activeEvent.hideHeroTextOverlay !== undefined
+    ? !!activeEvent.hideHeroTextOverlay
+    : !isWedding;
+
   const eventBadge = isWedding
     ? 'THE WEDDING CELEBRATION OF'
     : (activeEvent.eventType === 'concert'
@@ -224,99 +228,144 @@ export default function EventHero() {
           </>
         )}
 
-        {/* Vignette Lighting */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none z-10" />
+        {/* Vignette Lighting - only shown if text is overlaid to maintain readability */}
+        {!shouldHideOverlay && (
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none z-10" />
+        )}
 
         {/* ================= 👑 FESTIVE WEDDING NAMES (ROMANTIC POETIC REVEAL) 👑 ================= */}
-        <div className="absolute top-10 xs:top-12 sm:top-16 md:top-20 inset-x-3 sm:inset-x-4 text-center z-20 pointer-events-none flex flex-col items-center">
-          
-          {/* Item 1: Celebration Badge */}
-          <motion.div 
-            initial={{ opacity: 0, y: -16 }}
-            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 1, 0.5, 1] }}
-            className="inline-flex items-center px-4 sm:px-5 py-1 sm:py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 shadow-lg mb-2"
-          >
-            <span className="text-[10px] sm:text-xs font-sans font-semibold tracking-[0.22em] sm:tracking-[0.28em] text-amber-200 uppercase">
-              {eventBadge}
-            </span>
-          </motion.div>
+        {!shouldHideOverlay && (
+          <div className="absolute top-10 xs:top-12 sm:top-16 md:top-20 inset-x-3 sm:inset-x-4 text-center z-20 pointer-events-none flex flex-col items-center">
+            
+            {/* Item 1: Celebration Badge */}
+            <motion.div 
+              initial={{ opacity: 0, y: -16 }}
+              animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
+              transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 1, 0.5, 1] }}
+              className="inline-flex items-center px-4 sm:px-5 py-1 sm:py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 shadow-lg mb-2"
+            >
+              <span className="text-[10px] sm:text-xs font-sans font-semibold tracking-[0.22em] sm:tracking-[0.28em] text-amber-200 uppercase">
+                {eventBadge}
+              </span>
+            </motion.div>
 
-          {/* Item 2: Wedding Couple Names or Event Name */}
-          <motion.h1 
-            initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
-            animate={introReady ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 30, filter: 'blur(10px)' }}
-            transition={{ duration: 1.0, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
-            className={`text-white mt-1 leading-tight sm:leading-none drop-shadow-2xl ${
-              isWedding 
-                ? 'text-5xl xs:text-6xl sm:text-8xl md:text-9xl lg:text-[115px] font-normal' 
-                : 'text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-black tracking-tight'
-            }`}
-            style={isWedding ? { 
-              fontFamily: "'Alex Brush', 'Great Vibes', cursive",
-              textShadow: '0 4px 30px rgba(0,0,0,0.85), 0 0 50px rgba(245,215,127,0.45)'
-            } : {
-              fontFamily: "'Playfair Display', Georgia, serif",
-              textShadow: '0 4px 30px rgba(0,0,0,0.85), 0 0 40px rgba(245,215,127,0.3)',
-              letterSpacing: '-0.02em'
-            }}
-          >
-            {activeEvent.displayName}
-          </motion.h1>
+            {/* Item 2: Wedding Couple Names or Event Name */}
+            <motion.h1 
+              initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+              animate={introReady ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 30, filter: 'blur(10px)' }}
+              transition={{ duration: 1.0, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
+              className={`text-white mt-1 leading-tight sm:leading-none drop-shadow-2xl ${
+                isWedding 
+                  ? 'text-5xl xs:text-6xl sm:text-8xl md:text-9xl lg:text-[115px] font-normal' 
+                  : 'text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif font-black tracking-tight'
+              }`}
+              style={isWedding ? { 
+                fontFamily: "'Alex Brush', 'Great Vibes', cursive",
+                textShadow: '0 4px 30px rgba(0,0,0,0.85), 0 0 50px rgba(245,215,127,0.45)'
+              } : {
+                fontFamily: "'Playfair Display', Georgia, serif",
+                textShadow: '0 4px 30px rgba(0,0,0,0.85), 0 0 40px rgba(245,215,127,0.3)',
+                letterSpacing: '-0.02em'
+              }}
+            >
+              {activeEvent.displayName}
+            </motion.h1>
 
-          {/* Item 3: Event Date & Venue Badge */}
-          <motion.div 
-            initial={{ opacity: 0, y: 16 }}
-            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-            transition={{ duration: 0.8, delay: 0.45, ease: [0.25, 1, 0.5, 1] }}
-            className="mt-2 sm:mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 shadow-md"
-          >
-            <p className="text-[11px] sm:text-sm text-rose-100 font-medium tracking-wide">
-              {activeEvent.formattedDate} • {activeEvent.venue || (isWedding ? 'Wedding Venue' : 'Event Venue')}
-            </p>
-          </motion.div>
+            {/* Item 3: Event Date & Venue Badge */}
+            <motion.div 
+              initial={{ opacity: 0, y: 16 }}
+              animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+              transition={{ duration: 0.8, delay: 0.45, ease: [0.25, 1, 0.5, 1] }}
+              className="mt-2 sm:mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 shadow-md"
+            >
+              <p className="text-[11px] sm:text-sm text-rose-100 font-medium tracking-wide">
+                {activeEvent.formattedDate} • {activeEvent.venue || (isWedding ? 'Wedding Venue' : 'Event Venue')}
+              </p>
+            </motion.div>
 
-        </div>
+          </div>
+        )}
 
         {/* Item 5: Slide Dots */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={introReady ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.7, delay: 0.70 }}
-          className="absolute bottom-24 sm:bottom-32 inset-x-0 flex items-center justify-center gap-2 z-20 pointer-events-auto"
-        >
-          {slideImages.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={(e) => {
-                e.stopPropagation();
-                setCurrentSlide(idx);
-              }}
-              className={`transition-all duration-500 rounded-full cursor-pointer ${
-                idx === currentSlide
-                  ? 'w-6 h-2 bg-amber-300 shadow-lg shadow-amber-300/50'
-                  : 'w-2 h-2 bg-white/60 hover:bg-white'
-              }`}
-            />
-          ))}
-        </motion.div>
+        {slideImages.length > 1 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={introReady ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.7, delay: 0.70 }}
+            className={`absolute inset-x-0 flex items-center justify-center gap-2 z-20 pointer-events-auto ${
+              shouldHideOverlay ? 'bottom-3 sm:bottom-4' : 'bottom-24 sm:bottom-32'
+            }`}
+          >
+            <div className={shouldHideOverlay ? "flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/45 backdrop-blur-md border border-white/20 shadow-md" : "flex items-center gap-2"}>
+              {slideImages.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentSlide(idx);
+                  }}
+                  className={`transition-all duration-300 rounded-full cursor-pointer ${
+                    idx === currentSlide
+                      ? 'w-5 h-2 bg-amber-300 shadow-md shadow-amber-300/50'
+                      : 'w-2 h-2 bg-white/60 hover:bg-white'
+                  }`}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Fog Bottom Fade */}
         <div 
-          className="absolute bottom-0 inset-x-0 h-36 sm:h-64 pointer-events-none z-10"
+          className={`absolute bottom-0 inset-x-0 pointer-events-none z-10 ${shouldHideOverlay ? 'h-14 sm:h-20' : 'h-36 sm:h-64'}`}
           style={{
-            background: `linear-gradient(to top, 
-              #ffffff 15%, 
-              rgba(255, 255, 255, 0.95) 38%, 
-              rgba(255, 255, 255, 0) 100%
-            )`
+            background: shouldHideOverlay
+              ? 'linear-gradient(to top, #ffffff 15%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100%)'
+              : `linear-gradient(to top, 
+                  #ffffff 15%, 
+                  rgba(255, 255, 255, 0.95) 38%, 
+                  rgba(255, 255, 255, 0) 100%
+                )`
           }}
         />
 
       </div>
 
       {/* ==================== 🌟 2. CONTENT & ACTION BUTTONS 🌟 ==================== */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-5 relative z-20 -mt-6 sm:-mt-8">
+      <div className={`max-w-5xl mx-auto px-4 sm:px-5 relative z-20 ${shouldHideOverlay ? 'pt-4 sm:pt-6' : '-mt-6 sm:-mt-8'}`}>
+        
+        {/* Header Block Below Poster when Overlay is Hidden from Hero Photo */}
+        {shouldHideOverlay && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+            transition={{ duration: 0.8, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
+            className="mb-4 flex flex-col items-center text-center px-2"
+          >
+            {/* Badge */}
+            <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-[#6B111F]/10 border border-[#6B111F]/20 mb-2 shadow-2xs">
+              <span className="text-[10px] sm:text-xs font-sans font-bold tracking-[0.2em] text-[#6B111F] uppercase">
+                {eventBadge}
+              </span>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-2xl xs:text-3xl sm:text-5xl font-serif font-black text-stone-900 tracking-tight leading-tight mb-2">
+              {activeEvent.displayName}
+            </h1>
+
+            {/* Date & Venue */}
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-stone-100 border border-stone-200/80 text-stone-600 text-xs sm:text-sm font-medium shadow-2xs">
+              <span>{activeEvent.formattedDate}</span>
+              {activeEvent.venue && (
+                <>
+                  <span className="text-stone-300">•</span>
+                  <span>{activeEvent.venue}</span>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
         
         {/* Item 6: Description Paragraph */}
         <motion.p 

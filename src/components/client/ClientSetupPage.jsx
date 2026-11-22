@@ -276,6 +276,10 @@ export default function ClientSetupPage() {
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [hideHeroTextOverlay, setHideHeroTextOverlay] = useState(() => {
+    if (event?.hideHeroTextOverlay !== undefined) return !!event.hideHeroTextOverlay;
+    return !isWedding;
+  });
 
   // Sync state when slug or query params change
   useEffect(() => {
@@ -620,6 +624,7 @@ export default function ClientSetupPage() {
         venue,
         eventDate,
         heroPhotos: compressedPhotos,
+        hideHeroTextOverlay,
         customFrame: {
           bgColor: frameBgColor,
           textColor: frameTextColor,
@@ -891,45 +896,55 @@ export default function ClientSetupPage() {
                     className="absolute inset-0 w-full h-full object-cover filter brightness-[0.82] contrast-105"
                   />
 
-                  {/* Romantic Shadow Vignettes */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/25 to-black/90 pointer-events-none" />
+                  {/* Romantic Shadow Vignettes - only if overlay text is active */}
+                  {!hideHeroTextOverlay && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/25 to-black/90 pointer-events-none" />
+                  )}
 
-                  {/* Top Wedding Names & Header */}
-                  <div className="relative z-10 pt-5 flex flex-col items-center">
-                    <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-semibold text-amber-200 uppercase tracking-[0.2em] border border-white/15 shadow-sm">
-                      {isWedding 
-                        ? 'THE WEDDING CELEBRATION OF' 
-                        : (event.eventType === 'concert' 
-                            ? 'OFFICIAL FESTIVAL PHOTOBOOTH' 
-                            : (event.eventType === 'exhibition' 
-                                ? 'EXHIBITION PHOTOBOOTH' 
-                                : (event.eventType === 'festival' 
-                                    ? 'OFFICIAL EXPO PHOTOBOOTH' 
-                                    : 'OFFICIAL EVENT PHOTOBOOTH')))}
-                    </span>
+                  {/* Top Wedding Names & Header - hidden in clean poster mode */}
+                  {!hideHeroTextOverlay ? (
+                    <div className="relative z-10 pt-5 flex flex-col items-center">
+                      <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-semibold text-amber-200 uppercase tracking-[0.2em] border border-white/15 shadow-sm">
+                        {isWedding 
+                          ? 'THE WEDDING CELEBRATION OF' 
+                          : (event.eventType === 'concert' 
+                              ? 'OFFICIAL FESTIVAL PHOTOBOOTH' 
+                              : (event.eventType === 'exhibition' 
+                                  ? 'EXHIBITION PHOTOBOOTH' 
+                                  : (event.eventType === 'festival' 
+                                      ? 'OFFICIAL EXPO PHOTOBOOTH' 
+                                      : 'OFFICIAL EVENT PHOTOBOOTH')))}
+                      </span>
 
-                    {/* Live Couple Calligraphy or Modern Bold Display */}
-                    <h1 
-                      style={isWedding ? { 
-                        fontFamily: "'Alex Brush', 'Great Vibes', cursive",
-                        textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.4)'
-                      } : {
-                        fontFamily: "'Playfair Display', Georgia, serif",
-                        textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.3)',
-                        letterSpacing: '-0.02em'
-                      }}
-                      className={`${isWedding ? 'text-4xl xs:text-5xl font-normal' : 'text-2xl xs:text-3xl font-serif font-black tracking-tight'} text-white leading-tight mt-1 px-1 drop-shadow-2xl`}
-                    >
-                      {combinedDisplayName}
-                    </h1>
+                      {/* Live Couple Calligraphy or Modern Bold Display */}
+                      <h1 
+                        style={isWedding ? { 
+                          fontFamily: "'Alex Brush', 'Great Vibes', cursive",
+                          textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.4)'
+                        } : {
+                          fontFamily: "'Playfair Display', Georgia, serif",
+                          textShadow: '0 3px 20px rgba(0,0,0,0.9), 0 0 30px rgba(245,215,127,0.3)',
+                          letterSpacing: '-0.02em'
+                        }}
+                        className={`${isWedding ? 'text-4xl xs:text-5xl font-normal' : 'text-2xl xs:text-3xl font-serif font-black tracking-tight'} text-white leading-tight mt-1 px-1 drop-shadow-2xl`}
+                      >
+                        {combinedDisplayName}
+                      </h1>
 
-                    {/* Live Date & Venue */}
-                    <div className="mt-1 px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15">
-                      <p className="text-[9.5px] text-rose-100 font-medium">
-                        {formattedDisplayDate} • {venue || event.venue || (isWedding ? 'Grand Ballroom Jakarta' : 'Venue Acara')}
-                      </p>
+                      {/* Live Date & Venue */}
+                      <div className="mt-1 px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15">
+                        <p className="text-[9.5px] text-rose-100 font-medium">
+                          {formattedDisplayDate} • {venue || event.venue || (isWedding ? 'Grand Ballroom Jakarta' : 'Venue Acara')}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="relative z-10 pt-2 flex items-center justify-center">
+                      <span className="px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md text-[9px] font-sans font-medium text-white/90 border border-white/15 shadow-sm">
+                        Mode Poster Bersih (Teks Tidak Menutupi Foto)
+                      </span>
+                    </div>
+                  )}
 
                   {/* Bottom Photobooth Action Buttons Simulation */}
                   <div className="relative z-10 pb-2 space-y-2">
@@ -1263,6 +1278,50 @@ export default function ClientSetupPage() {
               <span>Format: JPG, PNG, WEBP (Maksimal 5 foto slide)</span>
               <span className="text-[#6B111F] font-semibold">Foto #1 otomatis jadi Cover Pembuka</span>
             </div>
+          </div>
+
+          {/* Opsi Tampilan Judul di Atas Foto Cover */}
+          <div className="rounded-2xl bg-white border border-[#EADBCC] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-serif font-bold text-stone-900">
+                  Teks Judul & Badge di Atas Foto Cover
+                </span>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  hideHeroTextOverlay 
+                    ? 'bg-emerald-100 text-emerald-800' 
+                    : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {hideHeroTextOverlay ? 'Mode Bersih (Direkomendasikan)' : 'Tampil di Atas Foto'}
+                </span>
+              </div>
+              <p className="text-[11px] text-stone-500 leading-relaxed max-w-xl">
+                {hideHeroTextOverlay 
+                  ? 'Foto cover ditampilkan bersih tanpa teks menutupi (sangat direkomendasikan jika foto Anda berupa poster atau flyer yang sudah ada tulisannya).' 
+                  : 'Teks nama acara dan badge ditampilkan mengambang di atas foto (cocok untuk foto prewedding atau foto polos tanpa tulisan).'}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setHideHeroTextOverlay(prev => !prev);
+                setIsSaved(false);
+                toast(
+                  !hideHeroTextOverlay 
+                    ? 'Mode Bersih aktif: Teks judul tidak akan menutupi foto poster' 
+                    : 'Mode Teks aktif: Teks judul akan tampil di atas foto',
+                  'info'
+                );
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition active:scale-95 cursor-pointer whitespace-nowrap flex-shrink-0 ${
+                hideHeroTextOverlay 
+                  ? 'bg-stone-900 text-amber-200 hover:bg-stone-800 shadow-xs' 
+                  : 'bg-[#6B111F] text-[#F5D77F] hover:bg-[#520C16] shadow-xs'
+              }`}
+            >
+              {hideHeroTextOverlay ? 'Ubah ke Mode Teks di Foto' : 'Sembunyikan Teks dari Foto'}
+            </button>
           </div>
 
           {/* Photos Cards - Wide Aspect Ratio for Landscape & Portrait Harmony */}

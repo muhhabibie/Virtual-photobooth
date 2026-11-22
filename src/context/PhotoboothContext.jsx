@@ -291,7 +291,8 @@ export function PhotoboothProvider({ children }) {
     pin, 
     templateIds, 
     heroPhotos,
-    customFrame
+    customFrame,
+    hideHeroTextOverlay
   }) => {
     const pkg = PACKAGES[pkgKey] || PACKAGES.standard;
     const activeDays = pkg.activeDays || 10;
@@ -327,6 +328,7 @@ export function PhotoboothProvider({ children }) {
       templateIds: templateIds || ['wedding-classic', 'gold-luxury'],
       heroPhotos: heroPhotos && heroPhotos.length > 0 ? heroPhotos : DEFAULT_HERO_PHOTOS,
       customFrame: customFrame || null,
+      hideHeroTextOverlay: hideHeroTextOverlay !== undefined ? !!hideHeroTextOverlay : (eventType !== 'wedding'),
       expiresAt: now + activeDays * 86400 * 1000,
       createdAt: now,
     };
