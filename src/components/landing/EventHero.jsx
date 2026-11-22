@@ -286,41 +286,47 @@ export default function EventHero() {
           </div>
         )}
 
-        {/* Item 5: Slide Dots */}
+        {/* Item 5: Slide Dots (Ultra-Minimalist iPhone iOS Frosted Glass Capsule) */}
         {slideImages.length > 1 && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={introReady ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.7, delay: 0.70 }}
-            className={`absolute inset-x-0 flex items-center justify-center gap-2 z-20 pointer-events-auto ${
-              shouldHideOverlay ? 'bottom-3 sm:bottom-4' : 'bottom-24 sm:bottom-32'
+            initial={{ opacity: 0, y: 6 }}
+            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+            transition={{ duration: 0.6, delay: 0.50, ease: [0.22, 1, 0.36, 1] }}
+            className={`absolute inset-x-0 flex items-center justify-center z-20 pointer-events-auto ${
+              shouldHideOverlay ? 'bottom-2.5 sm:bottom-3.5' : 'bottom-20 sm:bottom-28'
             }`}
           >
-            <div className={shouldHideOverlay ? "flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/45 backdrop-blur-md border border-white/20 shadow-md" : "flex items-center gap-2"}>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 backdrop-blur-xl border border-white/15 shadow-[0_2px_12px_rgba(0,0,0,0.28),inset_0_0.5px_0.5px_rgba(255,255,255,0.25)]">
               {slideImages.map((_, idx) => (
                 <button
                   key={idx}
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setCurrentSlide(idx);
                   }}
-                  className={`transition-all duration-300 rounded-full cursor-pointer ${
-                    idx === currentSlide
-                      ? 'w-5 h-2 bg-amber-300 shadow-md shadow-amber-300/50'
-                      : 'w-2 h-2 bg-white/60 hover:bg-white'
-                  }`}
-                />
+                  className="group/dot relative p-0.5 focus:outline-none cursor-pointer flex items-center justify-center"
+                  aria-label={`Slide ${idx + 1}`}
+                >
+                  <span
+                    className={`block h-1.5 rounded-full transition-all duration-300 ease-out ${
+                      idx === currentSlide
+                        ? 'w-4.5 bg-white shadow-[0_0_6px_rgba(255,255,255,0.85)]'
+                        : 'w-1.5 bg-white/40 group-hover/dot:bg-white/70'
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           </motion.div>
         )}
 
-        {/* Fog Bottom Fade */}
+        {/* Fog Bottom Fade - ultra subtle in poster mode to keep bottom artwork & icons crisp */}
         <div 
-          className={`absolute bottom-0 inset-x-0 pointer-events-none z-10 ${shouldHideOverlay ? 'h-14 sm:h-20' : 'h-36 sm:h-64'}`}
+          className={`absolute bottom-0 inset-x-0 pointer-events-none z-10 ${shouldHideOverlay ? 'h-6 sm:h-8' : 'h-36 sm:h-64'}`}
           style={{
             background: shouldHideOverlay
-              ? 'linear-gradient(to top, #ffffff 15%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100%)'
+              ? 'linear-gradient(to top, #ffffff, transparent)'
               : `linear-gradient(to top, 
                   #ffffff 15%, 
                   rgba(255, 255, 255, 0.95) 38%, 

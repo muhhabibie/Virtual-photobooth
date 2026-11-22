@@ -958,21 +958,27 @@ export default function ClientSetupPage() {
                       </div>
                     </div>
 
-                    {/* Prewedding Slide Dots Preview */}
+                    {/* Slide Dots Preview (Apple iPhone Minimalist Glass Capsule) */}
                     {heroPhotos.length > 1 && (
-                      <div className="flex items-center justify-center gap-1 pt-1">
-                        {heroPhotos.map((_, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => setPreviewPhotoIdx(i)}
-                            className={`rounded-full transition-all cursor-pointer ${
-                              i === previewPhotoIdx 
-                                ? 'w-4 h-1.5 bg-[#F5D77F]' 
-                                : 'w-1.5 h-1.5 bg-white/50'
-                            }`}
-                          />
-                        ))}
+                      <div className="flex items-center justify-center pt-1">
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/15 shadow-sm">
+                          {heroPhotos.map((_, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => setPreviewPhotoIdx(i)}
+                              className="p-0.5 focus:outline-none cursor-pointer flex items-center justify-center"
+                            >
+                              <span
+                                className={`block h-1 rounded-full transition-all duration-300 ${
+                                  i === previewPhotoIdx 
+                                    ? 'w-3.5 bg-white shadow-[0_0_4px_rgba(255,255,255,0.8)]' 
+                                    : 'w-1 bg-white/40'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
