@@ -990,7 +990,12 @@ export default function StepCamera() {
         </button>
 
         {/* Center: Pose Counter Badge */}
-        <div className="px-2.5 sm:px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-amber-200 text-[10px] sm:text-[10.5px] font-mono font-bold tracking-widest uppercase flex items-center justify-center shadow-md truncate">
+        <div className="px-2.5 sm:px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-amber-200 text-[10px] sm:text-[10.5px] font-mono font-bold tracking-widest uppercase flex items-center justify-center gap-1.5 shadow-md truncate">
+          {isGraphicFrameMode && (
+            <span className="text-[9px] text-amber-400 font-extrabold flex items-center gap-1">
+              <span>✨</span> {activeGraphicFrame?.name} •
+            </span>
+          )}
           <span>POSE {nextPhotoNum} / {targetPhotoCount}</span>
         </div>
 
@@ -1012,33 +1017,26 @@ export default function StepCamera() {
         <div 
           ref={frameContainerRef}
           style={{ 
-            backgroundColor: isGraphicFrameMode ? (activeGraphicFrame.themeHex || '#E65C9C') : currentTheme.hex,
-            border: 'none'
+            backgroundColor: isGraphicFrameMode ? 'transparent' : currentTheme.hex,
+            border: 'none',
+            boxShadow: isGraphicFrameMode ? 'none' : undefined
           }}
-          className="relative w-full max-h-[calc(100dvh-225px)] sm:max-h-[500px] rounded-2xl sm:rounded-3xl px-3 sm:px-5 pt-1.5 sm:pt-2 pb-2 sm:pb-2.5 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 overflow-hidden my-auto"
+          className={`relative w-full max-h-[calc(100dvh-225px)] sm:max-h-[500px] ${
+            isGraphicFrameMode
+              ? 'p-0 shadow-none bg-transparent'
+              : 'rounded-2xl sm:rounded-3xl px-3 sm:px-5 pt-1.5 sm:pt-2 pb-2 sm:pb-2.5 shadow-2xl shadow-black'
+          } flex flex-col items-center justify-center transition-all duration-300 overflow-hidden my-auto`}
         >
-          {/* Live Master Botanical & Custom Frame Ornaments Canvas */}
-          <canvas
-            ref={frameCanvasRef}
-            className="absolute inset-0 w-full h-full pointer-events-none z-0"
-          />
+          {/* Live Master Botanical & Custom Frame Ornaments Canvas (Standard Paper Frame only) */}
+          {!isGraphicFrameMode && (
+            <canvas
+              ref={frameCanvasRef}
+              className="absolute inset-0 w-full h-full pointer-events-none z-0"
+            />
+          )}
 
-          {/* Top Frame Header Title */}
-          {isGraphicFrameMode ? (
-            <div className="relative z-20 w-full flex items-center justify-between px-2 pt-1 pb-1 flex-shrink-0 text-white">
-              <div className="flex items-center gap-1.5">
-                <span className="px-2 py-0.5 rounded-full bg-black/35 backdrop-blur-xs text-amber-200 text-[8px] sm:text-[9px] font-sans font-extrabold uppercase tracking-wider flex items-center gap-1">
-                  <span>✨</span> PREMIUM
-                </span>
-                <h2 className="text-[11px] sm:text-xs font-serif font-bold text-white tracking-wider uppercase drop-shadow-sm truncate max-w-[170px] sm:max-w-xs">
-                  {activeGraphicFrame.name}
-                </h2>
-              </div>
-              <div className="px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-mono font-bold tracking-tight">
-                Pose {capturedPhotos.length + 1} / {targetPhotoCount}
-              </div>
-            </div>
-          ) : (
+          {/* Top Frame Header Title (Standard Paper Frame only) */}
+          {!isGraphicFrameMode && (
             <div className="relative z-20 w-full flex flex-col items-center justify-center px-2 pt-0.5 pb-1 flex-shrink-0">
               {/* Top Brand Header: N | sirklenice (Matching stripRenderer.js standard layout) */}
               <div className="flex items-center justify-center gap-1 pb-0.5" style={{ color: primaryTextColor }}>
@@ -1069,7 +1067,7 @@ export default function StepCamera() {
               borderColor: isGraphicFrameMode ? 'transparent' : accentColor,
               border: isGraphicFrameMode ? 'none' : undefined
             }}
-            className={`relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center ${isGraphicFrameMode ? 'border-0' : 'border-2'} my-1 touch-pan-y select-none cursor-grab active:cursor-grabbing group z-10`}
+            className={`relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black shadow-2xl flex items-center justify-center ${isGraphicFrameMode ? 'border-0 ring-0' : 'border-2 my-1'} touch-pan-y select-none cursor-grab active:cursor-grabbing group z-10`}
           >
             {/* Camera Video Stream */}
             <video
@@ -1137,19 +1135,8 @@ export default function StepCamera() {
 
           </div>
 
-          {/* Bottom Frame Chin Preview: Adapts to Premium Graphic Frame vs Classic Standard */}
-          {isGraphicFrameMode ? (
-            <div className="relative z-20 text-center pt-1 pb-1 flex-shrink-0 flex flex-col items-center w-full text-white">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs sm:text-sm font-serif font-bold tracking-wide text-white drop-shadow-sm">
-                  {guestName ? `${guestName} · ` : ''}{activeEvent?.displayName || 'Mitufaya 8th Anniversary'}
-                </span>
-              </div>
-              <p className="text-[8px] sm:text-[9px] text-white/80 font-sans tracking-wide mt-0.5">
-                {activeGraphicFrame.name} · {activeGraphicFrame.slots} Pose Eksklusif Event
-              </p>
-            </div>
-          ) : (
+          {/* Bottom Frame Chin Preview: Classic Standard Paper Strip Only */}
+          {!isGraphicFrameMode && (
             <div className="relative z-20 text-center pt-1 pb-1 flex-shrink-0 flex flex-col items-center w-full">
               {/* Guest Name in calligraphy */}
               <h3 
