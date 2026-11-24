@@ -72,12 +72,6 @@ export default function PhotostripThumbnail({
           scale: 1.5,
         });
       } else {
-        const resolvedGraphicId = item.graphicFrameId || (
-          ((item.eventSlug || '').toLowerCase().includes('mitufaya') || (activeEvent?.slug || '').toLowerCase().includes('mitufaya') || (activeEvent?.displayName || '').toLowerCase().includes('mitufaya'))
-            ? (validPhotos.length === 4 ? 'mitufaya-cosmic-4' : 'mitufaya-stamp-3')
-            : null
-        );
-
         renderMasterPhotoStrip(canvasRef.current, {
           photos: validPhotos,
           targetCount: validPhotos.length,
@@ -85,7 +79,7 @@ export default function PhotostripThumbnail({
           guestName: item.guestName,
           guestMessage: item.message || item.guestMessage,
           activeEvent: activeEvent,
-          graphicFrameId: resolvedGraphicId,
+          graphicFrameId: item.graphicFrameId || null,
           scale: 1.5,
         });
       }
