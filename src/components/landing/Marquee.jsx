@@ -1,7 +1,8 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { DEFAULT_HERO_PHOTOS } from '../../data/mockEvents';
+import { getEventGraphicFrames } from '../../data/eventFrames';
 
 // Authentic Photostrip Frame Themes for Event / Wedding Showcase
 const FRAME_PREVIEWS = [
@@ -80,12 +81,20 @@ const FRAME_PREVIEWS = [
 ];
 
 export default function Marquee() {
-  const { openBooth, activeEvent, setStripColor } = useBooth();
+  const { openBooth, activeEvent, setStripColor, setSelectedGraphicFrameId, setTargetPhotoCount } = useBooth();
   const trackRef = useRef(null);
   const containerRef = useRef(null);
 
+  const eventGraphicFrames = useMemo(() => getEventGraphicFrames(activeEvent), [activeEvent]);
+  const hasGraphicFrames = eventGraphicFrames.length > 0;
+
   // Quadruple duplicated list for 100% seamless, uninterrupted infinite sliding
-  const duplicated = [...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS];
+  const duplicated = useMemo(() => {
+    if (hasGraphicFrames) {
+      return [...eventGraphicFrames, ...eventGraphicFrames, ...eventGraphicFrames, ...eventGraphicFrames];
+    }
+    return [...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS];
+  }, [hasGraphicFrames, eventGraphicFrames]);
 
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
   const bride = activeEvent?.brideName;
@@ -265,6 +274,34 @@ export default function Marquee() {
         style={{ width: 'max-content' }}
       >
         {duplicated.map((card, i) => {
+          if (card.previewUrl) {
+            return (
+              <div
+                key={`${card.id}-${i}`}
+                onClick={() => {
+                  if (dragDistanceRef.current < 6) {
+                    if (setSelectedGraphicFrameId) setSelectedGraphicFrameId(card.id);
+                    if (setTargetPhotoCount) setTargetPhotoCount(card.slots);
+                    openBooth();
+                  }
+                }}
+                className="relative flex-shrink-0 w-44 xs:w-48 sm:w-52 h-[520px] xs:h-[550px] sm:h-[590px] rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-[1.02] cursor-pointer select-none group/card border border-stone-200/90 bg-stone-900"
+                title={`Pilih bingkai ${card.name}`}
+              >
+                <img 
+                  src={card.previewUrl} 
+                  alt={card.name} 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent text-white">
+                  <p className="text-xs sm:text-sm font-serif font-bold leading-tight">{card.name}</p>
+                  <p className="text-[10px] text-amber-200 font-sans mt-0.5">{card.slots} Pose · Eksklusif Event</p>
+                </div>
+              </div>
+            );
+          }
+
           const isLight = card.colorHex === '#FDFBF7' || card.colorHex === '#F3C5CB' || card.colorHex === '#FFFFFF';
           const botanicalColor = isLight ? '#B89F88' : card.textHex;
 
