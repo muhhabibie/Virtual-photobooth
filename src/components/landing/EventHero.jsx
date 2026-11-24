@@ -337,70 +337,107 @@ export default function EventHero() {
         {/* Header Block Below Poster when Overlay is Hidden from Hero Photo */}
         {shouldHideOverlay && (
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-            transition={{ duration: 0.8, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
-            className="mb-5 sm:mb-6 flex flex-col items-center text-center px-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.9, delay: 0.2, ease: [0.25, 1, 0.5, 1] }}
+            className="mb-6 sm:mb-8 flex flex-col items-center text-center px-3"
           >
             {/* Badge (Weddings Only) */}
             {eventBadge && (
-              <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-[#6B111F]/10 border border-[#6B111F]/20 mb-2.5 shadow-2xs">
-                <span className="text-[10px] sm:text-xs font-sans font-bold tracking-[0.2em] text-[#6B111F] uppercase">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={introReady ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="inline-flex items-center px-4 py-1 rounded-full mb-3 shadow-sm"
+                style={{ background: 'linear-gradient(135deg, #6B111F08, #B88E3E14)', border: '1px solid #C5A05940' }}
+              >
+                <span className="text-[10px] sm:text-xs font-sans font-bold tracking-[0.25em] uppercase"
+                  style={{ color: '#8A1828' }}>
                   {eventBadge}
                 </span>
-              </div>
+              </motion.div>
             )}
 
-            {/* Title (High-End Editorial Luxury Typography - Aesthetic & Non-Flat Gradient) */}
-            <h1 
-              className={`leading-tight px-2 ${
-                isWedding 
-                  ? 'text-4xl xs:text-5xl sm:text-7xl font-normal text-[#2A060D]' 
-                  : 'text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-serif font-bold sm:font-extrabold tracking-tight'
+            {/* Title — High-Craft Editorial Luxury Typography */}
+            <motion.h1
+              initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
+              animate={introReady ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 18, filter: 'blur(6px)' }}
+              transition={{ duration: 1.0, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className={`leading-[1.12] px-1 ${
+                isWedding
+                  ? 'text-5xl xs:text-6xl sm:text-8xl font-normal'
+                  : 'text-[30px] xs:text-[34px] sm:text-5xl md:text-[54px] font-bold'
               }`}
               style={isWedding ? {
                 fontFamily: "'Alex Brush', 'Great Vibes', cursive",
-                textShadow: '0 2px 12px rgba(107,17,31,0.1)'
+                color: '#3E0A14',
+                textShadow: '0 3px 16px rgba(107,17,31,0.13)'
               } : {
                 fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif",
-                letterSpacing: '-0.015em'
+                background: 'linear-gradient(135deg, #430812 0%, #7B1323 28%, #A8283D 52%, #7B1323 76%, #430812 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 2px 10px rgba(107,17,31,0.14))',
+                letterSpacing: '-0.02em',
               }}
             >
-              <span 
-                className={isWedding 
-                  ? 'text-[#3E0A14]' 
-                  : 'bg-gradient-to-r from-[#6B111F] via-[#BA2B46] via-[#D13B59] to-[#6B111F] bg-clip-text text-transparent inline-block'}
-                style={!isWedding ? {
-                  filter: 'drop-shadow(0 2px 8px rgba(186,43,70,0.22)) drop-shadow(0 1px 2px rgba(0,0,0,0.08))'
-                } : undefined}
-              >
-                {activeEvent.displayName}
-              </span>
-            </h1>
+              {activeEvent.displayName}
+            </motion.h1>
 
-            {/* Subtle Luxury Ornament Divider */}
-            <div className="flex items-center justify-center gap-2.5 my-2.5 sm:my-3">
-              <span className="w-8 sm:w-14 h-[1px] bg-gradient-to-r from-transparent via-[#C5A059]/60 to-[#C5A059]" />
-              <span className="text-[#B88E3E] text-[10px] sm:text-xs select-none">✦</span>
-              <span className="w-8 sm:w-14 h-[1px] bg-gradient-to-l from-transparent via-[#C5A059]/60 to-[#C5A059]" />
-            </div>
+            {/* Minimalist Champagne-Gold Hairline Divider (No Star/Sparkle Icons) */}
+            <motion.div
+              initial={{ opacity: 0, scaleX: 0.3 }}
+              animate={introReady ? { opacity: 1, scaleX: 1 } : { opacity: 0, scaleX: 0.3 }}
+              transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="flex items-center justify-center gap-2.5 my-3 sm:my-4"
+            >
+              <span className="h-[1px] w-12 sm:w-20" style={{ background: 'linear-gradient(to right, transparent, rgba(197, 160, 89, 0.75))' }} />
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#C5A059' }} />
+              <span className="h-[1px] w-12 sm:w-20" style={{ background: 'linear-gradient(to left, transparent, rgba(197, 160, 89, 0.75))' }} />
+            </motion.div>
 
-            {/* Date & Venue Luxury Capsule */}
-            <div className="inline-flex items-center flex-wrap justify-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[#FDFBF7] via-[#FAF4EA] to-[#FDFBF7] border border-[#E2D2B0] shadow-[0_2px_12px_rgba(180,140,60,0.08),0_1px_2px_rgba(0,0,0,0.02)]">
-              <div className="inline-flex items-center gap-1.5 text-[#3A1017]">
-                <Calendar className="w-3.5 h-3.5 text-[#B88E3E] shrink-0" />
-                <span className="text-xs sm:text-sm font-semibold tracking-tight">{activeEvent.formattedDate}</span>
+            {/* Date & Venue — Refined Luxury Ivory-Gold Pill */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+              transition={{ duration: 0.7, delay: 0.6, ease: [0.25, 1, 0.5, 1] }}
+              className="inline-flex items-center flex-wrap justify-center gap-x-3 gap-y-1.5 px-5 sm:px-6 py-2 sm:py-2.5 rounded-full"
+              style={{
+                background: 'linear-gradient(135deg, #FFFEFB 0%, #FAF3E6 55%, #FFFEFB 100%)',
+                border: '1px solid rgba(197, 160, 89, 0.45)',
+                boxShadow: '0 4px 18px rgba(168, 128, 56, 0.10), 0 1px 2px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.95)'
+              }}
+            >
+              {/* Date */}
+              <div className="inline-flex items-center gap-2">
+                <Calendar className="w-3.5 h-3.5 shrink-0 text-[#9B6F29]" strokeWidth={2} />
+                <span
+                  className="font-semibold text-xs sm:text-sm tracking-[0.02em] tabular-nums"
+                  style={{ color: '#2F0D13', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                >
+                  {activeEvent.formattedDate}
+                </span>
               </div>
+
+              {/* Clean Vertical Hairline Separator */}
               {activeEvent.venue && (
-                <>
-                  <span className="w-1 h-1 rounded-full bg-[#C5A059] mx-0.5 shrink-0" />
-                  <div className="inline-flex items-center gap-1 text-[#542129]">
-                    <MapPin className="w-3.5 h-3.5 text-[#B88E3E] shrink-0" />
-                    <span className="text-xs sm:text-sm font-medium tracking-tight">{activeEvent.venue}</span>
-                  </div>
-                </>
+                <span className="hidden xs:inline-block w-[1px] h-3.5 shrink-0" style={{ background: 'rgba(197, 160, 89, 0.5)' }} />
               )}
-            </div>
+
+              {/* Venue */}
+              {activeEvent.venue && (
+                <div className="inline-flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 shrink-0 text-[#8A1828]" strokeWidth={2} />
+                  <span
+                    className="font-semibold text-xs sm:text-sm tracking-[0.01em]"
+                    style={{ color: '#4A1822', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  >
+                    {activeEvent.venue}
+                  </span>
+                </div>
+              )}
+            </motion.div>
           </motion.div>
         )}
         
