@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle, RefreshCw, Home, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, UserCheck, AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
@@ -326,11 +326,15 @@ export default function StepFrames() {
             </div>
 
             {/* Mode Badge Pill */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-rose-50 border border-rose-200 text-[#6B111F] text-[11px] sm:text-xs font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#6B111F]"></span>
+            <div className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold border transition-colors ${
+              isPremiumMode
+                ? 'bg-gradient-to-r from-[#5E0E1A] to-[#7B1626] border-[#C5A059]/60 text-[#F5D77F] shadow-sm'
+                : 'bg-rose-50 border-rose-200 text-[#6B111F]'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${isPremiumMode ? 'bg-[#E8C987]' : 'bg-[#6B111F]'}`}></span>
               <span>
                 {isPremiumMode
-                  ? `Bingkai Premium (${activeGraphicFrame.slots} Pose)`
+                  ? `Bingkai Premium · ${activeGraphicFrame.slots} Pose`
                   : `Mode: ${targetPhotoCount === 1 ? 'Polaroid Single' : `${targetPhotoCount} Foto Strip`}`
                 }
               </span>
@@ -432,33 +436,22 @@ export default function StepFrames() {
           {/* Divider */}
           <div className="h-[1px] bg-gray-100 w-full" />
 
-          {/* TAB SELEKSI: Bingkai Standar vs Bingkai Premium */}
+          {/* TAB SELEKSI: Bingkai Premium (Highlighted) vs Bingkai Standar */}
           {hasGraphicFrames && (
-            <div className="bg-stone-50 p-2 sm:p-2.5 rounded-2xl border border-stone-200/80">
-              <div className="flex items-center justify-between mb-2 px-1">
-                <span className="text-[10px] sm:text-xs font-serif font-bold text-gray-700 uppercase tracking-wider">
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-[11px] sm:text-xs font-sans font-bold text-stone-700 uppercase tracking-[0.12em]">
                   Pilih Koleksi Bingkai
                 </span>
-                <span className="text-[9px] text-[#C4A46C] font-semibold">
-                  {isPremiumMode ? '✨ Mode Premium Aktif' : '🎞️ Mode Standar Aktif'}
+                <span className={`text-[10px] sm:text-[11px] font-sans font-semibold ${
+                  isPremiumMode ? 'text-[#8A1828]' : 'text-stone-400'
+                }`}>
+                  {isPremiumMode ? 'Koleksi Premium' : 'Koleksi Standar'}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedGraphicFrameId(null);
-                    setTargetPhotoCount(3);
-                  }}
-                  className={`py-2 px-3 rounded-xl text-xs font-serif font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    !isPremiumMode
-                      ? 'bg-white text-[#6B111F] shadow-sm border border-stone-200/90'
-                      : 'text-stone-500 hover:text-stone-800'
-                  }`}
-                >
-                  <span>🎞️ Bingkai Standar</span>
-                </button>
 
+              <div className="grid grid-cols-2 gap-2.5">
+                {/* Bingkai Premium — Highlighted Featured Collection */}
                 <button
                   type="button"
                   onClick={() => {
@@ -466,19 +459,79 @@ export default function StepFrames() {
                     setSelectedGraphicFrameId(first.id);
                     setTargetPhotoCount(first.slots);
                   }}
-                  className={`py-2 px-3 rounded-xl text-xs font-serif font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  className={`relative text-left p-3 sm:p-3.5 rounded-2xl transition-all duration-200 cursor-pointer flex flex-col justify-between ${
                     isPremiumMode
-                      ? 'bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] text-amber-200 shadow-md shadow-rose-950/20'
-                      : 'text-stone-500 hover:text-stone-800'
+                      ? 'bg-gradient-to-br from-[#5C0D19] via-[#7A1525] to-[#4A0913] border-[1.5px] border-[#C5A059] shadow-[0_8px_20px_-4px_rgba(107,17,31,0.32)]'
+                      : 'bg-gradient-to-br from-[#FFFDF7] via-[#FBF3E2] to-[#F7ECD4] border-[1.5px] border-[#C5A059]/80 shadow-[0_4px_14px_-2px_rgba(197,160,89,0.22)] hover:border-[#B88E3E] hover:shadow-[0_6px_18px_-2px_rgba(197,160,89,0.3)]'
                   }`}
                 >
-                  <Sparkles size={13} className={isPremiumMode ? 'text-amber-300' : 'text-stone-400'} />
-                  <span>✨ Bingkai Premium</span>
-                  <span className={`px-1.5 py-0.2 rounded-full text-[8px] font-sans font-extrabold uppercase ${
-                    isPremiumMode ? 'bg-amber-400 text-stone-900' : 'bg-stone-200 text-stone-600'
-                  }`}>
-                    {eventGraphicFrames.length} Desain
-                  </span>
+                  <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                    <span className={`text-[9px] font-sans font-bold uppercase tracking-[0.1em] ${
+                      isPremiumMode ? 'text-[#E8C987]' : 'text-[#9B7228]'
+                    }`}>
+                      Eksklusif
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-sans font-bold tracking-tight ${
+                      isPremiumMode
+                        ? 'bg-[#C5A059]/20 text-[#F5D77F] border border-[#C5A059]/40'
+                        : 'bg-[#6B111F]/10 text-[#6B111F]'
+                    }`}>
+                      {eventGraphicFrames.length} Desain
+                    </span>
+                  </div>
+
+                  <div>
+                    <div className={`text-xs sm:text-sm font-serif font-bold leading-snug ${
+                      isPremiumMode ? 'text-[#FDF3D7]' : 'text-[#5C0E1A]'
+                    }`}>
+                      Bingkai Premium
+                    </div>
+                    <div className={`text-[10px] font-sans mt-0.5 leading-tight ${
+                      isPremiumMode ? 'text-rose-100/80' : 'text-stone-600'
+                    }`}>
+                      Artwork khusus event
+                    </div>
+                  </div>
+                </button>
+
+                {/* Bingkai Standar */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedGraphicFrameId(null);
+                    setTargetPhotoCount(3);
+                  }}
+                  className={`relative text-left p-3 sm:p-3.5 rounded-2xl transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+                    !isPremiumMode
+                      ? 'bg-white border-[1.5px] border-[#6B111F]/45 shadow-sm'
+                      : 'bg-stone-50/90 border border-stone-200/90 hover:bg-white hover:border-stone-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                    <span className={`text-[9px] font-sans font-bold uppercase tracking-[0.1em] ${
+                      !isPremiumMode ? 'text-[#8A1828]/80' : 'text-stone-400'
+                    }`}>
+                      Klasik
+                    </span>
+                    <span className={`text-[9px] font-sans font-medium ${
+                      !isPremiumMode ? 'text-stone-500' : 'text-stone-400'
+                    }`}>
+                      1–4 Pose
+                    </span>
+                  </div>
+
+                  <div>
+                    <div className={`text-xs sm:text-sm font-serif font-bold leading-snug ${
+                      !isPremiumMode ? 'text-[#6B111F]' : 'text-stone-700'
+                    }`}>
+                      Bingkai Standar
+                    </div>
+                    <div className={`text-[10px] font-sans mt-0.5 leading-tight ${
+                      !isPremiumMode ? 'text-stone-500' : 'text-stone-400'
+                    }`}>
+                      Warna solid minimalis
+                    </div>
+                  </div>
                 </button>
               </div>
             </div>
@@ -489,15 +542,20 @@ export default function StepFrames() {
 
           {/* STEP 2: Either Premium Frames Selection or Standard Strip Pose Count */}
           {isPremiumMode ? (
-            /* ✨ PREMIUM FRAMES SELECTION (3 DESAIN GRAFIS EVENT) */
+            /* PREMIUM FRAMES SELECTION */
             <div>
-              <div className="flex items-center gap-2 mb-2.5 sm:mb-3.5">
-                <div className="w-5 h-5 rounded-full bg-[#6B111F] text-white flex items-center justify-center text-xs font-bold font-serif">
-                  2
+              <div className="flex items-center justify-between gap-2 mb-2.5 sm:mb-3.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-[#6B111F] text-white flex items-center justify-center text-xs font-bold font-serif">
+                    2
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-serif font-bold text-gray-900">
+                    Pilih Desain Bingkai Premium
+                  </h2>
                 </div>
-                <h2 className="text-xs sm:text-sm font-serif font-bold text-gray-900">
-                  Pilih Desain Bingkai Premium
-                </h2>
+                <span className="px-2.5 py-0.5 rounded-full bg-[#FAF3E3] border border-[#C5A059]/45 text-[#8A621B] text-[9px] sm:text-[10px] font-sans font-semibold tracking-wide uppercase">
+                  Eksklusif
+                </span>
               </div>
 
               <div className={`grid gap-2.5 ${eventGraphicFrames.length === 3 ? 'grid-cols-3' : eventGraphicFrames.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
@@ -512,8 +570,8 @@ export default function StepFrames() {
                       }}
                       className={`relative rounded-2xl overflow-hidden flex flex-col items-center transition-all cursor-pointer group ${
                         isSelected
-                          ? 'ring-2 ring-[#6B111F] shadow-lg shadow-rose-950/20 scale-[1.03]'
-                          : 'ring-1 ring-gray-200 hover:ring-rose-200 hover:scale-[1.01]'
+                          ? 'ring-2 ring-[#C5A059] shadow-lg shadow-amber-950/15 scale-[1.03]'
+                          : 'ring-1 ring-stone-200 hover:ring-[#C5A059]/60 hover:scale-[1.01]'
                       }`}
                     >
                       <div className="relative w-full" style={{ aspectRatio: '1/3' }}>
@@ -525,19 +583,19 @@ export default function StepFrames() {
                         />
                         {isSelected && (
                           <div className="absolute inset-0 bg-[#6B111F]/10 flex items-center justify-center">
-                            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#6B111F] flex items-center justify-center shadow-md">
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#6B111F] border border-[#C5A059]/80 flex items-center justify-center shadow-md">
                               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                                <path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M2 5L4 7L8 3" stroke="#F5D77F" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
                             </div>
                           </div>
                         )}
                       </div>
-                      <div className={`w-full text-center px-1 py-1.5 transition-colors ${isSelected ? 'bg-[#6B111F]' : 'bg-white group-hover:bg-rose-50'}`}>
-                        <p className={`text-[9px] sm:text-[10px] font-serif font-bold leading-tight truncate ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                      <div className={`w-full text-center px-1.5 py-2 transition-colors ${isSelected ? 'bg-[#6B111F]' : 'bg-white group-hover:bg-stone-50'}`}>
+                        <p className={`text-[9px] sm:text-[10px] font-serif font-bold leading-tight truncate ${isSelected ? 'text-[#FDF3D7]' : 'text-gray-900'}`}>
                           {frame.name}
                         </p>
-                        <p className={`text-[7px] sm:text-[8px] mt-0.5 ${isSelected ? 'text-rose-200' : 'text-gray-400'}`}>
+                        <p className={`text-[8px] mt-0.5 ${isSelected ? 'text-[#E8C987]' : 'text-gray-400'}`}>
                           {frame.slots} pose
                         </p>
                       </div>
@@ -546,12 +604,12 @@ export default function StepFrames() {
                 })}
               </div>
 
-              <p className="text-[10px] text-gray-500 font-sans mt-2.5 text-center">
-                ✨ Desain grafis kustom eksklusif event sudah dilengkapi artwork latar, font, dan ornamen khusus.
+              <p className="text-[10px] sm:text-[11px] text-stone-500 font-sans mt-3 text-center leading-relaxed">
+                Desain grafis kustom eksklusif event sudah dilengkapi artwork latar, tipografi, dan ornamen khusus.
               </p>
             </div>
           ) : (
-            /* 🎞️ BINGKAI STANDAR: STEP 2 (Pilih Jumlah Pose) & STEP 3 (Warna Bingkai Strip) */
+            /* BINGKAI STANDAR: STEP 2 & STEP 3 */
             <>
               {/* STEP 2: Pilih Jumlah Pose Strip */}
               <div>

@@ -993,7 +993,7 @@ export default function StepCamera() {
         <div className="px-2.5 sm:px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-amber-200 text-[10px] sm:text-[10.5px] font-mono font-bold tracking-widest uppercase flex items-center justify-center gap-1.5 shadow-md truncate">
           {isGraphicFrameMode && (
             <span className="text-[9px] text-amber-400 font-extrabold flex items-center gap-1">
-              <span>✨</span> {activeGraphicFrame?.name} •
+              {activeGraphicFrame?.name} •
             </span>
           )}
           <span>POSE {nextPhotoNum} / {targetPhotoCount}</span>
