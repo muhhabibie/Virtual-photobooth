@@ -15,7 +15,7 @@ import { AR_ACCESSORIES, drawAccessoryOverlay } from '../../config/accessories';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { drawStripBotanicals, drawFrameOrnaments } from '../../config/frameOrnaments';
 import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
-import { getEventGraphicFrames } from '../../data/eventFrames';
+import { getEventGraphicFrames, getCachedFrameImage } from '../../data/eventFrames';
 
 const ACCESSORY_ICONS = {
   'none': { icon: Wand2, color: 'text-amber-200' },
@@ -212,6 +212,7 @@ export default function StepCamera() {
   const animFrameRef = useRef(null);
   const frameCanvasRef = useRef(null);
   const frameContainerRef = useRef(null);
+  const graphicOverlayCanvasRef = useRef(null);
 
   const [capturing, setCapturing] = useState(false);
   const [cameraError, setCameraError] = useState(false);
@@ -625,6 +626,55 @@ export default function StepCamera() {
     return () => ro.disconnect();
   }, [accentColor, activeEvent, currentTheme, isGraphicFrameMode]);
 
+  // Synchronize Live WYSIWYG Graphic Frame Overlay onto Viewfinder
+  useEffect(() => {
+    if (!isGraphicFrameMode || !activeGraphicFrame) return;
+    const canvas = graphicOverlayCanvasRef.current;
+    const vp = viewportRef.current;
+    if (!canvas || !vp) return;
+
+    const renderOverlaySlice = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const w = vp.clientWidth || 360;
+      const h = vp.clientHeight || 270;
+      if (w === 0 || h === 0) return;
+
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+
+      const overlayImg = getCachedFrameImage(activeGraphicFrame.overlayUrl);
+      if (overlayImg && overlayImg.complete && overlayImg.naturalWidth > 0) {
+        const currentIdx = Math.min(capturedPhotos.length, targetPhotoCount - 1);
+        const slot = activeGraphicFrame.slotBoxes[currentIdx] || activeGraphicFrame.slotBoxes[0];
+        const centerY = slot.y + slot.h / 2;
+        const sw = 600;
+        const sh = Math.round(600 * (h / w));
+        const sx = 0;
+        const sy = Math.max(0, Math.min(1800 - sh, Math.round(centerY - sh / 2)));
+
+        ctx.drawImage(overlayImg, sx, sy, sw, sh, 0, 0, w, h);
+      }
+      ctx.restore();
+    };
+
+    renderOverlaySlice();
+
+    const overlayImg = getCachedFrameImage(activeGraphicFrame.overlayUrl);
+    if (overlayImg && !overlayImg.complete) {
+      overlayImg.addEventListener('load', renderOverlaySlice, { once: true });
+    }
+
+    const ro = new ResizeObserver(renderOverlaySlice);
+    ro.observe(vp);
+
+    return () => ro.disconnect();
+  }, [isGraphicFrameMode, activeGraphicFrame, capturedPhotos.length, targetPhotoCount]);
+
   // Silky Smooth 60 FPS AR Face Tracking Render Loop
   useEffect(() => {
     const canvas = arCanvasRef.current;
@@ -1033,6 +1083,14 @@ export default function StepCamera() {
               ref={arCanvasRef}
               className="absolute inset-0 w-full h-full pointer-events-none z-20"
             />
+
+            {/* Real-time WYSIWYG Graphic Frame Overlay (Clouds, Hearts, Stickers, Borders) */}
+            {isGraphicFrameMode && (
+              <canvas
+                ref={graphicOverlayCanvasRef}
+                className="absolute inset-0 w-full h-full pointer-events-none z-25"
+              />
+            )}
 
             {/* Camera Connecting Overlay */}
             {!isCameraReady && !cameraError && (
