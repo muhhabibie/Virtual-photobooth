@@ -110,15 +110,7 @@ export default function EventHero() {
     ? !!activeEvent.hideHeroTextOverlay
     : !isWedding;
 
-  const eventBadge = isWedding
-    ? 'THE WEDDING CELEBRATION OF'
-    : (activeEvent.eventType === 'concert'
-        ? 'OFFICIAL FESTIVAL PHOTOBOOTH'
-        : (activeEvent.eventType === 'exhibition'
-            ? 'EXHIBITION PHOTOBOOTH'
-            : (activeEvent.eventType === 'festival'
-                ? 'OFFICIAL EXPO PHOTOBOOTH'
-                : 'OFFICIAL EVENT PHOTOBOOTH')));
+  const eventBadge = isWedding ? 'THE WEDDING CELEBRATION OF' : '';
 
   const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
 
@@ -237,17 +229,19 @@ export default function EventHero() {
         {!shouldHideOverlay && (
           <div className="absolute top-10 xs:top-12 sm:top-16 md:top-20 inset-x-3 sm:inset-x-4 text-center z-20 pointer-events-none flex flex-col items-center">
             
-            {/* Item 1: Celebration Badge */}
-            <motion.div 
-              initial={{ opacity: 0, y: -16 }}
-              animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
-              transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 1, 0.5, 1] }}
-              className="inline-flex items-center px-4 sm:px-5 py-1 sm:py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 shadow-lg mb-2"
-            >
-              <span className="text-[10px] sm:text-xs font-sans font-semibold tracking-[0.22em] sm:tracking-[0.28em] text-amber-200 uppercase">
-                {eventBadge}
-              </span>
-            </motion.div>
+            {/* Item 1: Celebration Badge (Weddings Only) */}
+            {eventBadge && (
+              <motion.div 
+                initial={{ opacity: 0, y: -16 }}
+                animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
+                transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 1, 0.5, 1] }}
+                className="inline-flex items-center px-4 sm:px-5 py-1 sm:py-1.5 rounded-full bg-black/55 backdrop-blur-md border border-white/20 shadow-lg mb-2"
+              >
+                <span className="text-[10px] sm:text-xs font-sans font-semibold tracking-[0.22em] sm:tracking-[0.28em] text-amber-200 uppercase">
+                  {eventBadge}
+                </span>
+              </motion.div>
+            )}
 
             {/* Item 2: Wedding Couple Names or Event Name */}
             <motion.h1 
@@ -286,17 +280,17 @@ export default function EventHero() {
           </div>
         )}
 
-        {/* Item 5: Slide Dots (Ultra-Minimalist iPhone iOS Frosted Glass Capsule) */}
+        {/* Item 5: Slide Dots (Seamless Floating iPhone Style - No Black Bar Container) */}
         {slideImages.length > 1 && (
           <motion.div 
             initial={{ opacity: 0, y: 6 }}
             animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
             transition={{ duration: 0.6, delay: 0.50, ease: [0.22, 1, 0.36, 1] }}
             className={`absolute inset-x-0 flex items-center justify-center z-20 pointer-events-auto ${
-              shouldHideOverlay ? 'bottom-2.5 sm:bottom-3.5' : 'bottom-20 sm:bottom-28'
+              shouldHideOverlay ? 'bottom-2 sm:bottom-3' : 'bottom-20 sm:bottom-28'
             }`}
           >
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 backdrop-blur-xl border border-white/15 shadow-[0_2px_12px_rgba(0,0,0,0.28),inset_0_0.5px_0.5px_rgba(255,255,255,0.25)]">
+            <div className="flex items-center gap-1.5 py-1">
               {slideImages.map((_, idx) => (
                 <button
                   key={idx}
@@ -305,14 +299,14 @@ export default function EventHero() {
                     e.stopPropagation();
                     setCurrentSlide(idx);
                   }}
-                  className="group/dot relative p-0.5 focus:outline-none cursor-pointer flex items-center justify-center"
+                  className="group/dot relative p-1 focus:outline-none cursor-pointer flex items-center justify-center transition-transform active:scale-90"
                   aria-label={`Slide ${idx + 1}`}
                 >
                   <span
                     className={`block h-1.5 rounded-full transition-all duration-300 ease-out ${
                       idx === currentSlide
-                        ? 'w-4.5 bg-white shadow-[0_0_6px_rgba(255,255,255,0.85)]'
-                        : 'w-1.5 bg-white/40 group-hover/dot:bg-white/70'
+                        ? 'w-5 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.55),0_0_8px_rgba(255,255,255,0.85)] ring-1 ring-black/15'
+                        : 'w-1.5 bg-white/60 shadow-[0_1px_3px_rgba(0,0,0,0.45)] hover:bg-white/90 ring-1 ring-black/10'
                     }`}
                   />
                 </button>
@@ -348,12 +342,14 @@ export default function EventHero() {
             transition={{ duration: 0.8, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
             className="mb-4 flex flex-col items-center text-center px-2"
           >
-            {/* Badge */}
-            <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-[#6B111F]/10 border border-[#6B111F]/20 mb-2 shadow-2xs">
-              <span className="text-[10px] sm:text-xs font-sans font-bold tracking-[0.2em] text-[#6B111F] uppercase">
-                {eventBadge}
-              </span>
-            </div>
+            {/* Badge (Weddings Only) */}
+            {eventBadge && (
+              <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-[#6B111F]/10 border border-[#6B111F]/20 mb-2 shadow-2xs">
+                <span className="text-[10px] sm:text-xs font-sans font-bold tracking-[0.2em] text-[#6B111F] uppercase">
+                  {eventBadge}
+                </span>
+              </div>
+            )}
 
             {/* Title */}
             <h1 className="text-2xl xs:text-3xl sm:text-5xl font-serif font-black text-stone-900 tracking-tight leading-tight mb-2">

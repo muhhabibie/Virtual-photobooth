@@ -904,17 +904,11 @@ export default function ClientSetupPage() {
                   {/* Top Wedding Names & Header - hidden in clean poster mode */}
                   {!hideHeroTextOverlay ? (
                     <div className="relative z-10 pt-5 flex flex-col items-center">
-                      <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-semibold text-amber-200 uppercase tracking-[0.2em] border border-white/15 shadow-sm">
-                        {isWedding 
-                          ? 'THE WEDDING CELEBRATION OF' 
-                          : (event.eventType === 'concert' 
-                              ? 'OFFICIAL FESTIVAL PHOTOBOOTH' 
-                              : (event.eventType === 'exhibition' 
-                                  ? 'EXHIBITION PHOTOBOOTH' 
-                                  : (event.eventType === 'festival' 
-                                      ? 'OFFICIAL EXPO PHOTOBOOTH' 
-                                      : 'OFFICIAL EVENT PHOTOBOOTH')))}
-                      </span>
+                      {isWedding && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-sans font-semibold text-amber-200 uppercase tracking-[0.2em] border border-white/15 shadow-sm">
+                          THE WEDDING CELEBRATION OF
+                        </span>
+                      )}
 
                       {/* Live Couple Calligraphy or Modern Bold Display */}
                       <h1 
@@ -958,10 +952,10 @@ export default function ClientSetupPage() {
                       </div>
                     </div>
 
-                    {/* Slide Dots Preview (Apple iPhone Minimalist Glass Capsule) */}
+                    {/* Slide Dots Preview (Seamless Floating iPhone Style - No Black Bar) */}
                     {heroPhotos.length > 1 && (
                       <div className="flex items-center justify-center pt-1">
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/15 shadow-sm">
+                        <div className="flex items-center gap-1 py-0.5">
                           {heroPhotos.map((_, i) => (
                             <button
                               key={i}
@@ -972,8 +966,8 @@ export default function ClientSetupPage() {
                               <span
                                 className={`block h-1 rounded-full transition-all duration-300 ${
                                   i === previewPhotoIdx 
-                                    ? 'w-3.5 bg-white shadow-[0_0_4px_rgba(255,255,255,0.8)]' 
-                                    : 'w-1 bg-white/40'
+                                    ? 'w-3.5 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.5),0_0_4px_rgba(255,255,255,0.8)] ring-1 ring-black/10' 
+                                    : 'w-1 bg-white/60 shadow-[0_1px_2px_rgba(0,0,0,0.4)] ring-1 ring-black/10'
                                 }`}
                               />
                             </button>
