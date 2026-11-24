@@ -221,11 +221,11 @@ export function renderMasterPhotoStrip(canvas, {
     if (overlayImg && overlayImg.complete && overlayImg.naturalWidth > 0) {
       ctx.drawImage(overlayImg, 0, 0, totalW, totalH);
     } else if (overlayImg) {
-      overlayImg.onload = () => {
+      overlayImg.addEventListener('load', () => {
         try {
           ctx.drawImage(overlayImg, 0, 0, totalW, totalH);
         } catch (e) {}
-      };
+      }, { once: true });
     }
     return;
   }

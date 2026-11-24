@@ -15,6 +15,7 @@ import { AR_ACCESSORIES, drawAccessoryOverlay } from '../../config/accessories';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { drawStripBotanicals, drawFrameOrnaments } from '../../config/frameOrnaments';
 import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
+import { getEventGraphicFrames } from '../../data/eventFrames';
 
 const ACCESSORY_ICONS = {
   'none': { icon: Wand2, color: 'text-amber-200' },
@@ -194,6 +195,13 @@ export default function StepCamera() {
     closeBooth,
     selectedGraphicFrameId,
   } = useBooth();
+
+  // Active Graphic Frame for Event (e.g. Mitufaya 8th Anniversary)
+  const eventGraphicFrames = useMemo(() => getEventGraphicFrames(activeEvent), [activeEvent]);
+  const activeGraphicFrame = (selectedGraphicFrameId)
+    ? (eventGraphicFrames.find(f => f.id === selectedGraphicFrameId) || null)
+    : null;
+  const isGraphicFrameMode = Boolean(activeGraphicFrame);
 
   const { start, stop, toggle } = useCamera();
   const { toast } = useToast();
@@ -595,13 +603,16 @@ export default function StepCamera() {
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, w, h);
 
-      // Proportionally scale botanical line art relative to base 600px reference
-      const scale = Math.max(0.55, w / 600);
-      drawStripBotanicals(ctx, w, h, accentColor, scale);
+      // Only draw classical botanicals if NOT in Graphic Frame Mode
+      if (!isGraphicFrameMode) {
+        // Proportionally scale botanical line art relative to base 600px reference
+        const scale = Math.max(0.55, w / 600);
+        drawStripBotanicals(ctx, w, h, accentColor, scale);
 
-      // Custom bride/event ornaments if configured
-      if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {
-        drawFrameOrnaments(ctx, w, h, activeEvent.customFrame.ornaments, accentColor, scale);
+        // Custom bride/event ornaments if configured
+        if (activeEvent?.customFrame?.ornaments && activeEvent.customFrame.ornaments.length > 0) {
+          drawFrameOrnaments(ctx, w, h, activeEvent.customFrame.ornaments, accentColor, scale);
+        }
       }
 
       ctx.restore();
@@ -612,7 +623,7 @@ export default function StepCamera() {
     ro.observe(container);
 
     return () => ro.disconnect();
-  }, [accentColor, activeEvent, currentTheme]);
+  }, [accentColor, activeEvent, currentTheme, isGraphicFrameMode]);
 
   // Silky Smooth 60 FPS AR Face Tracking Render Loop
   useEffect(() => {
@@ -951,7 +962,7 @@ export default function StepCamera() {
         <div 
           ref={frameContainerRef}
           style={{ 
-            backgroundColor: currentTheme.hex,
+            backgroundColor: isGraphicFrameMode ? (activeGraphicFrame.themeHex || '#E65C9C') : currentTheme.hex,
             border: 'none'
           }}
           className="relative w-full max-h-[calc(100dvh-225px)] sm:max-h-[500px] rounded-2xl sm:rounded-3xl px-3 sm:px-5 pt-1.5 sm:pt-2 pb-2 sm:pb-2.5 shadow-2xl shadow-black flex flex-col items-center justify-between transition-all duration-300 overflow-hidden my-auto"
@@ -962,24 +973,40 @@ export default function StepCamera() {
             className="absolute inset-0 w-full h-full pointer-events-none z-0"
           />
 
-          {/* Top Frame Header Title (Matching stripRenderer.js) */}
-          <div className="relative z-20 w-full flex flex-col items-center justify-center px-2 pt-0.5 pb-1 flex-shrink-0">
-            {/* Top Brand Header: N | sirklenice (Matching stripRenderer.js standard layout) */}
-            <div className="flex items-center justify-center gap-1 pb-0.5" style={{ color: primaryTextColor }}>
-              <span className="text-[11px] sm:text-[13px] font-mono font-black tracking-widest">N</span>
-              <span className="text-[10px] sm:text-[12px] opacity-40">|</span>
-              <span className="text-[12px] sm:text-[14px] font-semibold italic tracking-[0.14em]" style={{ fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif" }}>sirklenice</span>
+          {/* Top Frame Header Title */}
+          {isGraphicFrameMode ? (
+            <div className="relative z-20 w-full flex items-center justify-between px-2 pt-1 pb-1 flex-shrink-0 text-white">
+              <div className="flex items-center gap-1.5">
+                <span className="px-2 py-0.5 rounded-full bg-black/35 backdrop-blur-xs text-amber-200 text-[8px] sm:text-[9px] font-sans font-extrabold uppercase tracking-wider flex items-center gap-1">
+                  <span>✨</span> PREMIUM
+                </span>
+                <h2 className="text-[11px] sm:text-xs font-serif font-bold text-white tracking-wider uppercase drop-shadow-sm truncate max-w-[170px] sm:max-w-xs">
+                  {activeGraphicFrame.name}
+                </h2>
+              </div>
+              <div className="px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-mono font-bold tracking-tight">
+                Pose {capturedPhotos.length + 1} / {targetPhotoCount}
+              </div>
             </div>
-            <h2 
-              className="text-[9px] sm:text-[10.5px] font-bold tracking-[0.16em] uppercase text-center leading-none"
-              style={{ 
-                color: primaryTextColor,
-                fontFamily: "'Playfair Display', 'Cinzel', 'Cormorant Garamond', Georgia, serif" 
-              }}
-            >
-              {topHeaderTitle}
-            </h2>
-          </div>
+          ) : (
+            <div className="relative z-20 w-full flex flex-col items-center justify-center px-2 pt-0.5 pb-1 flex-shrink-0">
+              {/* Top Brand Header: N | sirklenice (Matching stripRenderer.js standard layout) */}
+              <div className="flex items-center justify-center gap-1 pb-0.5" style={{ color: primaryTextColor }}>
+                <span className="text-[11px] sm:text-[13px] font-mono font-black tracking-widest">N</span>
+                <span className="text-[10px] sm:text-[12px] opacity-40">|</span>
+                <span className="text-[12px] sm:text-[14px] font-semibold italic tracking-[0.14em]" style={{ fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif" }}>sirklenice</span>
+              </div>
+              <h2 
+                className="text-[9px] sm:text-[10.5px] font-bold tracking-[0.16em] uppercase text-center leading-none"
+                style={{ 
+                  color: primaryTextColor,
+                  fontFamily: "'Playfair Display', 'Cinzel', 'Cormorant Garamond', Georgia, serif" 
+                }}
+              >
+                {topHeaderTitle}
+              </h2>
+            </div>
+          )}
 
           {/* Center Cutout Window (Full-width WYSIWYG Camera Stream with Solid Frame Border) */}
           <div 
@@ -988,7 +1015,7 @@ export default function StepCamera() {
             onTouchEnd={handleTouchEnd}
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
-            style={{ borderColor: accentColor }}
+            style={{ borderColor: isGraphicFrameMode ? 'rgba(255, 255, 255, 0.45)' : accentColor }}
             className="relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center border-2 my-1 touch-pan-y select-none cursor-grab active:cursor-grabbing group z-10"
           >
             {/* Camera Video Stream */}
@@ -1049,68 +1076,82 @@ export default function StepCamera() {
 
           </div>
 
-          {/* Bottom Frame Chin Preview: Matching Image 2 Professional Wedding Layout */}
-          <div className="relative z-20 text-center pt-1 pb-1 flex-shrink-0 flex flex-col items-center w-full">
-            
-            {/* Guest Name in calligraphy */}
-            <h3 
-              style={{ 
-                color: primaryTextColor,
-                fontFamily: "'Parisienne', 'Alex Brush', 'Great Vibes', cursive",
-                textShadow: '0 1px 8px rgba(0,0,0,0.1)'
-              }}
-              className="text-xl sm:text-2xl font-normal leading-tight my-0.5 px-2 truncate max-w-full"
-            >
-              {formattedGuestName || (isWedding ? couple : (activeEvent?.eventName || 'Nama Tamu'))}
-            </h3>
-
-            {/* 3. Event Badge: WEDDING / CAR FREE DAY */}
-            <span 
-              className="text-[7.5px] sm:text-[9px] font-black tracking-[0.25em] uppercase leading-none mb-1 opacity-90"
-              style={{ color: primaryTextColor, fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif" }}
-            >
-              {isWedding ? 'WEDDING' : (activeEvent?.eventName || 'EVENT').toUpperCase()}
-            </span>
-
-            {/* 4. Primary Divider Line with Center Diamond Accent */}
-            <div className="flex items-center justify-center gap-1.5 w-full my-0.5">
-              <span className="w-10 sm:w-14 h-[1px] rounded-full" style={{ backgroundColor: accentColor }} />
-              <span className="w-1.5 h-1.5 rotate-45 flex-shrink-0" style={{ backgroundColor: accentColor }} />
-              <span className="w-10 sm:w-14 h-[1px] rounded-full" style={{ backgroundColor: accentColor }} />
-            </div>
-
-            {/* 5. Date */}
-            <div 
-              className="text-[7.5px] sm:text-[8.5px] font-sans font-bold tracking-wider"
-              style={{ color: primaryTextColor }}
-            >
-              <span>{getEventFormattedDate(activeEvent)}</span>
-            </div>
-
-            {/* 6. Venue / Location Text */}
-            <div 
-              className="text-[7px] sm:text-[8px] font-bold tracking-wider uppercase mt-0.5 truncate max-w-[90%]"
-              style={{ 
-                color: primaryTextColor,
-                fontFamily: "'Playfair Display', 'Cinzel', sans-serif"
-              }}
-            >
-              <span>{venueText}</span>
-            </div>
-
-            {/* 7. Custom Message / Pesan Singkat (clean & easy-to-read font, not handwritten) */}
-            {customMessage && (
-              <p 
-                className="text-[8.5px] sm:text-[10px] font-medium italic truncate max-w-full px-2 mt-0.5 leading-tight tracking-normal"
-                style={{ 
-                  color: primaryTextColor, 
-                  fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
-                }}
-              >
-                {customMessage}
+          {/* Bottom Frame Chin Preview: Adapts to Premium Graphic Frame vs Classic Standard */}
+          {isGraphicFrameMode ? (
+            <div className="relative z-20 text-center pt-1 pb-1 flex-shrink-0 flex flex-col items-center w-full text-white">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs sm:text-sm font-serif font-bold tracking-wide text-white drop-shadow-sm">
+                  {guestName ? `${guestName} · ` : ''}{activeEvent?.displayName || 'Mitufaya 8th Anniversary'}
+                </span>
+              </div>
+              <p className="text-[8px] sm:text-[9px] text-white/80 font-sans tracking-wide mt-0.5">
+                {activeGraphicFrame.name} · {activeGraphicFrame.slots} Pose Eksklusif Event
               </p>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="relative z-20 text-center pt-1 pb-1 flex-shrink-0 flex flex-col items-center w-full">
+              {/* Guest Name in calligraphy */}
+              <h3 
+                style={{ 
+                  color: primaryTextColor,
+                  fontFamily: "'Parisienne', 'Alex Brush', 'Great Vibes', cursive",
+                  textShadow: '0 1px 8px rgba(0,0,0,0.1)'
+                }}
+                className="text-xl sm:text-2xl font-normal leading-tight my-0.5 px-2 truncate max-w-full"
+              >
+                {formattedGuestName || (isWedding ? couple : (activeEvent?.eventName || 'Nama Tamu'))}
+              </h3>
+
+              {/* 3. Event Badge: WEDDING / CAR FREE DAY */}
+              <span 
+                className="text-[7.5px] sm:text-[9px] font-black tracking-[0.25em] uppercase leading-none mb-1 opacity-90"
+                style={{ color: primaryTextColor, fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif" }}
+              >
+                {isWedding ? 'WEDDING' : (activeEvent?.eventName || 'EVENT').toUpperCase()}
+              </span>
+
+              {/* 4. Primary Divider Line with Center Diamond Accent */}
+              <div className="flex items-center justify-center gap-1.5 w-full my-0.5">
+                <span className="w-10 sm:w-14 h-[1px] rounded-full" style={{ backgroundColor: accentColor }} />
+                <span className="w-1.5 h-1.5 rotate-45 flex-shrink-0" style={{ backgroundColor: accentColor }} />
+                <span className="w-10 sm:w-14 h-[1px] rounded-full" style={{ backgroundColor: accentColor }} />
+              </div>
+
+              {/* 5. Date */}
+              <div 
+                className="text-[7.5px] sm:text-[8.5px] font-sans font-bold tracking-wider"
+                style={{ color: primaryTextColor }}
+              >
+                <span>{getEventFormattedDate(activeEvent)}</span>
+              </div>
+
+              {/* 6. Venue / Location Text */}
+              {activeEvent?.venue && (
+                <div 
+                  className="text-[7px] sm:text-[8px] font-bold tracking-wider uppercase mt-0.5 truncate max-w-[90%]"
+                  style={{ 
+                    color: primaryTextColor,
+                    fontFamily: "'Playfair Display', 'Cinzel', sans-serif" 
+                  }}
+                >
+                  <span>{venueText}</span>
+                </div>
+              )}
+
+              {/* 7. Custom Message / Pesan Singkat */}
+              {customMessage && (
+                <p 
+                  className="text-[8.5px] sm:text-[10px] font-medium italic truncate max-w-full px-2 mt-0.5 leading-tight tracking-normal"
+                  style={{ 
+                    color: primaryTextColor, 
+                    fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+                  }}
+                >
+                  {customMessage}
+                </p>
+              )}
+            </div>
+          )}
 
         </div>
 

@@ -19,7 +19,8 @@ export default function StepVoice() {
     setCurrentStep,
     goBack,
     activeEvent,
-    closeBooth
+    closeBooth,
+    selectedGraphicFrameId,
   } = useBooth();
 
   const {
@@ -56,9 +57,10 @@ export default function StepVoice() {
       guestName,
       guestMessage,
       activeEvent,
+      graphicFrameId: selectedGraphicFrameId,
       scale: 2,
     });
-  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent]);
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent, selectedGraphicFrameId]);
 
   useEffect(() => {
     renderStrip();
