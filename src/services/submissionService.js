@@ -105,7 +105,7 @@ export function blobToBase64(blob) {
 
 // Save submission (Cloud Firebase + LocalStorage fallback)
 // Optimized to guarantee Firestore documents stay lightweight (~70KB - 120KB) and NEVER exceed Firestore's 1MB limit!
-export async function saveSubmission({ eventId, eventSlug, guestName, guestMessage, photos, stripColor, stripStyle, stripImage, voiceBlob, voiceUrl, voiceDuration, isDemo = false }) {
+export async function saveSubmission({ eventId, eventSlug, guestName, guestMessage, photos, stripColor, stripStyle, stripImage, graphicFrameId = null, voiceBlob, voiceUrl, voiceDuration, isDemo = false }) {
   let finalVoiceUrl = voiceUrl || null;
   if (voiceBlob) {
     try {
@@ -150,6 +150,7 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
     takenDate: new Date().toLocaleString('id-ID'),
     colorHex: stripColor || '#6B111F',
     stripStyle: stripStyle || 'standard',
+    graphicFrameId: graphicFrameId || null,
     textHex: stripColor === '#FDFBF7' || stripColor === '#F3C5CB' ? '#6B111F' : '#F5D77F',
     hasVoice: !!finalVoiceUrl,
     voiceUrl: finalVoiceUrl,
@@ -178,6 +179,7 @@ export async function saveSubmission({ eventId, eventSlug, guestName, guestMessa
         takenDate: newSubmission.takenDate,
         colorHex: newSubmission.colorHex,
         stripStyle: newSubmission.stripStyle || 'standard',
+        graphicFrameId: newSubmission.graphicFrameId || null,
         textHex: newSubmission.textHex,
         hasVoice: !!finalVoiceUrl,
         voiceUrl: finalVoiceUrl,

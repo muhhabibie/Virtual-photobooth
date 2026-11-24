@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Image as ImageIcon, Video, Mic, Download, Check, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Image as ImageIcon, Video, Mic, Download, Loader2, AlertCircle } from 'lucide-react';
 import { generatePhotostripVideo } from '../../utils/videoGenerator';
 import { useToast } from '../ui/Toast';
 
@@ -24,7 +24,6 @@ export default function DownloadFormatModal({
 
   if (!isOpen) return null;
 
-  // Helper to get active canvas
   const getCanvas = () => {
     if (!photoCanvas) return null;
     return typeof photoCanvas === 'function' ? photoCanvas() : photoCanvas;
@@ -54,7 +53,7 @@ export default function DownloadFormatModal({
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 2000);
-      toast(`Foto strip HD berhasil diunduh (${filename})!`, 'success');
+      toast(`Foto strip berhasil diunduh (${filename})`, 'success');
       onClose();
     }, 'image/jpeg', 0.94);
   };
@@ -78,7 +77,7 @@ export default function DownloadFormatModal({
 
     setIsProcessingVideo(true);
     setVideoProgress(5);
-    setVideoStatusText('Menyiapkan audio & kanvas video...');
+    setVideoStatusText('Menyiapkan audio & visual video...');
     setVideoError(null);
 
     try {
@@ -96,7 +95,7 @@ export default function DownloadFormatModal({
 
       const videoUrl = URL.createObjectURL(result.blob);
       const a = document.createElement('a');
-      const filename = `${filenamePrefix}_voice_story.${result.extension}`;
+      const filename = `${filenamePrefix}_story.${result.extension}`;
       a.download = filename;
       a.href = videoUrl;
       document.body.appendChild(a);
@@ -104,12 +103,12 @@ export default function DownloadFormatModal({
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(videoUrl), 3000);
 
-      toast(`Video MP4 bersuara berhasil diunduh (${filename})!`, 'success');
+      toast(`Video MP4 berhasil diunduh (${filename})`, 'success');
       setIsProcessingVideo(false);
       onClose();
     } catch (err) {
       console.error('Video generation error:', err);
-      setVideoError('Gagal memproses video. Browser Anda mungkin membatasi perekaman video kanvas. Silakan unduh foto strip JPG dan audio secara terpisah.');
+      setVideoError('Gagal memproses video pada browser ini. Silakan unduh foto strip JPG secara terpisah.');
       setIsProcessingVideo(false);
       toast('Gagal memproses video', 'error');
     }
@@ -132,14 +131,14 @@ export default function DownloadFormatModal({
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const filename = `${filenamePrefix}_pesan_suara.webm`;
+      const filename = `${filenamePrefix}_suara.webm`;
       a.download = filename;
       a.href = url;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 2000);
-      toast(`Pesan suara berhasil diunduh (${filename})!`, 'success');
+      toast(`Pesan suara berhasil diunduh (${filename})`, 'success');
       onClose();
     } catch (e) {
       toast('Gagal mengunduh audio', 'error');
@@ -150,208 +149,189 @@ export default function DownloadFormatModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[280] flex items-center justify-center p-3 sm:p-4 selection:bg-rose-900 selection:text-amber-200">
+      <div className="fixed inset-0 z-[280] flex items-center justify-center p-4 selection:bg-white/20">
         
-        {/* Backdrop */}
+        {/* Backdrop (Apple Frosted Darkness) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           onClick={!isProcessingVideo ? onClose : undefined}
-          className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+          className="absolute inset-0 bg-black/75 backdrop-blur-xl cursor-pointer"
         />
 
-        {/* Modal Window */}
+        {/* Modal Sheet (Apple Minimalist Glass Card) */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.94, y: 16 }}
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 16 }}
-          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, scale: 0.96, y: 12 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-md bg-[#1C0A15] border border-[#C4A46C]/50 rounded-3xl p-5 sm:p-6 text-white shadow-2xl overflow-hidden my-auto z-10"
+          className="relative w-full max-w-[370px] bg-[#1C1C1E]/95 border border-white/[0.12] rounded-[28px] p-5 text-white shadow-[0_24px_64px_rgba(0,0,0,0.8)] overflow-hidden my-auto z-10 font-sans"
         >
-          {/* Subtle Ambient Shimmer */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+          {/* Top Grab Indicator */}
+          <div className="w-9 h-1 rounded-full bg-white/20 mx-auto mb-3" />
 
-          {/* Top Close Button (disabled during video rendering) */}
+          {/* Close Button */}
           {!isProcessingVideo && (
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition active:scale-90 cursor-pointer z-20"
+              className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/[0.08] hover:bg-white/[0.18] text-white/60 hover:text-white flex items-center justify-center transition active:scale-90 cursor-pointer z-20"
               title="Tutup"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           )}
 
-          {/* Modal Header */}
-          <div className="text-center pb-4 border-b border-white/10 relative z-10">
-            <h3 className="text-xl sm:text-2xl font-serif font-bold text-amber-200 tracking-tight">
-              Simpan Hasil Photobooth
+          {/* Header */}
+          <div className="text-center pt-1 pb-4">
+            <h3 className="text-base sm:text-lg font-semibold text-white tracking-tight">
+              Simpan Hasil Foto
             </h3>
-            <p className="text-xs text-stone-300 mt-1 font-sans">
-              Pilih format unduhan kenangan sesuai kebutuhanmu
+            <p className="text-xs text-white/50 mt-0.5">
+              Pilih format unduhan kenangan Anda
             </p>
           </div>
 
           {/* Processing Video State */}
           {isProcessingVideo ? (
-            <div className="py-8 px-2 flex flex-col items-center justify-center text-center relative z-10">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#6B111F] to-[#C4A46C] p-0.5 shadow-xl shadow-rose-950/50 mb-4 animate-spin">
-                <div className="w-full h-full bg-[#1C0A15] rounded-full flex items-center justify-center">
-                  <Video size={24} className="text-[#F5D77F] animate-pulse" />
-                </div>
+            <div className="py-6 px-2 flex flex-col items-center justify-center text-center">
+              <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center mb-3">
+                <Loader2 size={22} className="text-white/90 animate-spin" />
               </div>
 
-              <h4 className="text-lg font-serif font-bold text-amber-200">
-                Membuat Video Kenangan Bersuara...
+              <h4 className="text-sm font-medium text-white">
+                Memproses Video Story...
               </h4>
-              <p className="text-xs text-stone-300 mt-1 font-sans max-w-xs">
-                {videoStatusText || 'Sedang menyelaraskan photo strip dan audio doa...'}
+              <p className="text-xs text-white/50 mt-1 max-w-[250px] leading-relaxed">
+                {videoStatusText || 'Menyelaraskan foto dan suara...'}
               </p>
 
-              {/* Progress Bar */}
-              <div className="w-full bg-black/50 rounded-full h-3 border border-white/10 mt-5 overflow-hidden p-0.5">
+              {/* Minimal Apple Progress Track */}
+              <div className="w-full bg-white/[0.08] rounded-full h-1.5 mt-4 overflow-hidden">
                 <motion.div
-                  className="bg-gradient-to-r from-[#C4A46C] via-[#F5D77F] to-[#C4A46C] h-full rounded-full"
+                  className="bg-white h-full rounded-full"
                   initial={{ width: '5%' }}
                   animate={{ width: `${Math.max(5, videoProgress)}%` }}
                   transition={{ ease: 'easeOut', duration: 0.2 }}
                 />
               </div>
 
-              <span className="text-xs font-mono font-bold text-amber-300 mt-2">
+              <span className="text-[11px] font-mono text-white/40 mt-2">
                 {videoProgress}%
               </span>
-
-              <p className="text-[11px] text-stone-400 mt-4 font-sans italic">
-                Video MP4 9:16 vertikal akan otomatis terunduh begitu proses selesai.
-              </p>
             </div>
           ) : (
-            /* Format Selection Options */
-            <div className="py-4 space-y-3 relative z-10">
+            /* Format Selection (iOS Grouped Inset List Style) */
+            <div className="space-y-2">
               
-              {/* OPTION 1: Photo Strip Only (JPG HD - Siap Cetak) */}
-              <div
+              {/* Option 1: Photo Strip JPG */}
+              <button
+                type="button"
                 onClick={handleDownloadPhoto}
-                className="group p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/15 hover:border-amber-400/40 transition-all cursor-pointer flex items-center justify-between gap-3 active:scale-98"
+                className="w-full p-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98] border border-white/[0.08] transition flex items-center justify-between gap-3 text-left group cursor-pointer"
               >
-                <div className="flex items-start gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400/20 to-rose-400/20 border border-amber-300/30 flex items-center justify-center flex-shrink-0 text-amber-300 group-hover:scale-105 transition">
-                    <ImageIcon size={20} />
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/[0.06] flex items-center justify-center text-white/90 flex-shrink-0 group-hover:scale-105 transition">
+                    <ImageIcon size={18} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-serif font-bold text-white group-hover:text-amber-200 transition">
-                        Foto Strip Saja
-                      </h4>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-stone-300 border border-white/10">
-                        JPG HD
+                      <span className="text-[13px] font-medium text-white">
+                        Foto Strip HD
+                      </span>
+                      <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-white/[0.12] text-white/70">
+                        JPG
                       </span>
                     </div>
-                    <p className="text-xs text-stone-300 mt-1 leading-snug font-sans">
-                      Resolusi tinggi 2X Retina (ukuran 2x6 inci). Sangat ideal untuk dicetak fisik atau disimpan di galeri foto HP.
+                    <p className="text-[11px] text-white/50 truncate mt-0.5">
+                      Ukuran 2x6 inci • Siap cetak fisik & galeri
                     </p>
                   </div>
                 </div>
 
-                <div className="w-8 h-8 rounded-full bg-white/10 group-hover:bg-[#6B111F] group-hover:text-[#F5D77F] flex items-center justify-center flex-shrink-0 text-stone-300 transition">
-                  <Download size={15} />
+                <div className="w-7 h-7 rounded-full bg-white/[0.06] group-hover:bg-white/[0.16] flex items-center justify-center flex-shrink-0 text-white/60 group-hover:text-white transition">
+                  <Download size={14} />
                 </div>
-              </div>
+              </button>
 
-              {/* OPTION 2: Photo Strip + Audio (Video MP4 Story) - Enabled only if voice exists */}
+              {/* Option 2: Video MP4 Story (If voice note exists) */}
               {hasVoice && (
-                <div
+                <button
+                  type="button"
                   onClick={handleDownloadVideo}
-                  className="group p-4 rounded-2xl bg-gradient-to-r from-[#2F1122] to-[#200A18] hover:from-[#3D142C] hover:to-[#2B0D20] border-2 border-[#C4A46C] hover:border-[#F5D77F] shadow-lg shadow-rose-950/40 transition-all cursor-pointer flex items-center justify-between gap-3 active:scale-98 relative overflow-hidden"
+                  className="w-full p-3.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.12] active:scale-[0.98] border border-white/[0.14] transition flex items-center justify-between gap-3 text-left group cursor-pointer"
                 >
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C4A46C] to-[#F5D77F] flex items-center justify-center flex-shrink-0 text-[#240C17] group-hover:scale-105 transition shadow-sm">
-                      <Video size={20} />
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition shadow-sm">
+                      <Video size={18} className="text-black" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm font-serif font-bold text-amber-200">
-                          Foto Strip + Audio
-                        </h4>
-                        <span className="text-[9.5px] font-mono font-black uppercase px-2 py-0.5 rounded-full bg-[#C4A46C] text-[#240C17]">
-                          VIDEO MP4
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-medium text-white">
+                          Video Story + Suara
                         </span>
-                        <span className="text-[9.5px] font-sans font-bold text-amber-300 flex items-center gap-0.5">
-                          <Sparkles size={10} />
-                          <span>Rekomendasi</span>
+                        <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-white text-black">
+                          MP4
                         </span>
                       </div>
-                      <p className="text-xs text-stone-200 mt-1 leading-snug font-sans">
-                        Video vertikal 9:16 bersuara dilengkapi animasi gelombang suara. Siap diupload ke <strong>WhatsApp Status, IG Story & TikTok</strong>!
+                      <p className="text-[11px] text-white/50 truncate mt-0.5">
+                        Vertikal 9:16 • Untuk IG Story & WhatsApp
                       </p>
                     </div>
                   </div>
 
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#C4A46C] to-[#F5D77F] text-[#240C17] flex items-center justify-center flex-shrink-0 font-bold shadow-md">
-                    <Download size={15} />
+                  <div className="w-7 h-7 rounded-full bg-white/[0.08] group-hover:bg-white text-white/70 group-hover:text-black flex items-center justify-center flex-shrink-0 transition">
+                    <Download size={14} />
                   </div>
-                </div>
+                </button>
               )}
 
-              {/* OPTION 3: Voice Audio Only */}
+              {/* Option 3: Voice Note Audio Only */}
               {hasVoice && (
-                <div
+                <button
+                  type="button"
                   onClick={handleDownloadAudioOnly}
-                  className="group p-3 sm:p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer flex items-center justify-between gap-3 active:scale-98"
+                  className="w-full p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] active:scale-[0.98] border border-white/[0.05] transition flex items-center justify-between gap-3 text-left group cursor-pointer"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                      <Mic size={16} />
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-white/[0.06] flex items-center justify-center text-white/70 flex-shrink-0">
+                      <Mic size={15} />
                     </div>
-                    <div>
-                      <h4 className="text-xs font-serif font-bold text-stone-200 group-hover:text-white">
-                        Audio Doa Saja
-                      </h4>
-                      <p className="text-[11px] text-stone-400 font-sans">
-                        File rekaman pesan suara asli (.webm / .mp3)
+                    <div className="min-w-0">
+                      <span className="text-xs font-medium text-white/80">
+                        Pesan Suara Saja
+                      </span>
+                      <p className="text-[10.5px] text-white/40 truncate">
+                        File rekaman audio asli
                       </p>
                     </div>
                   </div>
 
-                  <span className="text-xs font-serif text-stone-400 group-hover:text-amber-200 flex items-center gap-1">
-                    <span>Unduh</span>
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white/40 group-hover:text-white transition">
                     <Download size={13} />
-                  </span>
-                </div>
+                  </div>
+                </button>
               )}
 
-              {/* Error Message if Video Failed */}
+              {/* Error Notice */}
               {videoError && (
-                <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs flex items-start gap-2">
-                  <AlertCircle size={16} className="text-rose-400 flex-shrink-0 mt-0.5" />
-                  <span>{videoError}</span>
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-xs flex items-start gap-2 mt-2">
+                  <AlertCircle size={15} className="text-red-400 flex-shrink-0 mt-0.5" />
+                  <span className="leading-tight">{videoError}</span>
                 </div>
               )}
 
-              {/* Notice if No Voice was recorded */}
-              {!hasVoice && (
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-stone-300 text-xs text-center font-sans">
-                  ℹ️ Sesi ini tidak menyertakan rekaman suara, sehingga hanya opsi unduh Foto Strip JPG yang tersedia.
-                </div>
-              )}
-
-            </div>
-          )}
-
-          {/* Modal Footer */}
-          {!isProcessingVideo && (
-            <div className="pt-3 border-t border-white/10 text-center relative z-10">
+              {/* Bottom Cancel Button */}
               <button
                 type="button"
                 onClick={onClose}
-                className="text-stone-400 hover:text-white text-xs font-sans py-1 px-3 transition cursor-pointer"
+                className="w-full py-2.5 rounded-xl text-xs font-medium text-white/50 hover:text-white/80 transition cursor-pointer text-center mt-2"
               >
                 Tutup
               </button>
+
             </div>
           )}
 

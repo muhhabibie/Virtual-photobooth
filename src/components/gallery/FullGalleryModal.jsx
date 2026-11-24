@@ -500,6 +500,11 @@ export default function FullGalleryModal() {
                             }))
                           );
                           const valid = loadedImgs.filter(Boolean).map(img => ({ canvas: img, dataUrl: img.src }));
+                          const resolvedModalGraphicId = fullFrameModal.graphicFrameId || (
+                            ((fullFrameModal.eventSlug || '').toLowerCase().includes('mitufaya') || (activeEvent?.slug || '').toLowerCase().includes('mitufaya') || (activeEvent?.displayName || '').toLowerCase().includes('mitufaya'))
+                              ? (valid.length === 4 ? 'mitufaya-cosmic-4' : 'mitufaya-stamp-3')
+                              : null
+                          );
                           renderMasterPhotoStrip(offCanvas, {
                             photos: valid,
                             targetCount: valid.length,
@@ -507,7 +512,7 @@ export default function FullGalleryModal() {
                             guestName: fullFrameModal.guestName,
                             guestMessage: fullFrameModal.message || fullFrameModal.guestMessage,
                             activeEvent,
-                            graphicFrameId: fullFrameModal.graphicFrameId || null,
+                            graphicFrameId: resolvedModalGraphicId,
                             scale: 2,
                           });
                           downloadUrl = offCanvas.toDataURL('image/jpeg', 0.95);
@@ -556,6 +561,11 @@ export default function FullGalleryModal() {
                             }))
                           );
                           const valid = loadedImgs.filter(Boolean).map(img => ({ canvas: img, dataUrl: img.src }));
+                          const resolvedModalGraphicId = fullFrameModal.graphicFrameId || (
+                            ((fullFrameModal.eventSlug || '').toLowerCase().includes('mitufaya') || (activeEvent?.slug || '').toLowerCase().includes('mitufaya') || (activeEvent?.displayName || '').toLowerCase().includes('mitufaya'))
+                              ? (valid.length === 4 ? 'mitufaya-cosmic-4' : 'mitufaya-stamp-3')
+                              : null
+                          );
                           renderMasterPhotoStrip(offCanvas, {
                             photos: valid,
                             targetCount: valid.length,
@@ -563,7 +573,7 @@ export default function FullGalleryModal() {
                             guestName: fullFrameModal.guestName,
                             guestMessage: fullFrameModal.message || fullFrameModal.guestMessage,
                             activeEvent,
-                            graphicFrameId: fullFrameModal.graphicFrameId || null,
+                            graphicFrameId: resolvedModalGraphicId,
                             scale: 2,
                           });
 
