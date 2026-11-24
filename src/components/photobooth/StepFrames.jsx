@@ -51,19 +51,11 @@ export default function StepFrames() {
   const eventGraphicFrames = useMemo(() => getEventGraphicFrames(activeEvent), [activeEvent]);
   const hasGraphicFrames = eventGraphicFrames.length > 0;
 
-  // If in graphic frame mode, activeGraphicFrame is the selected one
-  const activeGraphicFrame = hasGraphicFrames 
-    ? (eventGraphicFrames.find(f => f.id === selectedGraphicFrameId) || eventGraphicFrames[0])
+  // Active graphic frame is only non-null when selectedGraphicFrameId is set to one of the event graphic frames
+  const activeGraphicFrame = (hasGraphicFrames && selectedGraphicFrameId)
+    ? (eventGraphicFrames.find(f => f.id === selectedGraphicFrameId) || null)
     : null;
-
-  // Auto-select first graphic frame on mount if none selected
-  useEffect(() => {
-    if (hasGraphicFrames && !selectedGraphicFrameId) {
-      const first = eventGraphicFrames[0];
-      setSelectedGraphicFrameId(first.id);
-      setTargetPhotoCount(first.slots);
-    }
-  }, [hasGraphicFrames]);
+  const isPremiumMode = Boolean(activeGraphicFrame);
 
   // Preload overlay images for all graphic frames
   useEffect(() => {
@@ -133,13 +125,29 @@ export default function StepFrames() {
   };
 
   const handlePrev = () => {
-    const nextIdx = (activeColorIdx - 1 + colorThemes.length) % colorThemes.length;
-    handleSelectColor(nextIdx);
+    if (isPremiumMode && hasGraphicFrames) {
+      const currentIdx = eventGraphicFrames.findIndex(f => f.id === selectedGraphicFrameId);
+      const nextIdx = (currentIdx - 1 + eventGraphicFrames.length) % eventGraphicFrames.length;
+      const targetFrame = eventGraphicFrames[nextIdx];
+      setSelectedGraphicFrameId(targetFrame.id);
+      setTargetPhotoCount(targetFrame.slots);
+    } else {
+      const nextIdx = (activeColorIdx - 1 + colorThemes.length) % colorThemes.length;
+      handleSelectColor(nextIdx);
+    }
   };
 
   const handleNext = () => {
-    const nextIdx = (activeColorIdx + 1) % colorThemes.length;
-    handleSelectColor(nextIdx);
+    if (isPremiumMode && hasGraphicFrames) {
+      const currentIdx = eventGraphicFrames.findIndex(f => f.id === selectedGraphicFrameId);
+      const nextIdx = (currentIdx + 1) % eventGraphicFrames.length;
+      const targetFrame = eventGraphicFrames[nextIdx];
+      setSelectedGraphicFrameId(targetFrame.id);
+      setTargetPhotoCount(targetFrame.slots);
+    } else {
+      const nextIdx = (activeColorIdx + 1) % colorThemes.length;
+      handleSelectColor(nextIdx);
+    }
   };
 
   const handleStartCamera = () => {
@@ -165,7 +173,7 @@ export default function StepFrames() {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      if (hasGraphicFrames && activeGraphicFrame) {
+      if (isPremiumMode && activeGraphicFrame) {
         // Graphic frame preview: show frame overlay on color background
         renderMasterPhotoStrip(canvas, {
           targetCount: activeGraphicFrame.slots,
@@ -200,7 +208,7 @@ export default function StepFrames() {
     if (document.fonts?.ready) {
       document.fonts.ready.then(render);
     }
-  }, [targetPhotoCount, activeTheme, guestName, guestMessage, activeEvent, stripStyle, activeGraphicFrame, hasGraphicFrames]);
+  }, [targetPhotoCount, activeTheme, guestName, guestMessage, activeEvent, stripStyle, activeGraphicFrame, isPremiumMode]);
 
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
 
@@ -279,31 +287,53 @@ export default function StepFrames() {
           {/* Under-Preview Labels */}
           <div className="text-center mt-2 sm:mt-3">
             <h3 className="text-[11px] sm:text-xs font-serif font-bold tracking-widest text-[#C4A46C] uppercase">
-              {activeTheme.styleName}
+              {isPremiumMode ? activeGraphicFrame.name : activeTheme.styleName}
             </h3>
             <p className="text-[10px] sm:text-[11px] text-gray-500 font-sans mt-0.5">
-              {activeTheme.subName}
+              {isPremiumMode ? `${activeGraphicFrame.slots} Pose · Bingkai Premium Eksklusif` : activeTheme.subName}
             </p>
 
             {/* Pagination Dots */}
             <div className="flex items-center justify-center gap-1.5 my-2">
-              {colorThemes.map((c, i) => (
-                <button
-                  key={c.id}
-                  onClick={() => handleSelectColor(i)}
-                  className={`transition-all duration-300 rounded-full cursor-pointer ${
-                    i === activeColorIdx
-                      ? 'w-4 sm:w-5 h-1.5 bg-[#C4A46C]'
-                      : 'w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400'
-                  }`}
-                />
-              ))}
+              {isPremiumMode ? (
+                eventGraphicFrames.map((frame, idx) => (
+                  <button
+                    key={frame.id}
+                    onClick={() => {
+                      setSelectedGraphicFrameId(frame.id);
+                      setTargetPhotoCount(frame.slots);
+                    }}
+                    className={`transition-all duration-300 rounded-full cursor-pointer ${
+                      selectedGraphicFrameId === frame.id
+                        ? 'w-4 sm:w-5 h-1.5 bg-[#C4A46C]'
+                        : 'w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400'
+                    }`}
+                  />
+                ))
+              ) : (
+                colorThemes.map((c, i) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleSelectColor(i)}
+                    className={`transition-all duration-300 rounded-full cursor-pointer ${
+                      i === activeColorIdx
+                        ? 'w-4 sm:w-5 h-1.5 bg-[#C4A46C]'
+                        : 'w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400'
+                    }`}
+                  />
+                ))
+              )}
             </div>
 
             {/* Mode Badge Pill */}
             <div className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-rose-50 border border-rose-200 text-[#6B111F] text-[11px] sm:text-xs font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-[#6B111F]"></span>
-              <span>Mode: {targetPhotoCount === 1 ? 'Polaroid Single' : `${targetPhotoCount} Foto Strip`}</span>
+              <span>
+                {isPremiumMode
+                  ? `Bingkai Premium (${activeGraphicFrame.slots} Pose)`
+                  : `Mode: ${targetPhotoCount === 1 ? 'Polaroid Single' : `${targetPhotoCount} Foto Strip`}`
+                }
+              </span>
             </div>
           </div>
 
@@ -402,174 +432,234 @@ export default function StepFrames() {
           {/* Divider */}
           <div className="h-[1px] bg-gray-100 w-full" />
 
-          {/* STEP B: Pilih Bingkai Khusus Event OR Jumlah Pose Strip */}
-          <div>
-            <div className="flex items-center gap-2 mb-2.5 sm:mb-3.5">
-              <div className="w-5 h-5 rounded-full bg-[#6B111F] text-white flex items-center justify-center text-xs font-bold font-serif">
-                2
+          {/* TAB SELEKSI: Bingkai Standar vs Bingkai Premium */}
+          {hasGraphicFrames && (
+            <div className="bg-stone-50 p-2 sm:p-2.5 rounded-2xl border border-stone-200/80">
+              <div className="flex items-center justify-between mb-2 px-1">
+                <span className="text-[10px] sm:text-xs font-serif font-bold text-gray-700 uppercase tracking-wider">
+                  Pilih Koleksi Bingkai
+                </span>
+                <span className="text-[9px] text-[#C4A46C] font-semibold">
+                  {isPremiumMode ? '✨ Mode Premium Aktif' : '🎞️ Mode Standar Aktif'}
+                </span>
               </div>
-              <h2 className="text-xs sm:text-sm font-serif font-bold text-gray-900">
-                {hasGraphicFrames ? 'Pilih Bingkai Eksklusif Event' : 'Pilih Jumlah Pose Strip'}
-              </h2>
-            </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedGraphicFrameId(null);
+                    setTargetPhotoCount(3);
+                  }}
+                  className={`py-2 px-3 rounded-xl text-xs font-serif font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    !isPremiumMode
+                      ? 'bg-white text-[#6B111F] shadow-sm border border-stone-200/90'
+                      : 'text-stone-500 hover:text-stone-800'
+                  }`}
+                >
+                  <span>🎞️ Bingkai Standar</span>
+                </button>
 
-            {hasGraphicFrames ? (
-              /* ✨ GRAPHIC FRAME SELECTOR for event-specific frames (e.g. Mitufaya 8th) */
-              <div className="flex flex-col gap-3">
-                {/* Header banner */}
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-100">
-                  <Sparkles size={14} className="text-[#C4A46C] flex-shrink-0" />
-                  <p className="text-[9px] sm:text-[10px] text-[#6B111F] font-serif font-bold tracking-wider uppercase">
-                    Bingkai Eksklusif · {activeEvent?.displayName || 'Event Ini'}
-                  </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const first = eventGraphicFrames[0];
+                    setSelectedGraphicFrameId(first.id);
+                    setTargetPhotoCount(first.slots);
+                  }}
+                  className={`py-2 px-3 rounded-xl text-xs font-serif font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    isPremiumMode
+                      ? 'bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] text-amber-200 shadow-md shadow-rose-950/20'
+                      : 'text-stone-500 hover:text-stone-800'
+                  }`}
+                >
+                  <Sparkles size={13} className={isPremiumMode ? 'text-amber-300' : 'text-stone-400'} />
+                  <span>✨ Bingkai Premium</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[8px] font-sans font-extrabold uppercase ${
+                    isPremiumMode ? 'bg-amber-400 text-stone-900' : 'bg-stone-200 text-stone-600'
+                  }`}>
+                    {eventGraphicFrames.length} Desain
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Divider if tabs shown */}
+          {hasGraphicFrames && <div className="h-[1px] bg-gray-100 w-full" />}
+
+          {/* STEP 2: Either Premium Frames Selection or Standard Strip Pose Count */}
+          {isPremiumMode ? (
+            /* ✨ PREMIUM FRAMES SELECTION (3 DESAIN GRAFIS EVENT) */
+            <div>
+              <div className="flex items-center gap-2 mb-2.5 sm:mb-3.5">
+                <div className="w-5 h-5 rounded-full bg-[#6B111F] text-white flex items-center justify-center text-xs font-bold font-serif">
+                  2
+                </div>
+                <h2 className="text-xs sm:text-sm font-serif font-bold text-gray-900">
+                  Pilih Desain Bingkai Premium
+                </h2>
+              </div>
+
+              <div className={`grid gap-2.5 ${eventGraphicFrames.length === 3 ? 'grid-cols-3' : eventGraphicFrames.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                {eventGraphicFrames.map((frame) => {
+                  const isSelected = selectedGraphicFrameId === frame.id;
+                  return (
+                    <button
+                      key={frame.id}
+                      onClick={() => {
+                        setSelectedGraphicFrameId(frame.id);
+                        setTargetPhotoCount(frame.slots);
+                      }}
+                      className={`relative rounded-2xl overflow-hidden flex flex-col items-center transition-all cursor-pointer group ${
+                        isSelected
+                          ? 'ring-2 ring-[#6B111F] shadow-lg shadow-rose-950/20 scale-[1.03]'
+                          : 'ring-1 ring-gray-200 hover:ring-rose-200 hover:scale-[1.01]'
+                      }`}
+                    >
+                      <div className="relative w-full" style={{ aspectRatio: '1/3' }}>
+                        <img
+                          src={frame.previewUrl}
+                          alt={frame.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        {isSelected && (
+                          <div className="absolute inset-0 bg-[#6B111F]/10 flex items-center justify-center">
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#6B111F] flex items-center justify-center shadow-md">
+                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                <path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className={`w-full text-center px-1 py-1.5 transition-colors ${isSelected ? 'bg-[#6B111F]' : 'bg-white group-hover:bg-rose-50'}`}>
+                        <p className={`text-[9px] sm:text-[10px] font-serif font-bold leading-tight truncate ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                          {frame.name}
+                        </p>
+                        <p className={`text-[7px] sm:text-[8px] mt-0.5 ${isSelected ? 'text-rose-200' : 'text-gray-400'}`}>
+                          {frame.slots} pose
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="text-[10px] text-gray-500 font-sans mt-2.5 text-center">
+                ✨ Desain grafis kustom eksklusif event sudah dilengkapi artwork latar, font, dan ornamen khusus.
+              </p>
+            </div>
+          ) : (
+            /* 🎞️ BINGKAI STANDAR: STEP 2 (Pilih Jumlah Pose) & STEP 3 (Warna Bingkai Strip) */
+            <>
+              {/* STEP 2: Pilih Jumlah Pose Strip */}
+              <div>
+                <div className="flex items-center gap-2 mb-2.5 sm:mb-3.5">
+                  <div className="w-5 h-5 rounded-full bg-[#6B111F] text-white flex items-center justify-center text-xs font-bold font-serif">
+                    2
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-serif font-bold text-gray-900">
+                    Pilih Jumlah Pose Strip
+                  </h2>
                 </div>
 
-                {/* Frame cards row */}
-                <div className={`grid gap-2.5 ${eventGraphicFrames.length === 3 ? 'grid-cols-3' : eventGraphicFrames.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-                  {eventGraphicFrames.map((frame) => {
-                    const isSelected = selectedGraphicFrameId === frame.id;
+                {/* 4 Strip Cards Grid */}
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
+                  {STRIP_TYPES.map(t => {
+                    const isSelected = targetPhotoCount === t.id;
                     return (
                       <button
-                        key={frame.id}
-                        onClick={() => {
-                          setSelectedGraphicFrameId(frame.id);
-                          setTargetPhotoCount(frame.slots);
-                        }}
-                        className={`relative rounded-2xl overflow-hidden flex flex-col items-center transition-all cursor-pointer group ${
+                        key={t.id}
+                        onClick={() => handleSelectType(t.id)}
+                        className={`relative rounded-xl sm:rounded-2xl pt-3 sm:pt-4 pb-2 sm:pb-3 px-1 sm:px-1.5 flex flex-col items-center justify-between transition-all cursor-pointer ${
                           isSelected
-                            ? 'ring-2 ring-[#6B111F] shadow-lg shadow-rose-950/20 scale-[1.03]'
-                            : 'ring-1 ring-gray-200 hover:ring-rose-200 hover:scale-[1.01]'
+                            ? 'bg-[#6B111F] text-white shadow-lg shadow-rose-950/20 scale-[1.02]'
+                            : 'bg-white text-gray-800 border border-gray-200/90 hover:border-rose-200'
                         }`}
                       >
-                        {/* Frame preview image */}
-                        <div className="relative w-full" style={{ aspectRatio: '1/3' }}>
-                          <img
-                            src={frame.previewUrl}
-                            alt={frame.name}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                          {/* Selection overlay */}
-                          {isSelected && (
-                            <div className="absolute inset-0 bg-[#6B111F]/10 flex items-center justify-center">
-                              <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#6B111F] flex items-center justify-center shadow-md">
-                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                                  <path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                              </div>
-                            </div>
-                          )}
+                        {t.badge && (
+                          <span className={`absolute -top-1.5 sm:-top-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-bold text-white tracking-wider ${
+                            isSelected ? 'bg-[#C4A46C]' : t.badgeColor
+                          }`}>
+                            {t.badge}
+                          </span>
+                        )}
+
+                        <div className={`w-6 sm:w-8 rounded-md p-0.5 sm:p-1 my-1 flex flex-col gap-0.5 items-center justify-center ${
+                          isSelected ? 'bg-black/30 border border-white/20' : 'bg-[#2E2421] border border-[#443834]'
+                        }`}>
+                          {Array.from({ length: t.slots }).map((_, idx) => (
+                            <div
+                              key={idx}
+                              className={`w-full rounded-xs ${
+                                t.slots === 1 ? 'aspect-[4/3] bg-[#423632]' : 'h-1.5 sm:h-2 bg-[#423632]'
+                              }`}
+                            />
+                          ))}
                         </div>
-                        {/* Frame label */}
-                        <div className={`w-full text-center px-1 py-1.5 transition-colors ${isSelected ? 'bg-[#6B111F]' : 'bg-white group-hover:bg-rose-50'}`}>
-                          <p className={`text-[9px] sm:text-[10px] font-serif font-bold leading-tight truncate ${isSelected ? 'text-white' : 'text-gray-900'}`}>
-                            {frame.name}
-                          </p>
-                          <p className={`text-[7px] sm:text-[8px] mt-0.5 ${isSelected ? 'text-rose-200' : 'text-gray-400'}`}>
-                            {frame.slots} pose
-                          </p>
+
+                        <div className="text-center mt-0.5 sm:mt-1">
+                          <div className={`text-[11px] sm:text-xs font-serif font-bold leading-tight ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                            {t.name}
+                          </div>
+                          <div className={`text-[8px] sm:text-[9px] mt-0.5 ${isSelected ? 'text-rose-200' : 'text-gray-400'}`}>
+                            {t.sub}
+                          </div>
                         </div>
                       </button>
                     );
                   })}
                 </div>
               </div>
-            ) : (
-              /* Standard 4 Strip Cards Grid */
-              <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
-                {STRIP_TYPES.map(t => {
-                  const isSelected = targetPhotoCount === t.id;
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => handleSelectType(t.id)}
-                      className={`relative rounded-xl sm:rounded-2xl pt-3 sm:pt-4 pb-2 sm:pb-3 px-1 sm:px-1.5 flex flex-col items-center justify-between transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-[#6B111F] text-white shadow-lg shadow-rose-950/20 scale-[1.02]'
-                          : 'bg-white text-gray-800 border border-gray-200/90 hover:border-rose-200'
-                      }`}
-                    >
-                      {t.badge && (
-                        <span className={`absolute -top-1.5 sm:-top-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-bold text-white tracking-wider ${
-                          isSelected ? 'bg-[#C4A46C]' : t.badgeColor
+
+              {/* Divider */}
+              <div className="h-[1px] bg-gray-100 w-full" />
+
+              {/* STEP 3: Warna Bingkai Strip */}
+              <div>
+                <div className="flex items-center gap-2 mb-2.5 sm:mb-3.5">
+                  <div className="w-5 h-5 rounded-full bg-[#6B111F] text-white flex items-center justify-center text-xs font-bold font-serif">
+                    3
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-serif font-bold text-gray-900">
+                    Warna Bingkai Strip
+                  </h2>
+                </div>
+
+                {/* Color Swatches */}
+                <div className="grid grid-cols-5 sm:grid-cols-9 md:grid-cols-10 gap-2 sm:gap-2.5">
+                  {colorThemes.map((c, idx) => {
+                    const isSelected = activeColorIdx === idx;
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => handleSelectColor(idx)}
+                        className="flex flex-col items-center cursor-pointer group"
+                      >
+                        <div
+                          style={{ 
+                            backgroundColor: c.hex,
+                            border: c.borderHex ? `2px solid ${c.borderHex}` : undefined
+                          }}
+                          className={`w-full aspect-[4/3] rounded-lg sm:rounded-xl transition-all shadow-xs flex items-center justify-center ${
+                            isSelected
+                              ? 'ring-2 ring-offset-1 sm:ring-offset-2 ring-[#6B111F] scale-105'
+                              : 'border border-gray-200/80 group-hover:scale-102'
+                          }`}
+                        />
+                        <span className={`text-[9px] sm:text-[10px] mt-1 sm:mt-1.5 tracking-tight font-sans transition-colors truncate max-w-full ${
+                          isSelected ? 'font-bold text-[#6B111F]' : 'text-gray-500'
                         }`}>
-                          {t.badge}
+                          {c.name}
                         </span>
-                      )}
-
-                      <div className={`w-6 sm:w-8 rounded-md p-0.5 sm:p-1 my-1 flex flex-col gap-0.5 items-center justify-center ${
-                        isSelected ? 'bg-black/30 border border-white/20' : 'bg-[#2E2421] border border-[#443834]'
-                      }`}>
-                        {Array.from({ length: t.slots }).map((_, idx) => (
-                          <div
-                            key={idx}
-                            className={`w-full rounded-xs ${
-                              t.slots === 1 ? 'aspect-[4/3] bg-[#423632]' : 'h-1.5 sm:h-2 bg-[#423632]'
-                            }`}
-                          />
-                        ))}
-                      </div>
-
-                      <div className="text-center mt-0.5 sm:mt-1">
-                        <div className={`text-[11px] sm:text-xs font-serif font-bold leading-tight ${isSelected ? 'text-white' : 'text-gray-900'}`}>
-                          {t.name}
-                        </div>
-                        <div className={`text-[8px] sm:text-[9px] mt-0.5 ${isSelected ? 'text-rose-200' : 'text-gray-400'}`}>
-                          {t.sub}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            )}
-          </div>
-
-          {/* Divider — only when not in graphic frame mode */}
-          {!hasGraphicFrames && <div className="h-[1px] bg-gray-100 w-full" />}
-
-          {/* STEP C: Warna Bingkai Strip — hidden when in graphic frame mode */}
-          {!hasGraphicFrames && <div>
-            <div className="flex items-center gap-2 mb-2.5 sm:mb-3.5">
-              <div className="w-5 h-5 rounded-full bg-[#6B111F] text-white flex items-center justify-center text-xs font-bold font-serif">
-                3
-              </div>
-              <h2 className="text-xs sm:text-sm font-serif font-bold text-gray-900">
-                Warna Bingkai Strip
-              </h2>
-            </div>
-
-            {/* Color Swatches */}
-            <div className="grid grid-cols-5 sm:grid-cols-9 md:grid-cols-10 gap-2 sm:gap-2.5">
-              {colorThemes.map((c, idx) => {
-                const isSelected = activeColorIdx === idx;
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => handleSelectColor(idx)}
-                    className="flex flex-col items-center cursor-pointer group"
-                  >
-                    <div
-                      style={{ 
-                        backgroundColor: c.hex,
-                        border: c.borderHex ? `2px solid ${c.borderHex}` : undefined
-                      }}
-                      className={`w-full aspect-[4/3] rounded-lg sm:rounded-xl transition-all shadow-xs flex items-center justify-center ${
-                        isSelected
-                          ? 'ring-2 ring-offset-1 sm:ring-offset-2 ring-[#6B111F] scale-105'
-                          : 'border border-gray-200/80 group-hover:scale-102'
-                      }`}
-                    />
-                    <span className={`text-[9px] sm:text-[10px] mt-1 sm:mt-1.5 tracking-tight font-sans transition-colors truncate max-w-full ${
-                      isSelected ? 'font-bold text-[#6B111F]' : 'text-gray-500'
-                    }`}>
-                      {c.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>}
+            </>
+          )}
 
         </div>
 

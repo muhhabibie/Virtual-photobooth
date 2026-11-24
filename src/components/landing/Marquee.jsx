@@ -88,10 +88,11 @@ export default function Marquee() {
   const eventGraphicFrames = useMemo(() => getEventGraphicFrames(activeEvent), [activeEvent]);
   const hasGraphicFrames = eventGraphicFrames.length > 0;
 
-  // Quadruple duplicated list for 100% seamless, uninterrupted infinite sliding
+  // Seamless infinite sliding list featuring both Premium and Classic frames
   const duplicated = useMemo(() => {
     if (hasGraphicFrames) {
-      return [...eventGraphicFrames, ...eventGraphicFrames, ...eventGraphicFrames, ...eventGraphicFrames];
+      const allCards = [...eventGraphicFrames, ...FRAME_PREVIEWS];
+      return [...allCards, ...allCards, ...allCards];
     }
     return [...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS, ...FRAME_PREVIEWS];
   }, [hasGraphicFrames, eventGraphicFrames]);
@@ -282,12 +283,18 @@ export default function Marquee() {
                   if (dragDistanceRef.current < 6) {
                     if (setSelectedGraphicFrameId) setSelectedGraphicFrameId(card.id);
                     if (setTargetPhotoCount) setTargetPhotoCount(card.slots);
-                    openBooth();
+                    openBooth(card.id);
                   }
                 }}
                 className="relative flex-shrink-0 w-44 xs:w-48 sm:w-52 h-[520px] xs:h-[550px] sm:h-[590px] rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-[1.02] cursor-pointer select-none group/card border border-stone-200/90 bg-stone-900"
                 title={`Pilih bingkai ${card.name}`}
               >
+                {/* Shiny Premium Badge */}
+                <div className="absolute top-3 left-3 z-10 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 font-sans font-extrabold text-[8px] uppercase tracking-wider shadow-md flex items-center gap-1">
+                  <span>✨</span>
+                  <span>PREMIUM</span>
+                </div>
+
                 <img 
                   src={card.previewUrl} 
                   alt={card.name} 
@@ -296,7 +303,7 @@ export default function Marquee() {
                 />
                 <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent text-white">
                   <p className="text-xs sm:text-sm font-serif font-bold leading-tight">{card.name}</p>
-                  <p className="text-[10px] text-amber-200 font-sans mt-0.5">{card.slots} Pose · Eksklusif Event</p>
+                  <p className="text-[10px] text-amber-200 font-sans mt-0.5">{card.slots} Pose · Bingkai Premium</p>
                 </div>
               </div>
             );
@@ -311,7 +318,9 @@ export default function Marquee() {
               onClick={() => {
                 // If user dragged more than 6px, ignore click so it only acts as swipe
                 if (dragDistanceRef.current < 6) {
+                  if (setSelectedGraphicFrameId) setSelectedGraphicFrameId(null);
                   if (setStripColor) setStripColor(card.colorHex);
+                  if (setTargetPhotoCount) setTargetPhotoCount(card.slots || 3);
                   openBooth();
                 }
               }}

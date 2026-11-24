@@ -531,11 +531,11 @@ export function PhotoboothProvider({ children }) {
     const defaultBg = activeEvent?.customFrame?.bgColor || '#FFFFFF';
     setStripColor(defaultBg);
 
-    // Auto-detect and pre-select event graphic frames (e.g. Mitufaya)
+    // Check if a specific graphic frame was requested (e.g. clicked from Marquee)
     const eventGraphicFrames = getEventGraphicFrames(activeEvent);
     const initialGraphicId = (typeof preferredFrameId === 'string' && preferredFrameId)
       ? preferredFrameId
-      : (eventGraphicFrames.length > 0 ? eventGraphicFrames[0].id : null);
+      : null;
     setSelectedGraphicFrameId(initialGraphicId);
 
     if (initialGraphicId) {
@@ -543,6 +543,8 @@ export function PhotoboothProvider({ children }) {
       if (gFrame) {
         setTargetPhotoCount(gFrame.slots);
       }
+    } else {
+      setTargetPhotoCount(3); // Default to standard 3-pose strip
     }
 
     setCapturedPhotos([]);        // Fresh session: clear previous photos!
