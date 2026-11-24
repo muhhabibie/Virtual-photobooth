@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Camera, BookOpen, Lock, ShieldAlert, Calendar, QrCode, MessageCircle, ShoppingBag, ArrowRight, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, BookOpen, Lock, ShieldAlert, Calendar, MapPin, QrCode, MessageCircle, ShoppingBag, ArrowRight, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import Marquee from './Marquee';
@@ -340,29 +340,57 @@ export default function EventHero() {
             initial={{ opacity: 0, y: 16 }}
             animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
             transition={{ duration: 0.8, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
-            className="mb-4 flex flex-col items-center text-center px-2"
+            className="mb-5 sm:mb-6 flex flex-col items-center text-center px-2"
           >
             {/* Badge (Weddings Only) */}
             {eventBadge && (
-              <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-[#6B111F]/10 border border-[#6B111F]/20 mb-2 shadow-2xs">
+              <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-[#6B111F]/10 border border-[#6B111F]/20 mb-2.5 shadow-2xs">
                 <span className="text-[10px] sm:text-xs font-sans font-bold tracking-[0.2em] text-[#6B111F] uppercase">
                   {eventBadge}
                 </span>
               </div>
             )}
 
-            {/* Title */}
-            <h1 className="text-2xl xs:text-3xl sm:text-5xl font-serif font-black text-stone-900 tracking-tight leading-tight mb-2">
-              {activeEvent.displayName}
+            {/* Title (High-End Editorial Luxury Typography) */}
+            <h1 
+              className={`leading-tight px-2 ${
+                isWedding 
+                  ? 'text-4xl xs:text-5xl sm:text-7xl font-normal text-[#2A060D]' 
+                  : 'text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-serif font-black tracking-tight'
+              }`}
+              style={isWedding ? {
+                fontFamily: "'Alex Brush', 'Great Vibes', cursive",
+                textShadow: '0 2px 12px rgba(107,17,31,0.1)'
+              } : {
+                fontFamily: "'Playfair Display', 'Cinzel', Georgia, serif",
+                letterSpacing: '-0.02em'
+              }}
+            >
+              <span className={isWedding ? 'text-[#3E0A14]' : 'bg-gradient-to-r from-[#1A0307] via-[#4A0A15] to-[#1A0307] bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,0.06)]'}>
+                {activeEvent.displayName}
+              </span>
             </h1>
 
-            {/* Date & Venue */}
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-stone-100 border border-stone-200/80 text-stone-600 text-xs sm:text-sm font-medium shadow-2xs">
-              <span>{activeEvent.formattedDate}</span>
+            {/* Subtle Luxury Ornament Divider */}
+            <div className="flex items-center justify-center gap-2.5 my-2.5 sm:my-3">
+              <span className="w-8 sm:w-14 h-[1px] bg-gradient-to-r from-transparent via-[#C5A059]/60 to-[#C5A059]" />
+              <span className="text-[#B88E3E] text-[10px] sm:text-xs select-none">✦</span>
+              <span className="w-8 sm:w-14 h-[1px] bg-gradient-to-l from-transparent via-[#C5A059]/60 to-[#C5A059]" />
+            </div>
+
+            {/* Date & Venue Luxury Capsule */}
+            <div className="inline-flex items-center flex-wrap justify-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-[#FDFBF7] via-[#FAF4EA] to-[#FDFBF7] border border-[#E2D2B0] shadow-[0_2px_12px_rgba(180,140,60,0.08),0_1px_2px_rgba(0,0,0,0.02)]">
+              <div className="inline-flex items-center gap-1.5 text-[#3A1017]">
+                <Calendar className="w-3.5 h-3.5 text-[#B88E3E] shrink-0" />
+                <span className="text-xs sm:text-sm font-semibold tracking-tight">{activeEvent.formattedDate}</span>
+              </div>
               {activeEvent.venue && (
                 <>
-                  <span className="text-stone-300">•</span>
-                  <span>{activeEvent.venue}</span>
+                  <span className="w-1 h-1 rounded-full bg-[#C5A059] mx-0.5 shrink-0" />
+                  <div className="inline-flex items-center gap-1 text-[#542129]">
+                    <MapPin className="w-3.5 h-3.5 text-[#B88E3E] shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium tracking-tight">{activeEvent.venue}</span>
+                  </div>
                 </>
               )}
             </div>
