@@ -31,12 +31,12 @@ export const MITUFAYA_FRAMES = [
     previewUrl: '/frames/mitufaya_frame_2_preview.jpg',
     overlayUrl: '/frames/mitufaya_frame_2_overlay.png',
     slotBoxes: [
-      { x: 100, y: 270, w: 400, h: 245 },  // Pose 1 (Stamp)
-      { x: 100, y: 692, w: 400, h: 245 },  // Pose 2 (Stamp)
-      { x: 100, y: 1115, w: 400, h: 245 }  // Pose 3 (Stamp)
+      { x: 104, y: 265, w: 406, h: 260 },  // Pose 1 (Stamp)
+      { x: 104, y: 687, w: 406, h: 260 },  // Pose 2 (Stamp)
+      { x: 104, y: 1109, w: 406, h: 261 }  // Pose 3 (Stamp)
     ],
     accentColor: '#4E8A57',
-    themeHex: '#88C290',
+    themeHex: '#EAA4B5',
     styleName: 'PASTEL MEMORIES STAMP',
   },
   {

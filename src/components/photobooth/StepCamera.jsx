@@ -1065,8 +1065,11 @@ export default function StepCamera() {
             onTouchEnd={handleTouchEnd}
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
-            style={{ borderColor: isGraphicFrameMode ? 'rgba(255, 255, 255, 0.45)' : accentColor }}
-            className="relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center border-2 my-1 touch-pan-y select-none cursor-grab active:cursor-grabbing group z-10"
+            style={{
+              borderColor: isGraphicFrameMode ? 'transparent' : accentColor,
+              border: isGraphicFrameMode ? 'none' : undefined
+            }}
+            className={`relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-inner flex items-center justify-center ${isGraphicFrameMode ? 'border-0' : 'border-2'} my-1 touch-pan-y select-none cursor-grab active:cursor-grabbing group z-10`}
           >
             {/* Camera Video Stream */}
             <video
