@@ -351,22 +351,29 @@ export default function EventHero() {
               </div>
             )}
 
-            {/* Title (High-End Editorial Luxury Typography) */}
+            {/* Title (High-End Editorial Luxury Typography - Aesthetic & Non-Flat Gradient) */}
             <h1 
               className={`leading-tight px-2 ${
                 isWedding 
                   ? 'text-4xl xs:text-5xl sm:text-7xl font-normal text-[#2A060D]' 
-                  : 'text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-serif font-black tracking-tight'
+                  : 'text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-serif font-bold sm:font-extrabold tracking-tight'
               }`}
               style={isWedding ? {
                 fontFamily: "'Alex Brush', 'Great Vibes', cursive",
                 textShadow: '0 2px 12px rgba(107,17,31,0.1)'
               } : {
-                fontFamily: "'Playfair Display', 'Cinzel', Georgia, serif",
-                letterSpacing: '-0.02em'
+                fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif",
+                letterSpacing: '-0.015em'
               }}
             >
-              <span className={isWedding ? 'text-[#3E0A14]' : 'bg-gradient-to-r from-[#1A0307] via-[#4A0A15] to-[#1A0307] bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,0.06)]'}>
+              <span 
+                className={isWedding 
+                  ? 'text-[#3E0A14]' 
+                  : 'bg-gradient-to-r from-[#6B111F] via-[#BA2B46] via-[#D13B59] to-[#6B111F] bg-clip-text text-transparent inline-block'}
+                style={!isWedding ? {
+                  filter: 'drop-shadow(0 2px 8px rgba(186,43,70,0.22)) drop-shadow(0 1px 2px rgba(0,0,0,0.08))'
+                } : undefined}
+              >
                 {activeEvent.displayName}
               </span>
             </h1>
