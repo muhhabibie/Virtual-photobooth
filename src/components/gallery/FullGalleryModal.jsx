@@ -507,6 +507,7 @@ export default function FullGalleryModal() {
                             guestName: fullFrameModal.guestName,
                             guestMessage: fullFrameModal.message || fullFrameModal.guestMessage,
                             activeEvent,
+                            graphicFrameId: fullFrameModal.graphicFrameId || null,
                             scale: 2,
                           });
                           downloadUrl = offCanvas.toDataURL('image/jpeg', 0.95);
@@ -562,6 +563,7 @@ export default function FullGalleryModal() {
                             guestName: fullFrameModal.guestName,
                             guestMessage: fullFrameModal.message || fullFrameModal.guestMessage,
                             activeEvent,
+                            graphicFrameId: fullFrameModal.graphicFrameId || null,
                             scale: 2,
                           });
 

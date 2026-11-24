@@ -35,6 +35,7 @@ export default function StepResult() {
     goBack,
     reset,
     closeBooth,
+    selectedGraphicFrameId,
   } = useBooth();
 
   const { toast } = useToast();
@@ -180,10 +181,11 @@ export default function StepResult() {
         guestMessage,
         activeEvent,
         filterCss: activeFilterObj.css,
+        graphicFrameId: selectedGraphicFrameId,
         scale: 2,
       });
     }
-  }, [capturedPhotos, stripColor, guestName, guestMessage, selectedFilter, activeEvent, stripStyle]);
+  }, [capturedPhotos, stripColor, guestName, guestMessage, selectedFilter, activeEvent, stripStyle, selectedGraphicFrameId]);
 
   useEffect(() => {
     renderStrip();

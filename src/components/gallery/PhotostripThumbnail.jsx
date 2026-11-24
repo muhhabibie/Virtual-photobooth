@@ -79,6 +79,7 @@ export default function PhotostripThumbnail({
           guestName: item.guestName,
           guestMessage: item.message || item.guestMessage,
           activeEvent: activeEvent,
+          graphicFrameId: item.graphicFrameId || null,
           scale: 1.5,
         });
       }

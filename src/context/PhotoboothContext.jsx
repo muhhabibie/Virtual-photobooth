@@ -3,6 +3,7 @@ import { subscribeSubmissions, saveSubmission, getLocalSubmissions, deleteSubmis
 import { syncEventToCloud, subscribeCloudEvents, saveLocalEvents, deleteEventFromCloud } from '../services/eventService';
 import { INITIAL_EVENTS, PACKAGES, DEFAULT_HERO_PHOTOS, DEMO_EVENT } from '../data/mockEvents';
 import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../utils/stripRenderer';
+import { getEventGraphicFrames, preloadEventFrames } from '../data/eventFrames';
 
 const PhotoboothContext = createContext(null);
 
@@ -464,6 +465,7 @@ export function PhotoboothProvider({ children }) {
   const [stripColor, setStripColor] = useState('#FFFFFF');
   const [stripColorName, setStripColorName] = useState('Botanical');
   const [stripStyle, setStripStyle] = useState('standard'); // 'standard' | 'botanical-wedding'
+  const [selectedGraphicFrameId, setSelectedGraphicFrameId] = useState(null);
 
   const [selectedFrameIndex, setSelectedFrameIndex] = useState(0);
   const [selectedTimer, setSelectedTimer] = useState(3);
@@ -485,6 +487,7 @@ export function PhotoboothProvider({ children }) {
 
   // Initialize base state on mount if not already tagged
   useEffect(() => {
+    preloadEventFrames();
     try {
       if (!window.history.state || !window.history.state.__sirklen__) {
         window.history.replaceState({ __sirklen__: true, type: 'root' }, '');
@@ -522,11 +525,26 @@ export function PhotoboothProvider({ children }) {
     setCurrentStepState('frames');
   }, []);
 
-  const openBooth = useCallback(() => {
+  const openBooth = useCallback((preferredFrameId) => {
     if (isEventExpired) return;
     isClosingBoothRef.current = false;
     const defaultBg = activeEvent?.customFrame?.bgColor || '#FFFFFF';
     setStripColor(defaultBg);
+
+    // Auto-detect and pre-select event graphic frames (e.g. Mitufaya)
+    const eventGraphicFrames = getEventGraphicFrames(activeEvent);
+    const initialGraphicId = (typeof preferredFrameId === 'string' && preferredFrameId)
+      ? preferredFrameId
+      : (eventGraphicFrames.length > 0 ? eventGraphicFrames[0].id : null);
+    setSelectedGraphicFrameId(initialGraphicId);
+
+    if (initialGraphicId) {
+      const gFrame = eventGraphicFrames.find(f => f.id === initialGraphicId);
+      if (gFrame) {
+        setTargetPhotoCount(gFrame.slots);
+      }
+    }
+
     setCapturedPhotos([]);        // Fresh session: clear previous photos!
     setSelectedPhotoIndex(0);
     setVoiceBlob(null);
@@ -698,6 +716,7 @@ export function PhotoboothProvider({ children }) {
             guestName,
             guestMessage,
             activeEvent,
+            graphicFrameId: selectedGraphicFrameId,
             scale: 2,
           });
         }
@@ -716,6 +735,7 @@ export function PhotoboothProvider({ children }) {
       stripColor,
       stripStyle,
       stripImage,
+      graphicFrameId: selectedGraphicFrameId || null,
       voiceBlob: extraData?.voiceBlob !== undefined ? extraData.voiceBlob : voiceBlob,
       voiceUrl: extraData?.voiceUrl !== undefined ? extraData.voiceUrl : voiceUrl,
       voiceDuration: extraData?.voiceDuration !== undefined ? extraData.voiceDuration : voiceDuration,
@@ -732,7 +752,7 @@ export function PhotoboothProvider({ children }) {
     }
 
     return result;
-  }, [capturedPhotos, isEventExpired, activeEvent, currentSlug, guestName, guestMessage, stripColor, stripStyle, voiceBlob, voiceUrl, voiceDuration, isDemo]);
+  }, [capturedPhotos, isEventExpired, activeEvent, currentSlug, guestName, guestMessage, stripColor, stripStyle, selectedGraphicFrameId, voiceBlob, voiceUrl, voiceDuration, isDemo]);
 
   // Delete submission from local & cloud (with real-time multi-device sync)
   const deleteSubmission = useCallback(async (submissionId, localId) => {
@@ -798,6 +818,7 @@ export function PhotoboothProvider({ children }) {
       stripColor, setStripColor,
       stripColorName, setStripColorName,
       stripStyle, setStripStyle,
+      selectedGraphicFrameId, setSelectedGraphicFrameId,
       selectedFrameIndex, setSelectedFrameIndex,
       selectedTimer, setSelectedTimer,
       capturedPhotos, addPhoto, setCapturedPhotos,

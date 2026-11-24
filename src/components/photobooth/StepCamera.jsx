@@ -191,7 +191,8 @@ export default function StepCamera() {
     setCapturedPhotos,
     setCurrentStep, 
     goBack,
-    closeBooth 
+    closeBooth,
+    selectedGraphicFrameId,
   } = useBooth();
 
   const { start, stop, toggle } = useCamera();
@@ -486,9 +487,10 @@ export default function StepCamera() {
       guestName,
       guestMessage,
       activeEvent,
+      graphicFrameId: selectedGraphicFrameId,
       scale: 2,
     });
-  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, showPreviewModal, activeEvent]);
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, showPreviewModal, activeEvent, selectedGraphicFrameId]);
 
   useEffect(() => {
     renderModalStrip();
@@ -801,10 +803,11 @@ export default function StepCamera() {
         guestName,
         guestMessage,
         activeEvent,
+        graphicFrameId: selectedGraphicFrameId,
         scale: 2,
       });
     }
-  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent, stripStyle]);
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent, stripStyle, selectedGraphicFrameId]);
 
   useEffect(() => {
     if (isEjecting) {

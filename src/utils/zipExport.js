@@ -112,6 +112,7 @@ async function renderSubmissionStrip(item, event) {
       guestName: item.guestName,
       guestMessage: item.message || item.guestMessage,
       activeEvent: event,
+      graphicFrameId: item.graphicFrameId || null,
       scale: 2,
     });
 

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle, RefreshCw, Home } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, UserCheck, Heart, AlertCircle, RefreshCw, Home, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
 import { preloadFaceMesh } from '../../hooks/useFaceMesh';
+import { getEventGraphicFrames, getCachedFrameImage } from '../../data/eventFrames';
 
 const STRIP_TYPES = [
   { id: 1, name: 'Polaroid', sub: '1 frame', badge: 'CLASSIC', badgeColor: 'bg-[#6B111F]', slots: 1 },
@@ -42,8 +43,37 @@ export default function StepFrames() {
     setCapturedPhotos,
     setSelectedPhotoIndex,
     stripStyle, setStripStyle,
+    selectedGraphicFrameId, setSelectedGraphicFrameId,
     closeBooth 
   } = useBooth();
+
+  // Event-specific graphic frames (e.g. Mitufaya 8th Anniversary)
+  const eventGraphicFrames = useMemo(() => getEventGraphicFrames(activeEvent), [activeEvent]);
+  const hasGraphicFrames = eventGraphicFrames.length > 0;
+
+  // If in graphic frame mode, activeGraphicFrame is the selected one
+  const activeGraphicFrame = hasGraphicFrames 
+    ? (eventGraphicFrames.find(f => f.id === selectedGraphicFrameId) || eventGraphicFrames[0])
+    : null;
+
+  // Auto-select first graphic frame on mount if none selected
+  useEffect(() => {
+    if (hasGraphicFrames && !selectedGraphicFrameId) {
+      const first = eventGraphicFrames[0];
+      setSelectedGraphicFrameId(first.id);
+      setTargetPhotoCount(first.slots);
+    }
+  }, [hasGraphicFrames]);
+
+  // Preload overlay images for all graphic frames
+  useEffect(() => {
+    if (hasGraphicFrames) {
+      eventGraphicFrames.forEach(f => {
+        getCachedFrameImage(f.overlayUrl);
+        getCachedFrameImage(f.previewUrl);
+      });
+    }
+  }, [eventGraphicFrames]);
 
   const [nameError, setNameError] = useState(false);
   const [isStartingCamera, setIsStartingCamera] = useState(false);
@@ -135,7 +165,18 @@ export default function StepFrames() {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      if (stripStyle === 'botanical-wedding') {
+      if (hasGraphicFrames && activeGraphicFrame) {
+        // Graphic frame preview: show frame overlay on color background
+        renderMasterPhotoStrip(canvas, {
+          targetCount: activeGraphicFrame.slots,
+          stripColor: activeGraphicFrame.themeHex || '#FFFFFF',
+          guestName,
+          guestMessage,
+          activeEvent,
+          graphicFrameId: activeGraphicFrame.id,
+          scale: 1,
+        });
+      } else if (stripStyle === 'botanical-wedding') {
         renderBotanicalWeddingStrip(canvas, {
           targetCount: targetPhotoCount,
           guestName,
@@ -159,7 +200,7 @@ export default function StepFrames() {
     if (document.fonts?.ready) {
       document.fonts.ready.then(render);
     }
-  }, [targetPhotoCount, activeTheme, guestName, guestMessage, activeEvent, stripStyle]);
+  }, [targetPhotoCount, activeTheme, guestName, guestMessage, activeEvent, stripStyle, activeGraphicFrame, hasGraphicFrames]);
 
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
 
@@ -361,71 +402,134 @@ export default function StepFrames() {
           {/* Divider */}
           <div className="h-[1px] bg-gray-100 w-full" />
 
-          {/* STEP B: Pilih Tipe & Jumlah Pose Strip */}
+          {/* STEP B: Pilih Bingkai Khusus Event OR Jumlah Pose Strip */}
           <div>
             <div className="flex items-center gap-2 mb-2.5 sm:mb-3.5">
               <div className="w-5 h-5 rounded-full bg-[#6B111F] text-white flex items-center justify-center text-xs font-bold font-serif">
                 2
               </div>
               <h2 className="text-xs sm:text-sm font-serif font-bold text-gray-900">
-                Pilih Jumlah Pose Strip
+                {hasGraphicFrames ? 'Pilih Bingkai Eksklusif Event' : 'Pilih Jumlah Pose Strip'}
               </h2>
             </div>
 
-            {/* 4 Strip Cards Grid */}
-            <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
-              {STRIP_TYPES.map(t => {
-                const isSelected = targetPhotoCount === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => handleSelectType(t.id)}
-                    className={`relative rounded-xl sm:rounded-2xl pt-3 sm:pt-4 pb-2 sm:pb-3 px-1 sm:px-1.5 flex flex-col items-center justify-between transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#6B111F] text-white shadow-lg shadow-rose-950/20 scale-[1.02]'
-                        : 'bg-white text-gray-800 border border-gray-200/90 hover:border-rose-200'
-                    }`}
-                  >
-                    {t.badge && (
-                      <span className={`absolute -top-1.5 sm:-top-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-bold text-white tracking-wider ${
-                        isSelected ? 'bg-[#C4A46C]' : t.badgeColor
+            {hasGraphicFrames ? (
+              /* ✨ GRAPHIC FRAME SELECTOR for event-specific frames (e.g. Mitufaya 8th) */
+              <div className="flex flex-col gap-3">
+                {/* Header banner */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-100">
+                  <Sparkles size={14} className="text-[#C4A46C] flex-shrink-0" />
+                  <p className="text-[9px] sm:text-[10px] text-[#6B111F] font-serif font-bold tracking-wider uppercase">
+                    Bingkai Eksklusif · {activeEvent?.displayName || 'Event Ini'}
+                  </p>
+                </div>
+
+                {/* Frame cards row */}
+                <div className={`grid gap-2.5 ${eventGraphicFrames.length === 3 ? 'grid-cols-3' : eventGraphicFrames.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                  {eventGraphicFrames.map((frame) => {
+                    const isSelected = selectedGraphicFrameId === frame.id;
+                    return (
+                      <button
+                        key={frame.id}
+                        onClick={() => {
+                          setSelectedGraphicFrameId(frame.id);
+                          setTargetPhotoCount(frame.slots);
+                        }}
+                        className={`relative rounded-2xl overflow-hidden flex flex-col items-center transition-all cursor-pointer group ${
+                          isSelected
+                            ? 'ring-2 ring-[#6B111F] shadow-lg shadow-rose-950/20 scale-[1.03]'
+                            : 'ring-1 ring-gray-200 hover:ring-rose-200 hover:scale-[1.01]'
+                        }`}
+                      >
+                        {/* Frame preview image */}
+                        <div className="relative w-full" style={{ aspectRatio: '1/3' }}>
+                          <img
+                            src={frame.previewUrl}
+                            alt={frame.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                          {/* Selection overlay */}
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-[#6B111F]/10 flex items-center justify-center">
+                              <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#6B111F] flex items-center justify-center shadow-md">
+                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                  <path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {/* Frame label */}
+                        <div className={`w-full text-center px-1 py-1.5 transition-colors ${isSelected ? 'bg-[#6B111F]' : 'bg-white group-hover:bg-rose-50'}`}>
+                          <p className={`text-[9px] sm:text-[10px] font-serif font-bold leading-tight truncate ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                            {frame.name}
+                          </p>
+                          <p className={`text-[7px] sm:text-[8px] mt-0.5 ${isSelected ? 'text-rose-200' : 'text-gray-400'}`}>
+                            {frame.slots} pose
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              /* Standard 4 Strip Cards Grid */
+              <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
+                {STRIP_TYPES.map(t => {
+                  const isSelected = targetPhotoCount === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => handleSelectType(t.id)}
+                      className={`relative rounded-xl sm:rounded-2xl pt-3 sm:pt-4 pb-2 sm:pb-3 px-1 sm:px-1.5 flex flex-col items-center justify-between transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#6B111F] text-white shadow-lg shadow-rose-950/20 scale-[1.02]'
+                          : 'bg-white text-gray-800 border border-gray-200/90 hover:border-rose-200'
+                      }`}
+                    >
+                      {t.badge && (
+                        <span className={`absolute -top-1.5 sm:-top-2 px-1.5 sm:px-2 py-0.5 rounded-full text-[7px] sm:text-[8px] font-bold text-white tracking-wider ${
+                          isSelected ? 'bg-[#C4A46C]' : t.badgeColor
+                        }`}>
+                          {t.badge}
+                        </span>
+                      )}
+
+                      <div className={`w-6 sm:w-8 rounded-md p-0.5 sm:p-1 my-1 flex flex-col gap-0.5 items-center justify-center ${
+                        isSelected ? 'bg-black/30 border border-white/20' : 'bg-[#2E2421] border border-[#443834]'
                       }`}>
-                        {t.badge}
-                      </span>
-                    )}
-
-                    <div className={`w-6 sm:w-8 rounded-md p-0.5 sm:p-1 my-1 flex flex-col gap-0.5 items-center justify-center ${
-                      isSelected ? 'bg-black/30 border border-white/20' : 'bg-[#2E2421] border border-[#443834]'
-                    }`}>
-                      {Array.from({ length: t.slots }).map((_, idx) => (
-                        <div
-                          key={idx}
-                          className={`w-full rounded-xs ${
-                            t.slots === 1 ? 'aspect-[4/3] bg-[#423632]' : 'h-1.5 sm:h-2 bg-[#423632]'
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    <div className="text-center mt-0.5 sm:mt-1">
-                      <div className={`text-[11px] sm:text-xs font-serif font-bold leading-tight ${isSelected ? 'text-white' : 'text-gray-900'}`}>
-                        {t.name}
+                        {Array.from({ length: t.slots }).map((_, idx) => (
+                          <div
+                            key={idx}
+                            className={`w-full rounded-xs ${
+                              t.slots === 1 ? 'aspect-[4/3] bg-[#423632]' : 'h-1.5 sm:h-2 bg-[#423632]'
+                            }`}
+                          />
+                        ))}
                       </div>
-                      <div className={`text-[8px] sm:text-[9px] mt-0.5 ${isSelected ? 'text-rose-200' : 'text-gray-400'}`}>
-                        {t.sub}
+
+                      <div className="text-center mt-0.5 sm:mt-1">
+                        <div className={`text-[11px] sm:text-xs font-serif font-bold leading-tight ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                          {t.name}
+                        </div>
+                        <div className={`text-[8px] sm:text-[9px] mt-0.5 ${isSelected ? 'text-rose-200' : 'text-gray-400'}`}>
+                          {t.sub}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Divider */}
-          <div className="h-[1px] bg-gray-100 w-full" />
+          {/* Divider — only when not in graphic frame mode */}
+          {!hasGraphicFrames && <div className="h-[1px] bg-gray-100 w-full" />}
 
-          {/* STEP C: Warna Bingkai Strip */}
-          <div>
+          {/* STEP C: Warna Bingkai Strip — hidden when in graphic frame mode */}
+          {!hasGraphicFrames && <div>
             <div className="flex items-center gap-2 mb-2.5 sm:mb-3.5">
               <div className="w-5 h-5 rounded-full bg-[#6B111F] text-white flex items-center justify-center text-xs font-bold font-serif">
                 3
@@ -465,7 +569,7 @@ export default function StepFrames() {
                 );
               })}
             </div>
-          </div>
+          </div>}
 
         </div>
 

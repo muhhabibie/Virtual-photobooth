@@ -15,7 +15,8 @@ export default function StepReview() {
     setCapturedPhotos,
     setCurrentStep,
     activeEvent,
-    closeBooth
+    closeBooth,
+    selectedGraphicFrameId,
   } = useBooth();
 
   const canvasRef = useRef(null);
@@ -41,10 +42,11 @@ export default function StepReview() {
         guestName,
         guestMessage,
         activeEvent,
+        graphicFrameId: selectedGraphicFrameId,
         scale: 2,
       });
     }
-  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent, stripStyle]);
+  }, [capturedPhotos, targetPhotoCount, stripColor, guestName, guestMessage, activeEvent, stripStyle, selectedGraphicFrameId]);
 
   useEffect(() => {
     renderStrip();

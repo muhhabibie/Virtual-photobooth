@@ -1,5 +1,19 @@
 import { drawStripBotanicals, drawFrameOrnaments } from '../config/frameOrnaments';
 import { getEventDisplayName, getEventFormattedDate } from './eventHeader';
+import { MITUFAYA_FRAMES, getCachedFrameImage } from '../data/eventFrames';
+
+// Center-crop helper to prevent any photo distortion
+export function drawCoverToContext(ctx, imgEl, dx, dy, dw, dh) {
+  const srcW = imgEl.width || imgEl.naturalWidth;
+  const srcH = imgEl.height || imgEl.naturalHeight;
+  if (!srcW || !srcH) return;
+  const r = Math.max(dw / srcW, dh / srcH);
+  const nw = dw / r;
+  const nh = dh / r;
+  const sx = (srcW - nw) / 2;
+  const sy = (srcH - nh) / 2;
+  ctx.drawImage(imgEl, sx, sy, nw, nh, dx, dy, dw, dh);
+}
 
 /**
  * Universal Master Strip Renderer
@@ -145,8 +159,76 @@ export function renderMasterPhotoStrip(canvas, {
   activeEvent = null,
   filterCss = 'none',
   scale = 2,
+  graphicFrameId = null,
 }) {
   if (!canvas) return;
+
+  // 🌟 Check for Event-Specific Graphic Overlay Frames (e.g. Mitufaya 8th Anniversary)
+  const targetGraphicId = graphicFrameId || activeEvent?.selectedGraphicFrameId;
+  const graphicFrame = targetGraphicId ? MITUFAYA_FRAMES.find(f => f.id === targetGraphicId) : null;
+
+  if (graphicFrame) {
+    const totalW = 600 * scale;
+    const totalH = 1800 * scale;
+    canvas.width = totalW;
+    canvas.height = totalH;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // 1. Draw base accent background
+    ctx.fillStyle = graphicFrame.accentColor || '#FFFFFF';
+    ctx.fillRect(0, 0, totalW, totalH);
+
+    // 2. Draw captured photos into slot boxes
+    graphicFrame.slotBoxes.forEach((slot, idx) => {
+      const sx = Math.round(slot.x * scale);
+      const sy = Math.round(slot.y * scale);
+      const sw = Math.round(slot.w * scale);
+      const sh = Math.round(slot.h * scale);
+      const photo = photos[idx];
+
+      if (photo && (photo.canvas || photo.dataUrl)) {
+        ctx.save();
+        if (filterCss && filterCss !== 'none') {
+          ctx.filter = filterCss;
+        }
+        if (photo.canvas) {
+          drawCoverToContext(ctx, photo.canvas, sx, sy, sw, sh);
+        } else if (photo.dataUrl) {
+          const img = new Image();
+          img.src = photo.dataUrl;
+          drawCoverToContext(ctx, img, sx, sy, sw, sh);
+        }
+        ctx.restore();
+      } else {
+        // Aesthetic live preview placeholder
+        ctx.fillStyle = '#F8F5F0';
+        ctx.fillRect(sx, sy, sw, sh);
+        ctx.fillStyle = graphicFrame.accentColor || '#6B111F';
+        ctx.font = `${26 * scale}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('📷', sx + sw / 2, sy + sh / 2 - 12 * scale);
+        ctx.fillStyle = '#444444';
+        ctx.font = `bold ${14 * scale}px sans-serif`;
+        ctx.fillText(`Pose #${idx + 1}`, sx + sw / 2, sy + sh / 2 + 16 * scale);
+      }
+    });
+
+    // 3. Draw transparent frame overlay on top
+    const overlayImg = getCachedFrameImage(graphicFrame.overlayUrl);
+    if (overlayImg && overlayImg.complete && overlayImg.naturalWidth > 0) {
+      ctx.drawImage(overlayImg, 0, 0, totalW, totalH);
+    } else if (overlayImg) {
+      overlayImg.onload = () => {
+        try {
+          ctx.drawImage(overlayImg, 0, 0, totalW, totalH);
+        } catch (e) {}
+      };
+    }
+    return;
+  }
 
   const count = targetCount || (photos.length > 0 ? photos.length : 3);
   const isPolaroid = count === 1;

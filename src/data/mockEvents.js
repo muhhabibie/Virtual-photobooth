@@ -77,6 +77,27 @@ export const DEFAULT_HERO_PHOTOS = [
 
 export const INITIAL_EVENTS = [
   {
+    id: 'anniversary-mitufaya-8th',
+    slug: 'anniversary-mitufaya-8th',
+    eventType: 'festival',
+    eventName: 'Mitufaya 8th Anniversary',
+    displayName: 'Mitufaya 8th Anniversary',
+    eventDate: '2026-12-01',
+    formattedDate: '1 Desember 2026',
+    venue: 'Mitufaya Store',
+    package: 'all_in',
+    pin: '',
+    hideHeroTextOverlay: true,
+    templateIds: ['mitufaya-cosmic-4', 'mitufaya-stamp-3', 'mitufaya-botanical-3'],
+    heroPhotos: [
+      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1600&auto=format&fit=crop&q=85',
+      'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1600&auto=format&fit=crop&q=85',
+      'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=1600&auto=format&fit=crop&q=85',
+    ],
+    expiresAt: NOW + 365 * DAY_MS,
+    createdAt: NOW,
+  },
+  {
     id: 'event_cfd',
     slug: 'cfd',
     eventType: 'festival',
