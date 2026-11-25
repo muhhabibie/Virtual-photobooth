@@ -26,17 +26,30 @@ function loadImageWithFallback(url) {
   return new Promise((resolve) => {
     if (!url) return resolve({ img: null, tainted: false });
 
+    let settled = false;
+    const finish = (val) => {
+      if (settled) return;
+      settled = true;
+      resolve(val);
+    };
+
+    const timer = setTimeout(() => finish({ img: null, tainted: false }), 7000);
+
     const load = (useCors) => {
       const img = new Image();
       if (useCors && url.startsWith('http')) {
         img.crossOrigin = 'anonymous';
       }
-      img.onload = () => resolve({ img, tainted: !useCors && url.startsWith('http') });
+      img.onload = () => {
+        clearTimeout(timer);
+        finish({ img, tainted: !useCors && url.startsWith('http') });
+      };
       img.onerror = () => {
         if (useCors && url.startsWith('http')) {
           load(false);
         } else {
-          resolve({ img: null, tainted: false });
+          clearTimeout(timer);
+          finish({ img: null, tainted: false });
         }
       };
       img.src = url;
@@ -53,10 +66,16 @@ async function ensureGraphicOverlayLoaded(graphicId, activeEvent) {
   const gFrame = allFrames.find((f) => f.id === targetId);
   if (!gFrame?.overlayUrl) return;
   const overlayImg = getCachedFrameImage(gFrame.overlayUrl);
-  if (overlayImg && (!overlayImg.complete || overlayImg.naturalWidth === 0)) {
+  // Only await if browser hasn't completed fetching yet (avoid hanging when complete with naturalWidth === 0)
+  if (overlayImg && !overlayImg.complete) {
     await new Promise((resolve) => {
-      overlayImg.addEventListener('load', resolve, { once: true });
-      overlayImg.addEventListener('error', resolve, { once: true });
+      const timer = setTimeout(resolve, 4000);
+      const done = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      overlayImg.addEventListener('load', done, { once: true });
+      overlayImg.addEventListener('error', done, { once: true });
     });
   }
 }
@@ -114,7 +133,7 @@ async function renderThumbnailToUrl(item, photosList, activeEvent) {
       guestName: item.guestName,
       guestMessage: item.message || item.guestMessage,
       activeEvent,
-      scale: 1.2,
+      scale: 0.75,
     });
   } else {
     renderMasterPhotoStrip(offCanvas, {
@@ -125,7 +144,7 @@ async function renderThumbnailToUrl(item, photosList, activeEvent) {
       guestMessage: item.message || item.guestMessage,
       activeEvent,
       graphicFrameId: item.graphicFrameId || null,
-      scale: 1.2,
+      scale: 0.75,
     });
   }
 
@@ -151,6 +170,7 @@ export default function PhotostripThumbnail({
   className = '',
   onClick,
   showVoiceBadge = true,
+  deferRender = false,
 }) {
   const canvasRef = useRef(null);
 
@@ -172,23 +192,32 @@ export default function PhotostripThumbnail({
     }
     return null;
   });
+  const [taintedReady, setTaintedReady] = useState(false);
+  const [renderFailed, setRenderFailed] = useState(false);
 
   useEffect(() => {
     if (!item) return;
 
     if (cacheKey && thumbnailCache.has(cacheKey)) {
       setRenderedSrc(thumbnailCache.get(cacheKey));
+      setRenderFailed(false);
       return;
     }
 
     if (photosList.length === 0) {
       if (item.stripImage && item.stripImage.length > 1000) {
         setRenderedSrc(item.stripImage);
+      } else {
+        setRenderFailed(true);
       }
       return;
     }
 
+    if (deferRender) return;
+
     let isMounted = true;
+    setTaintedReady(false);
+    setRenderFailed(false);
 
     let renderPromise = thumbnailInFlight.get(cacheKey);
     if (!renderPromise) {
@@ -206,22 +235,25 @@ export default function PhotostripThumbnail({
     }
 
     renderPromise.then((res) => {
-      if (!isMounted || !res) return;
-      if (res.url) {
+      if (!isMounted) return;
+      if (res?.url) {
         setRenderedSrc(res.url);
-      } else if (res.tainted && res.offCanvas && canvasRef.current) {
+      } else if (res?.tainted && res.offCanvas && canvasRef.current) {
         const dest = canvasRef.current;
         dest.width = res.offCanvas.width;
         dest.height = res.offCanvas.height;
         const dCtx = dest.getContext('2d');
         dCtx?.drawImage(res.offCanvas, 0, 0);
+        setTaintedReady(true);
+      } else {
+        setRenderFailed(true);
       }
     });
 
     return () => {
       isMounted = false;
     };
-  }, [cacheKey]);
+  }, [cacheKey, deferRender]);
 
   if (!item) return null;
 
@@ -239,10 +271,24 @@ export default function PhotostripThumbnail({
           decoding="async"
         />
       ) : (
-        <div className="w-full aspect-[1/2.2] bg-[#1a0f14] flex items-center justify-center relative">
+        <div
+          className={`w-full ${taintedReady ? '' : 'aspect-[1/2.2]'} bg-[#1a0f14] flex items-center justify-center relative overflow-hidden`}
+        >
+          {!taintedReady && !renderFailed && (
+            <div className="absolute inset-0 bg-gradient-to-b from-[#24101A] via-[#170B11] to-[#24101A] animate-pulse pointer-events-none" />
+          )}
+          {renderFailed && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+              <span className="text-xs font-serif text-[#F5D77F]/80 font-semibold line-clamp-2">
+                {item.guestName || 'Kenangan Tamu'}
+              </span>
+            </div>
+          )}
           <canvas
             ref={canvasRef}
-            className="w-full h-auto object-contain block group-hover:scale-[1.02] transition-transform duration-300"
+            className={`w-full h-auto object-contain group-hover:scale-[1.02] transition-transform duration-300 ${
+              taintedReady ? 'block' : 'hidden'
+            }`}
           />
         </div>
       )}

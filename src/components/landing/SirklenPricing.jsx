@@ -7,9 +7,15 @@ export default function SirklenPricing({ onOrderClick }) {
   return (
     <section id="paket" className="py-14 sm:py-20 bg-[#FBF9F5] text-stone-900 select-none relative overflow-hidden">
       
-      {/* Soft Wedding Aura Background Decor */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-rose-200/20 rounded-full blur-3xl pointer-events-none" />
+      {/* Soft Wedding Aura Background Decor (Zero heavy CSS blur) */}
+      <div
+        className="absolute -top-24 -right-24 w-[480px] h-[480px] pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(253, 230, 138, 0.24) 0%, transparent 70%)' }}
+      />
+      <div
+        className="absolute -bottom-24 -left-24 w-[480px] h-[480px] pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(254, 205, 211, 0.24) 0%, transparent 70%)' }}
+      />
 
       <div className="max-w-6xl mx-auto px-3 sm:px-6 relative z-10">
         

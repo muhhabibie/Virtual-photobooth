@@ -66,10 +66,15 @@ async function renderHighResStripCanvas(item, activeEvent) {
     const gFrame = allFrames.find((f) => f.id === graphicId);
     if (gFrame?.overlayUrl) {
       const overlayImg = getCachedFrameImage(gFrame.overlayUrl);
-      if (overlayImg && (!overlayImg.complete || overlayImg.naturalWidth === 0)) {
+      if (overlayImg && !overlayImg.complete) {
         await new Promise((resolve) => {
-          overlayImg.addEventListener('load', resolve, { once: true });
-          overlayImg.addEventListener('error', resolve, { once: true });
+          const timer = setTimeout(resolve, 4000);
+          const done = () => {
+            clearTimeout(timer);
+            resolve();
+          };
+          overlayImg.addEventListener('load', done, { once: true });
+          overlayImg.addEventListener('error', done, { once: true });
         });
       }
     }
@@ -580,19 +585,19 @@ export default function FullGalleryModal() {
       {/* ================= 🌟 2. SCROLLABLE GALLERY BODY WITH CONTINUOUS BURGUNDY-GOLD RADIANCE 🌟 ================= */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24 sm:pb-28 no-scrollbar bg-[#0E050A] text-white relative">
         
-        {/* Layer 1: Top Golden Halo Beam */}
+        {/* Layer 1: Top Golden Halo Beam (Zero heavy CSS blur) */}
         <div 
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] sm:w-[1200px] h-[550px] pointer-events-none z-0 rounded-full opacity-60 blur-[120px]"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] sm:w-[1400px] h-[650px] pointer-events-none z-0 opacity-65"
           style={{
-            background: 'radial-gradient(ellipse at center, rgba(245, 215, 127, 0.40) 0%, rgba(168, 30, 50, 0.35) 50%, transparent 80%)'
+            background: 'radial-gradient(ellipse at center, rgba(245, 215, 127, 0.25) 0%, rgba(168, 30, 50, 0.22) 45%, transparent 75%)'
           }}
         />
 
-        {/* Layer 2: Central Ambient Deep Crimson Spotlight Blooming Behind Grid */}
+        {/* Layer 2: Central Ambient Deep Crimson Spotlight Blooming Behind Grid (Zero heavy CSS blur) */}
         <div 
-          className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] max-w-[1300px] h-[800px] sm:h-[950px] pointer-events-none z-0 rounded-full opacity-80 blur-[140px] sm:blur-[170px]"
+          className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[165%] max-w-[1450px] h-[950px] sm:h-[1100px] pointer-events-none z-0"
           style={{
-            background: 'radial-gradient(ellipse at center, rgba(168, 30, 50, 0.70) 0%, rgba(115, 18, 33, 0.45) 45%, rgba(196, 164, 108, 0.20) 75%, transparent 92%)'
+            background: 'radial-gradient(ellipse at center, rgba(168, 30, 50, 0.50) 0%, rgba(115, 18, 33, 0.30) 42%, rgba(196, 164, 108, 0.12) 68%, transparent 85%)'
           }}
         />
         

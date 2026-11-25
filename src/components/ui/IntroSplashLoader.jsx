@@ -106,13 +106,7 @@ export default function IntroSplashLoader({ onComplete }) {
           <div className="relative z-10 flex flex-col items-center text-center px-4">
 
             {/* ================= 1. MONOGRAM — SVG STROKE / PATH DRAW ANIMATION ================= */}
-            <motion.div
-              initial={{ scale: 0.97 }}
-              animate={{ scale: phase === 'holding' ? 1.02 : isOut ? 0.98 : 1 }}
-              transition={{ duration: phase === 'holding' ? 1.2 : 1.6, ease: 'easeInOut' }}
-              className="mb-5"
-              style={{ willChange: 'transform' }}
-            >
+            <div className="mb-5">
               <svg
                 viewBox="98 10 359 535"
                 className="h-[62px] sm:h-[78px] w-auto overflow-visible"
@@ -152,7 +146,7 @@ export default function IntroSplashLoader({ onComplete }) {
                   />
                 </g>
               </svg>
-            </motion.div>
+            </div>
 
             {/* ================= 2. BRAND TYPOGRAPHY LOCKUP ================= */}
             <div className="flex flex-col items-center justify-center mt-0.5">

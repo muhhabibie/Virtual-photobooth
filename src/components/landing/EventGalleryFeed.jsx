@@ -433,6 +433,7 @@ export default function EventGalleryFeed() {
                 <PhotostripThumbnail
                   item={card}
                   activeEvent={activeEvent}
+                  deferRender={!introReady}
                   className="w-full shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_20px_rgba(245,215,127,0.12)] border border-white/20 hover:border-amber-400/50 pointer-events-none select-none"
                 />
               </div>
@@ -445,28 +446,24 @@ export default function EventGalleryFeed() {
       <div className="text-center mt-7 sm:mt-9 px-4 relative z-20 flex justify-center">
         <motion.button
           onClick={openGalleryModal}
-          animate={{
-            y: [0, -4, 0],
-          }}
-          transition={{
+          animate={introReady && isSectionVisible ? { y: [0, -4, 0] } : { y: 0 }}
+          transition={introReady && isSectionVisible ? {
             duration: 3,
             repeat: Infinity,
             repeatType: 'reverse',
             ease: 'easeInOut',
-          }}
+          } : { duration: 0.2 }}
           className="group relative inline-flex items-center justify-center gap-2.5 sm:gap-3.5 px-7 sm:px-10 py-3.5 sm:py-4 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#8A1828] hover:to-[#9E1C30] border-2 border-[#F5D77F]/80 text-[#F5D77F] font-serif font-bold text-xs sm:text-sm tracking-wide shadow-[0_0_35px_rgba(245,215,127,0.35),0_12px_40px_rgba(107,17,31,0.8)] hover:shadow-[0_0_50px_rgba(245,215,127,0.55),0_15px_50px_rgba(138,24,40,0.9)] transform active:scale-95 transition-all duration-300 overflow-hidden cursor-pointer"
         >
           {/* Continuous Glare Beam Sweeping */}
           <motion.div 
-            animate={{
-              x: ['-100%', '350%'],
-            }}
-            transition={{
+            animate={introReady && isSectionVisible ? { x: ['-100%', '350%'] } : { x: '-100%' }}
+            transition={introReady && isSectionVisible ? {
               duration: 3.5,
               repeat: Infinity,
               repeatDelay: 1,
               ease: 'easeInOut',
-            }}
+            } : { duration: 0 }}
             className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-amber-200/35 to-transparent -skew-x-12 pointer-events-none" 
           />
 
