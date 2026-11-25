@@ -7,6 +7,71 @@ import { DEFAULT_HERO_PHOTOS, PACKAGES, CONTACT_LINKS } from '../../data/mockEve
 import GuestQrModal from '../ui/GuestQrModal';
 import PriceListModal from '../ui/PriceListModal';
 
+/**
+ * Renders non-wedding event titles with an aesthetic, legible handwritten script
+ * for ordinal numbers (e.g. "8th") paired with luxury editorial serif text.
+ */
+function renderFormattedEventTitle(rawName, isOverlay = false) {
+  const cleanName = (rawName || '').trim();
+  const parts = cleanName.split(/(\b\d+(?:st|nd|rd|th)\b)/gi);
+
+  const serifStyle = isOverlay
+    ? undefined
+    : {
+        background: 'linear-gradient(135deg, #430812 0%, #7B1323 28%, #A8283D 52%, #7B1323 76%, #430812 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text',
+        filter: 'drop-shadow(0 2px 10px rgba(107,17,31,0.14))',
+      };
+
+  const ordinalStyle = isOverlay
+    ? {
+        fontFamily: "'Dancing Script', 'Caveat', cursive",
+        fontWeight: 700,
+        fontSize: '1.28em',
+        lineHeight: 1.05,
+        background: 'linear-gradient(135deg, #FFFBEB 0%, #F5D77F 52%, #E5B94E 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text',
+        filter: 'drop-shadow(0 2px 12px rgba(0,0,0,0.45))',
+      }
+    : {
+        fontFamily: "'Dancing Script', 'Caveat', cursive",
+        fontWeight: 700,
+        fontSize: '1.34em',
+        lineHeight: 1.08,
+        background: 'linear-gradient(135deg, #9A6B1E 0%, #CFA047 38%, #A12339 76%, #6B111F 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text',
+        filter: 'drop-shadow(0 2px 8px rgba(154,107,30,0.2))',
+      };
+
+  return parts.map((part, idx) => {
+    const match = part.match(/^(\d+)(st|nd|rd|th)$/i);
+    if (match) {
+      return (
+        <span
+          key={idx}
+          className="inline-block px-2 py-0.5 -rotate-2 align-baseline select-none"
+          style={ordinalStyle}
+        >
+          {match[1]}
+          {match[2].toLowerCase()}
+        </span>
+      );
+    }
+    if (!part) return null;
+    return (
+      <span key={idx} style={serifStyle}>
+        {part}
+      </span>
+    );
+  });
+}
+
 export default function EventHero() {
   const { 
     activeEvent, 
@@ -262,7 +327,7 @@ export default function EventHero() {
                 letterSpacing: '-0.02em'
               }}
             >
-              {activeEvent.displayName}
+              {isWedding ? activeEvent.displayName : renderFormattedEventTitle(activeEvent.displayName, true)}
             </motion.h1>
 
             {/* Item 3: Event Date & Venue Badge */}
@@ -363,10 +428,10 @@ export default function EventHero() {
               initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
               animate={introReady ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 18, filter: 'blur(6px)' }}
               transition={{ duration: 1.0, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              className={`leading-[1.12] px-1 ${
+              className={`px-1 ${
                 isWedding
-                  ? 'text-5xl xs:text-6xl sm:text-8xl font-normal'
-                  : 'text-[30px] xs:text-[34px] sm:text-5xl md:text-[54px] font-bold'
+                  ? 'leading-[1.12] text-5xl xs:text-6xl sm:text-8xl font-normal'
+                  : 'leading-[1.22] text-[30px] xs:text-[34px] sm:text-5xl md:text-[54px] font-bold'
               }`}
               style={isWedding ? {
                 fontFamily: "'Alex Brush', 'Great Vibes', cursive",
@@ -374,15 +439,10 @@ export default function EventHero() {
                 textShadow: '0 3px 16px rgba(107,17,31,0.13)'
               } : {
                 fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif",
-                background: 'linear-gradient(135deg, #430812 0%, #7B1323 28%, #A8283D 52%, #7B1323 76%, #430812 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                filter: 'drop-shadow(0 2px 10px rgba(107,17,31,0.14))',
                 letterSpacing: '-0.02em',
               }}
             >
-              {activeEvent.displayName}
+              {isWedding ? activeEvent.displayName : renderFormattedEventTitle(activeEvent.displayName, false)}
             </motion.h1>
 
             {/* Minimalist Champagne-Gold Hairline Divider (No Star/Sparkle Icons) */}
@@ -454,7 +514,7 @@ export default function EventHero() {
             </>
           ) : (
             <>
-              Abadikan keseruanmu di <strong>{activeEvent.displayName}</strong>! Ambil pose terbaikmu bersama teman dan tinggalkan jejak memori tak terlupakan di galeri photobooth event.
+              Abadikan keseruanmu di <strong>{(activeEvent.displayName || '').trim()}</strong>! Ambil pose terbaikmu bersama teman dan tinggalkan jejak memori tak terlupakan di galeri photobooth event.
             </>
           )}
         </motion.p>
