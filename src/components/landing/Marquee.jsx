@@ -88,7 +88,7 @@ export default function Marquee() {
   const eventGraphicFrames = useMemo(() => getEventGraphicFrames(activeEvent), [activeEvent]);
   const hasGraphicFrames = eventGraphicFrames.length > 0;
 
-  // Seamless infinite sliding list featuring both Premium and Classic frames
+  // Seamless infinite sliding list featuring both Exclusive and Classic frames
   const duplicated = useMemo(() => {
     if (hasGraphicFrames) {
       const allCards = [...eventGraphicFrames, ...FRAME_PREVIEWS];
@@ -302,7 +302,7 @@ export default function Marquee() {
                 className="relative flex-shrink-0 w-44 xs:w-48 sm:w-52 h-[520px] xs:h-[550px] sm:h-[590px] rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-[1.02] cursor-pointer select-none group/card border border-stone-200/90 bg-stone-900"
                 title={`Pilih bingkai ${card.name}`}
               >
-                {/* Shiny Exclusive Badge */}
+                {/* Shiny Eksklusif Badge */}
                 <div className="absolute top-3 left-3 z-10 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 font-sans font-extrabold text-[8px] uppercase tracking-wider shadow-md flex items-center gap-1">
                   <span>✨</span>
                   <span>EKSKLUSIF</span>

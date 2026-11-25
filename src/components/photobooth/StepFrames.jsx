@@ -436,7 +436,7 @@ export default function StepFrames() {
           {/* Divider */}
           <div className="h-[1px] bg-gray-100 w-full" />
 
-          {/* TAB SELEKSI: Bingkai Premium (Highlighted) vs Bingkai Standar */}
+          {/* TAB SELEKSI: Bingkai Eksklusif (Highlighted) vs Bingkai Standar */}
           {hasGraphicFrames && (
             <div className="space-y-2.5">
               <div className="flex items-center justify-between px-0.5">
@@ -469,7 +469,7 @@ export default function StepFrames() {
                     <span className={`text-[9px] font-sans font-bold uppercase tracking-[0.1em] ${
                       isPremiumMode ? 'text-[#E8C987]' : 'text-[#9B7228]'
                     }`}>
-                      Khusus Event
+                      Eksklusif
                     </span>
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-sans font-bold tracking-tight ${
                       isPremiumMode
@@ -540,9 +540,9 @@ export default function StepFrames() {
           {/* Divider if tabs shown */}
           {hasGraphicFrames && <div className="h-[1px] bg-gray-100 w-full" />}
 
-          {/* STEP 2: Either Premium Frames Selection or Standard Strip Pose Count */}
+          {/* STEP 2: Either Exclusive Frames Selection or Standard Strip Pose Count */}
           {isPremiumMode ? (
-            /* PREMIUM FRAMES SELECTION */
+            /* EXCLUSIVE FRAMES SELECTION */
             <div>
               <div className="flex items-center justify-between gap-2 mb-2.5 sm:mb-3.5">
                 <div className="flex items-center gap-2">
@@ -554,7 +554,7 @@ export default function StepFrames() {
                   </h2>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full bg-[#FAF3E3] border border-[#C5A059]/45 text-[#8A621B] text-[9px] sm:text-[10px] font-sans font-semibold tracking-wide uppercase">
-                  Khusus Event
+                  Eksklusif
                 </span>
               </div>
 
