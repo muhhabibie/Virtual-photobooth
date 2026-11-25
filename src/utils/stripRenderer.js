@@ -1,6 +1,6 @@
 import { drawStripBotanicals, drawFrameOrnaments } from '../config/frameOrnaments';
 import { getEventDisplayName, getEventFormattedDate } from './eventHeader';
-import { MITUFAYA_FRAMES, getEventGraphicFrames, getCachedFrameImage } from '../data/eventFrames';
+import { MITUFAYA_FRAMES, getCachedFrameImage, getEventGraphicFrames } from '../data/eventFrames';
 
 // Center-crop helper to prevent any photo distortion
 export function drawCoverToContext(ctx, imgEl, dx, dy, dw, dh) {
@@ -150,172 +150,6 @@ function fitTextSize(ctx, text, maxW, baseSize, minSize = 11) {
   return size;
 }
 
-// Helper to ensure title case for legible calligraphy (avoiding bunched all-caps cursive)
-function formatScriptText(str) {
-  if (!str) return '';
-  const trimmed = str.trim();
-  if (trimmed === trimmed.toUpperCase() && trimmed.length > 1) {
-    return trimmed
-      .toLowerCase()
-      .split(' ')
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
-  }
-  return trimmed;
-}
-
-// Helper to wrap text cleanly across up to maxLines lines
-function wrapTextLines(ctx, text, maxWidth, maxLines = 2) {
-  if (!text) return [];
-  const words = text.trim().split(/\s+/);
-  const lines = [];
-  let current = '';
-
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
-    const testLine = current ? `${current} ${word}` : word;
-    if (ctx.measureText(testLine).width <= maxWidth) {
-      current = testLine;
-    } else if (lines.length + 1 < maxLines) {
-      if (current) lines.push(current);
-      current = word;
-    } else {
-      let truncated = current ? `${current} ${word}` : word;
-      while (truncated.length > 3 && ctx.measureText(`${truncated}…`).width > maxWidth) {
-        truncated = truncated.slice(0, -1).trimEnd();
-      }
-      lines.push(`${truncated}…`);
-      current = '';
-      break;
-    }
-  }
-  if (current) lines.push(current);
-  return lines.slice(0, maxLines);
-}
-
-// Shared horizontal divider with center diamond accent
-function drawDiamondDivider(ctx, centerX, divY, width, color, scale) {
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.4 * scale;
-  ctx.lineCap = 'round';
-  const diamondR = 3.0 * scale;
-
-  ctx.beginPath();
-  ctx.moveTo(centerX - width / 2, divY);
-  ctx.lineTo(centerX - diamondR - 4 * scale, divY);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(centerX + diamondR + 4 * scale, divY);
-  ctx.lineTo(centerX + width / 2, divY);
-  ctx.stroke();
-
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(centerX, divY - diamondR);
-  ctx.lineTo(centerX + diamondR, divY);
-  ctx.lineTo(centerX, divY + diamondR);
-  ctx.lineTo(centerX - diamondR, divY);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-}
-
-// Measure adaptive signature footer panel for Exclusive Graphic Frames
-function computeGraphicFooterLayout(ctx, { guestName, guestMessage, totalW, scale }) {
-  const cleanName = guestName && guestName.trim() ? guestName.trim() : '';
-  const rawMsg = guestMessage && guestMessage.trim() ? guestMessage.trim() : '';
-  const hasCustomMsg = Boolean(rawMsg && rawMsg !== 'With Love' && rawMsg !== '“With Love”');
-
-  if (!cleanName && !hasCustomMsg) {
-    return { hasFooter: false, extraH: 0, displayName: '', msgLines: [] };
-  }
-
-  const displayName = cleanName ? formatScriptText(cleanName) : '';
-  let msgLines = [];
-  if (hasCustomMsg) {
-    ctx.save();
-    ctx.font = `italic 500 ${16 * scale}px 'Cormorant Garamond', 'Playfair Display', Georgia, serif`;
-    msgLines = wrapTextLines(ctx, `\u201C${rawMsg}\u201D`, totalW - 84 * scale, 2);
-    ctx.restore();
-  }
-
-  let extraH = 22 * scale; // top pad
-  if (displayName) extraH += 42 * scale;
-  extraH += 18 * scale; // divider gap
-  if (msgLines.length > 0) extraH += msgLines.length * 22 * scale + 10 * scale;
-  extraH += 22 * scale; // date meta
-  extraH += 20 * scale; // bottom pad
-
-  return { hasFooter: true, extraH, displayName, msgLines };
-}
-
-// Draw clean editorial signature footer panel below Exclusive Graphic Frame artwork
-function drawGraphicFooterPanel(ctx, { totalW, artH, extraH, graphicFrame, activeEvent, layout, scale }) {
-  if (!layout.hasFooter || extraH <= 0) return;
-  const accent = graphicFrame?.accentColor || '#C4A46C';
-
-  // 1. Clean warm ivory card surface
-  ctx.save();
-  ctx.fillStyle = '#FCF9F4';
-  ctx.fillRect(0, artH, totalW, extraH);
-
-  // Subtle accent border stripe separating full-bleed artwork and signature mount
-  ctx.fillStyle = accent;
-  ctx.fillRect(0, artH, totalW, Math.max(2, Math.round(3 * scale)));
-  ctx.restore();
-
-  let cursorY = artH + 26 * scale;
-
-  // 2. Guest Name
-  if (layout.displayName) {
-    ctx.save();
-    ctx.fillStyle = '#231F20';
-    const nameBaseSize = 33 * scale;
-    ctx.font = `italic 600 ${nameBaseSize}px 'Playfair Display', 'Cormorant Garamond', Georgia, serif`;
-    fitTextSize(ctx, layout.displayName, totalW - 72 * scale, nameBaseSize, 20 * scale);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    cursorY += 28 * scale;
-    ctx.fillText(layout.displayName, totalW / 2, cursorY);
-    ctx.restore();
-    cursorY += 14 * scale;
-  }
-
-  // 3. Center Diamond Divider
-  drawDiamondDivider(ctx, totalW / 2, cursorY + 4 * scale, 180 * scale, accent, scale);
-  cursorY += 18 * scale;
-
-  // 4. Guest Prayer / Short Message (1–2 wrapped lines)
-  if (layout.msgLines.length > 0) {
-    ctx.save();
-    ctx.fillStyle = '#4A3E3A';
-    ctx.font = `italic 500 ${16 * scale}px 'Cormorant Garamond', 'Playfair Display', Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    layout.msgLines.forEach((line) => {
-      cursorY += 18 * scale;
-      drawSpacedText(ctx, line, totalW / 2, cursorY, 0.5 * scale);
-      cursorY += 4 * scale;
-    });
-    ctx.restore();
-    cursorY += 8 * scale;
-  }
-
-  // 5. Compact Event Date Footer
-  const dateText = getEventFormattedDate(activeEvent) || '';
-  if (dateText) {
-    ctx.save();
-    ctx.fillStyle = '#7A6E69';
-    ctx.font = `600 ${10.5 * scale}px 'Cinzel', 'Playfair Display', Georgia, serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    drawSpacedText(ctx, dateText, totalW / 2, cursorY + 14 * scale, 2.2 * scale);
-    ctx.restore();
-  }
-}
-
 export function renderMasterPhotoStrip(canvas, {
   photos = [],
   targetCount = 3,
@@ -329,31 +163,26 @@ export function renderMasterPhotoStrip(canvas, {
 }) {
   if (!canvas) return;
 
-  // 🌟 Check for Event-Specific Exclusive Graphic Frames (e.g. Mitufaya 8th Anniversary)
+  // 🌟 Check for Event-Specific Graphic Overlay Frames (e.g. Mitufaya 8th Anniversary)
   const targetGraphicId = graphicFrameId || activeEvent?.selectedGraphicFrameId;
-  const availableGraphicFrames = [...MITUFAYA_FRAMES, ...getEventGraphicFrames(activeEvent)];
-  const graphicFrame = targetGraphicId ? availableGraphicFrames.find(f => f.id === targetGraphicId) : null;
+  // Search in MITUFAYA_FRAMES first, then in event-specific graphic frames
+  const allKnownFrames = targetGraphicId
+    ? [...MITUFAYA_FRAMES, ...getEventGraphicFrames(activeEvent)]
+    : [];
+  const graphicFrame = targetGraphicId ? allKnownFrames.find(f => f.id === targetGraphicId) : null;
 
   if (graphicFrame) {
     const totalW = 600 * scale;
-    const artH = 1800 * scale;
-    const tempCtx = canvas.getContext('2d');
-    const footerLayout = computeGraphicFooterLayout(tempCtx, {
-      guestName,
-      guestMessage,
-      totalW,
-      scale,
-    });
-    const totalH = artH + footerLayout.extraH;
+    const totalH = 1800 * scale;
     canvas.width = totalW;
     canvas.height = totalH;
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // 1. Draw base accent background for the graphic artwork region
+    // 1. Draw base accent background
     ctx.fillStyle = graphicFrame.accentColor || '#FFFFFF';
-    ctx.fillRect(0, 0, totalW, artH);
+    ctx.fillRect(0, 0, totalW, totalH);
 
     // 2. Draw captured photos into slot boxes
     graphicFrame.slotBoxes.forEach((slot, idx) => {
@@ -391,31 +220,35 @@ export function renderMasterPhotoStrip(canvas, {
       }
     });
 
-    // 3. Draw transparent frame overlay strictly across the 600x1800 artwork area
+    // 3. Draw transparent frame overlay on top
     const overlayImg = getCachedFrameImage(graphicFrame.overlayUrl);
     if (overlayImg && overlayImg.complete && overlayImg.naturalWidth > 0) {
-      ctx.drawImage(overlayImg, 0, 0, totalW, artH);
+      ctx.drawImage(overlayImg, 0, 0, totalW, totalH);
     } else if (overlayImg) {
       overlayImg.addEventListener('load', () => {
         try {
-          ctx.drawImage(overlayImg, 0, 0, totalW, artH);
+          ctx.drawImage(overlayImg, 0, 0, totalW, totalH);
         } catch (e) {}
       }, { once: true });
     }
-
-    // 4. Draw adaptive editorial footer panel below artwork when Guest Name or Prayer is present
-    drawGraphicFooterPanel(ctx, {
-      totalW,
-      artH,
-      extraH: footerLayout.extraH,
-      graphicFrame,
-      activeEvent,
-      layout: footerLayout,
-      scale,
-    });
     return;
   }
 
+  // Guard: if a graphic frame ID was explicitly requested but frame wasn't found in any catalog
+  // (e.g. race condition during load), still skip the standard footer to avoid name/date appearing
+  // below exclusive frame artwork that is handled elsewhere (e.g. rendered by another pass).
+  if (targetGraphicId) {
+    const totalW = 600 * scale;
+    const totalH = 1800 * scale;
+    canvas.width = totalW;
+    canvas.height = totalH;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, totalW, totalH);
+    return;
+  }
+
+  // For standard (non-graphic-frame) strips only: render footer with guest name, date, venue, message
   const count = targetCount || (photos.length > 0 ? photos.length : 3);
   const isPolaroid = count === 1;
   const isWedding = (activeEvent?.eventType || 'wedding') === 'wedding';
@@ -584,6 +417,21 @@ export function renderMasterPhotoStrip(canvas, {
   // Date determination: Always format as DD - MM - YYYY
   const dateText = getEventFormattedDate(activeEvent) || '15 - 11 - 2026';
 
+  // Helper to ensure title case for legible calligraphy (avoiding bunched all-caps cursive)
+  const formatScriptText = (str) => {
+    if (!str) return '';
+    const trimmed = str.trim();
+    // If user typed in ALL CAPS (length > 1), convert each word to Capitalized
+    if (trimmed === trimmed.toUpperCase() && trimmed.length > 1) {
+      return trimmed
+        .toLowerCase()
+        .split(' ')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+    }
+    return trimmed;
+  };
+
   // Guest Name Determination (raw display, formatted for calligraphy legibility)
   const rawGuestName = guestName && guestName.trim() ? guestName.trim() : '';
   let guestScriptName = '';  // For large calligraphy script display
@@ -652,7 +500,32 @@ export function renderMasterPhotoStrip(canvas, {
   ctx.restore();
 
   // 4d. Divider Line with Center Diamond Accent
-  drawDiamondDivider(ctx, totalW / 2, divY, (isPolaroid ? 160 : 190) * scale, accentColor, scale);
+  ctx.save();
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 1.4 * scale;
+  ctx.lineCap = 'round';
+  const div1Width = (isPolaroid ? 160 : 190) * scale;
+  const diamondR = 3.0 * scale;
+  // Left segment
+  ctx.beginPath();
+  ctx.moveTo(totalW / 2 - div1Width / 2, divY);
+  ctx.lineTo(totalW / 2 - diamondR - 4 * scale, divY);
+  ctx.stroke();
+  // Right segment
+  ctx.beginPath();
+  ctx.moveTo(totalW / 2 + diamondR + 4 * scale, divY);
+  ctx.lineTo(totalW / 2 + div1Width / 2, divY);
+  ctx.stroke();
+  // Center diamond accent
+  ctx.fillStyle = accentColor;
+  ctx.beginPath();
+  ctx.moveTo(totalW / 2, divY - diamondR);
+  ctx.lineTo(totalW / 2 + diamondR, divY);
+  ctx.lineTo(totalW / 2, divY + diamondR);
+  ctx.lineTo(totalW / 2 - diamondR, divY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 
   // 4e. Date Text (e.g. 15 - 11 - 2026)
   ctx.save();
