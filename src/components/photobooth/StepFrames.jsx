@@ -290,7 +290,7 @@ export default function StepFrames() {
               {isPremiumMode ? activeGraphicFrame.name : activeTheme.styleName}
             </h3>
             <p className="text-[10px] sm:text-[11px] text-gray-500 font-sans mt-0.5">
-              {isPremiumMode ? `${activeGraphicFrame.slots} Pose · Bingkai Premium Eksklusif` : activeTheme.subName}
+              {isPremiumMode ? `${activeGraphicFrame.slots} Pose · Bingkai Eksklusif` : activeTheme.subName}
             </p>
 
             {/* Pagination Dots */}
@@ -334,7 +334,7 @@ export default function StepFrames() {
               <span className={`w-1.5 h-1.5 rounded-full ${isPremiumMode ? 'bg-[#E8C987]' : 'bg-[#6B111F]'}`}></span>
               <span>
                 {isPremiumMode
-                  ? `Bingkai Premium · ${activeGraphicFrame.slots} Pose`
+                  ? `Bingkai Eksklusif · ${activeGraphicFrame.slots} Pose`
                   : `Mode: ${targetPhotoCount === 1 ? 'Polaroid Single' : `${targetPhotoCount} Foto Strip`}`
                 }
               </span>
@@ -446,12 +446,12 @@ export default function StepFrames() {
                 <span className={`text-[10px] sm:text-[11px] font-sans font-semibold ${
                   isPremiumMode ? 'text-[#8A1828]' : 'text-stone-400'
                 }`}>
-                  {isPremiumMode ? 'Koleksi Premium' : 'Koleksi Standar'}
+                  {isPremiumMode ? 'Koleksi Eksklusif' : 'Koleksi Standar'}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">
-                {/* Bingkai Premium — Highlighted Featured Collection */}
+                {/* Bingkai Eksklusif — Highlighted Featured Collection */}
                 <button
                   type="button"
                   onClick={() => {
@@ -469,7 +469,7 @@ export default function StepFrames() {
                     <span className={`text-[9px] font-sans font-bold uppercase tracking-[0.1em] ${
                       isPremiumMode ? 'text-[#E8C987]' : 'text-[#9B7228]'
                     }`}>
-                      Eksklusif
+                      Khusus Event
                     </span>
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-sans font-bold tracking-tight ${
                       isPremiumMode
@@ -484,7 +484,7 @@ export default function StepFrames() {
                     <div className={`text-xs sm:text-sm font-serif font-bold leading-snug ${
                       isPremiumMode ? 'text-[#FDF3D7]' : 'text-[#5C0E1A]'
                     }`}>
-                      Bingkai Premium
+                      Bingkai Eksklusif
                     </div>
                     <div className={`text-[10px] font-sans mt-0.5 leading-tight ${
                       isPremiumMode ? 'text-rose-100/80' : 'text-stone-600'
@@ -550,11 +550,11 @@ export default function StepFrames() {
                     2
                   </div>
                   <h2 className="text-xs sm:text-sm font-serif font-bold text-gray-900">
-                    Pilih Desain Bingkai Premium
+                    Pilih Desain Bingkai Eksklusif
                   </h2>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full bg-[#FAF3E3] border border-[#C5A059]/45 text-[#8A621B] text-[9px] sm:text-[10px] font-sans font-semibold tracking-wide uppercase">
-                  Eksklusif
+                  Khusus Event
                 </span>
               </div>
 
