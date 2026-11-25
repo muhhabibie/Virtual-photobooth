@@ -6,7 +6,6 @@ import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
 import { CONTACT_LINKS, PACKAGES } from '../../data/mockEvents';
-import { sanitizeShareFilename, canvasToJpegFile, shareFileNativeOrFallback } from '../../utils/shareMedia';
 import PriceListModal from '../ui/PriceListModal';
 import DownloadFormatModal from './DownloadFormatModal';
 
@@ -273,45 +272,14 @@ export default function StepResult() {
     setShowDownloadModal(true);
   };
 
-  const handleShare = async () => {
+  const handleShare = () => {
     if (isDemoMode) {
       toast('Di mode demo tidak bisa bagikan foto. Yuk pesan paket untuk acaramu!', 'warning');
       setShowDemoModal(true);
       return;
     }
-
-    if (voiceUrl) {
-      setModalInitialMode('share');
-      setShowDownloadModal(true);
-      return;
-    }
-
-    try {
-      const canvas = getExportCanvas();
-      if (!canvas) {
-        toast('Foto belum siap dibagikan.', 'error');
-        return;
-      }
-      const prefix = `${sanitizeShareFilename(guestName, 'Tamu')}_${sanitizeShareFilename(activeEvent?.displayName, 'Event')}`;
-      const file = await canvasToJpegFile(canvas, `${prefix}_photostrip.jpg`, 0.95);
-      const eventTitle = getEventDisplayName(activeEvent) || 'Photobooth Event';
-
-      const res = await shareFileNativeOrFallback({
-        file,
-        title: `${guestName || 'Tamu'} — ${eventTitle}`,
-        text: `Momen seru di ${eventTitle}`,
-      });
-
-      if (res.status === 'needs_gesture') {
-        setModalInitialMode('share');
-        setShowDownloadModal(true);
-      } else if (res.status === 'fallback_downloaded') {
-        toast('Foto HD disimpan — siap diunggah ke WhatsApp atau Instagram!', 'info');
-      }
-    } catch {
-      setModalInitialMode('share');
-      setShowDownloadModal(true);
-    }
+    setModalInitialMode('share');
+    setShowDownloadModal(true);
   };
 
   return (

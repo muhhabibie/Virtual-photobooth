@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Download, Share, Image as ImageIcon, MessageCircle, ChevronRight, Volume2, Search, X, Calendar, Clock, Camera, Archive, Video, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Download, Share, Image as ImageIcon, ChevronRight, Volume2, Search, X, Calendar, Clock, Camera, Archive, Video, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { getDeletedSubmissionIds, isSubmissionDeleted } from '../../services/submissionService';
@@ -13,13 +13,15 @@ import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils
 import { MITUFAYA_FRAMES, getEventGraphicFrames, getCachedFrameImage } from '../../data/eventFrames';
 import { generatePhotostripVideo } from '../../utils/videoGenerator';
 import {
+  SOCIAL_CARD_SPECS,
   sanitizeShareFilename,
   triggerFileDownload,
-  canvasToJpegFile,
+  createSocialShareJpegFile,
   videoBlobToShareFile,
   shareFileNativeOrFallback,
   openWhatsAppLinkShare,
 } from '../../utils/shareMedia';
+import ShareFormatOptions from '../ui/ShareFormatOptions';
 import PriceListModal from '../ui/PriceListModal';
 
 /**
@@ -146,7 +148,7 @@ export default function FullGalleryModal() {
   const [readyShareFile, setReadyShareFile] = useState(null);
   const [readyShareLabel, setReadyShareLabel] = useState('');
   const [showPriceModal, setShowPriceModal] = useState(false);
-  const preparedFileRef = useRef({ id: null, file: null });
+  const preparedFileRef = useRef({ id: null, canvas: null, files: {} });
   const [hiddenMockIds] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('sirklen_hidden_mock_submissions') || '[]');
@@ -156,14 +158,23 @@ export default function FullGalleryModal() {
   });
   const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
 
-  // Pre-render HD JPG File when opening a photo so navigator.share fires synchronously on iOS Safari
+  const getModalFilenames = (item) => {
+    const guest = sanitizeShareFilename(item?.guestName, 'Tamu');
+    const couple = sanitizeShareFilename(activeEvent?.displayName, 'Event');
+    return {
+      jpgName: `${guest}_${couple}.jpg`,
+      prefix: `${guest}_${couple}`,
+    };
+  };
+
+  // Pre-render HD & social-ready JPG Files when opening a photo so navigator.share fires synchronously on iOS Safari
   useEffect(() => {
     setActionSheetMode(null);
     setReadyShareFile(null);
     setReadyShareLabel('');
     setVideoProgress(0);
     setVideoStatusText('');
-    preparedFileRef.current = { id: null, file: null };
+    preparedFileRef.current = { id: null, canvas: null, files: {} };
 
     if (!fullFrameModal) return;
 
@@ -172,11 +183,27 @@ export default function FullGalleryModal() {
       try {
         const offCanvas = await renderHighResStripCanvas(fullFrameModal, activeEvent);
         if (!offCanvas || cancelled) return;
-        const guest = sanitizeShareFilename(fullFrameModal.guestName, 'Tamu');
-        const couple = sanitizeShareFilename(activeEvent?.displayName, 'Event');
-        const file = await canvasToJpegFile(offCanvas, `${guest}_${couple}.jpg`, 0.96);
+
+        const { prefix } = getModalFilenames(fullFrameModal);
+        const shareMeta = {
+          filenamePrefix: prefix,
+          coupleName: getEventDisplayName(activeEvent) || 'Photobooth Event',
+          eventName: getEventHeaderTitle(activeEvent) || '',
+          guestName: fullFrameModal.guestName || '',
+        };
+
+        const [raw, feed, story] = await Promise.all([
+          createSocialShareJpegFile(offCanvas, { ...shareMeta, format: 'raw', quality: 0.96 }),
+          createSocialShareJpegFile(offCanvas, { ...shareMeta, format: 'feed', quality: 0.94 }),
+          createSocialShareJpegFile(offCanvas, { ...shareMeta, format: 'story', quality: 0.94 }),
+        ]);
+
         if (!cancelled) {
-          preparedFileRef.current = { id: fullFrameModal.id, file };
+          preparedFileRef.current = {
+            id: fullFrameModal.id,
+            canvas: offCanvas,
+            files: { raw, feed, story },
+          };
         }
       } catch (e) {
         // Silent fallback: will render on demand if needed
@@ -188,24 +215,34 @@ export default function FullGalleryModal() {
     };
   }, [fullFrameModal, activeEvent]);
 
-  const getModalFilenames = (item) => {
-    const guest = sanitizeShareFilename(item?.guestName, 'Tamu');
-    const couple = sanitizeShareFilename(activeEvent?.displayName, 'Event');
-    return {
-      jpgName: `${guest}_${couple}.jpg`,
-      prefix: `${guest}_${couple}`,
-    };
-  };
-
-  const getOrCreateJpgFile = async (item) => {
-    if (preparedFileRef.current?.id === item.id && preparedFileRef.current?.file) {
-      return preparedFileRef.current.file;
+  const getOrCreateJpgFile = async (item, format = 'raw') => {
+    const cached = preparedFileRef.current;
+    if (cached?.id === item.id && cached?.files?.[format]) {
+      return cached.files[format];
     }
-    const { jpgName } = getModalFilenames(item);
-    const offCanvas = await renderHighResStripCanvas(item, activeEvent);
+
+    const offCanvas =
+      cached?.id === item.id && cached?.canvas
+        ? cached.canvas
+        : await renderHighResStripCanvas(item, activeEvent);
+
     if (!offCanvas) return null;
-    const file = await canvasToJpegFile(offCanvas, jpgName, 0.96);
-    preparedFileRef.current = { id: item.id, file };
+
+    const { prefix } = getModalFilenames(item);
+    const file = await createSocialShareJpegFile(offCanvas, {
+      format,
+      filenamePrefix: prefix,
+      coupleName: getEventDisplayName(activeEvent) || 'Photobooth Event',
+      eventName: getEventHeaderTitle(activeEvent) || '',
+      guestName: item.guestName || '',
+      quality: format === 'raw' ? 0.96 : 0.94,
+    });
+
+    preparedFileRef.current = {
+      id: item.id,
+      canvas: offCanvas,
+      files: { ...(cached?.id === item.id ? cached.files : {}), [format]: file },
+    };
     return file;
   };
 
@@ -283,7 +320,7 @@ export default function FullGalleryModal() {
     }
   };
 
-  const handleSharePhotoOnly = async () => {
+  const handleSharePhotoFormat = async (format = 'raw') => {
     if (!fullFrameModal) return;
     if (isDemoMode) {
       toast('Di mode demo tidak bisa bagikan foto. Yuk pesan paket untuk acaramu!', 'warning');
@@ -291,7 +328,7 @@ export default function FullGalleryModal() {
       return;
     }
     try {
-      const file = await getOrCreateJpgFile(fullFrameModal);
+      const file = await getOrCreateJpgFile(fullFrameModal, format);
       if (!file) {
         toast('Foto belum siap dibagikan.', 'error');
         return;
@@ -306,7 +343,7 @@ export default function FullGalleryModal() {
         setActionSheetMode(null);
       } else if (res.status === 'needs_gesture') {
         setReadyShareFile(res.file);
-        setReadyShareLabel('Foto Strip HD Siap Dibagikan');
+        setReadyShareLabel(`${SOCIAL_CARD_SPECS[format]?.label || 'Foto HD'} Siap Dibagikan`);
         setActionSheetMode('share');
       } else if (res.status === 'fallback_downloaded') {
         setActionSheetMode(null);
@@ -811,12 +848,8 @@ export default function FullGalleryModal() {
                             setShowPriceModal(true);
                             return;
                           }
-                          if (hasVoiceNote) {
-                            setReadyShareFile(null);
-                            setActionSheetMode('share');
-                          } else {
-                            handleSharePhotoOnly();
-                          }
+                          setReadyShareFile(null);
+                          setActionSheetMode('share');
                         }}
                         disabled={isDownloadingStrip || isDownloadingVideo}
                         className="h-11 px-4 rounded-2xl bg-white hover:bg-white/90 text-[#1C1C1E] text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(0,0,0,0.45)] transition active:scale-[0.97] cursor-pointer disabled:opacity-60"
@@ -966,12 +999,31 @@ export default function FullGalleryModal() {
                             Simpan ke Perangkat Saja
                           </button>
                         </div>
+                      ) : actionSheetMode === 'share' ? (
+                        <ShareFormatOptions
+                          hasVoice={Boolean(fullFrameModal.hasVoice || fullFrameModal.voiceUrl)}
+                          onSelectPhotoFormat={handleSharePhotoFormat}
+                          onSelectVoiceVideo={handleSharePhotoWithVoice}
+                          onSelectWhatsAppLink={() => {
+                            const eventTitle = activeEvent?.displayName || 'Photobooth Event';
+                            openWhatsAppLinkShare({
+                              text: `Lihat foto strip dari ${fullFrameModal.guestName || 'tamu'} di ${eventTitle}:`,
+                              url: window.location.href,
+                            });
+                            setActionSheetMode(null);
+                          }}
+                          onCancel={() => {
+                            setActionSheetMode(null);
+                            setReadyShareFile(null);
+                          }}
+                          cancelLabel="Batal"
+                        />
                       ) : (
                         <div className="space-y-2">
-                          {/* Choice 1: Hanya Foto Strip */}
+                          {/* Download Choice 1: Hanya Foto Strip */}
                           <button
                             type="button"
-                            onClick={actionSheetMode === 'share' ? handleSharePhotoOnly : handleDownloadStripHd}
+                            onClick={handleDownloadStripHd}
                             className="w-full p-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98] border border-white/[0.08] transition flex items-center justify-between gap-3 text-left group cursor-pointer"
                           >
                             <div className="flex items-center gap-3 min-w-0">
@@ -988,19 +1040,17 @@ export default function FullGalleryModal() {
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-white/50 truncate mt-0.5">
-                                  {actionSheetMode === 'share'
-                                    ? 'Chat WA, Status WA & IG Story'
-                                    : 'Ukuran cetak & galeri resolusi tinggi'}
+                                  Ukuran cetak & galeri resolusi tinggi
                                 </p>
                               </div>
                             </div>
                             <ChevronRight size={16} className="text-white/40 group-hover:text-white flex-shrink-0 transition" />
                           </button>
 
-                          {/* Choice 2: Foto + Audio Doa (Video Story 9:16) */}
+                          {/* Download Choice 2: Foto + Audio Doa (Video Story 9:16) */}
                           <button
                             type="button"
-                            onClick={actionSheetMode === 'share' ? handleSharePhotoWithVoice : handleDownloadVoiceVideo}
+                            onClick={handleDownloadVoiceVideo}
                             className="w-full p-3.5 rounded-2xl bg-white/[0.09] hover:bg-white/[0.14] active:scale-[0.98] border border-white/[0.16] transition flex items-center justify-between gap-3 text-left group cursor-pointer"
                           >
                             <div className="flex items-center gap-3 min-w-0">
@@ -1017,45 +1067,12 @@ export default function FullGalleryModal() {
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-white/55 truncate mt-0.5">
-                                  {actionSheetMode === 'share'
-                                    ? 'IG Story, WA Status & TikTok bersuara'
-                                    : 'Video vertikal 9:16 dengan rekaman suara'}
+                                  Video vertikal 9:16 dengan rekaman suara
                                 </p>
                               </div>
                             </div>
                             <ChevronRight size={16} className="text-white/60 group-hover:text-white flex-shrink-0 transition" />
                           </button>
-
-                          {/* Choice 3 (Share mode only): Quick WhatsApp Link */}
-                          {actionSheetMode === 'share' && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const eventTitle = activeEvent?.displayName || 'Photobooth Event';
-                                openWhatsAppLinkShare({
-                                  text: `Lihat foto strip dari ${fullFrameModal.guestName || 'tamu'} di ${eventTitle}:`,
-                                  url: window.location.href,
-                                });
-                                setActionSheetMode(null);
-                              }}
-                              className="w-full p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] active:scale-[0.98] border border-white/[0.06] transition flex items-center justify-between gap-3 text-left group cursor-pointer"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-8 h-8 rounded-xl bg-white/[0.06] flex items-center justify-center text-white/75 flex-shrink-0">
-                                  <MessageCircle size={15} />
-                                </div>
-                                <div className="min-w-0">
-                                  <span className="text-xs font-medium text-white/85">
-                                    Kirim Link ke WhatsApp
-                                  </span>
-                                  <p className="text-[10.5px] text-white/45 truncate">
-                                    Bagikan tautan galeri langsung via WA
-                                  </p>
-                                </div>
-                              </div>
-                              <ChevronRight size={15} className="text-white/35 group-hover:text-white flex-shrink-0 transition" />
-                            </button>
-                          )}
 
                           <button
                             type="button"
