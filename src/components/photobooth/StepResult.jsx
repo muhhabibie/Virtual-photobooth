@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Download, Volume2, Check, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Home, Lock, MessageCircle, ShoppingBag, Camera, ArrowRight } from 'lucide-react';
+import { Download, Share, Volume2, Check, ArrowLeft, Move, SlidersHorizontal, Smile, RefreshCw, BookOpen, Home, Lock, MessageCircle, ShoppingBag, Camera, ArrowRight } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { getEventHeaderTitle, getEventDisplayName, getEventFormattedDate } from '../../utils/eventHeader';
 import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
 import { CONTACT_LINKS, PACKAGES } from '../../data/mockEvents';
+import { sanitizeShareFilename, canvasToJpegFile, shareFileNativeOrFallback } from '../../utils/shareMedia';
 import PriceListModal from '../ui/PriceListModal';
 import DownloadFormatModal from './DownloadFormatModal';
 
@@ -49,6 +50,7 @@ export default function StepResult() {
   const [activeTab, setActiveTab] = useState('filters'); // 'filters' | 'stickers'
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [modalInitialMode, setModalInitialMode] = useState('download');
   const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
 
   const filterCarouselRef = useRef(null);
@@ -267,7 +269,49 @@ export default function StepResult() {
       setShowDemoModal(true);
       return;
     }
+    setModalInitialMode('download');
     setShowDownloadModal(true);
+  };
+
+  const handleShare = async () => {
+    if (isDemoMode) {
+      toast('Di mode demo tidak bisa bagikan foto. Yuk pesan paket untuk acaramu!', 'warning');
+      setShowDemoModal(true);
+      return;
+    }
+
+    if (voiceUrl) {
+      setModalInitialMode('share');
+      setShowDownloadModal(true);
+      return;
+    }
+
+    try {
+      const canvas = getExportCanvas();
+      if (!canvas) {
+        toast('Foto belum siap dibagikan.', 'error');
+        return;
+      }
+      const prefix = `${sanitizeShareFilename(guestName, 'Tamu')}_${sanitizeShareFilename(activeEvent?.displayName, 'Event')}`;
+      const file = await canvasToJpegFile(canvas, `${prefix}_photostrip.jpg`, 0.95);
+      const eventTitle = getEventDisplayName(activeEvent) || 'Photobooth Event';
+
+      const res = await shareFileNativeOrFallback({
+        file,
+        title: `${guestName || 'Tamu'} — ${eventTitle}`,
+        text: `Momen seru di ${eventTitle}`,
+      });
+
+      if (res.status === 'needs_gesture') {
+        setModalInitialMode('share');
+        setShowDownloadModal(true);
+      } else if (res.status === 'fallback_downloaded') {
+        toast('Foto HD disimpan — siap diunggah ke WhatsApp atau Instagram!', 'info');
+      }
+    } catch {
+      setModalInitialMode('share');
+      setShowDownloadModal(true);
+    }
   };
 
   return (
@@ -457,14 +501,26 @@ export default function StepResult() {
           </button>
         )}
 
-        {/* Primary Download Button (Opens DownloadFormatModal for Photo HD / Video MP4) */}
-        <button
-          onClick={handleDownload}
-          className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] font-serif font-bold text-xs sm:text-sm border border-amber-400/50 shadow-2xl shadow-rose-950/60 flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer"
-        >
-          <Download size={17} />
-          <span>{voiceUrl ? 'Download Foto & Audio (Video / JPG)' : 'Download Photo Strip HD (JPG)'}</span>
-        </button>
+        {/* Primary Action Row: Share & Download (Apple Minimalist + Luxury Accent) */}
+        <div className="grid grid-cols-2 gap-2 w-full">
+          <button
+            type="button"
+            onClick={handleShare}
+            className="py-3 px-4 rounded-full bg-white hover:bg-white/90 text-[#1C1C1E] font-sans font-semibold text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2 transition active:scale-[0.97] cursor-pointer"
+          >
+            <Share size={16} strokeWidth={2.2} />
+            <span>Bagikan</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDownload}
+            className="py-3 px-4 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] font-serif font-bold text-xs sm:text-sm border border-amber-400/50 shadow-2xl shadow-rose-950/60 flex items-center justify-center gap-2 transition active:scale-[0.97] cursor-pointer"
+          >
+            <Download size={16} />
+            <span>{voiceUrl ? 'Simpan' : 'Download HD'}</span>
+          </button>
+        </div>
 
         {/* Secondary Action: Buku Tamu Only (Kembali ke Dashboard ada di pojok kanan atas) */}
         <button
@@ -482,7 +538,7 @@ export default function StepResult() {
 
       </div>
 
-      {/* ================= 🌟 DOWNLOAD FORMAT MODAL (PHOTO HD / VIDEO MP4 / AUDIO) 🌟 ================= */}
+      {/* ================= 🌟 DOWNLOAD FORMAT MODAL (PHOTO HD / VIDEO MP4 / AUDIO / SHARE) 🌟 ================= */}
       <DownloadFormatModal
         isOpen={showDownloadModal}
         onClose={() => setShowDownloadModal(false)}
@@ -491,6 +547,8 @@ export default function StepResult() {
         guestName={guestName || 'Tamu Undangan'}
         coupleName={getEventDisplayName(activeEvent) || 'Sabrina & Raka'}
         eventName={getEventHeaderTitle(activeEvent) || 'The Wedding'}
+        isWedding={(activeEvent?.eventType || 'wedding') === 'wedding'}
+        initialMode={modalInitialMode}
         filenamePrefix={`${(guestName || 'Tamu').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, '_')}_${(activeEvent?.displayName || 'Event').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, '_')}`}
         isDemo={isDemoMode}
         onOpenDemoModal={() => {

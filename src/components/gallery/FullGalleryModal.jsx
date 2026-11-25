@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Plus, Download, Volume2, Search, X, Calendar, Clock, Camera, Archive, Video, Loader2 } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { ArrowLeft, Plus, Download, Share, Image as ImageIcon, MessageCircle, ChevronRight, Volume2, Search, X, Calendar, Clock, Camera, Archive, Video, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { getDeletedSubmissionIds, isSubmissionDeleted } from '../../services/submissionService';
@@ -12,6 +12,14 @@ import PhotostripThumbnail from './PhotostripThumbnail';
 import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
 import { MITUFAYA_FRAMES, getEventGraphicFrames, getCachedFrameImage } from '../../data/eventFrames';
 import { generatePhotostripVideo } from '../../utils/videoGenerator';
+import {
+  sanitizeShareFilename,
+  triggerFileDownload,
+  canvasToJpegFile,
+  videoBlobToShareFile,
+  shareFileNativeOrFallback,
+  openWhatsAppLinkShare,
+} from '../../utils/shareMedia';
 import PriceListModal from '../ui/PriceListModal';
 
 /**
@@ -132,7 +140,13 @@ export default function FullGalleryModal() {
   const [isZipping, setIsZipping] = useState(false);
   const [isDownloadingStrip, setIsDownloadingStrip] = useState(false);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
+  const [actionSheetMode, setActionSheetMode] = useState(null); // null | 'share' | 'download'
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [videoStatusText, setVideoStatusText] = useState('');
+  const [readyShareFile, setReadyShareFile] = useState(null);
+  const [readyShareLabel, setReadyShareLabel] = useState('');
   const [showPriceModal, setShowPriceModal] = useState(false);
+  const preparedFileRef = useRef({ id: null, file: null });
   const [hiddenMockIds] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('sirklen_hidden_mock_submissions') || '[]');
@@ -141,6 +155,243 @@ export default function FullGalleryModal() {
     }
   });
   const isDemoMode = Boolean(isDemo || activeEvent?.isDemo || activeEvent?.slug === 'demo');
+
+  // Pre-render HD JPG File when opening a photo so navigator.share fires synchronously on iOS Safari
+  useEffect(() => {
+    setActionSheetMode(null);
+    setReadyShareFile(null);
+    setReadyShareLabel('');
+    setVideoProgress(0);
+    setVideoStatusText('');
+    preparedFileRef.current = { id: null, file: null };
+
+    if (!fullFrameModal) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const offCanvas = await renderHighResStripCanvas(fullFrameModal, activeEvent);
+        if (!offCanvas || cancelled) return;
+        const guest = sanitizeShareFilename(fullFrameModal.guestName, 'Tamu');
+        const couple = sanitizeShareFilename(activeEvent?.displayName, 'Event');
+        const file = await canvasToJpegFile(offCanvas, `${guest}_${couple}.jpg`, 0.96);
+        if (!cancelled) {
+          preparedFileRef.current = { id: fullFrameModal.id, file };
+        }
+      } catch (e) {
+        // Silent fallback: will render on demand if needed
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fullFrameModal, activeEvent]);
+
+  const getModalFilenames = (item) => {
+    const guest = sanitizeShareFilename(item?.guestName, 'Tamu');
+    const couple = sanitizeShareFilename(activeEvent?.displayName, 'Event');
+    return {
+      jpgName: `${guest}_${couple}.jpg`,
+      prefix: `${guest}_${couple}`,
+    };
+  };
+
+  const getOrCreateJpgFile = async (item) => {
+    if (preparedFileRef.current?.id === item.id && preparedFileRef.current?.file) {
+      return preparedFileRef.current.file;
+    }
+    const { jpgName } = getModalFilenames(item);
+    const offCanvas = await renderHighResStripCanvas(item, activeEvent);
+    if (!offCanvas) return null;
+    const file = await canvasToJpegFile(offCanvas, jpgName, 0.96);
+    preparedFileRef.current = { id: item.id, file };
+    return file;
+  };
+
+  const handleDownloadStripHd = async () => {
+    if (!fullFrameModal) return;
+    if (isDemoMode) {
+      toast('Di mode demo tidak bisa download foto. Yuk pesan paket untuk acaramu!', 'warning');
+      setShowPriceModal(true);
+      return;
+    }
+    setIsDownloadingStrip(true);
+    try {
+      const { jpgName } = getModalFilenames(fullFrameModal);
+      const file = await getOrCreateJpgFile(fullFrameModal);
+      if (file) {
+        triggerFileDownload(file, jpgName);
+      } else {
+        const fallbackUrl = fullFrameModal.stripImage || fullFrameModal.photos?.[0];
+        if (!fallbackUrl) {
+          toast('Foto tidak tersedia untuk diunduh.', 'error');
+          return;
+        }
+        triggerFileDownload(fallbackUrl, jpgName);
+      }
+      setActionSheetMode(null);
+      toast(`Photo strip HD berhasil diunduh (${jpgName})!`, 'success');
+    } catch (e) {
+      console.error('HD strip download error:', e);
+      toast('Gagal memproses photo strip HD.', 'error');
+    } finally {
+      setIsDownloadingStrip(false);
+    }
+  };
+
+  const handleDownloadVoiceVideo = async () => {
+    if (!fullFrameModal) return;
+    if (isDemoMode) {
+      toast('Di mode demo tidak bisa download video. Yuk pesan paket untuk acaramu!', 'warning');
+      setShowPriceModal(true);
+      return;
+    }
+    setIsDownloadingVideo(true);
+    setVideoProgress(8);
+    setVideoStatusText('Menyiapkan video story...');
+
+    try {
+      const offCanvas = await renderHighResStripCanvas(fullFrameModal, activeEvent);
+      if (!offCanvas) throw new Error('Tidak ada foto untuk dirender ke video.');
+
+      const isWeddingEvent = (activeEvent?.eventType || 'wedding') === 'wedding';
+      const result = await generatePhotostripVideo({
+        photoCanvas: offCanvas,
+        voiceUrl: fullFrameModal.voiceUrl,
+        guestName: fullFrameModal.guestName || 'Tamu',
+        coupleName: activeEvent?.displayName || 'Event',
+        eventName: activeEvent?.eventName || activeEvent?.displayName || 'Event',
+        audioLabel: isWeddingEvent ? 'Pesan Suara & Doa Restu' : 'Pesan Suara & Ucapan',
+        onProgress: (p, txt) => {
+          setVideoProgress(p);
+          setVideoStatusText(txt);
+        },
+      });
+
+      const guest = sanitizeShareFilename(fullFrameModal.guestName, 'Tamu');
+      const filename = `${guest}_voice_story.${result.extension}`;
+      triggerFileDownload(result.blob, filename);
+      setActionSheetMode(null);
+      toast(`Video Story + Suara berhasil diunduh (${filename})!`, 'success');
+    } catch (err) {
+      console.error('Video download error:', err);
+      toast('Gagal memproses video bersuara.', 'error');
+    } finally {
+      setIsDownloadingVideo(false);
+      setVideoProgress(0);
+    }
+  };
+
+  const handleSharePhotoOnly = async () => {
+    if (!fullFrameModal) return;
+    if (isDemoMode) {
+      toast('Di mode demo tidak bisa bagikan foto. Yuk pesan paket untuk acaramu!', 'warning');
+      setShowPriceModal(true);
+      return;
+    }
+    try {
+      const file = await getOrCreateJpgFile(fullFrameModal);
+      if (!file) {
+        toast('Foto belum siap dibagikan.', 'error');
+        return;
+      }
+      const eventTitle = activeEvent?.displayName || 'Photobooth Event';
+      const res = await shareFileNativeOrFallback({
+        file,
+        title: `${fullFrameModal.guestName || 'Tamu'} — ${eventTitle}`,
+        text: `Momen seru di ${eventTitle}`,
+      });
+      if (res.status === 'shared') {
+        setActionSheetMode(null);
+      } else if (res.status === 'needs_gesture') {
+        setReadyShareFile(res.file);
+        setReadyShareLabel('Foto Strip HD Siap Dibagikan');
+        setActionSheetMode('share');
+      } else if (res.status === 'fallback_downloaded') {
+        setActionSheetMode(null);
+        toast('Foto HD disimpan — siap diunggah ke WhatsApp atau Instagram!', 'info');
+      }
+    } catch (e) {
+      console.error('Share photo error:', e);
+      toast('Gagal membagikan foto.', 'error');
+    }
+  };
+
+  const handleSharePhotoWithVoice = async () => {
+    if (!fullFrameModal) return;
+    if (isDemoMode) {
+      toast('Di mode demo tidak bisa bagikan video. Yuk pesan paket untuk acaramu!', 'warning');
+      setShowPriceModal(true);
+      return;
+    }
+    setIsDownloadingVideo(true);
+    setVideoProgress(8);
+    setVideoStatusText('Menyiapkan video story + suara...');
+
+    try {
+      const offCanvas = await renderHighResStripCanvas(fullFrameModal, activeEvent);
+      if (!offCanvas) throw new Error('Foto tidak tersedia.');
+
+      const isWeddingEvent = (activeEvent?.eventType || 'wedding') === 'wedding';
+      const result = await generatePhotostripVideo({
+        photoCanvas: offCanvas,
+        voiceUrl: fullFrameModal.voiceUrl,
+        guestName: fullFrameModal.guestName || 'Tamu',
+        coupleName: activeEvent?.displayName || 'Event',
+        eventName: activeEvent?.eventName || activeEvent?.displayName || 'Event',
+        audioLabel: isWeddingEvent ? 'Pesan Suara & Doa Restu' : 'Pesan Suara & Ucapan',
+        onProgress: (p, txt) => {
+          setVideoProgress(p);
+          setVideoStatusText(txt);
+        },
+      });
+
+      const { prefix } = getModalFilenames(fullFrameModal);
+      const videoFile = videoBlobToShareFile(result.blob, prefix, result.extension);
+      const eventTitle = activeEvent?.displayName || 'Photobooth Event';
+
+      const res = await shareFileNativeOrFallback({
+        file: videoFile,
+        title: `${fullFrameModal.guestName || 'Tamu'} — ${eventTitle}`,
+        text: `Pesan suara & kenangan di ${eventTitle}`,
+      });
+
+      if (res.status === 'shared') {
+        setActionSheetMode(null);
+      } else if (res.status === 'needs_gesture') {
+        setReadyShareFile(res.file);
+        setReadyShareLabel('Video Story + Audio Siap Dibagikan');
+      } else if (res.status === 'fallback_downloaded') {
+        setActionSheetMode(null);
+        toast('Video Story disimpan — siap diunggah ke IG Story, WA Status, atau TikTok!', 'info');
+      }
+    } catch (err) {
+      console.error('Share video error:', err);
+      toast('Gagal menyiapkan video untuk dibagikan.', 'error');
+    } finally {
+      setIsDownloadingVideo(false);
+      setVideoProgress(0);
+    }
+  };
+
+  const handleTriggerReadyShare = async () => {
+    if (!readyShareFile) return;
+    const eventTitle = activeEvent?.displayName || 'Photobooth Event';
+    const res = await shareFileNativeOrFallback({
+      file: readyShareFile,
+      title: `${fullFrameModal?.guestName || 'Tamu'} — ${eventTitle}`,
+      text: `Momen seru di ${eventTitle}`,
+    });
+    if (res.status === 'shared') {
+      setReadyShareFile(null);
+      setActionSheetMode(null);
+    } else if (res.status === 'fallback_downloaded') {
+      setReadyShareFile(null);
+      setActionSheetMode(null);
+      toast('File tersimpan — siap diunggah ke WhatsApp atau Instagram!', 'info');
+    }
+  };
 
   // Intercept phone back button when zoomed photo modal is active
   useEffect(() => {
@@ -547,143 +798,284 @@ export default function FullGalleryModal() {
                   </div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="w-full mt-0.5">
-                  <button
-                    onClick={async () => {
-                      if (isDemoMode) {
-                        toast('Di mode demo tidak bisa download foto. Yuk pesan paket untuk acaramu!', 'warning');
-                        setShowPriceModal(true);
-                        return;
-                      }
-                      setIsDownloadingStrip(true);
-                      const sanitize = (name) => (name || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
-                      const guest = sanitize(fullFrameModal.guestName) || 'Tamu';
-                      const couple = sanitize(activeEvent?.displayName) || 'Raka & Sabrina';
-                      const filename = `${guest}_${couple}.jpg`;
-
-                      let objectUrlToRevoke = null;
-                      try {
-                        let downloadUrl = null;
-                        const offCanvas = await renderHighResStripCanvas(fullFrameModal, activeEvent);
-
-                        if (offCanvas) {
-                          const blob = await new Promise((resolve) => offCanvas.toBlob(resolve, 'image/jpeg', 0.96));
-                          if (blob) {
-                            objectUrlToRevoke = URL.createObjectURL(blob);
-                            downloadUrl = objectUrlToRevoke;
-                          } else {
-                            downloadUrl = offCanvas.toDataURL('image/jpeg', 0.96);
+                {/* Apple-Minimalist Action Bar (Bagikan & Unduh HD) */}
+                {(() => {
+                  const hasVoiceNote = Boolean(fullFrameModal.hasVoice || fullFrameModal.voiceUrl);
+                  return (
+                    <div className="w-full mt-1 grid grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isDemoMode) {
+                            toast('Di mode demo tidak bisa bagikan foto. Yuk pesan paket untuk acaramu!', 'warning');
+                            setShowPriceModal(true);
+                            return;
                           }
-                        } else {
-                          downloadUrl = fullFrameModal.stripImage || fullFrameModal.photos?.[0];
-                        }
+                          if (hasVoiceNote) {
+                            setReadyShareFile(null);
+                            setActionSheetMode('share');
+                          } else {
+                            handleSharePhotoOnly();
+                          }
+                        }}
+                        disabled={isDownloadingStrip || isDownloadingVideo}
+                        className="h-11 px-4 rounded-2xl bg-white hover:bg-white/90 text-[#1C1C1E] text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(0,0,0,0.45)] transition active:scale-[0.97] cursor-pointer disabled:opacity-60"
+                      >
+                        <Share size={15} strokeWidth={2.2} />
+                        <span>Bagikan</span>
+                      </button>
 
-                        if (!downloadUrl) {
-                          toast('Foto tidak tersedia untuk diunduh.', 'error');
-                          return;
-                        }
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isDemoMode) {
+                            toast('Di mode demo tidak bisa download foto. Yuk pesan paket untuk acaramu!', 'warning');
+                            setShowPriceModal(true);
+                            return;
+                          }
+                          if (hasVoiceNote) {
+                            setReadyShareFile(null);
+                            setActionSheetMode('download');
+                          } else {
+                            handleDownloadStripHd();
+                          }
+                        }}
+                        disabled={isDownloadingStrip || isDownloadingVideo}
+                        className="h-11 px-4 rounded-2xl bg-white/[0.12] hover:bg-white/[0.18] text-white border border-white/[0.18] text-xs sm:text-[13px] font-medium flex items-center justify-center gap-2 backdrop-blur-md transition active:scale-[0.97] cursor-pointer disabled:opacity-60"
+                      >
+                        {isDownloadingStrip ? (
+                          <Loader2 size={15} className="animate-spin text-white/80" />
+                        ) : (
+                          <Download size={15} strokeWidth={2} />
+                        )}
+                        <span>Unduh HD</span>
+                      </button>
+                    </div>
+                  );
+                })()}
 
-                        const a = document.createElement('a');
-                        a.href = downloadUrl;
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        toast(`Photo strip HD berhasil diunduh (${filename})!`, 'success');
-                      } catch (e) {
-                        console.error('HD strip download error:', e);
-                        toast('Gagal memproses photo strip HD.', 'error');
-                      } finally {
-                        if (objectUrlToRevoke) {
-                          setTimeout(() => URL.revokeObjectURL(objectUrlToRevoke), 3000);
-                        }
-                        setIsDownloadingStrip(false);
+              </div>
+
+              {/* Apple Glass Action Sheet (Pilih Format Bagikan / Unduh) */}
+              <AnimatePresence>
+                {actionSheetMode && (
+                  <div
+                    className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-3 sm:p-4"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isDownloadingVideo) {
+                        setActionSheetMode(null);
+                        setReadyShareFile(null);
                       }
                     }}
-                    disabled={isDownloadingStrip}
-                    className="w-full py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] border border-[#E5C158]/50 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xl transition active:scale-95 cursor-pointer disabled:opacity-60"
                   >
-                    {isDownloadingStrip ? (
-                      <>
-                        <Loader2 size={15} className="animate-spin text-amber-200" />
-                        <span>Menyiapkan Photo Strip HD...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download size={15} />
-                        <span>Download Photo Strip HD</span>
-                      </>
-                    )}
-                  </button>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 bg-black/70 backdrop-blur-md"
+                    />
 
-                  {/* Option 2: Download Video + Audio MP4 Story (If voice note exists) */}
-                  {(fullFrameModal.hasVoice || fullFrameModal.voiceUrl) && (
-                    <button
-                      onClick={async () => {
-                        if (isDemoMode) {
-                          toast('Di mode demo tidak bisa download video. Yuk pesan paket untuk acaramu!', 'warning');
-                          setShowPriceModal(true);
-                          return;
-                        }
-                        setIsDownloadingVideo(true);
-                        toast('Menyiapkan video photo strip + rekaman suara...', 'info');
-
-                        try {
-                          const offCanvas = await renderHighResStripCanvas(fullFrameModal, activeEvent);
-                          if (!offCanvas) {
-                            throw new Error('Tidak ada foto untuk dirender ke video.');
-                          }
-
-                          const result = await generatePhotostripVideo({
-                            photoCanvas: offCanvas,
-                            voiceUrl: fullFrameModal.voiceUrl,
-                            guestName: fullFrameModal.guestName || 'Tamu Undangan',
-                            coupleName: activeEvent?.displayName || 'Sabrina & Raka',
-                            eventName: activeEvent?.eventName || 'The Wedding',
-                          });
-
-                          const videoUrl = URL.createObjectURL(result.blob);
-                          const a = document.createElement('a');
-                          const sanitize = (name) => (name || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
-                          const guest = sanitize(fullFrameModal.guestName) || 'Tamu';
-                          const filename = `${guest}_voice_story.${result.extension}`;
-                          a.download = filename;
-                          a.href = videoUrl;
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                          setTimeout(() => URL.revokeObjectURL(videoUrl), 3000);
-                          toast(`Video MP4 + Suara berhasil diunduh (${filename})! 🎬`, 'success');
-                        } catch (err) {
-                          console.error('Video download error:', err);
-                          toast('Gagal memproses video bersuara.', 'error');
-                        } finally {
-                          setIsDownloadingVideo(false);
-                        }
-                      }}
-                      disabled={isDownloadingVideo}
-                      className="w-full mt-2 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#8C6534] via-[#A3783F] to-[#8C6534] hover:from-[#7A562B] hover:to-[#7A562B] text-white border border-[#BFA069]/40 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xl transition active:scale-95 cursor-pointer disabled:opacity-50"
+                    <motion.div
+                      initial={{ opacity: 0, y: 24, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 24, scale: 0.97 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="relative w-full max-w-[360px] bg-[#1C1C1E]/95 border border-white/[0.12] rounded-[28px] p-5 text-white shadow-[0_24px_64px_rgba(0,0,0,0.85)] z-10 font-sans mb-2 sm:mb-0"
                     >
-                      {isDownloadingVideo ? (
-                        <>
-                          <Loader2 size={15} className="animate-spin text-amber-200" />
-                          <span>Memproses Video MP4...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Video size={15} className="text-amber-200" />
-                          <span>Download Video + Suara (MP4 Story)</span>
-                        </>
-                      )}
-                    </button>
-                  )}
+                      <div className="w-9 h-1 rounded-full bg-white/20 mx-auto mb-3" />
 
-                </div>
+                      {!isDownloadingVideo && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActionSheetMode(null);
+                            setReadyShareFile(null);
+                          }}
+                          className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/[0.08] hover:bg-white/[0.16] text-white/60 hover:text-white flex items-center justify-center transition active:scale-90 cursor-pointer"
+                          title="Tutup"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+
+                      <div className="text-center pt-0.5 pb-4">
+                        <h3 className="text-base font-semibold text-white tracking-tight">
+                          {actionSheetMode === 'share' ? 'Bagikan Kenangan' : 'Unduh Kenangan'}
+                        </h3>
+                        <p className="text-xs text-white/50 mt-0.5">
+                          {actionSheetMode === 'share'
+                            ? 'Pilih format yang ingin dibagikan ke sosmed'
+                            : 'Pilih format file yang ingin disimpan'}
+                        </p>
+                      </div>
+
+                      {isDownloadingVideo ? (
+                        <div className="py-5 px-2 flex flex-col items-center text-center">
+                          <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center mb-3">
+                            <Loader2 size={22} className="text-white/90 animate-spin" />
+                          </div>
+                          <h4 className="text-sm font-medium text-white">
+                            Menyiapkan Video Story...
+                          </h4>
+                          <p className="text-xs text-white/50 mt-1 max-w-[250px]">
+                            {videoStatusText || 'Menggabungkan foto dan rekaman suara...'}
+                          </p>
+                          <div className="w-full bg-white/[0.08] rounded-full h-1.5 mt-4 overflow-hidden">
+                            <motion.div
+                              className="bg-white h-full rounded-full"
+                              initial={{ width: '8%' }}
+                              animate={{ width: `${Math.max(8, videoProgress)}%` }}
+                              transition={{ ease: 'easeOut', duration: 0.2 }}
+                            />
+                          </div>
+                          <span className="text-[11px] font-mono text-white/40 mt-2">
+                            {videoProgress}%
+                          </span>
+                        </div>
+                      ) : readyShareFile ? (
+                        <div className="py-3 flex flex-col items-center text-center space-y-3">
+                          <div className="w-12 h-12 rounded-2xl bg-white text-[#1C1C1E] flex items-center justify-center shadow-lg">
+                            <Share size={20} strokeWidth={2.2} />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-semibold text-white">
+                              {readyShareLabel || 'Siap Dibagikan'}
+                            </h4>
+                            <p className="text-xs text-white/55 mt-1 max-w-[260px]">
+                              Ketuk tombol di bawah untuk membuka menu bagikan ke WhatsApp, IG Story, atau TikTok.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleTriggerReadyShare}
+                            className="w-full py-3 rounded-2xl bg-white hover:bg-white/90 text-[#1C1C1E] text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-lg"
+                          >
+                            <Share size={15} />
+                            <span>Bagikan Sekarang</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerFileDownload(readyShareFile, readyShareFile.name);
+                              toast('File berhasil disimpan ke perangkat.', 'success');
+                            }}
+                            className="w-full py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white/80 text-xs font-medium transition cursor-pointer"
+                          >
+                            Simpan ke Perangkat Saja
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {/* Choice 1: Hanya Foto Strip */}
+                          <button
+                            type="button"
+                            onClick={actionSheetMode === 'share' ? handleSharePhotoOnly : handleDownloadStripHd}
+                            className="w-full p-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.10] active:scale-[0.98] border border-white/[0.08] transition flex items-center justify-between gap-3 text-left group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/[0.06] flex items-center justify-center text-white/90 flex-shrink-0">
+                                <ImageIcon size={18} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[13px] font-medium text-white">
+                                    Hanya Foto Strip
+                                  </span>
+                                  <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-white/[0.12] text-white/70">
+                                    JPG HD
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-white/50 truncate mt-0.5">
+                                  {actionSheetMode === 'share'
+                                    ? 'Chat WA, Status WA & IG Story'
+                                    : 'Ukuran cetak & galeri resolusi tinggi'}
+                                </p>
+                              </div>
+                            </div>
+                            <ChevronRight size={16} className="text-white/40 group-hover:text-white flex-shrink-0 transition" />
+                          </button>
+
+                          {/* Choice 2: Foto + Audio Doa (Video Story 9:16) */}
+                          <button
+                            type="button"
+                            onClick={actionSheetMode === 'share' ? handleSharePhotoWithVoice : handleDownloadVoiceVideo}
+                            className="w-full p-3.5 rounded-2xl bg-white/[0.09] hover:bg-white/[0.14] active:scale-[0.98] border border-white/[0.16] transition flex items-center justify-between gap-3 text-left group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-9 h-9 rounded-xl bg-white text-[#1C1C1E] flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <Video size={18} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[13px] font-medium text-white">
+                                    Foto + Audio Doa
+                                  </span>
+                                  <span className="text-[10px] font-medium px-1.5 py-0.2 rounded bg-white text-[#1C1C1E]">
+                                    9:16
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-white/55 truncate mt-0.5">
+                                  {actionSheetMode === 'share'
+                                    ? 'IG Story, WA Status & TikTok bersuara'
+                                    : 'Video vertikal 9:16 dengan rekaman suara'}
+                                </p>
+                              </div>
+                            </div>
+                            <ChevronRight size={16} className="text-white/60 group-hover:text-white flex-shrink-0 transition" />
+                          </button>
+
+                          {/* Choice 3 (Share mode only): Quick WhatsApp Link */}
+                          {actionSheetMode === 'share' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const eventTitle = activeEvent?.displayName || 'Photobooth Event';
+                                openWhatsAppLinkShare({
+                                  text: `Lihat foto strip dari ${fullFrameModal.guestName || 'tamu'} di ${eventTitle}:`,
+                                  url: window.location.href,
+                                });
+                                setActionSheetMode(null);
+                              }}
+                              className="w-full p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] active:scale-[0.98] border border-white/[0.06] transition flex items-center justify-between gap-3 text-left group cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-xl bg-white/[0.06] flex items-center justify-center text-white/75 flex-shrink-0">
+                                  <MessageCircle size={15} />
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="text-xs font-medium text-white/85">
+                                    Kirim Link ke WhatsApp
+                                  </span>
+                                  <p className="text-[10.5px] text-white/45 truncate">
+                                    Bagikan tautan galeri langsung via WA
+                                  </p>
+                                </div>
+                              </div>
+                              <ChevronRight size={15} className="text-white/35 group-hover:text-white flex-shrink-0 transition" />
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActionSheetMode(null);
+                              setReadyShareFile(null);
+                            }}
+                            className="w-full py-2.5 rounded-xl text-xs font-medium text-white/50 hover:text-white/80 transition cursor-pointer text-center mt-1"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      )}
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
 
             </div>
-          </div>
-        );
+          );
       })()}
       </AnimatePresence>
 

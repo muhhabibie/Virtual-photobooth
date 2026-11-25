@@ -10,6 +10,7 @@ export async function generatePhotostripVideo({
   guestName = 'Tamu Undangan',
   coupleName = 'Sabrina & Raka',
   eventName = 'The Wedding',
+  audioLabel = 'Pesan Suara & Ucapan',
   onProgress = () => {},
 }) {
   if (!photoCanvas) {
@@ -156,21 +157,34 @@ export async function generatePhotostripVideo({
       ctx.fillStyle = radialGlow;
       ctx.fillRect(0, 0, 720, 1280);
 
-      // --- 3. Header Text: Event & Couple Name ---
+      // --- 3. Header Text: Event & Couple Name (avoid duplicate title) ---
+      const cleanEvent = (eventName || '').trim();
+      const cleanCouple = (coupleName || '').trim();
+      const isDuplicateHeader = !cleanEvent || cleanEvent.toLowerCase() === cleanCouple.toLowerCase();
+
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#C4A46C';
-      ctx.font = '600 14px "Cinzel", "Playfair Display", serif';
-      ctx.letterSpacing = '4px';
-      ctx.fillText(eventName.toUpperCase(), 360, 54);
+      if (!isDuplicateHeader) {
+        ctx.save();
+        ctx.fillStyle = '#C4A46C';
+        ctx.font = '600 13px "Cinzel", "Playfair Display", serif';
+        ctx.letterSpacing = '3px';
+        ctx.fillText(cleanEvent.toUpperCase(), 360, 52);
+        ctx.restore();
 
-      ctx.fillStyle = '#F5D77F';
-      ctx.font = '700 24px "Playfair Display", serif';
-      ctx.fillText(coupleName, 360, 84);
+        ctx.fillStyle = '#F5D77F';
+        ctx.font = '700 24px "Playfair Display", serif';
+        ctx.fillText(cleanCouple, 360, 82);
+      } else {
+        ctx.fillStyle = '#F5D77F';
+        ctx.font = '700 25px "Playfair Display", serif';
+        ctx.fillText(cleanCouple || cleanEvent, 360, 74);
+      }
 
-      // --- 4. Render Photo Strip (Crisp High-Res in Center) ---
-      // Calculate strip dimensions to fit gracefully between header (90px) and bottom audio bar (1120px)
-      const maxStripHeight = 960;
-      const maxStripWidth = 520;
+      // --- 4. Render Photo Strip (Crisp High-Res, Vertically Centered) ---
+      const topSafeY = 104;
+      const bottomSafeY = 1072;
+      const maxStripHeight = bottomSafeY - topSafeY;
+      const maxStripWidth = 530;
       const stripRatio = photoCanvas.width / photoCanvas.height;
 
       let drawW = maxStripHeight * stripRatio;
@@ -181,7 +195,7 @@ export async function generatePhotostripVideo({
       }
 
       const drawX = (720 - drawW) / 2;
-      const drawY = 105;
+      const drawY = Math.round(topSafeY + (maxStripHeight - drawH) / 2);
 
       // Soft drop shadow under photo strip
       ctx.save();
@@ -225,7 +239,7 @@ export async function generatePhotostripVideo({
       ctx.textAlign = 'left';
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '700 17px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText(`Pesan Suara & Doa Restu`, cardX + 24, cardY + 36);
+      ctx.fillText(audioLabel, cardX + 24, cardY + 36);
 
       ctx.fillStyle = '#C4A46C';
       ctx.font = '500 13px "Plus Jakarta Sans", sans-serif';
