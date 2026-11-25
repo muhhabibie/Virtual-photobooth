@@ -9,9 +9,87 @@ import SpotifyVoicePlayer from '../ui/SpotifyVoicePlayer';
 import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
 import { getEventHeaderTitle, getEventDisplayName } from '../../utils/eventHeader';
 import PhotostripThumbnail from './PhotostripThumbnail';
-import { renderMasterPhotoStrip } from '../../utils/stripRenderer';
+import { renderMasterPhotoStrip, renderBotanicalWeddingStrip } from '../../utils/stripRenderer';
+import { MITUFAYA_FRAMES, getEventGraphicFrames, getCachedFrameImage } from '../../data/eventFrames';
 import { generatePhotostripVideo } from '../../utils/videoGenerator';
 import PriceListModal from '../ui/PriceListModal';
+
+/**
+ * Renders a full-resolution (2x Retina) photostrip canvas from raw submission photos,
+ * awaiting web fonts and any graphic overlay image before returning the canvas.
+ */
+async function renderHighResStripCanvas(item, activeEvent) {
+  const photosList = Array.isArray(item?.photos) && item.photos.length > 0
+    ? item.photos
+    : (item?.photo ? [item.photo] : []);
+
+  if (photosList.length === 0) return null;
+
+  if (document.fonts?.ready) {
+    try {
+      await document.fonts.ready;
+    } catch {}
+  }
+
+  const loadedImgs = await Promise.all(
+    photosList.map((src) => new Promise((res) => {
+      if (!src) return res(null);
+      const url = typeof src === 'string' ? src : (src?.dataUrl || '');
+      if (!url) return res(null);
+      const img = new Image();
+      if (url.startsWith('http')) {
+        img.crossOrigin = 'anonymous';
+      }
+      img.onload = () => res(img);
+      img.onerror = () => res(null);
+      img.src = url;
+    }))
+  );
+
+  const valid = loadedImgs.filter(Boolean).map((img) => ({ canvas: img, dataUrl: img.src }));
+  if (valid.length === 0) return null;
+
+  // Ensure graphic frame overlay PNG is completely loaded before offscreen canvas draw
+  const graphicId = item.graphicFrameId || null;
+  if (graphicId) {
+    const allFrames = [...MITUFAYA_FRAMES, ...getEventGraphicFrames(activeEvent)];
+    const gFrame = allFrames.find((f) => f.id === graphicId);
+    if (gFrame?.overlayUrl) {
+      const overlayImg = getCachedFrameImage(gFrame.overlayUrl);
+      if (overlayImg && (!overlayImg.complete || overlayImg.naturalWidth === 0)) {
+        await new Promise((resolve) => {
+          overlayImg.addEventListener('load', resolve, { once: true });
+          overlayImg.addEventListener('error', resolve, { once: true });
+        });
+      }
+    }
+  }
+
+  const offCanvas = document.createElement('canvas');
+  if (item.stripStyle === 'botanical-wedding') {
+    renderBotanicalWeddingStrip(offCanvas, {
+      photos: valid,
+      targetCount: valid.length,
+      guestName: item.guestName,
+      guestMessage: item.message || item.guestMessage,
+      activeEvent,
+      scale: 2,
+    });
+  } else {
+    renderMasterPhotoStrip(offCanvas, {
+      photos: valid,
+      targetCount: valid.length,
+      stripColor: item.colorHex || item.stripColor || '#6B111F',
+      guestName: item.guestName,
+      guestMessage: item.message || item.guestMessage,
+      activeEvent,
+      graphicFrameId: graphicId,
+      scale: 2,
+    });
+  }
+
+  return offCanvas;
+}
 
 function getNowIndonesianDate() {
   const now = new Date();
@@ -52,6 +130,7 @@ export default function FullGalleryModal() {
   const [likes, setLikes] = useState({});
   const [fullFrameModal, setFullFrameModal] = useState(null);
   const [isZipping, setIsZipping] = useState(false);
+  const [isDownloadingStrip, setIsDownloadingStrip] = useState(false);
   const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [hiddenMockIds] = useState(() => {
@@ -477,55 +556,65 @@ export default function FullGalleryModal() {
                         setShowPriceModal(true);
                         return;
                       }
+                      setIsDownloadingStrip(true);
                       const sanitize = (name) => (name || '').trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ');
                       const guest = sanitize(fullFrameModal.guestName) || 'Tamu';
                       const couple = sanitize(activeEvent?.displayName) || 'Raka & Sabrina';
                       const filename = `${guest}_${couple}.jpg`;
 
-                      let downloadUrl = fullFrameModal.stripImage;
-                      if (!downloadUrl) {
-                        try {
-                          const offCanvas = document.createElement('canvas');
-                          const photosList = Array.isArray(fullFrameModal.photos) && fullFrameModal.photos.length > 0
-                            ? fullFrameModal.photos
-                            : (fullFrameModal.photo ? [fullFrameModal.photo] : []);
-                          
-                          const loadedImgs = await Promise.all(
-                            photosList.map(src => new Promise(res => {
-                              const img = new Image();
-                              img.crossOrigin = 'anonymous';
-                              img.onload = () => res(img);
-                              img.onerror = () => res(null);
-                              img.src = typeof src === 'string' ? src : (src?.dataUrl || '');
-                            }))
-                          );
-                          const valid = loadedImgs.filter(Boolean).map(img => ({ canvas: img, dataUrl: img.src }));
-                          renderMasterPhotoStrip(offCanvas, {
-                            photos: valid,
-                            targetCount: valid.length,
-                            stripColor: fullFrameModal.colorHex || fullFrameModal.stripColor || '#6B111F',
-                            guestName: fullFrameModal.guestName,
-                            guestMessage: fullFrameModal.message || fullFrameModal.guestMessage,
-                            activeEvent,
-                            graphicFrameId: fullFrameModal.graphicFrameId || null,
-                            scale: 2,
-                          });
-                          downloadUrl = offCanvas.toDataURL('image/jpeg', 0.95);
-                        } catch (e) {
-                          downloadUrl = fullFrameModal.photos?.[0];
-                        }
-                      }
+                      let objectUrlToRevoke = null;
+                      try {
+                        let downloadUrl = null;
+                        const offCanvas = await renderHighResStripCanvas(fullFrameModal, activeEvent);
 
-                      const a = document.createElement('a');
-                      a.href = downloadUrl;
-                      a.download = filename;
-                      a.click();
-                      toast(`Photo strip berhasil diunduh (${filename})! 💍`, 'success');
+                        if (offCanvas) {
+                          const blob = await new Promise((resolve) => offCanvas.toBlob(resolve, 'image/jpeg', 0.96));
+                          if (blob) {
+                            objectUrlToRevoke = URL.createObjectURL(blob);
+                            downloadUrl = objectUrlToRevoke;
+                          } else {
+                            downloadUrl = offCanvas.toDataURL('image/jpeg', 0.96);
+                          }
+                        } else {
+                          downloadUrl = fullFrameModal.stripImage || fullFrameModal.photos?.[0];
+                        }
+
+                        if (!downloadUrl) {
+                          toast('Foto tidak tersedia untuk diunduh.', 'error');
+                          return;
+                        }
+
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        toast(`Photo strip HD berhasil diunduh (${filename})!`, 'success');
+                      } catch (e) {
+                        console.error('HD strip download error:', e);
+                        toast('Gagal memproses photo strip HD.', 'error');
+                      } finally {
+                        if (objectUrlToRevoke) {
+                          setTimeout(() => URL.revokeObjectURL(objectUrlToRevoke), 3000);
+                        }
+                        setIsDownloadingStrip(false);
+                      }
                     }}
-                    className="w-full py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] border border-[#E5C158]/50 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xl transition active:scale-95 cursor-pointer"
+                    disabled={isDownloadingStrip}
+                    className="w-full py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#6B111F] via-[#8A1828] to-[#6B111F] hover:from-[#520C16] hover:to-[#520C16] text-[#F5D77F] border border-[#E5C158]/50 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xl transition active:scale-95 cursor-pointer disabled:opacity-60"
                   >
-                    <Download size={15} />
-                    <span>Download Photo Strip HD</span>
+                    {isDownloadingStrip ? (
+                      <>
+                        <Loader2 size={15} className="animate-spin text-amber-200" />
+                        <span>Menyiapkan Photo Strip HD...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download size={15} />
+                        <span>Download Photo Strip HD</span>
+                      </>
+                    )}
                   </button>
 
                   {/* Option 2: Download Video + Audio MP4 Story (If voice note exists) */}
@@ -541,31 +630,10 @@ export default function FullGalleryModal() {
                         toast('Menyiapkan video photo strip + rekaman suara...', 'info');
 
                         try {
-                          const offCanvas = document.createElement('canvas');
-                          const photosList = Array.isArray(fullFrameModal.photos) && fullFrameModal.photos.length > 0
-                            ? fullFrameModal.photos
-                            : (fullFrameModal.photo ? [fullFrameModal.photo] : []);
-                          
-                          const loadedImgs = await Promise.all(
-                            photosList.map(src => new Promise(res => {
-                              const img = new Image();
-                              img.crossOrigin = 'anonymous';
-                              img.onload = () => res(img);
-                              img.onerror = () => res(null);
-                              img.src = typeof src === 'string' ? src : (src?.dataUrl || '');
-                            }))
-                          );
-                          const valid = loadedImgs.filter(Boolean).map(img => ({ canvas: img, dataUrl: img.src }));
-                          renderMasterPhotoStrip(offCanvas, {
-                            photos: valid,
-                            targetCount: valid.length,
-                            stripColor: fullFrameModal.colorHex || fullFrameModal.stripColor || '#6B111F',
-                            guestName: fullFrameModal.guestName,
-                            guestMessage: fullFrameModal.message || fullFrameModal.guestMessage,
-                            activeEvent,
-                            graphicFrameId: fullFrameModal.graphicFrameId || null,
-                            scale: 2,
-                          });
+                          const offCanvas = await renderHighResStripCanvas(fullFrameModal, activeEvent);
+                          if (!offCanvas) {
+                            throw new Error('Tidak ada foto untuk dirender ke video.');
+                          }
 
                           const result = await generatePhotostripVideo({
                             photoCanvas: offCanvas,
