@@ -1,16 +1,10 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Share2, Plus, Volume2, ArrowRight, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 import { useToast } from '../ui/Toast';
 import { MOCK_GALLERY_PHOTOS } from '../../data/mockGalleryData';
-import { getEventHeaderTitle } from '../../utils/eventHeader';
 import PhotostripThumbnail from '../gallery/PhotostripThumbnail';
-
-const romanticTransition = {
-  duration: 1.1,
-  ease: [0.22, 1, 0.36, 1],
-};
 
 export default function EventGalleryFeed() {
   const { 
@@ -22,7 +16,8 @@ export default function EventGalleryFeed() {
     guestMessage, 
     voiceUrl, 
     activeEvent, 
-    savedSubmissions 
+    savedSubmissions,
+    introReady,
   } = useBooth();
   const { toast } = useToast();
 
@@ -98,6 +93,7 @@ export default function EventGalleryFeed() {
   }, [baseCards]);
 
   // Real-time Gesture & Motion Coordinates
+  const sectionRef = useRef(null);
   const containerRef = useRef(null);
   const trackRef = useRef(null);
   const currentXRef = useRef(0);
@@ -107,9 +103,25 @@ export default function EventGalleryFeed() {
   const lastTimeRef = useRef(performance.now());
   const singleSetWidthRef = useRef(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [isSectionVisible, setIsSectionVisible] = useState(false);
   const velocityRef = useRef(0);
   const lastPointerXRef = useRef(0);
   const lastPointerTimeRef = useRef(0);
+
+  // Only run rAF auto-scroll when the splash intro is done AND this section is near the viewport
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setIsSectionVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsSectionVisible(entry.isIntersecting),
+      { rootMargin: '250px 0px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Measure single set width for seamless infinite modulo wrapping
   const updateMetrics = useCallback(() => {
@@ -130,6 +142,8 @@ export default function EventGalleryFeed() {
 
   // CONTINUOUS SLIDING FROM RIGHT TO LEFT (Infinite Smooth Hardware-Accelerated Animation)
   useEffect(() => {
+    if (!introReady || !isSectionVisible || displayCards.length === 0) return;
+
     let animId;
 
     const animate = (time) => {
@@ -170,7 +184,7 @@ export default function EventGalleryFeed() {
     lastTimeRef.current = performance.now();
     animId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animId);
-  }, [isHovered]);
+  }, [isHovered, introReady, isSectionVisible, displayCards.length]);
 
   // TOUCH SWIPE (MOBILE) & MOUSE DRAG (LAPTOP) HANDLERS
   const handlePointerDown = (e) => {
@@ -250,7 +264,7 @@ export default function EventGalleryFeed() {
     : 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1600&auto=format&fit=crop&q=85';
 
   return (
-    <section id="gallery-feed" className="relative bg-gradient-to-b from-[#0E050A] via-[#0E050A] to-[#14060C] text-white pt-0 pb-24 sm:pb-28 overflow-hidden select-none">
+    <section ref={sectionRef} id="gallery-feed" className="relative bg-gradient-to-b from-[#0E050A] via-[#0E050A] to-[#14060C] text-white pt-0 pb-24 sm:pb-28 overflow-hidden select-none">
       
       {/* ================= 🌟 1. TOP ROMANTIC WEDDING PHOTO WITH CINEMATIC MASK FADE 🌟 ================= */}
       <div className="relative w-full h-[280px] sm:h-[340px] overflow-hidden bg-gradient-to-b from-white via-[#0E050A] to-[#0E050A]">
@@ -258,6 +272,7 @@ export default function EventGalleryFeed() {
         <img
           src={backdropPhoto}
           alt={coupleName}
+          decoding="async"
           onError={(e) => {
             e.currentTarget.onerror = null;
             e.currentTarget.src = 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=1600&auto=format&fit=crop&q=85';
@@ -277,32 +292,21 @@ export default function EventGalleryFeed() {
           }}
         />
 
-        {/* Bottom Soft Opacity Blur Overlay */}
-        <div className="absolute bottom-0 inset-x-0 h-28 sm:h-36 bg-gradient-to-t from-[#0E050A] via-[#0E050A]/70 to-transparent backdrop-blur-[2px] pointer-events-none" />
+        {/* Bottom Soft Opacity Fade */}
+        <div className="absolute bottom-0 inset-x-0 h-28 sm:h-36 bg-gradient-to-t from-[#0E050A] via-[#0E050A]/75 to-transparent pointer-events-none" />
       </div>
 
-      {/* ================= 🌟 GRAND MULTI-LAYERED AMBIENT SPOTLIGHT GRADIENT AURA 🌟 ================= */}
-      {/* Layer 1: Giant Deep Burgundy & Wine Crimson Backdrop Radiance */}
+      {/* ================= 🌟 GRAND MULTI-LAYERED AMBIENT SPOTLIGHT GRADIENT AURA (Zero heavy CSS blur) 🌟 ================= */}
       <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] max-w-[1500px] h-[850px] sm:h-[1150px] pointer-events-none z-0 rounded-full opacity-85 blur-[120px] sm:blur-[160px]"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] max-w-[1500px] h-[900px] sm:h-[1150px] pointer-events-none z-0"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(138, 24, 40, 0.85) 0%, rgba(107, 17, 31, 0.60) 35%, rgba(74, 8, 21, 0.40) 60%, rgba(196, 164, 108, 0.20) 80%, transparent 95%)'
+          background: 'radial-gradient(ellipse at center, rgba(138, 24, 40, 0.55) 0%, rgba(107, 17, 31, 0.35) 35%, rgba(74, 8, 21, 0.18) 60%, transparent 78%)'
         }}
       />
-
-      {/* Layer 2: Core Golden Light Beam (Pendaran Emas Megah) */}
       <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] max-w-[950px] h-[480px] sm:h-[680px] pointer-events-none z-0 rounded-full opacity-60 blur-[85px] sm:blur-[115px]"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] max-w-[950px] h-[520px] sm:h-[680px] pointer-events-none z-0"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(245, 215, 127, 0.52) 0%, rgba(212, 175, 55, 0.32) 40%, rgba(138, 24, 40, 0.22) 70%, transparent 88%)'
-        }}
-      />
-
-      {/* Layer 3: Header Golden Crown Beam */}
-      <div 
-        className="absolute top-10 left-1/2 -translate-x-1/2 w-[850px] sm:w-[1200px] h-[450px] pointer-events-none z-0 rounded-full opacity-50 blur-[110px]"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(245, 215, 127, 0.48) 0%, rgba(138, 24, 40, 0.35) 55%, transparent 80%)'
+          background: 'radial-gradient(ellipse at center, rgba(245, 215, 127, 0.24) 0%, rgba(212, 175, 55, 0.12) 40%, transparent 72%)'
         }}
       />
 
@@ -310,27 +314,17 @@ export default function EventGalleryFeed() {
       <div className="relative z-20 max-w-xl mx-auto px-4 -mt-32 sm:-mt-36 text-center mb-6">
         
         {/* Gold Ornament Pill Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.2 }}
-          transition={romanticTransition}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#180A12]/80 backdrop-blur-md border border-[#C4A46C]/40 shadow-lg shadow-black/50 mb-2.5"
-        >
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#180A12]/80 backdrop-blur-md border border-[#C4A46C]/40 shadow-lg shadow-black/50 mb-2.5">
           <span 
             style={{ fontFamily: "'Cinzel', Georgia, serif" }}
             className="text-[9px] sm:text-[10px] font-bold tracking-[0.28em] text-[#F5D77F] uppercase"
           >
             MOMENTS & GUESTBOOK
           </span>
-        </motion.div>
+        </div>
 
         {/* Big Grand Aesthetic Title: Galeri Pengunjung (No Font Clipping) */}
-        <motion.h2
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.2 }}
-          transition={{ ...romanticTransition, delay: 0.1 }}
+        <h2
           className="text-5xl xs:text-6xl sm:text-7xl font-normal leading-tight my-1 drop-shadow-2xl pt-4 pb-4 px-6 overflow-visible"
           style={{ 
             fontFamily: "'Great Vibes', 'Alex Brush', cursive",
@@ -341,15 +335,10 @@ export default function EventGalleryFeed() {
           }}
         >
           Galeri Pengunjung
-        </motion.h2>
+        </h2>
 
         {/* Subtitle Divider & Quote */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: false, amount: 0.2 }}
-          transition={{ ...romanticTransition, delay: 0.2 }}
-        >
+        <div>
           <div className="flex items-center justify-center gap-3 my-1 w-full max-w-sm mx-auto">
             <div className="h-px bg-gradient-to-r from-transparent via-[#C4A46C]/60 to-transparent flex-1" />
             <span className="text-[9px] font-serif tracking-[0.25em] text-[#F5D77F] uppercase font-bold">
@@ -363,82 +352,97 @@ export default function EventGalleryFeed() {
               ? '"Setiap senyuman, doa restu, dan kenangan manis yang terabadikan abadi dari seluruh tamu tercinta."'
               : '"Setiap senyuman, keseruan, dan kenangan manis yang terabadikan abadi dari seluruh pengunjung tercinta."'}
           </p>
-        </motion.div>
-      </div>
-
-      {/* ================= 🌟 3. RIGHT-TO-LEFT HORIZONTAL SWIPEABLE & AUTO-SLIDING CAROUSEL 🌟 ================= */}
-      <div 
-        ref={containerRef}
-        className="relative w-full overflow-hidden py-3 select-none group cursor-grab active:cursor-grabbing touch-pan-y z-20"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => {
-          setIsHovered(false);
-          handlePointerUp();
-        }}
-      >
-        {/* Navigation Chevrons for Laptop / Desktop */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleStepScroll('left');
-          }}
-          className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-[#F5D77F] shadow-2xl border border-amber-400/40 items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer active:scale-95 backdrop-blur-sm"
-          title="Geser Kiri"
-        >
-          <ChevronLeft size={22} className="text-[#F5D77F]" />
-        </button>
-
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleStepScroll('right');
-          }}
-          className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-[#F5D77F] shadow-2xl border border-amber-400/40 items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer active:scale-95 backdrop-blur-sm"
-          title="Geser Kanan"
-        >
-          <ChevronRight size={22} className="text-[#F5D77F]" />
-        </button>
-
-        {/* Infinite Hardware-Accelerated Sliding Track (Always moving right to left + 100% swipeable) */}
-        <div 
-          ref={trackRef}
-          className="flex items-center gap-3.5 sm:gap-5 will-change-transform"
-          style={{ width: 'max-content' }}
-        >
-          {displayCards.map((card, idx) => (
-            <div
-              key={`${card.id}-${idx}`}
-              onClick={() => {
-                if (dragDistanceRef.current < 8) {
-                  openGalleryModal();
-                }
-              }}
-              className="w-44 xs:w-50 sm:w-56 flex-shrink-0 cursor-pointer transition-all duration-300 transform hover:scale-105"
-            >
-              <PhotostripThumbnail
-                item={card}
-                activeEvent={activeEvent}
-                className="w-full shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_20px_rgba(245,215,127,0.12)] border border-white/20 hover:border-amber-400/50 pointer-events-none select-none"
-              />
-            </div>
-          ))}
         </div>
       </div>
 
+      {/* ================= 🌟 3. RIGHT-TO-LEFT HORIZONTAL SWIPEABLE & AUTO-SLIDING CAROUSEL 🌟 ================= */}
+      {displayCards.length === 0 ? (
+        <div className="relative z-20 max-w-sm mx-auto px-4 py-8 text-center">
+          <div className="rounded-3xl bg-[#1C0814]/85 border border-[#C4A46C]/35 p-6 shadow-2xl">
+            <p className="text-sm font-serif text-[#F5D77F] font-semibold">
+              Belum ada foto di galeri event ini
+            </p>
+            <p className="text-xs text-amber-100/70 mt-1.5 mb-4 leading-relaxed">
+              Jadilah yang pertama mengabadikan momen terbaikmu di photobooth!
+            </p>
+            <button
+              type="button"
+              onClick={openBooth}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#6B111F] to-[#8A1828] border border-[#F5D77F]/50 text-[#F5D77F] text-xs font-serif font-bold active:scale-95 transition cursor-pointer"
+            >
+              <Camera size={14} />
+              <span>Ambil Foto Pertama</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div 
+          ref={containerRef}
+          className="relative w-full overflow-hidden py-3 select-none group cursor-grab active:cursor-grabbing touch-pan-y z-20"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => {
+            setIsHovered(false);
+            handlePointerUp();
+          }}
+        >
+          {/* Navigation Chevrons for Laptop / Desktop */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleStepScroll('left');
+            }}
+            className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-[#F5D77F] shadow-2xl border border-amber-400/40 items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer active:scale-95 backdrop-blur-sm"
+            title="Geser Kiri"
+          >
+            <ChevronLeft size={22} className="text-[#F5D77F]" />
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleStepScroll('right');
+            }}
+            className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-[#F5D77F] shadow-2xl border border-amber-400/40 items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200 cursor-pointer active:scale-95 backdrop-blur-sm"
+            title="Geser Kanan"
+          >
+            <ChevronRight size={22} className="text-[#F5D77F]" />
+          </button>
+
+          {/* Infinite Hardware-Accelerated Sliding Track (Always moving right to left + 100% swipeable) */}
+          <div 
+            ref={trackRef}
+            className="flex items-center gap-3.5 sm:gap-5 will-change-transform"
+            style={{ width: 'max-content' }}
+          >
+            {displayCards.map((card, idx) => (
+              <div
+                key={`${card.id}-${idx}`}
+                onClick={() => {
+                  if (dragDistanceRef.current < 8) {
+                    openGalleryModal();
+                  }
+                }}
+                className="w-44 xs:w-50 sm:w-56 flex-shrink-0 cursor-pointer transition-all duration-300 transform hover:scale-105"
+              >
+                <PhotostripThumbnail
+                  item={card}
+                  activeEvent={activeEvent}
+                  className="w-full shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_20px_rgba(245,215,127,0.12)] border border-white/20 hover:border-amber-400/50 pointer-events-none select-none"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ================= 🌟 4. "LIHAT SEMUA GALERI FOTO TAMU" BUTTON 🌟 ================= */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false, amount: 0.2 }}
-        transition={romanticTransition}
-        className="text-center mt-7 sm:mt-9 px-4 relative z-20 flex justify-center"
-      >
+      <div className="text-center mt-7 sm:mt-9 px-4 relative z-20 flex justify-center">
         <motion.button
           onClick={openGalleryModal}
           animate={{
@@ -466,22 +470,25 @@ export default function EventGalleryFeed() {
             className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-amber-200/35 to-transparent -skew-x-12 pointer-events-none" 
           />
 
-          {/* Text (No Arrow icon) */}
           <span className="drop-shadow-sm font-semibold tracking-wider">
             Lihat Semua Galeri Foto Tamu ({baseCards.length} Foto)
           </span>
         </motion.button>
-      </motion.div>
+      </div>
 
-      {/* ================= 🌟 5. SEAMLESS GRADIENT & BLUR TRANSITION TO HOW IT WORKS 🌟 ================= */}
+      {/* ================= 🌟 5. SEAMLESS GRADIENT TRANSITION TO HOW IT WORKS 🌟 ================= */}
       <div 
         className="absolute bottom-0 inset-x-0 h-32 sm:h-40 pointer-events-none z-10"
         style={{
           background: 'linear-gradient(to bottom, transparent 0%, rgba(22, 8, 14, 0.4) 40%, rgba(22, 8, 14, 0.85) 75%, #16080E 100%)'
         }}
       />
-      {/* Soft Ambient Light Glow Orb at Seam */}
-      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-[350px] sm:w-[650px] h-[120px] bg-[#6B111F]/30 blur-3xl rounded-full pointer-events-none z-0" />
+      <div
+        className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-[350px] sm:w-[650px] h-[140px] rounded-full pointer-events-none z-0"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(107, 17, 31, 0.32) 0%, transparent 72%)'
+        }}
+      />
 
     </section>
   );

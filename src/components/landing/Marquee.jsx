@@ -81,7 +81,7 @@ const FRAME_PREVIEWS = [
 ];
 
 export default function Marquee() {
-  const { openBooth, activeEvent, setStripColor, setSelectedGraphicFrameId, setTargetPhotoCount } = useBooth();
+  const { openBooth, activeEvent, setStripColor, setSelectedGraphicFrameId, setTargetPhotoCount, introReady } = useBooth();
   const trackRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -115,6 +115,18 @@ export default function Marquee() {
   const lastTimeRef = useRef(performance.now());
   const singleSetWidthRef = useRef(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { rootMargin: '200px 0px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Measure single set width for seamless infinite modulo wrapping
   const updateMetrics = useCallback(() => {
@@ -131,6 +143,7 @@ export default function Marquee() {
 
   // CONTINUOUS SLIDING FROM RIGHT TO LEFT (Infinite Smooth Hardware-Accelerated Marquee)
   useEffect(() => {
+    if (!introReady || !isVisible) return;
     let animId;
 
     const animate = (time) => {
@@ -163,7 +176,7 @@ export default function Marquee() {
     lastTimeRef.current = performance.now();
     animId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animId);
-  }, [isHovered]);
+  }, [isHovered, introReady, isVisible]);
 
   // TOUCH SWIPE (MOBILE) & MOUSE DRAG (LAPTOP) HANDLERS
   const handlePointerDown = (e) => {
@@ -434,6 +447,8 @@ export default function Marquee() {
                         src={eventPhotos[idx % eventPhotos.length] || DEFAULT_HERO_PHOTOS[idx % DEFAULT_HERO_PHOTOS.length]} 
                         alt={`Pose ${idx + 1}`}
                         draggable={false}
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
                           e.currentTarget.src = DEFAULT_HERO_PHOTOS[idx % DEFAULT_HERO_PHOTOS.length] || DEFAULT_HERO_PHOTOS[0];

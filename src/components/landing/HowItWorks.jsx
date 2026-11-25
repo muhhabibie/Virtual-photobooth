@@ -156,28 +156,17 @@ export default function HowItWorks() {
         className="absolute bottom-16 -right-6 sm:bottom-20 sm:-right-8 w-40 sm:w-64 md:w-72 h-40 sm:h-64 md:h-72 pointer-events-none text-[#F5D77F] opacity-30 z-0"
       />
 
-      {/* ================= 🌟 GRAND MULTI-LAYERED AMBIENT SPOTLIGHT GRADIENT AURA 🌟 ================= */}
-      {/* Layer 1: Giant Deep Burgundy & Wine Crimson Backdrop Radiance */}
+      {/* ================= 🌟 GRAND MULTI-LAYERED AMBIENT SPOTLIGHT GRADIENT AURA (Zero heavy CSS blur) 🌟 ================= */}
       <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] max-w-[1400px] h-[800px] sm:h-[1100px] pointer-events-none z-0 rounded-full opacity-85 blur-[120px] sm:blur-[160px]"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] max-w-[1400px] h-[850px] sm:h-[1100px] pointer-events-none z-0"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(138, 24, 40, 0.85) 0%, rgba(107, 17, 31, 0.60) 35%, rgba(74, 8, 21, 0.40) 60%, rgba(196, 164, 108, 0.18) 80%, transparent 95%)'
+          background: 'radial-gradient(ellipse at center, rgba(138, 24, 40, 0.55) 0%, rgba(107, 17, 31, 0.35) 35%, rgba(74, 8, 21, 0.18) 60%, transparent 78%)'
         }}
       />
-
-      {/* Layer 2: Core Golden Light Beam (Pendaran Emas Megah) */}
       <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] max-w-[900px] h-[450px] sm:h-[650px] pointer-events-none z-0 rounded-full opacity-60 blur-[80px] sm:blur-[110px]"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] max-w-[900px] h-[500px] sm:h-[650px] pointer-events-none z-0"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(245, 215, 127, 0.50) 0%, rgba(212, 175, 55, 0.30) 40%, rgba(138, 24, 40, 0.20) 70%, transparent 88%)'
-        }}
-      />
-
-      {/* Layer 3: Top Title Golden Crown Beam */}
-      <div 
-        className="absolute top-4 left-1/2 -translate-x-1/2 w-[850px] sm:w-[1200px] h-[420px] pointer-events-none z-0 rounded-full opacity-50 blur-[110px]"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(245, 215, 127, 0.45) 0%, rgba(138, 24, 40, 0.35) 50%, transparent 80%)'
+          background: 'radial-gradient(ellipse at center, rgba(245, 215, 127, 0.22) 0%, rgba(212, 175, 55, 0.12) 40%, transparent 72%)'
         }}
       />
 

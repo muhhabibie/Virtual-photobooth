@@ -269,7 +269,7 @@ export default function EventHero() {
                   src={imgUrl}
                   alt={`${activeEvent.displayName} ${idx + 1}`}
                   draggable={false}
-                  loading="eager"
+                  loading={idx === 0 || idx === currentSlide ? 'eager' : 'lazy'}
                   decoding="async"
                   className="w-full h-full object-cover object-center pointer-events-none select-none"
                 />
@@ -331,9 +331,9 @@ export default function EventHero() {
 
             {/* Item 2: Wedding Couple Names or Event Name */}
             <motion.h1 
-              initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
-              animate={introReady ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 30, filter: 'blur(10px)' }}
-              transition={{ duration: 1.0, delay: 0.25, ease: [0.25, 1, 0.5, 1] }}
+              initial={{ opacity: 0, y: 22 }}
+              animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
+              transition={{ duration: 0.85, delay: 0.2, ease: [0.25, 1, 0.5, 1] }}
               className={`text-white mt-1 leading-tight sm:leading-none drop-shadow-2xl ${
                 isWedding 
                   ? 'text-5xl xs:text-6xl sm:text-8xl md:text-9xl lg:text-[115px] font-normal' 
@@ -446,9 +446,9 @@ export default function EventHero() {
 
             {/* Title — High-Craft Editorial Luxury Typography */}
             <motion.h1
-              initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
-              animate={introReady ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 18, filter: 'blur(6px)' }}
-              transition={{ duration: 1.0, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={introReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+              transition={{ duration: 0.85, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className={`px-1 ${
                 isWedding
                   ? 'leading-[1.12] text-5xl xs:text-6xl sm:text-8xl font-normal'

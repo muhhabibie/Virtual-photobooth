@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useBooth } from '../../context/PhotoboothContext';
 
 const BRAND_NAME = "VIRTUAL PHOTOBOOTH";
-const BRAND_LETTERS = BRAND_NAME.split("");
-const TOTAL_LETTERS = BRAND_LETTERS.length;
 
 // ================= Geometri monogram Sirklen (dijiplak dari logo resmi, kanvas 551x551) =================
 // Bentuk solid: huruf N + titik kiri-bawah + titik kanan-atas
@@ -26,28 +24,28 @@ export default function IntroSplashLoader({ onComplete }) {
   const { setIntroReady, introKey } = useBooth();
   const clipId = `sirklen-glyph-clip-${introKey || 0}`;
 
-  // Timeline:
-  // 1. 'entering' (0.0s - 2.5s): kontur emas tergambar, lalu tinta mengisi huruf mengikuti alur pena
-  // 2. 'holding'  (2.5s - 3.7s): logo utuh, aura champagne bernafas lembut
-  // 3. 'exiting'  (3.7s - 5.1s): tinta ditarik mundur (arah sebaliknya), lalu kontur emas ikut mundur
-  // 4. 'dissolve' (5.1s - 5.8s): kanvas memudar ke aplikasi utama
-  // 5. 'done'     (5.8s): unmount
+  // Timeline (snappy ~3.2s total on mobile & desktop):
+  // 1. 'entering' (0.0s - 1.35s): kontur emas tergambar, tinta mengisi huruf
+  // 2. 'holding'  (1.35s - 2.05s): logo utuh bernapas lembut
+  // 3. 'exiting'  (2.05s - 2.75s): tinta & kontur ditarik mundur
+  // 4. 'dissolve' (2.75s - 3.25s): kanvas memudar ke aplikasi utama
+  // 5. 'done'     (3.25s): unmount
   const [phase, setPhase] = useState('entering');
 
   useEffect(() => {
     setPhase('entering');
     if (setIntroReady) setIntroReady(false);
 
-    const timer1 = setTimeout(() => setPhase('holding'), 2500);
-    const timer2 = setTimeout(() => setPhase('exiting'), 3700);
+    const timer1 = setTimeout(() => setPhase('holding'), 1350);
+    const timer2 = setTimeout(() => setPhase('exiting'), 2050);
     const timer3 = setTimeout(() => {
       setPhase('dissolve');
       if (setIntroReady) setIntroReady(true);
-    }, 5100);
+    }, 2750);
     const timer4 = setTimeout(() => {
       setPhase('done');
       if (onComplete) onComplete();
-    }, 5800);
+    }, 3250);
 
     return () => {
       clearTimeout(timer1);
@@ -71,16 +69,16 @@ export default function IntroSplashLoader({ onComplete }) {
 
   const outlineTransition =
     phase === 'entering'
-      ? { pathLength: { duration: 1.4, ease: EASE_DRAW, delay: 0.1 }, opacity: { duration: 0.3, delay: 0.1 } }
+      ? { pathLength: { duration: 0.85, ease: EASE_DRAW, delay: 0.05 }, opacity: { duration: 0.25, delay: 0.05 } }
       : phase === 'holding'
-      ? { opacity: { duration: 0.9, ease: 'easeOut' } }
-      : { pathLength: { duration: 1.2, ease: EASE_DRAW, delay: 0.25 }, opacity: { duration: 1.45, times: [0, 0.8, 1] } };
+      ? { opacity: { duration: 0.5, ease: 'easeOut' } }
+      : { pathLength: { duration: 0.65, ease: EASE_DRAW, delay: 0.1 }, opacity: { duration: 0.75, times: [0, 0.8, 1] } };
 
   // Tinta utama: digambar maju, lalu ditarik mundur dari ujung ke awal (arah sebaliknya)
   const inkAnimate = isOut ? { pathLength: 0 } : { pathLength: 1 };
   const inkTransition = isOut
-    ? { pathLength: { duration: 1.3, ease: EASE_DRAW } }
-    : { pathLength: { duration: 1.9, ease: EASE_DRAW, delay: 0.45 } };
+    ? { pathLength: { duration: 0.65, ease: EASE_DRAW } }
+    : { pathLength: { duration: 1.0, ease: EASE_DRAW, delay: 0.2 } };
 
   return (
     <AnimatePresence mode="wait">
@@ -89,7 +87,7 @@ export default function IntroSplashLoader({ onComplete }) {
           key={`intro-splash-canvas-${introKey || 0}`}
           initial={{ opacity: 1 }}
           animate={{ opacity: phase === 'dissolve' ? 0 : 1 }}
-          transition={{ duration: 0.7, ease: EASE_SOFT }}
+          transition={{ duration: 0.5, ease: EASE_SOFT }}
           className={`fixed inset-0 z-[99999] bg-[#FAF8F5] flex flex-col items-center justify-center select-none overflow-hidden ${
             phase === 'dissolve' ? 'pointer-events-none' : ''
           }`}
@@ -97,15 +95,12 @@ export default function IntroSplashLoader({ onComplete }) {
           {/* Warm Ivory & Silk Vignette */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#FDFBF7] via-[#FAF8F5] to-[#F5EFEB] pointer-events-none" />
 
-          {/* Aura champagne lembut */}
-          <motion.div
-            animate={{
-              scale: phase === 'holding' ? [1, 1.06, 1] : 1,
-              opacity: phase === 'holding' ? [0.35, 0.6, 0.35] : 0.35
+          {/* Lightweight Champagne Radial Aura (Zero heavy CSS blur filter for 60fps mobile) */}
+          <div
+            className="absolute w-[420px] h-[420px] rounded-full pointer-events-none -translate-y-4 opacity-70"
+            style={{
+              background: 'radial-gradient(circle, rgba(245, 215, 127, 0.22) 0%, rgba(255, 228, 230, 0.14) 45%, transparent 72%)',
             }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-amber-200/35 via-rose-100/25 to-amber-100/15 blur-3xl pointer-events-none -translate-y-4"
-            style={{ willChange: 'transform, opacity' }}
           />
 
           <div className="relative z-10 flex flex-col items-center text-center px-4">
@@ -161,39 +156,28 @@ export default function IntroSplashLoader({ onComplete }) {
 
             {/* ================= 2. BRAND TYPOGRAPHY LOCKUP ================= */}
             <div className="flex flex-col items-center justify-center mt-0.5">
-              {/* Title: VIRTUAL PHOTOBOOTH */}
-              <h1
-                style={{ fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif" }}
-                className="text-xs xs:text-sm sm:text-base md:text-lg font-bold tracking-[0.24em] sm:tracking-[0.32em] text-[#540D18] uppercase flex items-center justify-center select-none whitespace-nowrap pl-[0.24em] sm:pl-[0.32em]"
+              {/* Title: VIRTUAL PHOTOBOOTH (Single GPU-composited layer instead of 18 span nodes) */}
+              <motion.h1
+                initial={{ opacity: 0, y: 8 }}
+                animate={isOut ? { opacity: 0, y: -6 } : { opacity: 1, y: 0 }}
+                transition={{
+                  duration: isOut ? 0.4 : 0.65,
+                  delay: isOut ? 0 : 0.45,
+                  ease: EASE_SOFT
+                }}
+                style={{ fontFamily: "'Cinzel', 'Playfair Display', Georgia, serif", willChange: 'transform, opacity' }}
+                className="text-xs xs:text-sm sm:text-base md:text-lg font-bold tracking-[0.24em] sm:tracking-[0.32em] text-[#540D18] uppercase text-center select-none whitespace-nowrap pl-[0.24em] sm:pl-[0.32em]"
               >
-                {BRAND_LETTERS.map((char, idx) => {
-                  const reverseIdx = TOTAL_LETTERS - 1 - idx;
-                  return (
-                    <motion.span
-                      key={idx}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={isOut ? { opacity: 0, y: -5 } : { opacity: 1, y: 0 }}
-                      transition={{
-                        duration: isOut ? 0.45 : 0.65,
-                        delay: isOut ? reverseIdx * 0.035 : 0.95 + idx * 0.045,
-                        ease: EASE_SOFT
-                      }}
-                      className={char === " " ? "inline-block w-1.5 sm:w-2.5" : "inline-block"}
-                      style={{ willChange: 'transform, opacity' }}
-                    >
-                      {char}
-                    </motion.span>
-                  );
-                })}
-              </h1>
+                {BRAND_NAME}
+              </motion.h1>
 
               {/* Tagline: makes memories with sirklenice (Luxury Editorial with Delicate Hairlines) */}
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={isOut ? { opacity: 0, y: -4 } : { opacity: 1, y: 0 }}
                 transition={{
-                  duration: isOut ? 0.4 : 0.85,
-                  delay: isOut ? 0.05 : 1.6,
+                  duration: isOut ? 0.35 : 0.65,
+                  delay: isOut ? 0.05 : 0.7,
                   ease: EASE_SOFT
                 }}
                 className="flex items-center justify-center gap-2.5 sm:gap-3.5 mt-3 sm:mt-3.5"
