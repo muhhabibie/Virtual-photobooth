@@ -9,11 +9,11 @@ import PriceListModal from '../ui/PriceListModal';
 
 /**
  * Renders non-wedding event titles with an aesthetic, legible handwritten script
- * for ordinal numbers (e.g. "8th") paired with luxury editorial serif text.
+ * for ordinal numbers (e.g. "8th") styled as a superscript glued to the preceding word.
  */
 function renderFormattedEventTitle(rawName, isOverlay = false) {
   const cleanName = (rawName || '').trim();
-  const parts = cleanName.split(/(\b\d+(?:st|nd|rd|th)\b)/gi);
+  const parts = cleanName.split(/(\S+\s*\b\d+(?:st|nd|rd|th)\b|\b\d+(?:st|nd|rd|th)\b)/gi);
 
   const serifStyle = isOverlay
     ? undefined
@@ -25,12 +25,10 @@ function renderFormattedEventTitle(rawName, isOverlay = false) {
         filter: 'drop-shadow(0 2px 10px rgba(107,17,31,0.14))',
       };
 
-  const ordinalStyle = isOverlay
+  const ordinalBaseStyle = isOverlay
     ? {
         fontFamily: "'Dancing Script', 'Caveat', cursive",
         fontWeight: 700,
-        fontSize: '1.28em',
-        lineHeight: 1.05,
         background: 'linear-gradient(135deg, #FFFBEB 0%, #F5D77F 52%, #E5B94E 100%)',
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
@@ -40,8 +38,6 @@ function renderFormattedEventTitle(rawName, isOverlay = false) {
     : {
         fontFamily: "'Dancing Script', 'Caveat', cursive",
         fontWeight: 700,
-        fontSize: '1.34em',
-        lineHeight: 1.08,
         background: 'linear-gradient(135deg, #9A6B1E 0%, #CFA047 38%, #A12339 76%, #6B111F 100%)',
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
@@ -49,21 +45,46 @@ function renderFormattedEventTitle(rawName, isOverlay = false) {
         filter: 'drop-shadow(0 2px 8px rgba(154,107,30,0.2))',
       };
 
+  const renderSuperscriptOrdinal = (num, suffix) => (
+    <sup
+      className="inline-flex items-start relative -top-[0.42em] ml-[2px] sm:ml-[4px] -rotate-3 select-none"
+      style={{ fontSize: '0.68em', lineHeight: 1 }}
+    >
+      <span className="inline-block px-[2px] leading-none" style={ordinalBaseStyle}>
+        {num}
+      </span>
+      <span
+        className="inline-block pr-[4px] leading-none relative -top-[0.06em] ml-[1px]"
+        style={{ ...ordinalBaseStyle, fontSize: '0.64em' }}
+      >
+        {suffix.toLowerCase()}
+      </span>
+    </sup>
+  );
+
   return parts.map((part, idx) => {
-    const match = part.match(/^(\d+)(st|nd|rd|th)$/i);
-    if (match) {
+    if (!part) return null;
+
+    const attachedMatch = part.match(/^(\S+?)\s*(\d+)(st|nd|rd|th)$/i);
+    if (attachedMatch) {
+      const [, word, num, suffix] = attachedMatch;
       return (
-        <span
-          key={idx}
-          className="inline-block px-2 py-0.5 -rotate-2 align-baseline select-none"
-          style={ordinalStyle}
-        >
-          {match[1]}
-          {match[2].toLowerCase()}
+        <span key={idx} className="inline-block whitespace-nowrap">
+          <span style={serifStyle}>{word}</span>
+          {renderSuperscriptOrdinal(num, suffix)}
         </span>
       );
     }
-    if (!part) return null;
+
+    const standaloneMatch = part.match(/^(\d+)(st|nd|rd|th)$/i);
+    if (standaloneMatch) {
+      return (
+        <span key={idx} className="inline-block whitespace-nowrap">
+          {renderSuperscriptOrdinal(standaloneMatch[1], standaloneMatch[2])}
+        </span>
+      );
+    }
+
     return (
       <span key={idx} style={serifStyle}>
         {part}
@@ -431,7 +452,7 @@ export default function EventHero() {
               className={`px-1 ${
                 isWedding
                   ? 'leading-[1.12] text-5xl xs:text-6xl sm:text-8xl font-normal'
-                  : 'leading-[1.22] text-[30px] xs:text-[34px] sm:text-5xl md:text-[54px] font-bold'
+                  : 'pt-1.5 leading-[1.32] text-[28px] xs:text-[32px] sm:text-5xl md:text-[54px] font-bold'
               }`}
               style={isWedding ? {
                 fontFamily: "'Alex Brush', 'Great Vibes', cursive",
