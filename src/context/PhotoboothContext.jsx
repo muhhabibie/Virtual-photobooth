@@ -621,9 +621,14 @@ export function PhotoboothProvider({ children }) {
 
     // Check if a specific graphic frame was requested (e.g. clicked from Marquee)
     const eventGraphicFrames = getEventGraphicFrames(activeEvent);
+    const isMitufaya = Boolean(
+      (activeEvent?.slug || '').toLowerCase().includes('mitufaya') ||
+      (activeEvent?.eventName || '').toLowerCase().includes('mitufaya') ||
+      (activeEvent?.displayName || '').toLowerCase().includes('mitufaya')
+    );
     const initialGraphicId = (typeof preferredFrameId === 'string' && preferredFrameId)
       ? preferredFrameId
-      : null;
+      : (isMitufaya && eventGraphicFrames.length > 0 ? eventGraphicFrames[0].id : null);
     setSelectedGraphicFrameId(initialGraphicId);
 
     if (initialGraphicId) {
