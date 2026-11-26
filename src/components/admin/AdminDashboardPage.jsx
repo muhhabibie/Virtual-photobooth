@@ -5,7 +5,7 @@ import {
   ExternalLink, Eye, Image as ImageIcon, Upload, 
   MessageCircle, Share2, LogOut, Crop, Printer, Archive, 
   ChevronRight, ChevronLeft, Smartphone, X, Camera, Copy, Sparkles, Edit3,
-  Images, Search, Volume2, Loader2
+  Images, Search, Volume2, Loader2, Clock
 } from 'lucide-react';
 import { useBooth } from '../../context/PhotoboothContext';
 import { getDeletedSubmissionIds, isSubmissionDeleted } from '../../services/submissionService';
@@ -33,6 +33,7 @@ export default function AdminDashboardPage() {
     deleteEvent,
     updateEventConfig,
     toggleExpireEvent,
+    extendEventPeriod,
     updateEventHeroPhotos,
     savedSubmissions,
     deleteSubmission,
@@ -124,6 +125,19 @@ export default function AdminDashboardPage() {
     });
     toast('Perubahan event berhasil disimpan!', 'success');
     setEditModalEvent(null);
+  };
+
+  const handleExtendEvent = async (evt) => {
+    const pkg = PACKAGES[evt.package] || PACKAGES.all_in;
+    const isExpired = Date.now() > evt.expiresAt;
+    const updated = await extendEventPeriod(evt.id);
+    if (updated) {
+      if (isExpired) {
+        toast(`Event "${evt.displayName}" berhasil diaktifkan kembali selama ${pkg.activeDays} hari!`, 'success');
+      } else {
+        toast(`Masa aktif event "${evt.displayName}" diperpanjang +${pkg.activeDays} hari (${pkg.name})`, 'success');
+      }
+    }
   };
 
   // Form State for "Create Event"
@@ -722,6 +736,20 @@ export default function AdminDashboardPage() {
                             <span className={`w-1.5 h-1.5 rounded-full ${isExpired ? 'bg-rose-500' : 'bg-emerald-500'}`} />
                             <span>{isExpired ? 'Kedaluwarsa' : `Aktif (${daysLeft} Hari Lagi)`}</span>
                           </span>
+
+                          {/* Quick Extend Active Period Button */}
+                          <button
+                            onClick={() => handleExtendEvent(evt)}
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-sans font-bold transition active:scale-95 cursor-pointer shadow-2xs ${
+                              isExpired
+                                ? 'bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 animate-pulse'
+                                : 'bg-[#FAF7F2] hover:bg-[#6B111F] hover:text-[#F5D77F] text-stone-700 border border-[#E5DACB]'
+                            }`}
+                            title={`Perpanjang masa aktif event +${pkgInfo.activeDays} hari (${pkgInfo.name})`}
+                          >
+                            <Clock size={10} className={isExpired ? 'text-white' : 'text-[#6B111F]'} />
+                            <span>{isExpired ? `Aktifkan Lagi (+${pkgInfo.activeDays}h)` : `+${pkgInfo.activeDays} Hari`}</span>
+                          </button>
                         </div>
 
                         {/* Event Title */}
@@ -854,6 +882,17 @@ export default function AdminDashboardPage() {
                           >
                             <Edit3 size={13} className="text-amber-700" />
                             <span>Edit</span>
+                          </button>
+
+                          <div className="w-[1px] h-3.5 bg-stone-300 flex-shrink-0" />
+
+                          <button
+                            onClick={() => handleExtendEvent(evt)}
+                            className="px-2.5 py-1 rounded-xl text-stone-600 hover:text-amber-800 hover:bg-amber-50 text-xs font-medium flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap flex-shrink-0"
+                            title={`Perpanjang masa aktif event +${pkgInfo.activeDays} hari (${pkgInfo.name})`}
+                          >
+                            <Clock size={13} className="text-amber-700" />
+                            <span>+{pkgInfo.activeDays}h</span>
                           </button>
 
                           <div className="w-[1px] h-3.5 bg-stone-300 flex-shrink-0" />
@@ -1869,6 +1908,79 @@ export default function AdminDashboardPage() {
                     <option value="all_in">Paket Spesial (14 Hari)</option>
                   </select>
                 </div>
+
+                {/* 6. Info & Perpanjangan Masa Aktif */}
+                {editModalEvent && (
+                  <div className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-serif font-bold text-stone-700 flex items-center gap-1.5">
+                        <Clock size={13} className="text-[#6B111F]" />
+                        <span>Masa Aktif Event:</span>
+                      </span>
+                      <span className={`font-mono font-bold text-[11px] px-2 py-0.5 rounded-full ${
+                        Date.now() > (editModalEvent.expiresAt || 0)
+                          ? 'bg-rose-100 text-rose-700'
+                          : 'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        {Date.now() > (editModalEvent.expiresAt || 0)
+                          ? 'Kedaluwarsa'
+                          : `Sisa ${Math.ceil(((editModalEvent.expiresAt || 0) - Date.now()) / (1000 * 60 * 60 * 24))} Hari`}
+                      </span>
+                    </div>
+
+                    <div className="text-[11px] text-stone-500 font-sans">
+                      {editModalEvent.expiresAt 
+                        ? `Berlaku hingga: ${new Date(editModalEvent.expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}` 
+                        : 'Masa aktif belum ditentukan'}
+                    </div>
+
+                    <div className="pt-1 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const pkg = PACKAGES[editFormData.package] || PACKAGES.all_in;
+                          const updated = await extendEventPeriod(editModalEvent.id, pkg.activeDays);
+                          if (updated) {
+                            setEditModalEvent(updated);
+                            toast(`Masa aktif diperpanjang +${pkg.activeDays} hari (${pkg.name})`, 'success');
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-[#6B111F] hover:bg-[#8A1828] text-[#F5D77F] text-xs font-serif font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
+                      >
+                        <Clock size={12} />
+                        <span>+ Perpanjang Sesuai Paket ({PACKAGES[editFormData.package]?.activeDays || 10} Hari)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const updated = await extendEventPeriod(editModalEvent.id, 7);
+                          if (updated) {
+                            setEditModalEvent(updated);
+                            toast('Masa aktif berhasil ditambah 7 hari', 'success');
+                          }
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 text-xs font-serif font-medium border border-stone-200 transition active:scale-95 cursor-pointer"
+                      >
+                        +7 Hari
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const updated = await extendEventPeriod(editModalEvent.id, 30);
+                          if (updated) {
+                            setEditModalEvent(updated);
+                            toast('Masa aktif berhasil ditambah 30 hari', 'success');
+                          }
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 text-xs font-serif font-medium border border-stone-200 transition active:scale-95 cursor-pointer"
+                      >
+                        +30 Hari
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="pt-4 border-t border-stone-200 flex items-center justify-end gap-2.5">

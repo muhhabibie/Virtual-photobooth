@@ -360,17 +360,60 @@ export function PhotoboothProvider({ children }) {
     });
   }, []);
 
-  const toggleExpireEvent = useCallback((eventId) => {
-    setEvents(prev => prev.map(e => {
-      if (e.id === eventId) {
-        const isNowExpired = Date.now() > e.expiresAt;
-        return {
-          ...e,
-          expiresAt: isNowExpired ? Date.now() + 7 * 86400 * 1000 : Date.now() - 1000
-        };
-      }
-      return e;
-    }));
+  const toggleExpireEvent = useCallback(async (eventId) => {
+    let updatedEventToSync = null;
+    setEvents(prev => {
+      const next = prev.map(e => {
+        if (e.id === eventId || e.slug === eventId) {
+          const isNowExpired = Date.now() > e.expiresAt;
+          const pkg = PACKAGES[e.package] || PACKAGES.all_in;
+          const activeDays = pkg.activeDays || 10;
+          updatedEventToSync = {
+            ...e,
+            expiresAt: isNowExpired ? Date.now() + activeDays * 86400 * 1000 : Date.now() - 1000
+          };
+          return updatedEventToSync;
+        }
+        return e;
+      });
+      saveLocalEvents(next);
+      return next;
+    });
+    if (updatedEventToSync) {
+      await syncEventToCloud(updatedEventToSync);
+    }
+    return updatedEventToSync;
+  }, []);
+
+  // Perpanjang masa aktif event sesuai durasi paket (atau custom hari)
+  const extendEventPeriod = useCallback(async (eventId, customDays = null) => {
+    let updatedEventToSync = null;
+    setEvents(prev => {
+      const next = prev.map(e => {
+        if (e.id === eventId || e.slug === eventId) {
+          const pkg = PACKAGES[e.package] || PACKAGES.all_in;
+          const daysToAdd = typeof customDays === 'number' ? customDays : (pkg.activeDays || 10);
+          const msToAdd = daysToAdd * 86400 * 1000;
+          const now = Date.now();
+          // Jika sudah kedaluwarsa, mulai hitung dari sekarang. Jika masih aktif, tambahkan ke expiresAt yang ada.
+          const baseTime = (e.expiresAt && e.expiresAt > now) ? e.expiresAt : now;
+          const newExpiresAt = baseTime + msToAdd;
+
+          updatedEventToSync = {
+            ...e,
+            expiresAt: newExpiresAt
+          };
+          return updatedEventToSync;
+        }
+        return e;
+      });
+      saveLocalEvents(next);
+      return next;
+    });
+    if (updatedEventToSync) {
+      await syncEventToCloud(updatedEventToSync);
+    }
+    return updatedEventToSync;
   }, []);
 
   const updateEventHeroPhotos = useCallback(async (eventId, newPhotoUrls) => {
@@ -812,6 +855,7 @@ export function PhotoboothProvider({ children }) {
       createEvent,
       deleteEvent,
       toggleExpireEvent,
+      extendEventPeriod,
       updateEventHeroPhotos,
       updateEventConfig,
       introReady,
