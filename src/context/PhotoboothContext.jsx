@@ -385,23 +385,63 @@ export function PhotoboothProvider({ children }) {
     return updatedEventToSync;
   }, []);
 
-  // Perpanjang masa aktif event sesuai durasi paket (atau custom hari)
-  const extendEventPeriod = useCallback(async (eventId, customDays = null) => {
+  // Perpanjang / kurangi masa aktif event (custom hari positif untuk menambah, negatif untuk mengurangi)
+  const adjustEventPeriod = useCallback(async (eventId, daysDelta) => {
     let updatedEventToSync = null;
     setEvents(prev => {
       const next = prev.map(e => {
         if (e.id === eventId || e.slug === eventId) {
-          const pkg = PACKAGES[e.package] || PACKAGES.all_in;
-          const daysToAdd = typeof customDays === 'number' ? customDays : (pkg.activeDays || 10);
-          const msToAdd = daysToAdd * 86400 * 1000;
+          const delta = typeof daysDelta === 'number' ? daysDelta : 0;
+          const msDelta = delta * 86400 * 1000;
           const now = Date.now();
-          // Jika sudah kedaluwarsa, mulai hitung dari sekarang. Jika masih aktif, tambahkan ke expiresAt yang ada.
-          const baseTime = (e.expiresAt && e.expiresAt > now) ? e.expiresAt : now;
-          const newExpiresAt = baseTime + msToAdd;
+          
+          let baseTime;
+          if (delta > 0) {
+            // Jika menambah hari: kalau sudah kedaluwarsa, mulai dari sekarang; kalau masih aktif, tambah dari expiresAt
+            baseTime = (e.expiresAt && e.expiresAt > now) ? e.expiresAt : now;
+          } else {
+            // Jika mengurangi hari: kurangi dari expiresAt yang sekarang
+            baseTime = e.expiresAt || now;
+          }
+          const newExpiresAt = Math.max(0, baseTime + msDelta);
 
           updatedEventToSync = {
             ...e,
             expiresAt: newExpiresAt
+          };
+          return updatedEventToSync;
+        }
+        return e;
+      });
+      saveLocalEvents(next);
+      return next;
+    });
+    if (updatedEventToSync) {
+      await syncEventToCloud(updatedEventToSync);
+    }
+    return updatedEventToSync;
+  }, []);
+
+  // Perpanjang masa aktif event sesuai durasi paket (atau custom hari)
+  const extendEventPeriod = useCallback(async (eventId, customDays = null) => {
+    let daysToAdd = customDays;
+    if (typeof daysToAdd !== 'number') {
+      const found = events.find(e => e.id === eventId || e.slug === eventId);
+      const pkg = PACKAGES[found?.package] || PACKAGES.all_in;
+      daysToAdd = pkg.activeDays || 10;
+    }
+    return adjustEventPeriod(eventId, daysToAdd);
+  }, [events, adjustEventPeriod]);
+
+  // Atur timestamp kedaluwarsa secara langsung
+  const setEventExpiryTimestamp = useCallback(async (eventId, timestamp) => {
+    let updatedEventToSync = null;
+    setEvents(prev => {
+      const next = prev.map(e => {
+        if (e.id === eventId || e.slug === eventId) {
+          updatedEventToSync = {
+            ...e,
+            expiresAt: timestamp
           };
           return updatedEventToSync;
         }
@@ -856,6 +896,8 @@ export function PhotoboothProvider({ children }) {
       deleteEvent,
       toggleExpireEvent,
       extendEventPeriod,
+      adjustEventPeriod,
+      setEventExpiryTimestamp,
       updateEventHeroPhotos,
       updateEventConfig,
       introReady,

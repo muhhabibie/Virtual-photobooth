@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Plus, Calendar, QrCode, Trash2, Check, Lock, 
+  Plus, Minus, Calendar, QrCode, Trash2, Check, Lock, 
   ExternalLink, Eye, Image as ImageIcon, Upload, 
   MessageCircle, Share2, LogOut, Crop, Printer, Archive, 
   ChevronRight, ChevronLeft, Smartphone, X, Camera, Copy, Sparkles, Edit3,
@@ -34,6 +34,8 @@ export default function AdminDashboardPage() {
     updateEventConfig,
     toggleExpireEvent,
     extendEventPeriod,
+    adjustEventPeriod,
+    setEventExpiryTimestamp,
     updateEventHeroPhotos,
     savedSubmissions,
     deleteSubmission,
@@ -83,7 +85,9 @@ export default function AdminDashboardPage() {
     venue: '',
     eventDate: '',
     package: 'standard',
+    expiresAt: null,
   });
+  const [customDaysDelta, setCustomDaysDelta] = useState(1);
 
   const openEditModal = (evt) => {
     setEditModalEvent(evt);
@@ -97,7 +101,9 @@ export default function AdminDashboardPage() {
       venue: evt.venue || '',
       eventDate: evt.eventDate || '',
       package: evt.package || 'standard',
+      expiresAt: evt.expiresAt || (Date.now() + 10 * 86400 * 1000),
     });
+    setCustomDaysDelta(1);
   };
 
   const handleSaveEdit = (e) => {
@@ -127,16 +133,58 @@ export default function AdminDashboardPage() {
     setEditModalEvent(null);
   };
 
-  const handleExtendEvent = async (evt) => {
+  const handleExtendEvent = async (evt, customDays = null) => {
     const pkg = PACKAGES[evt.package] || PACKAGES.all_in;
+    const daysToAdd = typeof customDays === 'number' ? customDays : (pkg.activeDays || 10);
     const isExpired = Date.now() > evt.expiresAt;
-    const updated = await extendEventPeriod(evt.id);
+    const updated = await extendEventPeriod(evt.id, daysToAdd);
     if (updated) {
-      if (isExpired) {
-        toast(`Event "${evt.displayName}" berhasil diaktifkan kembali selama ${pkg.activeDays} hari!`, 'success');
-      } else {
-        toast(`Masa aktif event "${evt.displayName}" diperpanjang +${pkg.activeDays} hari (${pkg.name})`, 'success');
+      if (editModalEvent && editModalEvent.id === evt.id) {
+        setEditModalEvent(updated);
+        setEditFormData(prev => ({ ...prev, expiresAt: updated.expiresAt }));
       }
+      if (isExpired) {
+        toast(`Event "${evt.displayName}" berhasil diaktifkan kembali selama ${daysToAdd} hari!`, 'success');
+      } else {
+        toast(`Masa aktif event "${evt.displayName}" ditambah +${daysToAdd} hari`, 'success');
+      }
+    }
+  };
+
+  const handleAdjustEventDays = async (evt, delta) => {
+    if (!evt || typeof delta !== 'number' || delta === 0) return;
+    const updated = await adjustEventPeriod(evt.id, delta);
+    if (updated) {
+      if (editModalEvent && editModalEvent.id === evt.id) {
+        setEditModalEvent(updated);
+        setEditFormData(prev => ({ ...prev, expiresAt: updated.expiresAt }));
+      }
+      if (delta > 0) {
+        toast(`Masa aktif event "${evt.displayName}" ditambah +${delta} hari`, 'success');
+      } else {
+        toast(`Masa aktif event "${evt.displayName}" dikurangi ${Math.abs(delta)} hari`, 'info');
+      }
+    }
+  };
+
+  const handleSetEventExpiryDate = async (evt, dateString) => {
+    if (!evt || !dateString) return;
+    try {
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 23, 59, 59);
+        const newTimestamp = d.getTime();
+        const updated = await setEventExpiryTimestamp(evt.id, newTimestamp);
+        if (updated) {
+          if (editModalEvent && editModalEvent.id === evt.id) {
+            setEditModalEvent(updated);
+            setEditFormData(prev => ({ ...prev, expiresAt: updated.expiresAt }));
+          }
+          toast(`Batas masa aktif "${evt.displayName}" diatur ke ${dateString}`, 'success');
+        }
+      }
+    } catch (e) {
+      toast('Format tanggal tidak valid', 'error');
     }
   };
 
@@ -750,6 +798,17 @@ export default function AdminDashboardPage() {
                             <Clock size={10} className={isExpired ? 'text-white' : 'text-[#6B111F]'} />
                             <span>{isExpired ? `Aktifkan Lagi (+${pkgInfo.activeDays}h)` : `+${pkgInfo.activeDays} Hari`}</span>
                           </button>
+
+                          {/* Quick Decrease 1 Day Button */}
+                          {!isExpired && (
+                            <button
+                              onClick={() => handleAdjustEventDays(evt, -1)}
+                              className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#FAF7F2] hover:bg-rose-50 text-stone-500 hover:text-rose-700 border border-[#E5DACB] text-[10px] font-bold transition active:scale-95 cursor-pointer shadow-2xs"
+                              title="Kurangi masa aktif -1 hari"
+                            >
+                              <Minus size={10} />
+                            </button>
+                          )}
                         </div>
 
                         {/* Event Title */}
@@ -1911,72 +1970,155 @@ export default function AdminDashboardPage() {
 
                 {/* 6. Info & Perpanjangan Masa Aktif */}
                 {editModalEvent && (
-                  <div className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] space-y-2">
+                  <div className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E5DACB] space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-serif font-bold text-stone-700 flex items-center gap-1.5">
                         <Clock size={13} className="text-[#6B111F]" />
                         <span>Masa Aktif Event:</span>
                       </span>
-                      <span className={`font-mono font-bold text-[11px] px-2 py-0.5 rounded-full ${
+                      <span className={`font-mono font-bold text-[11px] px-2.5 py-0.5 rounded-full ${
                         Date.now() > (editModalEvent.expiresAt || 0)
                           ? 'bg-rose-100 text-rose-700'
                           : 'bg-emerald-100 text-emerald-800'
                       }`}>
                         {Date.now() > (editModalEvent.expiresAt || 0)
                           ? 'Kedaluwarsa'
-                          : `Sisa ${Math.ceil(((editModalEvent.expiresAt || 0) - Date.now()) / (1000 * 60 * 60 * 24))} Hari`}
+                          : `Sisa ${Math.ceil(((editModalEvent.expiresAt || 0) - Date.now()) / (1000 * 60 * 60 * 24))} Hari Lagi`}
                       </span>
                     </div>
 
-                    <div className="text-[11px] text-stone-500 font-sans">
-                      {editModalEvent.expiresAt 
-                        ? `Berlaku hingga: ${new Date(editModalEvent.expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}` 
-                        : 'Masa aktif belum ditentukan'}
+                    <div className="text-[11px] text-stone-600 font-sans flex items-center justify-between gap-2 flex-wrap">
+                      <span>
+                        {editModalEvent.expiresAt 
+                          ? `Berlaku hingga: ${new Date(editModalEvent.expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}` 
+                          : 'Masa aktif belum ditentukan'}
+                      </span>
+                      {/* Set Tanggal Kalender Langsung */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-stone-500 font-medium">Ubah Tanggal:</span>
+                        <input
+                          type="date"
+                          value={editModalEvent.expiresAt ? new Date(editModalEvent.expiresAt).toISOString().split('T')[0] : ''}
+                          onChange={(e) => handleSetEventExpiryDate(editModalEvent, e.target.value)}
+                          className="py-1 px-2 text-[11px] font-mono rounded-lg bg-white border border-[#E5DACB] text-stone-800 focus:outline-none focus:border-[#6B111F]"
+                          title="Pilih langsung tanggal batas kedaluwarsa"
+                        />
+                      </div>
                     </div>
 
-                    <div className="pt-1 flex flex-wrap gap-2">
+                    {/* Custom Tambah & Kurangi Hari */}
+                    <div className="pt-2 border-t border-[#E5DACB]/70 flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] font-serif font-bold text-stone-700">Custom Hari:</span>
+                      <div className="inline-flex items-center rounded-xl bg-white border border-[#E5DACB] overflow-hidden shadow-2xs">
+                        <button 
+                          type="button" 
+                          onClick={() => setCustomDaysDelta(prev => Math.max(1, prev - 1))}
+                          className="px-2.5 py-1 text-stone-600 hover:bg-stone-100 hover:text-stone-900 font-bold text-xs transition cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <input 
+                          type="number" 
+                          min="1" 
+                          max="365" 
+                          value={customDaysDelta} 
+                          onChange={(e) => setCustomDaysDelta(Math.max(1, parseInt(e.target.value) || 1))} 
+                          className="w-12 text-center text-xs font-mono font-bold text-stone-900 border-x border-[#E5DACB] py-1 focus:outline-none"
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => setCustomDaysDelta(prev => prev + 1)}
+                          className="px-2.5 py-1 text-stone-600 hover:bg-stone-100 hover:text-stone-900 font-bold text-xs transition cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+
                       <button
                         type="button"
-                        onClick={async () => {
+                        onClick={() => handleAdjustEventDays(editModalEvent, customDaysDelta)}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-serif font-bold flex items-center gap-1 shadow-xs transition active:scale-95 cursor-pointer"
+                        title={`Tambah ${customDaysDelta} hari masa aktif`}
+                      >
+                        <Plus size={12} />
+                        <span>Tambah +{customDaysDelta} Hari</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAdjustEventDays(editModalEvent, -customDaysDelta)}
+                        className="px-3 py-1.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white text-xs font-serif font-bold flex items-center gap-1 shadow-xs transition active:scale-95 cursor-pointer"
+                        title={`Kurangi ${customDaysDelta} hari masa aktif`}
+                      >
+                        <Minus size={12} />
+                        <span>Kurangi -{customDaysDelta} Hari</span>
+                      </button>
+                    </div>
+
+                    {/* Shortcut Cepat Tambah & Kurangi */}
+                    <div className="pt-2 border-t border-[#E5DACB]/70 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] text-stone-500 font-serif mr-1">Shortcut Cepat:</span>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
                           const pkg = PACKAGES[editFormData.package] || PACKAGES.all_in;
-                          const updated = await extendEventPeriod(editModalEvent.id, pkg.activeDays);
-                          if (updated) {
-                            setEditModalEvent(updated);
-                            toast(`Masa aktif diperpanjang +${pkg.activeDays} hari (${pkg.name})`, 'success');
-                          }
+                          handleExtendEvent(editModalEvent, pkg.activeDays);
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-[#6B111F] hover:bg-[#8A1828] text-[#F5D77F] text-xs font-serif font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
+                        className="px-2.5 py-1 rounded-lg bg-[#6B111F] hover:bg-[#8A1828] text-[#F5D77F] text-[11px] font-serif font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-2xs"
                       >
-                        <Clock size={12} />
-                        <span>+ Perpanjang Sesuai Paket ({PACKAGES[editFormData.package]?.activeDays || 10} Hari)</span>
+                        <Clock size={11} />
+                        <span>+ Sesuai Paket ({PACKAGES[editFormData.package]?.activeDays || 10}h)</span>
                       </button>
 
                       <button
                         type="button"
-                        onClick={async () => {
-                          const updated = await extendEventPeriod(editModalEvent.id, 7);
-                          if (updated) {
-                            setEditModalEvent(updated);
-                            toast('Masa aktif berhasil ditambah 7 hari', 'success');
-                          }
-                        }}
-                        className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 text-xs font-serif font-medium border border-stone-200 transition active:scale-95 cursor-pointer"
+                        onClick={() => handleAdjustEventDays(editModalEvent, 1)}
+                        className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-50 text-emerald-800 hover:border-emerald-300 text-[11px] font-mono font-bold border border-stone-200 transition active:scale-95 cursor-pointer"
                       >
-                        +7 Hari
+                        +1h
                       </button>
 
                       <button
                         type="button"
-                        onClick={async () => {
-                          const updated = await extendEventPeriod(editModalEvent.id, 30);
-                          if (updated) {
-                            setEditModalEvent(updated);
-                            toast('Masa aktif berhasil ditambah 30 hari', 'success');
-                          }
-                        }}
-                        className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-stone-100 text-stone-700 text-xs font-serif font-medium border border-stone-200 transition active:scale-95 cursor-pointer"
+                        onClick={() => handleAdjustEventDays(editModalEvent, 7)}
+                        className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-50 text-emerald-800 hover:border-emerald-300 text-[11px] font-mono font-bold border border-stone-200 transition active:scale-95 cursor-pointer"
                       >
-                        +30 Hari
+                        +7h
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAdjustEventDays(editModalEvent, 30)}
+                        className="px-2 py-1 rounded-lg bg-white hover:bg-emerald-50 text-emerald-800 hover:border-emerald-300 text-[11px] font-mono font-bold border border-stone-200 transition active:scale-95 cursor-pointer"
+                      >
+                        +30h
+                      </button>
+
+                      <span className="w-[1px] h-3.5 bg-stone-300 mx-1" />
+
+                      <button
+                        type="button"
+                        onClick={() => handleAdjustEventDays(editModalEvent, -1)}
+                        className="px-2 py-1 rounded-lg bg-white hover:bg-rose-50 text-rose-800 hover:border-rose-300 text-[11px] font-mono font-bold border border-stone-200 transition active:scale-95 cursor-pointer"
+                      >
+                        -1h
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAdjustEventDays(editModalEvent, -3)}
+                        className="px-2 py-1 rounded-lg bg-white hover:bg-rose-50 text-rose-800 hover:border-rose-300 text-[11px] font-mono font-bold border border-stone-200 transition active:scale-95 cursor-pointer"
+                      >
+                        -3h
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAdjustEventDays(editModalEvent, -7)}
+                        className="px-2 py-1 rounded-lg bg-white hover:bg-rose-50 text-rose-800 hover:border-rose-300 text-[11px] font-mono font-bold border border-stone-200 transition active:scale-95 cursor-pointer"
+                      >
+                        -7h
                       </button>
                     </div>
                   </div>
