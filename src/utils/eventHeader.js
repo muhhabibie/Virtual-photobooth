@@ -52,7 +52,13 @@ export function getEventDisplayName(activeEvent, slug = '') {
 }
 
 export function getEventFormattedDate(activeEvent) {
-  if (!activeEvent || !activeEvent.eventDate) return '15 - 11 - 2026';
+  if (!activeEvent) return '15 - 11 - 2026';
+  const slug = (activeEvent.slug || '').toLowerCase();
+  const name = (activeEvent.displayName || activeEvent.eventName || '').toLowerCase();
+  if (slug.includes('mitufaya') || name.includes('mitufaya')) {
+    return '01-06 - 12 - 2026';
+  }
+  if (!activeEvent.eventDate) return '15 - 11 - 2026';
   try {
     const raw = String(activeEvent.eventDate).trim();
     if (raw.includes('-')) {

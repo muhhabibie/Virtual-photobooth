@@ -21,9 +21,12 @@ export function PhotoboothProvider({ children }) {
       let updated = parsed.map(evt => {
         const initMatch = initialMap.get((evt.slug || '').toLowerCase());
         if (initMatch) {
+          const isMitufaya = (evt.slug || '').toLowerCase().includes('mitufaya');
           return {
             ...initMatch,
             ...evt,
+            formattedDate: isMitufaya ? initMatch.formattedDate : (evt.formattedDate || initMatch.formattedDate),
+            eventDate: isMitufaya ? initMatch.eventDate : (evt.eventDate || initMatch.eventDate),
             eventType: evt.eventType || initMatch.eventType,
             displayName: evt.displayName || initMatch.displayName,
             eventName: evt.eventName || initMatch.eventName,
@@ -69,9 +72,11 @@ export function PhotoboothProvider({ children }) {
           const match = cloudMap.get(evt.slug.toLowerCase());
           if (match) {
             hasChanges = true;
+            const isMitufaya = evt.slug.toLowerCase().includes('mitufaya');
             return {
               ...evt,
               ...match,
+              formattedDate: isMitufaya ? '1-6 Desember 2026' : (match.formattedDate || evt.formattedDate),
               heroPhotos: (match.heroPhotos && match.heroPhotos.length > 0) ? match.heroPhotos : evt.heroPhotos,
             };
           }

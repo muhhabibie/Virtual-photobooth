@@ -83,7 +83,7 @@ export const INITIAL_EVENTS = [
     eventName: 'Mitufaya 8th Anniversary',
     displayName: 'Mitufaya 8th Anniversary',
     eventDate: '2026-12-01',
-    formattedDate: '1 Desember 2026',
+    formattedDate: '1-6 Desember 2026',
     venue: 'Mitufaya Store',
     package: 'all_in',
     pin: '',
